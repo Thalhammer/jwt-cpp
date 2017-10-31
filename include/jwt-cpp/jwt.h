@@ -9,6 +9,8 @@
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 #include <openssl/pem.h>
+#include <openssl/ec.h>
+#include <openssl/err.h>
 
 namespace jwt {
 	using date = std::chrono::system_clock::time_point;
@@ -40,6 +42,14 @@ namespace jwt {
 			: std::runtime_error(msg)
 		{}
 		rsa_exception(const char* msg)
+			: std::runtime_error(msg)
+		{}
+	};
+	struct ecdsa_exception : public std::runtime_error {
+		ecdsa_exception(const std::string& msg)
+			: std::runtime_error(msg)
+		{}
+		ecdsa_exception(const char* msg)
 			: std::runtime_error(msg)
 		{}
 	};
@@ -138,7 +148,6 @@ namespace jwt {
 				res.resize(EVP_PKEY_size(pkey.get()));
 				unsigned int len = 0;
 
-				EVP_SignInit(ctx.get(), md());
 				if (!EVP_SignUpdate(ctx.get(), data.data(), data.size()))
 					throw signature_generation_exception();
 				if (!EVP_SignFinal(ctx.get(), (unsigned char*)res.data(), &len, pkey.get()))
@@ -162,6 +171,120 @@ namespace jwt {
 				return alg_name;
 			}
 		private:
+			std::shared_ptr<EVP_PKEY> pkey;
+			const EVP_MD*(*md)();
+			const std::string alg_name;
+		};
+		struct ecdsa {
+			ecdsa(const std::string& public_key, const std::string& private_key, const std::string& public_key_password, const std::string& private_key_password, const EVP_MD*(*md)(), const std::string& name)
+				: md(md), alg_name(name)
+			{
+				EC_KEY* key = nullptr;
+				if (private_key.empty()) {
+					std::unique_ptr<BIO, decltype(&BIO_free_all)> pubkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
+					if (BIO_write(pubkey_bio.get(), public_key.data(), public_key.size()) != public_key.size())
+						throw ecdsa_exception("failed to load public key: bio_write failed");
+
+					key = PEM_read_bio_EC_PUBKEY(pubkey_bio.get(), nullptr, nullptr, (void*)public_key_password.c_str());
+					if (key == nullptr)
+						throw ecdsa_exception("failed to load public key: PEM_read_bio_EC_PUBKEY failed");
+				} else {
+					std::unique_ptr<BIO, decltype(&BIO_free_all)> privkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
+					if (BIO_write(privkey_bio.get(), private_key.data(), private_key.size()) != private_key.size())
+						throw ecdsa_exception("failed to load private key: bio_write failed");
+					key = PEM_read_bio_ECPrivateKey(privkey_bio.get(), nullptr, nullptr, (void*)private_key_password.c_str());
+					if (key == nullptr)
+						throw ecdsa_exception("failed to load private key: PEM_read_bio_RSAPrivateKey failed");
+				}
+
+				if(key == nullptr || EC_KEY_check_key(key) == 0)
+					throw ecdsa_exception("failed to load key: key is null or invalid");
+
+				pkey.reset(EVP_PKEY_new(), EVP_PKEY_free);
+				if (!pkey)
+					throw ecdsa_exception("failed to load public key: EVP_PKEY_new failed");
+
+				if (EVP_PKEY_assign_EC_KEY(pkey.get(), key) == 0) {
+					EC_KEY_free(key);
+					throw ecdsa_exception("failed to load key: EVP_PKEY_assign_EC_KEY failed");
+				}
+			}
+			std::string sign(const std::string& data) const {
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_destroy);
+				if (!ctx)
+					throw signature_generation_exception("failed to create signature: could not create context");
+				if (!EVP_SignInit(ctx.get(), md()))
+					throw signature_generation_exception("failed to create signature: SignInit failed");
+
+				std::string res;
+				res.resize(EVP_PKEY_size(pkey.get()));
+				unsigned int len = 0;
+
+				if (!EVP_SignUpdate(ctx.get(), data.data(), data.size()))
+					throw signature_generation_exception();
+				if (!EVP_SignFinal(ctx.get(), (unsigned char*)res.data(), &len, pkey.get()))
+					throw signature_generation_exception();
+
+				res.resize(len);
+
+				return der2raw(res);
+			}
+			void verify(const std::string& data, const std::string& signature) const {
+				const std::string sig = raw2der(signature);
+
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_destroy);
+				if (!ctx)
+					throw signature_verification_exception("failed to verify signature: could not create context");
+				if (!EVP_VerifyInit(ctx.get(), md()))
+					throw signature_verification_exception("failed to verify signature: VerifyInit failed");
+				if (!EVP_VerifyUpdate(ctx.get(), data.data(), data.size()))
+					throw signature_verification_exception("failed to verify signature: VerifyUpdate failed");
+				if (EVP_VerifyFinal(ctx.get(), (const unsigned char*)sig.data(), sig.size(), pkey.get()) != 1)
+					throw signature_verification_exception(ERR_error_string(ERR_get_error(), nullptr));
+			}
+			std::string name() const {
+				return alg_name;
+			}
+		private:
+			static std::string der2raw(const std::string& d) {
+				const uint8_t* der = (const uint8_t*)d.data();
+				if (der[0] != 0x30 || d.size() - 2 != der[1]
+					|| der[2] != 0x02 || der[3] > d.size() - 6
+					|| der[der[3] + 4] != 0x02 || der[der[3] + 5] > (d.size() - 6 - der[3]))
+					throw std::logic_error("not a der encoding");
+				auto r = d.substr(4, der[3]);
+				auto s = d.substr(6 + r.size());
+				if (r[0] == 0x00 && r.size() % 2 == 1)
+					r = r.substr(1);
+				if (s[0] == 0x00 && s.size() % 2 == 1)
+					s = s.substr(1);
+				return r + s;
+			}
+			static std::string raw2der(const std::string& raw) {
+				std::string res(4, 0x00);
+				res[0] = 0x30;
+				res[2] = 0x02;
+				if (raw[0] & 0x80) {
+					res[3] = (char)(raw.size() / 2 + 1);
+					res += '\0';
+				}
+				else {
+					res[3] = (char)(raw.size() / 2);
+				}
+				res += raw.substr(0, raw.size() / 2);
+				if (raw[raw.size() / 2] & 0x80) {
+					res += 0x02;
+					res += (char)(raw.size() / 2 + 1);
+					res += '\0';
+				}
+				else {
+					res += (char)(raw.size() / 2);
+				}
+				res += raw.substr(raw.size() / 2);
+				res[1] = (char)(res.size() - 2);
+				return res;
+			}
+
 			std::shared_ptr<EVP_PKEY> pkey;
 			const EVP_MD*(*md)();
 			const std::string alg_name;
@@ -195,6 +318,21 @@ namespace jwt {
 		struct rs512 : public rsa {
 			rs512(const std::string& public_key, const std::string& private_key, const std::string& public_key_password, const std::string& private_key_password)
 				: rsa(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "RS512")
+			{}
+		};
+		struct es256 : public ecdsa {
+			es256(const std::string& public_key, const std::string& private_key, const std::string& public_key_password, const std::string& private_key_password)
+				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "ES256")
+			{}
+		};
+		struct es384 : public ecdsa {
+			es384(const std::string& public_key, const std::string& private_key, const std::string& public_key_password, const std::string& private_key_password)
+				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha384, "ES384")
+			{}
+		};
+		struct es512 : public ecdsa {
+			es512(const std::string& public_key, const std::string& private_key, const std::string& public_key_password, const std::string& private_key_password)
+				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "ES512")
 			{}
 		};
 	}
@@ -499,12 +637,13 @@ namespace jwt {
 				if (!jwt.has_payload_claim(key))
 					throw token_verification_exception("decoded_jwt is missing " + key + " claim");
 				auto& jc = jwt.get_payload_claim(key);
-				if(jc.get_type() != c.get_type())
+				if (jc.get_type() != c.get_type())
 					throw token_verification_exception("claim " + key + " type mismatch");
 				if (c.get_type() == claim::type::date) {
-					if(c.as_date() != jc.as_date())
+					if (c.as_date() != jc.as_date())
 						throw token_verification_exception("claim " + key + " does not match expected");
-				} else if (c.get_type() == claim::type::set) {
+				}
+				else if (c.get_type() == claim::type::set) {
 					auto& s1 = c.as_set();
 					auto& s2 = jc.as_set();
 					if (s1.size() != s2.size())
@@ -512,10 +651,11 @@ namespace jwt {
 					auto it1 = s1.cbegin();
 					auto it2 = s2.cbegin();
 					while (it1 != s1.cend() && it2 != s2.cend()) {
-						if(*it1++ != *it2++)
+						if (*it1++ != *it2++)
 							throw token_verification_exception("claim " + key + " does not match expected");
 					}
-				} else if (c.get_type() == claim::type::string) {
+				}
+				else if (c.get_type() == claim::type::string) {
 					if (c.as_string() != jc.as_string())
 						throw token_verification_exception("claim " + key + " does not match expected");
 				}
@@ -546,13 +686,14 @@ namespace jwt {
 			{
 				if (c.first == "exp" || c.first == "iat" || c.first == "nbf") {
 					// Nothing to do here, already checked
-				} else if (c.first == "aud") {
+				}
+				else if (c.first == "aud") {
 					if (!jwt.has_audience())
 						throw token_verification_exception("token doesn't contain the required audience");
 					auto& aud = jwt.get_audience();
 					auto& expected = c.second.as_set();
-					for(auto& e : expected)
-						if(aud.count(e) == 0)
+					for (auto& e : expected)
+						if (aud.count(e) == 0)
 							throw token_verification_exception("token doesn't contain the required audience");
 				}
 				else {
