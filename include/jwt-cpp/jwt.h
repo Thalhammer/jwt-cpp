@@ -118,7 +118,7 @@ namespace jwt {
 				: md(md), alg_name(name)
 			{
 				std::unique_ptr<BIO, decltype(&BIO_free_all)> pubkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
-				if (BIO_write(pubkey_bio.get(), public_key.data(), public_key.size()) != public_key.size())
+				if ((size_t)BIO_write(pubkey_bio.get(), public_key.data(), public_key.size()) != public_key.size())
 					throw rsa_exception("failed to load public key: bio_write failed");
 				pkey.reset(PEM_read_bio_PUBKEY(pubkey_bio.get(), nullptr, nullptr, (void*)public_key_password.c_str()), EVP_PKEY_free);
 				if (!pkey)
@@ -126,7 +126,7 @@ namespace jwt {
 
 				if (!private_key.empty()) {
 					std::unique_ptr<BIO, decltype(&BIO_free_all)> privkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
-					if (BIO_write(privkey_bio.get(), private_key.data(), private_key.size()) != private_key.size())
+					if ((size_t)BIO_write(privkey_bio.get(), private_key.data(), private_key.size()) != private_key.size())
 						throw rsa_exception("failed to load private key: bio_write failed");
 					RSA* privkey = PEM_read_bio_RSAPrivateKey(privkey_bio.get(), nullptr, nullptr, (void*)private_key_password.c_str());
 					if (privkey == nullptr)
@@ -179,86 +179,65 @@ namespace jwt {
 			ecdsa(const std::string& public_key, const std::string& private_key, const std::string& public_key_password, const std::string& private_key_password, const EVP_MD*(*md)(), const std::string& name)
 				: md(md), alg_name(name)
 			{
-				EC_KEY* key = nullptr;
 				if (private_key.empty()) {
 					std::unique_ptr<BIO, decltype(&BIO_free_all)> pubkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
-					if (BIO_write(pubkey_bio.get(), public_key.data(), public_key.size()) != public_key.size())
+					if ((size_t)BIO_write(pubkey_bio.get(), public_key.data(), public_key.size()) != public_key.size())
 						throw ecdsa_exception("failed to load public key: bio_write failed");
 
-					key = PEM_read_bio_EC_PUBKEY(pubkey_bio.get(), nullptr, nullptr, (void*)public_key_password.c_str());
-					if (key == nullptr)
+					pkey.reset(PEM_read_bio_EC_PUBKEY(pubkey_bio.get(), nullptr, nullptr, (void*)public_key_password.c_str()), EC_KEY_free);
+					if (!pkey)
 						throw ecdsa_exception("failed to load public key: PEM_read_bio_EC_PUBKEY failed");
 				} else {
 					std::unique_ptr<BIO, decltype(&BIO_free_all)> privkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
-					if (BIO_write(privkey_bio.get(), private_key.data(), private_key.size()) != private_key.size())
+					if ((size_t)BIO_write(privkey_bio.get(), private_key.data(), private_key.size()) != private_key.size())
 						throw ecdsa_exception("failed to load private key: bio_write failed");
-					key = PEM_read_bio_ECPrivateKey(privkey_bio.get(), nullptr, nullptr, (void*)private_key_password.c_str());
-					if (key == nullptr)
+					pkey.reset(PEM_read_bio_ECPrivateKey(privkey_bio.get(), nullptr, nullptr, (void*)private_key_password.c_str()), EC_KEY_free);
+					if (!pkey)
 						throw ecdsa_exception("failed to load private key: PEM_read_bio_RSAPrivateKey failed");
 				}
 
-				if(key == nullptr || EC_KEY_check_key(key) == 0)
-					throw ecdsa_exception("failed to load key: key is null or invalid");
-
-				pkey.reset(EVP_PKEY_new(), EVP_PKEY_free);
-				if (!pkey)
-					throw ecdsa_exception("failed to load public key: EVP_PKEY_new failed");
-
-				if (EVP_PKEY_assign_EC_KEY(pkey.get(), key) == 0) {
-					EC_KEY_free(key);
-					throw ecdsa_exception("failed to load key: EVP_PKEY_assign_EC_KEY failed");
-				}
+				if(EC_KEY_check_key(pkey.get()) == 0)
+					throw ecdsa_exception("failed to load key: key is invalid");
 			}
 			std::string sign(const std::string& data) const {
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_destroy);
-				if (!ctx)
-					throw signature_generation_exception("failed to create signature: could not create context");
-				if (!EVP_SignInit(ctx.get(), md()))
-					throw signature_generation_exception("failed to create signature: SignInit failed");
+				const std::string hash = generate_hash(data);
 
-				std::string res;
-				res.resize(EVP_PKEY_size(pkey.get()));
-				unsigned int len = 0;
+				std::unique_ptr<ECDSA_SIG, decltype(&ECDSA_SIG_free)>
+					sig(ECDSA_do_sign((const unsigned char*)hash.data(), hash.size(), pkey.get()), ECDSA_SIG_free);
 
-				if (!EVP_SignUpdate(ctx.get(), data.data(), data.size()))
-					throw signature_generation_exception();
-				if (!EVP_SignFinal(ctx.get(), (unsigned char*)res.data(), &len, pkey.get()))
-					throw signature_generation_exception();
-
-				res.resize(len);
-
-				return der2raw(res);
+				return bn2raw(sig->r) + bn2raw(sig->s);
 			}
 			void verify(const std::string& data, const std::string& signature) const {
-				const std::string sig = raw2der(signature);
+				const std::string hash = generate_hash(data);
+				auto r = raw2bn(signature.substr(0, signature.size() / 2));
+				auto s = raw2bn(signature.substr(signature.size() / 2));
 
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_destroy);
-				if (!ctx)
-					throw signature_verification_exception("failed to verify signature: could not create context");
-				if (!EVP_VerifyInit(ctx.get(), md()))
-					throw signature_verification_exception("failed to verify signature: VerifyInit failed");
-				if (!EVP_VerifyUpdate(ctx.get(), data.data(), data.size()))
-					throw signature_verification_exception("failed to verify signature: VerifyUpdate failed");
-				if (EVP_VerifyFinal(ctx.get(), (const unsigned char*)sig.data(), sig.size(), pkey.get()) != 1)
-					throw signature_verification_exception(ERR_error_string(ERR_get_error(), nullptr));
+				ECDSA_SIG sig;
+				sig.r = r.get();
+				sig.s = s.get();
+
+				if(ECDSA_do_verify((const unsigned char*)hash.data(), hash.size(), &sig, pkey.get()) != 1)
+					throw signature_verification_exception("Invalid signature");
 			}
 			std::string name() const {
 				return alg_name;
 			}
 		private:
-			static std::string der2raw(const std::string& d) {
-				const uint8_t* der = (const uint8_t*)d.data();
-				if (der[0] != 0x30 || d.size() - 2 != der[1]
-					|| der[2] != 0x02 || der[3] > d.size() - 6
-					|| der[der[3] + 4] != 0x02 || der[der[3] + 5] > (d.size() - 6 - der[3]))
-					throw std::logic_error("not a der encoding");
-				auto r = d.substr(4, der[3]);
-				auto s = d.substr(6 + r.size());
-				if (r[0] == 0x00 && r.size() % 2 == 1)
-					r = r.substr(1);
-				if (s[0] == 0x00 && s.size() % 2 == 1)
-					s = s.substr(1);
-				return r + s;
+			static std::string bn2raw(BIGNUM* bn) {
+				std::string res;
+				res.resize(BN_num_bytes(bn));
+				BN_bn2bin(bn, (unsigned char*)res.data());
+				if(res.size()%2 == 1 && res[0] == 0x00)
+					return res.substr(1);
+				return res;
+			}
+			static std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw) {
+				if(raw[0] >= 0x80) {
+					std::string str(1, 0x00);
+					str += raw;
+					return std::unique_ptr<BIGNUM, decltype(&BN_free)>(BN_bin2bn((const unsigned char*)str.data(), str.size(), nullptr), BN_free);
+				}
+				return std::unique_ptr<BIGNUM, decltype(&BN_free)>(BN_bin2bn((const unsigned char*)raw.data(), raw.size(), nullptr), BN_free);
 			}
 			static std::string raw2der(const std::string& raw) {
 				std::string res(4, 0x00);
@@ -285,7 +264,22 @@ namespace jwt {
 				return res;
 			}
 
-			std::shared_ptr<EVP_PKEY> pkey;
+			std::string generate_hash(const std::string& data) const {
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(), &EVP_MD_CTX_destroy);
+				if(EVP_DigestInit(ctx.get(), md()) == 0)
+					throw signature_generation_exception("EVP_DigestInit failed");
+				if(EVP_DigestUpdate(ctx.get(), data.data(), data.size()) == 0)
+					throw signature_generation_exception("EVP_DigestUpdate failed");
+				unsigned int len = 0;
+				std::string res;
+				res.resize(EVP_MD_CTX_block_size(ctx.get()));
+				if(EVP_DigestFinal(ctx.get(), (unsigned char*)res.data(), &len) == 0)
+					throw signature_generation_exception("EVP_DigestFinal failed");
+				res.resize(len);
+				return res;
+			}
+
+			std::shared_ptr<EC_KEY> pkey;
 			const EVP_MD*(*md)();
 			const std::string alg_name;
 		};
@@ -306,118 +300,104 @@ namespace jwt {
 			{}
 		};
 		struct rs256 : public rsa {
-			rs256(const std::string& public_key, const std::string& private_key, const std::string& public_key_password, const std::string& private_key_password)
+			rs256(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: rsa(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "RS256")
 			{}
 		};
 		struct rs384 : public rsa {
-			rs384(const std::string& public_key, const std::string& private_key, const std::string& public_key_password, const std::string& private_key_password)
+			rs384(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: rsa(public_key, private_key, public_key_password, private_key_password, EVP_sha384, "RS384")
 			{}
 		};
 		struct rs512 : public rsa {
-			rs512(const std::string& public_key, const std::string& private_key, const std::string& public_key_password, const std::string& private_key_password)
+			rs512(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: rsa(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "RS512")
 			{}
 		};
 		struct es256 : public ecdsa {
-			es256(const std::string& public_key, const std::string& private_key, const std::string& public_key_password, const std::string& private_key_password)
+			es256(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "ES256")
 			{}
 		};
 		struct es384 : public ecdsa {
-			es384(const std::string& public_key, const std::string& private_key, const std::string& public_key_password, const std::string& private_key_password)
+			es384(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha384, "ES384")
 			{}
 		};
 		struct es512 : public ecdsa {
-			es512(const std::string& public_key, const std::string& private_key, const std::string& public_key_password, const std::string& private_key_password)
+			es512(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "ES512")
 			{}
 		};
 	}
 
 	class claim {
+		picojson::value val;
 	public:
 		enum class type {
+			null,
+			boolean,
+			number,
 			string,
-			date,
-			set,
-			unset
+			array,
+			object,
+			int64
 		};
-	private:
-		type t;
-		std::string string;
-		std::set<std::string> set;
-		date d;
-	public:
+
 		claim()
-			: t(type::unset)
+			: val()
 		{}
 		claim(std::string s)
-			: t(type::string), string(std::move(s))
+			: val(std::move(s))
 		{}
 		claim(date s)
-			: t(type::date), d(std::move(s))
+			: val(int64_t(std::chrono::system_clock::to_time_t(s)))
 		{}
 		claim(std::set<std::string> s)
-			: t(type::set), set(std::move(s))
+			: val(picojson::array(s.cbegin(), s.cend()))
 		{}
 		claim(const picojson::value& val)
-		{
-			if (val.is<int64_t>())
-			{
-				t = type::date;
-				d = std::chrono::system_clock::from_time_t(val.get<int64_t>());
-			}
-			else if (val.is<std::string>())
-			{
-				t = type::string;
-				string = val.get<std::string>();
-			}
-			else if (val.is<picojson::array>())
-			{
-				t = type::set;
-				auto arr = val.get<picojson::array>();
-				for (auto& e : arr)
-					set.insert(e.get<std::string>());
-			}
-		}
+			: val(val)
+		{}
 
 		picojson::value to_json() const {
-			switch (t)
-			{
-			case claim::type::date:
-				return picojson::value(
-					std::chrono::system_clock::to_time_t(d)
-				);
-			case claim::type::set:
-				return picojson::value(
-					picojson::array(set.cbegin(), set.cend())
-				);
-			case claim::type::string:
-				return picojson::value(string);
-			default:
-				throw std::logic_error("invalid value");
-			}
+			return val;
 		}
 
-		type get_type() const { return t; }
+		type get_type() const {
+			if (val.is<picojson::null>()) return type::null;
+			else if (val.is<bool>()) return type::boolean;
+			else if (val.is<int64_t>()) return type::int64;
+			else if (val.is<double>()) return type::number;
+			else if (val.is<std::string>()) return type::string;
+			else if (val.is<picojson::array>()) return type::array;
+			else if (val.is<picojson::object>()) return type::object;
+			else throw std::logic_error("internal error");
+		}
 
 		const std::string& as_string() const {
-			if (t != type::string)
+			if (!val.is<std::string>())
 				throw std::bad_cast();
-			return string;
+			return val.get<std::string>();
 		}
-		const date& as_date() const {
-			if (t != type::date)
-				throw std::bad_cast();
-			return d;
+		date as_date() const {
+			return std::chrono::system_clock::from_time_t(as_int());
 		}
-		const std::set<std::string>& as_set() const {
-			if (t != type::set)
+		const picojson::array& as_array() const {
+			if (!val.is<picojson::array>())
 				throw std::bad_cast();
-			return set;
+			return val.get<picojson::array>();
+		}
+		const std::set<std::string> as_set() const {
+			std::set<std::string> res;
+			for(auto& e : as_array())
+				res.insert(e.get<std::string>());
+			return res;
+		}
+		int64_t as_int() const {
+			if (!val.is<int64_t>())
+				throw std::bad_cast();
+			return val.get<int64_t>();
 		}
 	};
 
@@ -434,10 +414,10 @@ namespace jwt {
 		bool has_id() const noexcept { return has_payload_claim("jti"); }
 		const std::string& get_issuer() const { return get_payload_claim("iss").as_string(); }
 		const std::string& get_subject() const { return get_payload_claim("sub").as_string(); }
-		const std::set<std::string>& get_audience() const { return get_payload_claim("aud").as_set(); }
-		const date& get_expires_at() const { return get_payload_claim("exp").as_date(); }
-		const date& get_not_before() const { return get_payload_claim("nbf").as_date(); }
-		const date& get_issued_at() const { return get_payload_claim("iat").as_date(); }
+		std::set<std::string> get_audience() const { return get_payload_claim("aud").as_set(); }
+		const date get_expires_at() const { return get_payload_claim("exp").as_date(); }
+		const date get_not_before() const { return get_payload_claim("nbf").as_date(); }
+		const date get_issued_at() const { return get_payload_claim("iat").as_date(); }
 		const std::string& get_id() const { return get_payload_claim("jti").as_string(); }
 		bool has_payload_claim(const std::string& name) const noexcept { return payload_claims.count(name) != 0; }
 		const claim& get_payload_claim(const std::string& name) const {
@@ -639,13 +619,13 @@ namespace jwt {
 				auto& jc = jwt.get_payload_claim(key);
 				if (jc.get_type() != c.get_type())
 					throw token_verification_exception("claim " + key + " type mismatch");
-				if (c.get_type() == claim::type::date) {
+				if (c.get_type() == claim::type::int64) {
 					if (c.as_date() != jc.as_date())
 						throw token_verification_exception("claim " + key + " does not match expected");
 				}
-				else if (c.get_type() == claim::type::set) {
-					auto& s1 = c.as_set();
-					auto& s2 = jc.as_set();
+				else if (c.get_type() == claim::type::array) {
+					auto s1 = c.as_set();
+					auto s2 = jc.as_set();
 					if (s1.size() != s2.size())
 						throw token_verification_exception("claim " + key + " does not match expected");
 					auto it1 = s1.cbegin();
@@ -690,8 +670,8 @@ namespace jwt {
 				else if (c.first == "aud") {
 					if (!jwt.has_audience())
 						throw token_verification_exception("token doesn't contain the required audience");
-					auto& aud = jwt.get_audience();
-					auto& expected = c.second.as_set();
+					auto aud = jwt.get_audience();
+					auto expected = c.second.as_set();
 					for (auto& e : expected)
 						if (aud.count(e) == 0)
 							throw token_verification_exception("token doesn't contain the required audience");

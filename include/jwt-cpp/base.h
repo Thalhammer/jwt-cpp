@@ -129,7 +129,7 @@ namespace jwt {
 
 			
 			size_t fast_size = size - size % 4;
-			for (size_t i = 0, j = 0; i < fast_size;) {
+			for (size_t i = 0; i < fast_size;) {
 				uint32_t sextet_a = get_sextet(i++);
 				uint32_t sextet_b = get_sextet(i++);
 				uint32_t sextet_c = get_sextet(i++);
@@ -154,13 +154,6 @@ namespace jwt {
 			switch (fill_cnt) {
 			case 1:
 				triple |= (get_sextet(fast_size + 2) << 1 * 6);
-			case 2:
-			default:
-				break;
-			}
-
-			switch (fill_cnt) {
-			case 1:
 				res += (triple >> 2 * 8) & 0xFF;
 				res += (triple >> 1 * 8) & 0xFF;
 				break;

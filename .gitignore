@@ -301,3 +301,9 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# Linux files
+test
+*.o
+*.o.d
+.vscode
