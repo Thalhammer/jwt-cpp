@@ -10,6 +10,12 @@ namespace {
 	extern std::string ecdsa_pub_key_invalid;
 }
 
+int main(int argc, char *argv[])
+{
+	::testing::InitGoogleTest(&argc, argv);
+	return RUN_ALL_TESTS();
+}
+
 TEST(TokenTest, DecodeToken) {
 	std::string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
 	auto decoded = jwt::decode(token);

@@ -12,6 +12,11 @@
 #include <openssl/ec.h>
 #include <openssl/err.h>
 
+//If openssl version less than 1.1
+#if OPENSSL_VERSION_NUMBER < 269484032
+#define OPENSSL10
+#endif
+
 namespace jwt {
 	using date = std::chrono::system_clock::time_point;
 
@@ -138,7 +143,11 @@ namespace jwt {
 				}
 			}
 			std::string sign(const std::string& data) const {
+#ifdef OPENSSL10
 				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_destroy);
+#else
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_free);
+#endif
 				if (!ctx)
 					throw signature_generation_exception("failed to create signature: could not create context");
 				if (!EVP_SignInit(ctx.get(), md()))
@@ -157,7 +166,11 @@ namespace jwt {
 				return res;
 			}
 			void verify(const std::string& data, const std::string& signature) const {
+#ifdef OPENSSL10
 				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_destroy);
+#else
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_free);
+#endif
 				if (!ctx)
 					throw signature_verification_exception("failed to verify signature: could not create context");
 				if (!EVP_VerifyInit(ctx.get(), md()))
@@ -204,26 +217,47 @@ namespace jwt {
 
 				std::unique_ptr<ECDSA_SIG, decltype(&ECDSA_SIG_free)>
 					sig(ECDSA_do_sign((const unsigned char*)hash.data(), hash.size(), pkey.get()), ECDSA_SIG_free);
+#ifdef OPENSSL10
 
 				return bn2raw(sig->r) + bn2raw(sig->s);
+#else
+				const BIGNUM *r;
+				const BIGNUM *s;
+				ECDSA_SIG_get0(sig.get(), &r, &s);
+				return bn2raw(r) + bn2raw(s);
+#endif
 			}
 			void verify(const std::string& data, const std::string& signature) const {
 				const std::string hash = generate_hash(data);
 				auto r = raw2bn(signature.substr(0, signature.size() / 2));
 				auto s = raw2bn(signature.substr(signature.size() / 2));
 
+#ifdef OPENSSL10
 				ECDSA_SIG sig;
 				sig.r = r.get();
 				sig.s = s.get();
 
 				if(ECDSA_do_verify((const unsigned char*)hash.data(), hash.size(), &sig, pkey.get()) != 1)
 					throw signature_verification_exception("Invalid signature");
+#else
+				ECDSA_SIG *sig = ECDSA_SIG_new();
+
+				ECDSA_SIG_set0(sig, r.get(), s.get());
+
+				if(ECDSA_do_verify((const unsigned char*)hash.data(), hash.size(), sig, pkey.get()) != 1)
+					throw signature_verification_exception("Invalid signature");
+#endif
 			}
 			std::string name() const {
 				return alg_name;
 			}
 		private:
-			static std::string bn2raw(BIGNUM* bn) {
+#ifdef OPENSSL10
+			static std::string bn2raw(BIGNUM* bn)
+#else
+			static std::string bn2raw(const BIGNUM* bn)
+#endif
+			{
 				std::string res;
 				res.resize(BN_num_bytes(bn));
 				BN_bn2bin(bn, (unsigned char*)res.data());
@@ -265,7 +299,11 @@ namespace jwt {
 			}
 
 			std::string generate_hash(const std::string& data) const {
+#ifdef OPENSSL10
 				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(), &EVP_MD_CTX_destroy);
+#else
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+#endif
 				if(EVP_DigestInit(ctx.get(), md()) == 0)
 					throw signature_generation_exception("EVP_DigestInit failed");
 				if(EVP_DigestUpdate(ctx.get(), data.data(), data.size()) == 0)
@@ -398,6 +436,11 @@ namespace jwt {
 			if (!val.is<int64_t>())
 				throw std::bad_cast();
 			return val.get<int64_t>();
+		}
+		bool as_bool() const {
+			if (!val.is<bool>())
+				throw std::bad_cast();
+			return val.get<bool>();
 		}
 	};
 
@@ -688,12 +731,12 @@ namespace jwt {
 		return verifier<Clock>(c);
 	}
 
-	auto verify() {
-		struct default_clock {
-			auto now() const {
-				return std::chrono::system_clock::now();
-			}
-		};
+	struct default_clock {
+		std::chrono::system_clock::time_point now() const {
+			return std::chrono::system_clock::now();
+		}
+	};
+	verifier<default_clock> verify() {
 		return verify<default_clock>({});
 	}
 

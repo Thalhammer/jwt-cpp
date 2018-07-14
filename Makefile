@@ -6,16 +6,16 @@ OBJ = $(FSRC:=.o)
 
 DEP_DIR = .deps
 
-GTEST = /usr/src/gtest/src/gtest-all.cc /usr/src/gtest/src/gtest_main.cc
-
 FLAGS = -fPIC -Wall -Wno-unknown-pragmas -I include
-CXXFLAGS = -std=c++14
+CXXFLAGS = 
 CFLAGS = 
-LINKFLAGS = -I /usr/src/gtest/ $(GTEST) -lssl -lcrypto -pthread
+LINKFLAGS = -lssl -lcrypto -lgtest
 
 OUTFILE = test
 
 .PHONY: clean debug release
+
+all: debug
 
 debug: FLAGS += -g
 debug: $(OUTFILE)
