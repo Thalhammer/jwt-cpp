@@ -732,7 +732,7 @@ namespace jwt {
 	}
 
 	struct default_clock {
-		std::chrono::_V2::system_clock::time_point now() const {
+		std::chrono::system_clock::time_point now() const {
 			return std::chrono::system_clock::now();
 		}
 	};
