@@ -7,9 +7,9 @@ OBJ = $(FSRC:=.o)
 DEP_DIR = .deps
 
 FLAGS = -fPIC -Wall -Wno-unknown-pragmas -I include
-CXXFLAGS = 
+CXXFLAGS = -std=c++11
 CFLAGS = 
-LINKFLAGS = -lssl -lcrypto -lgtest
+LINKFLAGS = -lcrypto -lgtest -lpthread
 
 OUTFILE = test
 
