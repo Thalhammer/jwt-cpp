@@ -70,10 +70,10 @@ namespace jwt {
 	namespace algorithm {
 
 		struct none {
-			std::string sign(const std::string& data) const {
+			std::string sign(const std::string&) const {
 				return "";
 			}
-			void verify(const std::string& data, const std::string& signature) const {
+			void verify(const std::string&, const std::string& signature) const {
 				if (!signature.empty())
 					throw signature_verification_exception();
 			}
