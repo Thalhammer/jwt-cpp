@@ -736,14 +736,18 @@ namespace jwt {
 			return std::chrono::system_clock::now();
 		}
 	};
+
+    inline
 	verifier<default_clock> verify() {
 		return verify<default_clock>({});
 	}
 
+    inline
 	builder create() {
 		return builder();
 	}
 
+    inline
 	decoded_jwt decode(const std::string& token) {
 		return decoded_jwt(token);
 	}
