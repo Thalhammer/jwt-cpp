@@ -50,3 +50,14 @@ In order to use jwt-cpp you need the following tools.
 In order to build the test cases you also need
 * gtest installed in linker path
 * pthread
+
+## Troubleshooting
+#### Missing _HMAC amd _EVP_sha256 symbols on Mac
+There seems to exists a problem with the included openssl library of MacOS. Make sure you link to one provided by brew.
+See [here](https://github.com/Thalhammer/jwt-cpp/issues/6) for more details.
+#### Building on windows fails with syntax errors
+The header "Windows.h", which is often included in windowsprojects, defines macros for MIN and MAX which screw up std::numeric_limits.
+See [here](https://github.com/Thalhammer/jwt-cpp/issues/5) for more details. To fix this do one of the following things:
+* define NOMINMAX, which suppresses this behaviour
+* include this library before you include windows.h
+* place ```#undef max``` and ```#undef min``` before you include this library
