@@ -2,7 +2,20 @@
 A header only library for creating and validating json web tokens in c++.
 
 ## Signature algorithms
-jwt-cpp currently supports all algorithms used in normal applications. It does not yet support the optional PS256, PS384, PS512 defined in later versions of the specification. Those are not used in the wild yet and the modular design of jwt-cpp allows one to add them without any problems. If you need them feel free to open a pull request.
+As of version 0.2.0 jwt-cpp supports all algorithms defined by the spec. The modular design of jwt-cpp allows one to add additional algorithms without any problems. If you need any feel free to open a pull request.
+For the sake of completeness, here is a list of all supported algorithms:
+* HS256
+* HS384
+* HS512
+* RS256
+* RS384
+* RS512
+* ES256
+* ES384
+* ES512
+* PS256
+* PS384
+* PS512
 
 ## Examples
 Simple example of decoding a token and printing all claims:
