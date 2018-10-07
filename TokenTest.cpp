@@ -75,6 +75,30 @@ TEST(TokenTest, CreateTokenRS512) {
 		"hfGgejPBCBlGrQtqFGFdHHOjNHY", token);
 }
 
+TEST(TokenTest, CreateTokenPS256) {
+	auto token = jwt::create()
+		.set_issuer("auth0")
+		.set_type("JWS")
+		.sign(jwt::algorithm::ps256(rsa_pub_key, rsa_priv_key, "", ""));
+
+	ASSERT_EQ(
+		"eyJhbGciOiJQUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.yrqybvOkt6z2REIrSVIYoTA-sg-SOW1ZdMM0HksnIBy"
+		"wk9535ugb_nLfCld2r30RjZzkuT875FmFOsjvvUL6WcZq5X0D8y81mmoe7cJ7g-ZVEtEf5HkK8ITGXwaBkPmOJgv-dxUl1KAi9mzz"
+		"OmjOsbwYU_rxJv-kcnmUYimtvv8", token);
+}
+
+TEST(TokenTest, CreateTokenPS384) {
+	auto token = jwt::create()
+		.set_issuer("auth0")
+		.set_type("JWS")
+		.sign(jwt::algorithm::ps384(rsa_pub_key, rsa_priv_key, "", ""));
+
+	ASSERT_EQ(
+		"eyJhbGciOiJQUzM4NCIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.lGXMcgseUWc_U5F7A5HI-EymAz9WYJbM4-OHjO0rzz4"
+		"1oevoFkQu4HfJrEWfrnxXkYjpkbmgWWYakISNVK2EYvPCQqMKEpzUsVCnQjTWF0uowABrCXOjzCprK1_Wtkwmnacbko7L4y68BOlR"
+		"zQFYMnQS7EviYV1LF6fWNP5cRk4", token);
+}
+
 TEST(TokenTest, CreateTokenES256) {
 	
 	auto token = jwt::create()
