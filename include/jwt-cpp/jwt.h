@@ -310,7 +310,7 @@ namespace jwt {
 					throw signature_generation_exception("EVP_DigestUpdate failed");
 				unsigned int len = 0;
 				std::string res;
-				res.resize(EVP_MD_CTX_block_size(ctx.get()));
+				res.resize(EVP_MD_CTX_size(ctx.get()));
 				if(EVP_DigestFinal(ctx.get(), (unsigned char*)res.data(), &len) == 0)
 					throw signature_generation_exception("EVP_DigestFinal failed");
 				res.resize(len);
@@ -318,6 +318,86 @@ namespace jwt {
 			}
 
 			std::shared_ptr<EC_KEY> pkey;
+			const EVP_MD*(*md)();
+			const std::string alg_name;
+		};
+
+		struct pss {
+			pss(const std::string& public_key, const std::string& private_key, const std::string& public_key_password, const std::string& private_key_password, const EVP_MD*(*md)(), const std::string& name)
+				: md(md), alg_name(name)
+			{
+				std::unique_ptr<BIO, decltype(&BIO_free_all)> pubkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
+				if ((size_t)BIO_write(pubkey_bio.get(), public_key.data(), public_key.size()) != public_key.size())
+					throw rsa_exception("failed to load public key: bio_write failed");
+				pkey.reset(PEM_read_bio_PUBKEY(pubkey_bio.get(), nullptr, nullptr, (void*)public_key_password.c_str()), EVP_PKEY_free);
+				if (!pkey)
+					throw rsa_exception("failed to load public key: PEM_read_bio_PUBKEY failed");
+
+				if (!private_key.empty()) {
+					std::unique_ptr<BIO, decltype(&BIO_free_all)> privkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
+					if ((size_t)BIO_write(privkey_bio.get(), private_key.data(), private_key.size()) != private_key.size())
+						throw rsa_exception("failed to load private key: bio_write failed");
+					RSA* privkey = PEM_read_bio_RSAPrivateKey(privkey_bio.get(), nullptr, nullptr, (void*)private_key_password.c_str());
+					if (privkey == nullptr)
+						throw rsa_exception("failed to load private key: PEM_read_bio_RSAPrivateKey failed");
+					if (EVP_PKEY_assign_RSA(pkey.get(), privkey) == 0) {
+						RSA_free(privkey);
+						throw rsa_exception("failed to load private key: EVP_PKEY_assign_RSA failed");
+					}
+				}
+			}
+			std::string sign(const std::string& data) const {
+				auto hash = this->generate_hash(data);
+
+				std::unique_ptr<RSA, decltype(&RSA_free)> key(EVP_PKEY_get1_RSA(pkey.get()), RSA_free);
+				const int size = RSA_size(key.get());
+
+				std::string padded(size, 0x00);
+				if (!RSA_padding_add_PKCS1_PSS_mgf1(key.get(), (unsigned char*)padded.data(), (const unsigned char*)hash.data(), md(), md(), -1))  
+					throw signature_generation_exception("failed to create signature: RSA_padding_add_PKCS1_PSS_mgf1 failed");
+
+				std::string res(size, 0x00);
+				if (RSA_private_encrypt(size, (const unsigned char*)padded.data(), (unsigned char*)res.data(), key.get(), RSA_NO_PADDING) < 0)
+					throw signature_generation_exception("failed to create signature: RSA_private_encrypt failed");
+				return res;
+			}
+			void verify(const std::string& data, const std::string& signature) const {
+				auto hash = this->generate_hash(data);
+
+				std::unique_ptr<RSA, decltype(&RSA_free)> key(EVP_PKEY_get1_RSA(pkey.get()), RSA_free);
+				const int size = RSA_size(key.get());
+				
+				std::string sig(size, 0x00);
+				if(!RSA_public_decrypt(signature.size(), (const unsigned char*)signature.data(), (unsigned char*)sig.data(), key.get(), RSA_NO_PADDING))
+					throw signature_verification_exception("Invalid signature");
+				
+				if(!RSA_verify_PKCS1_PSS_mgf1(key.get(), (const unsigned char*)hash.data(), md(), md(), (const unsigned char*)sig.data(), -1))
+					throw signature_verification_exception("Invalid signature");
+			}
+			std::string name() const {
+				return alg_name;
+			}
+		private:
+			std::string generate_hash(const std::string& data) const {
+#ifdef OPENSSL10
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(), &EVP_MD_CTX_destroy);
+#else
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+#endif
+				if(EVP_DigestInit(ctx.get(), md()) == 0)
+					throw signature_generation_exception("EVP_DigestInit failed");
+				if(EVP_DigestUpdate(ctx.get(), data.data(), data.size()) == 0)
+					throw signature_generation_exception("EVP_DigestUpdate failed");
+				unsigned int len = 0;
+				std::string res;
+				res.resize(EVP_MD_CTX_size(ctx.get()));
+				if(EVP_DigestFinal(ctx.get(), (unsigned char*)res.data(), &len) == 0)
+					throw signature_generation_exception("EVP_DigestFinal failed");
+				res.resize(len);
+				return res;
+			}
+
+			std::shared_ptr<EVP_PKEY> pkey;
 			const EVP_MD*(*md)();
 			const std::string alg_name;
 		};
@@ -365,6 +445,22 @@ namespace jwt {
 		struct es512 : public ecdsa {
 			es512(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "ES512")
+			{}
+		};
+
+		struct ps256 : public pss {
+			ps256(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
+				: pss(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "PS256")
+			{}
+		};
+		struct ps384 : public pss {
+			ps384(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
+				: pss(public_key, private_key, public_key_password, private_key_password, EVP_sha384, "PS384")
+			{}
+		};
+		struct ps512 : public pss {
+			ps512(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
+				: pss(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "PS512")
 			{}
 		};
 	}

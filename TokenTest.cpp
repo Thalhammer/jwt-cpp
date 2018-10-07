@@ -81,10 +81,8 @@ TEST(TokenTest, CreateTokenPS256) {
 		.set_type("JWS")
 		.sign(jwt::algorithm::ps256(rsa_pub_key, rsa_priv_key, "", ""));
 
-	ASSERT_EQ(
-		"eyJhbGciOiJQUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.yrqybvOkt6z2REIrSVIYoTA-sg-SOW1ZdMM0HksnIBy"
-		"wk9535ugb_nLfCld2r30RjZzkuT875FmFOsjvvUL6WcZq5X0D8y81mmoe7cJ7g-ZVEtEf5HkK8ITGXwaBkPmOJgv-dxUl1KAi9mzz"
-		"OmjOsbwYU_rxJv-kcnmUYimtvv8", token);
+	// TODO: Find a better way to check if generated signature is valid
+	// Can't do simple check for equal since pss adds random salt.
 }
 
 TEST(TokenTest, CreateTokenPS384) {
@@ -93,10 +91,18 @@ TEST(TokenTest, CreateTokenPS384) {
 		.set_type("JWS")
 		.sign(jwt::algorithm::ps384(rsa_pub_key, rsa_priv_key, "", ""));
 
-	ASSERT_EQ(
-		"eyJhbGciOiJQUzM4NCIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.lGXMcgseUWc_U5F7A5HI-EymAz9WYJbM4-OHjO0rzz4"
-		"1oevoFkQu4HfJrEWfrnxXkYjpkbmgWWYakISNVK2EYvPCQqMKEpzUsVCnQjTWF0uowABrCXOjzCprK1_Wtkwmnacbko7L4y68BOlR"
-		"zQFYMnQS7EviYV1LF6fWNP5cRk4", token);
+	// TODO: Find a better way to check if generated signature is valid
+	// Can't do simple check for equal since pss adds random salt.
+}
+
+TEST(TokenTest, CreateTokenPS512) {
+	auto token = jwt::create()
+		.set_issuer("auth0")
+		.set_type("JWS")
+		.sign(jwt::algorithm::ps512(rsa_pub_key, rsa_priv_key, "", ""));
+
+	// TODO: Find a better way to check if generated signature is valid
+	// Can't do simple check for equal since pss adds random salt.
 }
 
 TEST(TokenTest, CreateTokenES256) {
@@ -261,6 +267,51 @@ TEST(TokenTest, VerifyTokenES256Fail) {
 
 	auto verify = jwt::verify()
 		.allow_algorithm(jwt::algorithm::es256(ecdsa_pub_key_invalid, "", "", ""));
+	auto decoded_token = jwt::decode(token);
+
+	ASSERT_THROW(verify.verify(decoded_token), jwt::signature_verification_exception);
+}
+
+TEST(TokenTest, VerifyTokenPS256) {
+	std::string token = "eyJhbGciOiJQUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.CJ4XjVWdbV6vXGZkD4GdJbtYc80SN9cmPOqRhZBRzOyDRqTFE"
+		"4MsbdKyQuhAWcvuMOjn-24qOTjVMR_P_uTC1uG6WPLcucxZyLnbb56zbKnEklW2SX0mQnCGewr-93a_vDaFT6Cp45MsF_OwFPRCMaS5CJg-"
+		"N5KY67UrVSr3s9nkuK9ZTQkyODHfyEUh9F_FhRCATGrb5G7_qHqBYvTvaPUXqzhhpCjN855Tocg7A24Hl0yMwM-XdasucW5xNdKjG_YCkis"
+		"HX7ax--JiF5GNYCO61eLFteO4THUg-3Z0r4OlGqlppyWo5X5tjcxOZCvBh7WDWfkxA48KFZPRv0nlKA";
+
+	auto verify = jwt::verify()
+		.allow_algorithm(jwt::algorithm::ps256(rsa_pub_key, rsa_priv_key, "", ""))
+		.with_issuer("auth0");
+
+	auto decoded_token = jwt::decode(token);
+
+	verify.verify(decoded_token);
+}
+
+TEST(TokenTest, VerifyTokenPS256PublicOnly) {
+	std::string token = "eyJhbGciOiJQUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.CJ4XjVWdbV6vXGZkD4GdJbtYc80SN9cmPOqRhZBRzOyDRqTFE"
+		"4MsbdKyQuhAWcvuMOjn-24qOTjVMR_P_uTC1uG6WPLcucxZyLnbb56zbKnEklW2SX0mQnCGewr-93a_vDaFT6Cp45MsF_OwFPRCMaS5CJg-"
+		"N5KY67UrVSr3s9nkuK9ZTQkyODHfyEUh9F_FhRCATGrb5G7_qHqBYvTvaPUXqzhhpCjN855Tocg7A24Hl0yMwM-XdasucW5xNdKjG_YCkis"
+		"HX7ax--JiF5GNYCO61eLFteO4THUg-3Z0r4OlGqlppyWo5X5tjcxOZCvBh7WDWfkxA48KFZPRv0nlKA";
+
+	auto verify = jwt::verify()
+		.allow_algorithm(jwt::algorithm::ps256(rsa_pub_key, "", "", ""))
+		.with_issuer("auth0");
+
+	auto decoded_token = jwt::decode(token);
+
+	verify.verify(decoded_token);
+}
+
+TEST(TokenTest, VerifyTokenPS256Fail) {
+	std::string token = "eyJhbGciOiJQUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.CJ4XjVWdbV6vXGZkD4GdJbtYc80SN9cmPOqRhZBRzOyDRqTFE"
+		"4MsbdKyQuhAWcvuMOjn-24qOTjVMR_P_uTC1uG6WPLcucxZyLnbb56zbKnEklW2SX0mQnCGewr-93a_vDaFT6Cp45MsF_OwFPRCMaS5CJg-"
+		"N5KY67UrVSr3s9nkuK9ZTQkyODHfyEUh9F_FhRCATGrb5G7_qHqBYvTvaPUXqzhhpCjN855Tocg7A24Hl0yMwM-XdasucW5xNdKjG_YCkis"
+		"HX7ax--JiF5GNYCO61eLFteO4THUg-3Z0r4OlGqlppyWo5X5tjcxOZCvBh7WDWfkxA48KFZPRv0nlKA";
+
+	auto verify = jwt::verify()
+		.allow_algorithm(jwt::algorithm::ps256(rsa_pub_key_invalid, "", "", ""))
+		.with_issuer("auth0");
+
 	auto decoded_token = jwt::decode(token);
 
 	ASSERT_THROW(verify.verify(decoded_token), jwt::signature_verification_exception);
