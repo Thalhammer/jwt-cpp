@@ -266,7 +266,7 @@ namespace jwt {
 				return res;
 			}
 			static std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw) {
-				if(raw[0] >= 0x80) {
+				if(static_cast<uint8_t>(raw[0]) >= 0x80) {
 					std::string str(1, 0x00);
 					str += raw;
 					return std::unique_ptr<BIGNUM, decltype(&BN_free)>(BN_bin2bn((const unsigned char*)str.data(), str.size(), nullptr), BN_free);
@@ -616,10 +616,25 @@ namespace jwt {
 				switch (str.size() % 4) {
 				case 1:
 					str += alphabet::base64url::fill();
+#ifdef __cpp_attributes
+#if __has_cpp_attribute(fallthrough)
+					[[fallthrough]];
+#endif
+#endif
 				case 2:
 					str += alphabet::base64url::fill();
+#ifdef __cpp_attributes
+#if __has_cpp_attribute(fallthrough)
+					[[fallthrough]];
+#endif
+#endif
 				case 3:
 					str += alphabet::base64url::fill();
+#ifdef __cpp_attributes  
+#if __has_cpp_attribute(fallthrough)
+					[[fallthrough]];
+#endif
+#endif
 				default:
 					break;
 				}
@@ -710,6 +725,7 @@ namespace jwt {
 	template<typename Clock>
 	class verifier {
 		struct algo_base {
+			virtual ~algo_base() = default;
 			virtual void verify(const std::string& data, const std::string& sig) = 0;
 		};
 		template<typename T>
