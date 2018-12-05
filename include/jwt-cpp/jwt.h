@@ -17,6 +17,10 @@
 #define OPENSSL10
 #endif
 
+#ifndef JWT_CLAIM_EXPLICIT
+#define JWT_CLAIM_EXPLICIT 0
+#endif
+
 namespace jwt {
 	using date = std::chrono::system_clock::time_point;
 
@@ -24,10 +28,10 @@ namespace jwt {
 		signature_verification_exception()
 			: std::runtime_error("signature verification failed")
 		{}
-		signature_verification_exception(const std::string& msg)
+		explicit signature_verification_exception(const std::string& msg)
 			: std::runtime_error(msg)
 		{}
-		signature_verification_exception(const char* msg)
+		explicit signature_verification_exception(const char* msg)
 			: std::runtime_error(msg)
 		{}
 	};
@@ -35,26 +39,26 @@ namespace jwt {
 		signature_generation_exception()
 			: std::runtime_error("signature generation failed")
 		{}
-		signature_generation_exception(const std::string& msg)
+		explicit signature_generation_exception(const std::string& msg)
 			: std::runtime_error(msg)
 		{}
-		signature_generation_exception(const char* msg)
+		explicit signature_generation_exception(const char* msg)
 			: std::runtime_error(msg)
 		{}
 	};
 	struct rsa_exception : public std::runtime_error {
-		rsa_exception(const std::string& msg)
+		explicit rsa_exception(const std::string& msg)
 			: std::runtime_error(msg)
 		{}
-		rsa_exception(const char* msg)
+		explicit rsa_exception(const char* msg)
 			: std::runtime_error(msg)
 		{}
 	};
 	struct ecdsa_exception : public std::runtime_error {
-		ecdsa_exception(const std::string& msg)
+		explicit ecdsa_exception(const std::string& msg)
 			: std::runtime_error(msg)
 		{}
-		ecdsa_exception(const char* msg)
+		explicit ecdsa_exception(const char* msg)
 			: std::runtime_error(msg)
 		{}
 	};
@@ -62,7 +66,7 @@ namespace jwt {
 		token_verification_exception()
 			: std::runtime_error("token verification failed")
 		{}
-		token_verification_exception(const std::string& msg)
+		explicit token_verification_exception(const std::string& msg)
 			: std::runtime_error("token verification failed: " + msg)
 		{}
 	};
@@ -273,30 +277,6 @@ namespace jwt {
 				}
 				return std::unique_ptr<BIGNUM, decltype(&BN_free)>(BN_bin2bn((const unsigned char*)raw.data(), raw.size(), nullptr), BN_free);
 			}
-			static std::string raw2der(const std::string& raw) {
-				std::string res(4, 0x00);
-				res[0] = 0x30;
-				res[2] = 0x02;
-				if (raw[0] & 0x80) {
-					res[3] = (char)(raw.size() / 2 + 1);
-					res += '\0';
-				}
-				else {
-					res[3] = (char)(raw.size() / 2);
-				}
-				res += raw.substr(0, raw.size() / 2);
-				if (raw[raw.size() / 2] & 0x80) {
-					res += 0x02;
-					res += (char)(raw.size() / 2 + 1);
-					res += '\0';
-				}
-				else {
-					res += (char)(raw.size() / 2);
-				}
-				res += raw.substr(raw.size() / 2);
-				res[1] = (char)(res.size() - 2);
-				return res;
-			}
 
 			std::string generate_hash(const std::string& data) const {
 #ifdef OPENSSL10
@@ -403,17 +383,17 @@ namespace jwt {
 		};
 
 		struct hs256 : public hmacsha {
-			hs256(std::string key)
+			explicit hs256(std::string key)
 				: hmacsha(std::move(key), EVP_sha256, "HS256")
 			{}
 		};
 		struct hs384 : public hmacsha {
-			hs384(std::string key)
+			explicit hs384(std::string key)
 				: hmacsha(std::move(key), EVP_sha384, "HS384")
 			{}
 		};
 		struct hs512 : public hmacsha {
-			hs512(std::string key)
+			explicit hs512(std::string key)
 				: hmacsha(std::move(key), EVP_sha512, "HS512")
 			{}
 		};
@@ -481,18 +461,33 @@ namespace jwt {
 		claim()
 			: val()
 		{}
+#if JWT_CLAIM_EXPLICIT
+		explicit claim(std::string s)
+			: val(std::move(s))
+		{}
+		explicit claim(const date& s)
+			: val(int64_t(std::chrono::system_clock::to_time_t(s)))
+		{}
+		explicit claim(const std::set<std::string>& s)
+			: val(picojson::array(s.cbegin(), s.cend()))
+		{}
+		explicit claim(const picojson::value& val)
+			: val(val)
+		{}
+#else
 		claim(std::string s)
 			: val(std::move(s))
 		{}
-		claim(date s)
+		claim(const date& s)
 			: val(int64_t(std::chrono::system_clock::to_time_t(s)))
 		{}
-		claim(std::set<std::string> s)
+		claim(const std::set<std::string>& s)
 			: val(picojson::array(s.cbegin(), s.cend()))
 		{}
 		claim(const picojson::value& val)
 			: val(val)
 		{}
+#endif
 
 		picojson::value to_json() const {
 			return val;
@@ -598,14 +593,14 @@ namespace jwt {
 		std::string signature;
 		std::string signature_base64;
 	public:
-		decoded_jwt(const std::string& token)
+		explicit decoded_jwt(const std::string& token)
 			: token(token)
 		{
 			auto hdr_end = token.find('.');
 			if (hdr_end == std::string::npos)
 				throw std::invalid_argument("invalid token supplied");
 			auto payload_end = token.find('.', hdr_end + 1);
-			if (hdr_end == std::string::npos)
+			if (payload_end == std::string::npos)
 				throw std::invalid_argument("invalid token supplied");
 			header = header_base64 = token.substr(0, hdr_end);
 			payload = payload_base64 = token.substr(hdr_end + 1, payload_end - hdr_end - 1);
@@ -653,7 +648,7 @@ namespace jwt {
 				if (!picojson::parse(val, str).empty())
 					throw std::runtime_error("Invalid json");
 
-				for (auto& e : val.get<picojson::object>()) { res.insert({ e.first, e.second }); }
+				for (auto& e : val.get<picojson::object>()) { res.insert({ e.first, claim(e.second) }); }
 
 				return res;
 			};
@@ -679,19 +674,19 @@ namespace jwt {
 		builder() {}
 		friend builder create();
 	public:
-		builder& set_header_claim(const std::string& id, claim c) { header_claims[id] = c; return *this; }
-		builder& set_payload_claim(const std::string& id, claim c) { payload_claims[id] = c; return *this; }
-		builder& set_algorithm(const std::string& str) { return set_header_claim("alg", str); }
-		builder& set_type(const std::string& str) { return set_header_claim("typ", str); }
-		builder& set_content_type(const std::string& str) { return set_header_claim("cty", str); }
-		builder& set_key_id(const std::string& str) { return set_header_claim("kid", str); }
-		builder& set_issuer(const std::string& str) { return set_payload_claim("iss", str); }
-		builder& set_subject(const std::string& str) { return set_payload_claim("sub", str); }
-		builder& set_audience(const std::set<std::string>& l) { return set_payload_claim("aud", l); }
-		builder& set_expires_at(date d) { return set_payload_claim("exp", d); }
-		builder& set_not_before(date d) { return set_payload_claim("nbf", d); }
-		builder& set_issued_at(date d) { return set_payload_claim("iat", d); }
-		builder& set_id(const std::string& str) { return set_payload_claim("jti", str); }
+		builder& set_header_claim(const std::string& id, claim c) { header_claims[id] = std::move(c); return *this; }
+		builder& set_payload_claim(const std::string& id, claim c) { payload_claims[id] = std::move(c); return *this; }
+		builder& set_algorithm(const std::string& str) { return set_header_claim("alg", claim(str)); }
+		builder& set_type(const std::string& str) { return set_header_claim("typ", claim(str)); }
+		builder& set_content_type(const std::string& str) { return set_header_claim("cty", claim(str)); }
+		builder& set_key_id(const std::string& str) { return set_header_claim("kid", claim(str)); }
+		builder& set_issuer(const std::string& str) { return set_payload_claim("iss", claim(str)); }
+		builder& set_subject(const std::string& str) { return set_payload_claim("sub", claim(str)); }
+		builder& set_audience(const std::set<std::string>& l) { return set_payload_claim("aud", claim(l)); }
+		builder& set_expires_at(const date& d) { return set_payload_claim("exp", claim(d)); }
+		builder& set_not_before(const date& d) { return set_payload_claim("nbf", claim(d)); }
+		builder& set_issued_at(const date& d) { return set_payload_claim("iat", claim(d)); }
+		builder& set_id(const std::string& str) { return set_payload_claim("jti", claim(str)); }
 
 		template<typename T>
 		std::string sign(const T& algo) {
@@ -731,8 +726,8 @@ namespace jwt {
 		template<typename T>
 		struct algo : public algo_base {
 			T alg;
-			algo(T a) : alg(a) {}
-			virtual void verify(const std::string& data, const std::string& sig) {
+			explicit algo(T a) : alg(a) {}
+			virtual void verify(const std::string& data, const std::string& sig) override {
 				alg.verify(data, sig);
 			}
 		};
@@ -742,16 +737,16 @@ namespace jwt {
 		Clock clock;
 		std::unordered_map<std::string, std::shared_ptr<algo_base>> algs;
 	public:
-		verifier(Clock c) : clock(c) {}
+		explicit verifier(Clock c) : clock(c) {}
 
 		verifier& leeway(size_t leeway) { default_leeway = leeway; return *this; }
-		verifier& expires_at_leeway(size_t leeway) { return with_claim("exp", std::chrono::system_clock::from_time_t(leeway)); }
-		verifier& not_before_leeway(size_t leeway) { return with_claim("nbf", std::chrono::system_clock::from_time_t(leeway)); }
-		verifier& issued_at_leeway(size_t leeway) { return with_claim("iat", std::chrono::system_clock::from_time_t(leeway)); }
-		verifier& with_issuer(const std::string& iss) { return with_claim("iss", iss); }
-		verifier& with_subject(const std::string& sub) { return with_claim("sub", sub); }
-		verifier& with_audience(const std::set<std::string>& aud) { return with_claim("aud", aud); }
-		verifier& with_id(const std::string& id) { return with_claim("jti", id); }
+		verifier& expires_at_leeway(size_t leeway) { return with_claim("exp", claim(std::chrono::system_clock::from_time_t(leeway))); }
+		verifier& not_before_leeway(size_t leeway) { return with_claim("nbf", claim(std::chrono::system_clock::from_time_t(leeway))); }
+		verifier& issued_at_leeway(size_t leeway) { return with_claim("iat", claim(std::chrono::system_clock::from_time_t(leeway))); }
+		verifier& with_issuer(const std::string& iss) { return with_claim("iss", claim(iss)); }
+		verifier& with_subject(const std::string& sub) { return with_claim("sub", claim(sub)); }
+		verifier& with_audience(const std::set<std::string>& aud) { return with_claim("aud", claim(aud)); }
+		verifier& with_id(const std::string& id) { return with_claim("jti", claim(id)); }
 		verifier& with_claim(const std::string& name, claim c) { claims[name] = c; return *this; }
 
 		template<typename Algorithm>

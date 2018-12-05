@@ -65,6 +65,14 @@ extern "C" {
 #endif
 #endif // PICOJSON_USE_RVALUE_REFERENCE
 
+#ifndef PICOJSON_NOEXCEPT
+#if PICOJSON_USE_RVALUE_REFERENCE
+#define PICOJSON_NOEXCEPT noexcept
+#else
+#define PICOJSON_NOEXCEPT throw()
+#endif
+#endif
+
 // experimental support for int64_t (see README.mkdn for detail)
 #ifdef PICOJSON_USE_INT64
 #define __STDC_FORMAT_MACROS
@@ -160,10 +168,10 @@ public:
   value(const value &x);
   value &operator=(const value &x);
 #if PICOJSON_USE_RVALUE_REFERENCE
-  value(value &&x) throw();
-  value &operator=(value &&x) throw();
+  value(value &&x) PICOJSON_NOEXCEPT;
+  value &operator=(value &&x) PICOJSON_NOEXCEPT;
 #endif
-  void swap(value &x) throw();
+  void swap(value &x) PICOJSON_NOEXCEPT;
   template <typename T> bool is() const;
   template <typename T> const T &get() const;
   template <typename T> T &get();
@@ -231,7 +239,7 @@ inline value::value(double n) : type_(number_type), u_() {
   if (
 #ifdef _MSC_VER
       !_finite(n)
-#elif __cplusplus >= 201103L || !(defined(isnan) && defined(isinf))
+#elif __cplusplus >= 201103L
       std::isnan(n) || std::isinf(n)
 #else
       isnan(n) || isinf(n)
@@ -320,15 +328,15 @@ inline value &value::operator=(const value &x) {
 }
 
 #if PICOJSON_USE_RVALUE_REFERENCE
-inline value::value(value &&x) throw() : type_(null_type), u_() {
+inline value::value(value &&x) PICOJSON_NOEXCEPT : type_(null_type), u_() {
   swap(x);
 }
-inline value &value::operator=(value &&x) throw() {
+inline value &value::operator=(value &&x) PICOJSON_NOEXCEPT {
   swap(x);
   return *this;
 }
 #endif
-inline void value::swap(value &x) throw() {
+inline void value::swap(value &x) PICOJSON_NOEXCEPT {
   std::swap(type_, x.type_);
   std::swap(u_, x.u_);
 }
