@@ -307,3 +307,5 @@ test
 *.o
 *.o.d
 .vscode
+
+docs

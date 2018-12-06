@@ -118,6 +118,16 @@ TEST(TokenTest, CreateTokenES256) {
 	ASSERT_NO_THROW(jwt::verify().allow_algorithm(jwt::algorithm::es256(ecdsa_pub_key, "", "", "")).verify(decoded));
 }
 
+TEST(TokenTest, CreateTokenES256NoPrivate) {
+	
+	ASSERT_THROW([](){
+		auto token = jwt::create()
+			.set_issuer("auth0")
+			.set_type("JWS")
+			.sign(jwt::algorithm::es256(ecdsa_pub_key, "", "", ""));
+	}(), jwt::signature_generation_exception);
+}
+
 TEST(TokenTest, VerifyTokenRS256) {
 	std::string token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
 		"HAZCTQxa1Q8NppnpYV-hlqxh-X3Bb0JOePTGzjynpNZoJh2aHZD-GKpZt7OO1Zp8AFWPZ3p8Cahq8536fD8RiBES9jRsvChZvOqA7gMcFc4"
