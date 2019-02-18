@@ -914,7 +914,11 @@ namespace jwt {
 		 * \throws std::runtime_error If claim was not present
 		 * \throws std::bad_cast Claim was present but not a set (Should not happen in a valid token)
 		 */
-		std::set<std::string> get_audience() const { return get_payload_claim("aud").as_set(); }
+		std::set<std::string> get_audience() const { 
+			auto aud = get_payload_claim("aud");
+			if(aud.get_type() == jwt::claim::type::string) return { aud.as_string()};
+			else return aud.as_set();
+		}
 		/**
 		 * Get expires claim
 		 * \return expires as a date in utc
