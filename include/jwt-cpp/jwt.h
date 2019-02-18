@@ -1245,6 +1245,12 @@ namespace jwt {
 		 */
 		builder& set_audience(const std::set<std::string>& l) { return set_payload_claim("aud", claim(l)); }
 		/**
+		 * Set audience claim
+		 * \param aud Single audience
+		 * \return *this to allow for method chaining
+		 */
+		builder& set_audience(const std::string& aud) { return set_payload_claim("aud", claim(aud)); }
+		/**
 		 * Set expires at claim
 		 * \param d Expires time
 		 * \return *this to allow for method chaining

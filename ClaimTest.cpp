@@ -23,3 +23,11 @@ TEST(ClaimTest, AudienceAsString) {
 	ASSERT_EQ(1, aud.size());
 	ASSERT_EQ("test", *aud.begin());
 }
+
+TEST(ClaimTest, SetAudienceAsString) {
+	auto token = jwt::create()
+		.set_type("JWT")
+		.set_audience("test")
+		.sign(jwt::algorithm::hs256("test"));
+	ASSERT_EQ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0.ny5Fa0vzAg7tNL95KWg_ecBNd3XP3tdAzq0SFA6diY4", token);
+}
