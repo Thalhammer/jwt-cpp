@@ -1135,21 +1135,21 @@ namespace jwt {
 				switch (str.size() % 4) {
 				case 1:
 					str += alphabet::base64url::fill();
-#ifdef __cpp_attributes
+#ifdef __has_cpp_attribute
 #if __has_cpp_attribute(fallthrough)
 					[[fallthrough]];
 #endif
 #endif
 				case 2:
 					str += alphabet::base64url::fill();
-#ifdef __cpp_attributes
+#ifdef __has_cpp_attribute
 #if __has_cpp_attribute(fallthrough)
 					[[fallthrough]];
 #endif
 #endif
 				case 3:
 					str += alphabet::base64url::fill();
-#ifdef __cpp_attributes  
+#ifdef __has_cpp_attribute
 #if __has_cpp_attribute(fallthrough)
 					[[fallthrough]];
 #endif
