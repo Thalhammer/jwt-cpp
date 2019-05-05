@@ -82,12 +82,7 @@ namespace jwt {
 #endif
 			std::unique_ptr<BIO, decltype(&BIO_free_all)> keybio(BIO_new(BIO_s_mem()), BIO_free_all);
 
-			std::unique_ptr<X509, decltype(&X509_free)> cert(PEM_read_bio_X509(certbio.get(), NULL, [](char *buf, int size, int rwflag, void *userdata)->int{
-				auto mpw = reinterpret_cast<const std::string*>(userdata);
-				size = static_cast<size_t>(size) > mpw->size() ? mpw->size() : size;
-				memcpy(buf, mpw->data(), size);
-				return size;
-			}, const_cast<void*>(reinterpret_cast<const void*>(&pw))), X509_free);
+			std::unique_ptr<X509, decltype(&X509_free)> cert(PEM_read_bio_X509(certbio.get(), nullptr, nullptr, const_cast<char*>(pw.c_str())), X509_free);
 			if (!cert) throw rsa_exception("Error loading cert into memory");
 			std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)> key(X509_get_pubkey(cert.get()), EVP_PKEY_free);
 			if(!key) throw rsa_exception("Error getting public key from certificate");
