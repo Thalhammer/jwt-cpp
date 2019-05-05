@@ -74,13 +74,19 @@ namespace jwt {
 	namespace helper {
 		inline
 		std::string extract_pubkey_from_cert(const std::string& certstr, const std::string& pw = "") {
-			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(BIO_new_mem_buf((char *)certstr.data(), certstr.size()), BIO_free_all);
+			// TODO: Cannot find the exact version this change happended
+#if OPENSSL_VERSION_NUMBER <= 0x1000114fL
+			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(BIO_new_mem_buf(const_cast<char*>(certstr.data()), certstr.size()), BIO_free_all);
+#else
+			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(BIO_new_mem_buf(certstr.data(), certstr.size()), BIO_free_all);
+#endif
 			std::unique_ptr<BIO, decltype(&BIO_free_all)> keybio(BIO_new(BIO_s_mem()), BIO_free_all);
 
 			std::unique_ptr<X509, decltype(&X509_free)> cert(PEM_read_bio_X509(certbio.get(), NULL, [](char *buf, int size, int rwflag, void *userdata)->int{
-				auto mpw = reinterpret_cast<const std::string*>(userdata)->substr(0, size);
-				memcpy(buf, mpw.data(), mpw.size());
-				return mpw.size();
+				auto mpw = reinterpret_cast<const std::string*>(userdata);
+				size = static_cast<size_t>(size) > mpw->size() ? mpw->size() : size;
+				memcpy(buf, mpw->data(), size);
+				return size;
 			}, const_cast<void*>(reinterpret_cast<const void*>(&pw))), X509_free);
 			if (!cert) throw rsa_exception("Error loading cert into memory");
 			std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)> key(X509_get_pubkey(cert.get()), EVP_PKEY_free);
