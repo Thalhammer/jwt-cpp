@@ -197,33 +197,31 @@ namespace jwt {
 			rsa(const std::string& public_key, const std::string& private_key, const std::string& public_key_password, const std::string& private_key_password, const EVP_MD*(*md)(), const std::string& name)
 				: md(md), alg_name(name)
 			{
-				
 				std::unique_ptr<BIO, decltype(&BIO_free_all)> pubkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
 				
-				if(public_key.substr(0, 27) == "-----BEGIN CERTIFICATE-----") {
-					auto pkey = helper::extract_pubkey_from_cert(public_key, public_key_password);
-					if ((size_t)BIO_write(pubkey_bio.get(), pkey.data(), pkey.size()) != pkey.size())
-						throw rsa_exception("failed to load public key: bio_write failed");
-				} else  {
-					if ((size_t)BIO_write(pubkey_bio.get(), public_key.data(), public_key.size()) != public_key.size())
-						throw rsa_exception("failed to load public key: bio_write failed");
+				if(!public_key.empty()) {
+					if(public_key.substr(0, 27) == "-----BEGIN CERTIFICATE-----") {
+						auto pkey = helper::extract_pubkey_from_cert(public_key, public_key_password);
+						if ((size_t)BIO_write(pubkey_bio.get(), pkey.data(), pkey.size()) != pkey.size())
+							throw rsa_exception("failed to load public key: bio_write failed");
+					} else {
+						if ((size_t)BIO_write(pubkey_bio.get(), public_key.data(), public_key.size()) != public_key.size())
+							throw rsa_exception("failed to load public key: bio_write failed");
+					}
+					pkey.reset(PEM_read_bio_PUBKEY(pubkey_bio.get(), nullptr, nullptr, (void*)public_key_password.c_str()), EVP_PKEY_free);
+					if (!pkey)
+						throw rsa_exception("failed to load public key: PEM_read_bio_PUBKEY failed");
 				}
-				pkey.reset(PEM_read_bio_PUBKEY(pubkey_bio.get(), nullptr, nullptr, (void*)public_key_password.c_str()), EVP_PKEY_free);
-				if (!pkey)
-					throw rsa_exception("failed to load public key: PEM_read_bio_PUBKEY failed");
-
 				if (!private_key.empty()) {
 					std::unique_ptr<BIO, decltype(&BIO_free_all)> privkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
 					if ((size_t)BIO_write(privkey_bio.get(), private_key.data(), private_key.size()) != private_key.size())
 						throw rsa_exception("failed to load private key: bio_write failed");
-					RSA* privkey = PEM_read_bio_RSAPrivateKey(privkey_bio.get(), nullptr, nullptr, (void*)private_key_password.c_str());
-					if (privkey == nullptr)
-						throw rsa_exception("failed to load private key: PEM_read_bio_RSAPrivateKey failed");
-					if (EVP_PKEY_assign_RSA(pkey.get(), privkey) == 0) {
-						RSA_free(privkey);
-						throw rsa_exception("failed to load private key: EVP_PKEY_assign_RSA failed");
-					}
+					pkey.reset(PEM_read_bio_PrivateKey(privkey_bio.get(), nullptr, nullptr, const_cast<char*>(private_key_password.c_str())), EVP_PKEY_free);
+					if (!pkey)
+						throw rsa_exception("failed to load private key: PEM_read_bio_PrivateKey failed");
 				}
+				if(!pkey)
+					throw rsa_exception("at least one of public or private key need to be present");
 			}
 			/**
 			 * Sign jwt data
@@ -306,7 +304,7 @@ namespace jwt {
 			ecdsa(const std::string& public_key, const std::string& private_key, const std::string& public_key_password, const std::string& private_key_password, const EVP_MD*(*md)(), const std::string& name)
 				: md(md), alg_name(name)
 			{
-				if (private_key.empty()) {
+				if (!public_key.empty()) {
 					std::unique_ptr<BIO, decltype(&BIO_free_all)> pubkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
 					if(public_key.substr(0, 27) == "-----BEGIN CERTIFICATE-----") {
 						auto pkey = helper::extract_pubkey_from_cert(public_key, public_key_password);
@@ -320,14 +318,18 @@ namespace jwt {
 					pkey.reset(PEM_read_bio_EC_PUBKEY(pubkey_bio.get(), nullptr, nullptr, (void*)public_key_password.c_str()), EC_KEY_free);
 					if (!pkey)
 						throw ecdsa_exception("failed to load public key: PEM_read_bio_EC_PUBKEY failed");
-				} else {
+				}
+
+				if (!private_key.empty()) {
 					std::unique_ptr<BIO, decltype(&BIO_free_all)> privkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
 					if ((size_t)BIO_write(privkey_bio.get(), private_key.data(), private_key.size()) != private_key.size())
-						throw ecdsa_exception("failed to load private key: bio_write failed");
-					pkey.reset(PEM_read_bio_ECPrivateKey(privkey_bio.get(), nullptr, nullptr, (void*)private_key_password.c_str()), EC_KEY_free);
+						throw rsa_exception("failed to load private key: bio_write failed");
+					pkey.reset(PEM_read_bio_ECPrivateKey(privkey_bio.get(), nullptr, nullptr, const_cast<char*>(private_key_password.c_str())), EC_KEY_free);
 					if (!pkey)
-						throw ecdsa_exception("failed to load private key: PEM_read_bio_RSAPrivateKey failed");
+						throw rsa_exception("failed to load private key: PEM_read_bio_ECPrivateKey failed");
 				}
+				if(!pkey)
+					throw rsa_exception("at least one of public or private key need to be present");
 
 				if(EC_KEY_check_key(pkey.get()) == 0)
 					throw ecdsa_exception("failed to load key: key is invalid");
@@ -470,31 +472,32 @@ namespace jwt {
 			pss(const std::string& public_key, const std::string& private_key, const std::string& public_key_password, const std::string& private_key_password, const EVP_MD*(*md)(), const std::string& name)
 				: md(md), alg_name(name)
 			{
-				std::unique_ptr<BIO, decltype(&BIO_free_all)> pubkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
-				if(public_key.substr(0, 27) == "-----BEGIN CERTIFICATE-----") {
-					auto pkey = helper::extract_pubkey_from_cert(public_key, public_key_password);
-					if ((size_t)BIO_write(pubkey_bio.get(), pkey.data(), pkey.size()) != pkey.size())
-						throw rsa_exception("failed to load public key: bio_write failed");
-				} else  {
-					if ((size_t)BIO_write(pubkey_bio.get(), public_key.data(), public_key.size()) != public_key.size())
-						throw rsa_exception("failed to load public key: bio_write failed");
+				if(!public_key.empty()) {
+					std::unique_ptr<BIO, decltype(&BIO_free_all)> pubkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
+					if(public_key.substr(0, 27) == "-----BEGIN CERTIFICATE-----") {
+						auto pkey = helper::extract_pubkey_from_cert(public_key, public_key_password);
+						if ((size_t)BIO_write(pubkey_bio.get(), pkey.data(), pkey.size()) != pkey.size())
+							throw rsa_exception("failed to load public key: bio_write failed");
+					} else  {
+						if ((size_t)BIO_write(pubkey_bio.get(), public_key.data(), public_key.size()) != public_key.size())
+							throw rsa_exception("failed to load public key: bio_write failed");
+					}
+					pkey.reset(PEM_read_bio_PUBKEY(pubkey_bio.get(), nullptr, nullptr, (void*)public_key_password.c_str()), EVP_PKEY_free);
+					if (!pkey)
+						throw rsa_exception("failed to load public key: PEM_read_bio_PUBKEY failed");
 				}
-				pkey.reset(PEM_read_bio_PUBKEY(pubkey_bio.get(), nullptr, nullptr, (void*)public_key_password.c_str()), EVP_PKEY_free);
-				if (!pkey)
-					throw rsa_exception("failed to load public key: PEM_read_bio_PUBKEY failed");
-
+				
 				if (!private_key.empty()) {
 					std::unique_ptr<BIO, decltype(&BIO_free_all)> privkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
 					if ((size_t)BIO_write(privkey_bio.get(), private_key.data(), private_key.size()) != private_key.size())
 						throw rsa_exception("failed to load private key: bio_write failed");
-					RSA* privkey = PEM_read_bio_RSAPrivateKey(privkey_bio.get(), nullptr, nullptr, (void*)private_key_password.c_str());
-					if (privkey == nullptr)
-						throw rsa_exception("failed to load private key: PEM_read_bio_RSAPrivateKey failed");
-					if (EVP_PKEY_assign_RSA(pkey.get(), privkey) == 0) {
-						RSA_free(privkey);
-						throw rsa_exception("failed to load private key: EVP_PKEY_assign_RSA failed");
-					}
+					pkey.reset(PEM_read_bio_PrivateKey(privkey_bio.get(), nullptr, nullptr, const_cast<char*>(private_key_password.c_str())), EVP_PKEY_free);
+					if (!pkey)
+						throw rsa_exception("failed to load private key: PEM_read_bio_PrivateKey failed");
 				}
+
+				if(!pkey)
+					throw rsa_exception("at least one of public or private key need to be present");
 			}
 			/**
 			 * Sign jwt data

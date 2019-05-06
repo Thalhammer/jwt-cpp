@@ -158,6 +158,22 @@ TEST(TokenTest, VerifyTokenRS256PublicOnly) {
 	verify.verify(decoded_token);
 }
 
+TEST(TokenTest, VerifyTokenRS256PrivateOnly) {
+	std::string token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
+		"HAZCTQxa1Q8NppnpYV-hlqxh-X3Bb0JOePTGzjynpNZoJh2aHZD-GKpZt7OO1Zp8AFWPZ3p8Cahq8536fD8RiBES9jRsvChZvOqA7gMcFc4"
+		"YD0iZhNIcI7a654u5yPYyTlf5kjR97prCf_OXWRn-bYY74zna4p_bP9oWCL4BkaoRcMxi-IR7kmVcCnvbYqyIrKloXP2qPO442RBGqU7Ov9"
+		"sGQxiVqtRHKXZR9RbfvjrErY1KGiCp9M5i2bsUHadZEY44FE2jiOmx-uc2z5c05CCXqVSpfCjWbh9gQ";
+
+	auto verify = jwt::verify()
+		.allow_algorithm(jwt::algorithm::rs256("", rsa_priv_key, "", ""))
+		.with_issuer("auth0");
+
+	auto decoded_token = jwt::decode(token);
+
+	verify.verify(decoded_token);
+}
+
+
 TEST(TokenTest, VerifyTokenRS256Fail) {
 	std::string token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
 		"HAZCTQxa1Q8NppnpYV-hlqxh-X3Bb0JOePTGzjynpNZoJh2aHZD-GKpZt7OO1Zp8AFWPZ3p8Cahq8536fD8RiBES9jRsvChZvOqA7gMcFc4"
@@ -194,6 +210,20 @@ TEST(TokenTest, VerifyTokenRS512PublicOnly) {
 
 	auto verify = jwt::verify()
 		.allow_algorithm(jwt::algorithm::rs512(rsa512_pub_key, "", "", ""))
+		.with_issuer("auth0");
+
+	auto decoded_token = jwt::decode(token);
+
+	verify.verify(decoded_token);
+}
+
+TEST(TokenTest, VerifyTokenRS512PrivateOnly) {
+	std::string token = "eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.GZhnjtsvBl2_KDSxg4JW6xnmNjr2mWhYSZ"
+		"SSQyLKvI0TK86sJKchkt_HDy2IC5l5BGRhq_Xv9pHdA1umidQZG3a7gWvHsujqybCBgBraMTd1wJrCl4QxFg2RYHhHbRqb9BnPJgFD_vryd4"
+		"GBhfGgejPBCBlGrQtqFGFdHHOjNHY";
+
+	auto verify = jwt::verify()
+		.allow_algorithm(jwt::algorithm::rs512("", rsa512_priv_key, "", ""))
 		.with_issuer("auth0");
 
 	auto decoded_token = jwt::decode(token);
