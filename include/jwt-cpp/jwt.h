@@ -93,6 +93,35 @@ namespace jwt {
 			std::string res(ptr, len);
 			return res;
 		}
+
+		inline
+		std::shared_ptr<EVP_PKEY> load_public_key_from_string(const std::string& key, const std::string& password = "") {
+			std::unique_ptr<BIO, decltype(&BIO_free_all)> pubkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
+			if(key.substr(0, 27) == "-----BEGIN CERTIFICATE-----") {
+				auto pkey = helper::extract_pubkey_from_cert(key, password);
+				if ((size_t)BIO_write(pubkey_bio.get(), pkey.data(), pkey.size()) != pkey.size())
+					throw rsa_exception("failed to load public key: bio_write failed");
+			} else {
+				if ((size_t)BIO_write(pubkey_bio.get(), key.data(), key.size()) != key.size())
+					throw rsa_exception("failed to load public key: bio_write failed");
+			}
+			
+			std::shared_ptr<EVP_PKEY> pkey(PEM_read_bio_PUBKEY(pubkey_bio.get(), nullptr, nullptr, (void*)password.c_str()), EVP_PKEY_free);
+			if (!pkey)
+				throw rsa_exception("failed to load public key: PEM_read_bio_PUBKEY failed");
+			return pkey;
+		}
+
+		inline
+		std::shared_ptr<EVP_PKEY> load_private_key_from_string(const std::string& key, const std::string& password = "") {
+			std::unique_ptr<BIO, decltype(&BIO_free_all)> privkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
+			if ((size_t)BIO_write(privkey_bio.get(), key.data(), key.size()) != key.size())
+				throw rsa_exception("failed to load private key: bio_write failed");
+			std::shared_ptr<EVP_PKEY> pkey(PEM_read_bio_PrivateKey(privkey_bio.get(), nullptr, nullptr, const_cast<char*>(password.c_str())), EVP_PKEY_free);
+			if (!pkey)
+				throw rsa_exception("failed to load private key: PEM_read_bio_PrivateKey failed");
+			return pkey;
+		}
 	}
 
 	namespace algorithm {
@@ -197,30 +226,11 @@ namespace jwt {
 			rsa(const std::string& public_key, const std::string& private_key, const std::string& public_key_password, const std::string& private_key_password, const EVP_MD*(*md)(), const std::string& name)
 				: md(md), alg_name(name)
 			{
-				std::unique_ptr<BIO, decltype(&BIO_free_all)> pubkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
-				
-				if(!public_key.empty()) {
-					if(public_key.substr(0, 27) == "-----BEGIN CERTIFICATE-----") {
-						auto pkey = helper::extract_pubkey_from_cert(public_key, public_key_password);
-						if ((size_t)BIO_write(pubkey_bio.get(), pkey.data(), pkey.size()) != pkey.size())
-							throw rsa_exception("failed to load public key: bio_write failed");
-					} else {
-						if ((size_t)BIO_write(pubkey_bio.get(), public_key.data(), public_key.size()) != public_key.size())
-							throw rsa_exception("failed to load public key: bio_write failed");
-					}
-					pkey.reset(PEM_read_bio_PUBKEY(pubkey_bio.get(), nullptr, nullptr, (void*)public_key_password.c_str()), EVP_PKEY_free);
-					if (!pkey)
-						throw rsa_exception("failed to load public key: PEM_read_bio_PUBKEY failed");
-				}
 				if (!private_key.empty()) {
-					std::unique_ptr<BIO, decltype(&BIO_free_all)> privkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
-					if ((size_t)BIO_write(privkey_bio.get(), private_key.data(), private_key.size()) != private_key.size())
-						throw rsa_exception("failed to load private key: bio_write failed");
-					pkey.reset(PEM_read_bio_PrivateKey(privkey_bio.get(), nullptr, nullptr, const_cast<char*>(private_key_password.c_str())), EVP_PKEY_free);
-					if (!pkey)
-						throw rsa_exception("failed to load private key: PEM_read_bio_PrivateKey failed");
-				}
-				if(!pkey)
+					pkey = helper::load_private_key_from_string(private_key, private_key_password);
+				} else if(!public_key.empty()) {
+					pkey = helper::load_public_key_from_string(public_key, public_key_password);
+				} else
 					throw rsa_exception("at least one of public or private key need to be present");
 			}
 			/**
@@ -472,31 +482,11 @@ namespace jwt {
 			pss(const std::string& public_key, const std::string& private_key, const std::string& public_key_password, const std::string& private_key_password, const EVP_MD*(*md)(), const std::string& name)
 				: md(md), alg_name(name)
 			{
-				if(!public_key.empty()) {
-					std::unique_ptr<BIO, decltype(&BIO_free_all)> pubkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
-					if(public_key.substr(0, 27) == "-----BEGIN CERTIFICATE-----") {
-						auto pkey = helper::extract_pubkey_from_cert(public_key, public_key_password);
-						if ((size_t)BIO_write(pubkey_bio.get(), pkey.data(), pkey.size()) != pkey.size())
-							throw rsa_exception("failed to load public key: bio_write failed");
-					} else  {
-						if ((size_t)BIO_write(pubkey_bio.get(), public_key.data(), public_key.size()) != public_key.size())
-							throw rsa_exception("failed to load public key: bio_write failed");
-					}
-					pkey.reset(PEM_read_bio_PUBKEY(pubkey_bio.get(), nullptr, nullptr, (void*)public_key_password.c_str()), EVP_PKEY_free);
-					if (!pkey)
-						throw rsa_exception("failed to load public key: PEM_read_bio_PUBKEY failed");
-				}
-				
 				if (!private_key.empty()) {
-					std::unique_ptr<BIO, decltype(&BIO_free_all)> privkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
-					if ((size_t)BIO_write(privkey_bio.get(), private_key.data(), private_key.size()) != private_key.size())
-						throw rsa_exception("failed to load private key: bio_write failed");
-					pkey.reset(PEM_read_bio_PrivateKey(privkey_bio.get(), nullptr, nullptr, const_cast<char*>(private_key_password.c_str())), EVP_PKEY_free);
-					if (!pkey)
-						throw rsa_exception("failed to load private key: PEM_read_bio_PrivateKey failed");
-				}
-
-				if(!pkey)
+					pkey = helper::load_private_key_from_string(private_key, private_key_password);
+				} else if(!public_key.empty()) {
+					pkey = helper::load_public_key_from_string(public_key, public_key_password);
+				} else
 					throw rsa_exception("at least one of public or private key need to be present");
 			}
 			/**
