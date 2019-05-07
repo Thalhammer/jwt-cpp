@@ -57,15 +57,11 @@ auto token = jwt::create()
 Here is a simple example of creating a token that will expire in 2 hours:
 
 ```c++
-
-	// Note to @Thalhammer: please replace with a better example if this is not a good way
-        auto token = jwt::create()
-         .set_issuer("auth0")
-         .set_issued_at(jwt::date(std::chrono::system_clock::now()))
-         .set_expires_at(jwt::date(std::chrono::system_clock::now()+ std::chrono::seconds{3600}))
-         .sign(jwt::algorithm::hs256{"secret"}
-
-
+auto token = jwt::create()
+	.set_issuer("auth0")
+	.set_issued_at(std::chrono::system_clock::now())
+	.set_expires_at(std::chrono::system_clock::now() + std::chrono::seconds{3600})
+	.sign(jwt::algorithm::hs256{"secret"});
 ```
 
 ## Contributing
@@ -85,11 +81,13 @@ In order to build the test cases you also need
 ## Troubleshooting
 #### Expired tokens
 If you are generating tokens that seem to immediately expire, you are likely not using UTC. Specifically,
-if you use `get_time` to get the current time, it likely uses localtime, while this library uses UTC, which may be why your token is immediately expiring. Please see example above on the right way to use current time.
+if you use `get_time` to get the current time, it likely uses localtime, while this library uses UTC,
+which may be why your token is immediately expiring. Please see example above on the right way to use current time.
 
 #### Missing _HMAC amd _EVP_sha256 symbols on Mac
 There seems to exists a problem with the included openssl library of MacOS. Make sure you link to one provided by brew.
 See [here](https://github.com/Thalhammer/jwt-cpp/issues/6) for more details.
+
 #### Building on windows fails with syntax errors
 The header "Windows.h", which is often included in windowsprojects, defines macros for MIN and MAX which screw up std::numeric_limits.
 See [here](https://github.com/Thalhammer/jwt-cpp/issues/5) for more details. To fix this do one of the following things:
