@@ -54,7 +54,7 @@ auto token = jwt::create()
 	.sign(jwt::algorithm::hs256{"secret"});
 ```
 
-Here is a simple example of creating a token that will expire in 2 hours:
+Here is a simple example of creating a token that will expire in one hour:
 
 ```c++
 auto token = jwt::create()
