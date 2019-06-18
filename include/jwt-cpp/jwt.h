@@ -98,8 +98,8 @@ namespace jwt {
 		std::shared_ptr<EVP_PKEY> load_public_key_from_string(const std::string& key, const std::string& password = "") {
 			std::unique_ptr<BIO, decltype(&BIO_free_all)> pubkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
 			if(key.substr(0, 27) == "-----BEGIN CERTIFICATE-----") {
-				auto pkey = helper::extract_pubkey_from_cert(key, password);
-				if ((size_t)BIO_write(pubkey_bio.get(), pkey.data(), pkey.size()) != pkey.size())
+				auto epkey = helper::extract_pubkey_from_cert(key, password);
+				if ((size_t)BIO_write(pubkey_bio.get(), epkey.data(), epkey.size()) != epkey.size())
 					throw rsa_exception("failed to load public key: bio_write failed");
 			} else {
 				if ((size_t)BIO_write(pubkey_bio.get(), key.data(), key.size()) != key.size())
@@ -280,8 +280,9 @@ namespace jwt {
 					throw signature_verification_exception("failed to verify signature: VerifyInit failed");
 				if (!EVP_VerifyUpdate(ctx.get(), data.data(), data.size()))
 					throw signature_verification_exception("failed to verify signature: VerifyUpdate failed");
-				if (!EVP_VerifyFinal(ctx.get(), (const unsigned char*)signature.data(), signature.size(), pkey.get()))
-					throw signature_verification_exception();
+				auto res = EVP_VerifyFinal(ctx.get(), (const unsigned char*)signature.data(), signature.size(), pkey.get());
+				if (res != 1)
+					throw signature_verification_exception("evp verify final failed: " + std::to_string(res) + " " + ERR_error_string(ERR_get_error(), NULL));
 			}
 			/**
 			 * Returns the algorithm name provided to the constructor
@@ -317,8 +318,8 @@ namespace jwt {
 				if (!public_key.empty()) {
 					std::unique_ptr<BIO, decltype(&BIO_free_all)> pubkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
 					if(public_key.substr(0, 27) == "-----BEGIN CERTIFICATE-----") {
-						auto pkey = helper::extract_pubkey_from_cert(public_key, public_key_password);
-						if ((size_t)BIO_write(pubkey_bio.get(), pkey.data(), pkey.size()) != pkey.size())
+						auto epkey = helper::extract_pubkey_from_cert(public_key, public_key_password);
+						if ((size_t)BIO_write(pubkey_bio.get(), epkey.data(), epkey.size()) != epkey.size())
 							throw ecdsa_exception("failed to load public key: bio_write failed");
 					} else  {
 						if ((size_t)BIO_write(pubkey_bio.get(), public_key.data(), public_key.size()) != public_key.size())
