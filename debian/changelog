@@ -1,0 +1,5 @@
+jwt-cpp (0.3.0) stable; urgency=medium
+
+  * Initial Release.
+
+ -- Dominik Thalhammer <dominik@thalhammer.it>  Wed, 19 Jun 2019 22:32:23 +0200

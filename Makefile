@@ -12,7 +12,7 @@ CFLAGS =
 LINKFLAGS = -lcrypto -lgtest -lpthread
 
 ifeq ($(PREFIX),)
-    PREFIX := /usr/local
+    PREFIX := /usr
 endif
 
 OUTFILE = test
