@@ -11,9 +11,13 @@ CXXFLAGS = -std=c++11
 CFLAGS = 
 LINKFLAGS = -lcrypto -lgtest -lpthread
 
+ifeq ($(PREFIX),)
+    PREFIX := /usr/local
+endif
+
 OUTFILE = test
 
-.PHONY: clean debug release
+.PHONY: clean debug release check install
 
 all: debug
 
@@ -53,5 +57,14 @@ clean:
 	@rm -f $(OBJ)
 	@echo Removing dependency files
 	@rm -rf $(DEP_DIR)
+
+check: $(OUTFILE)
+	./$(OUTFILE)
+
+install: check
+	@echo Installing headers
+	@install -d $(DESTDIR)$(PREFIX)/include/jwt-cpp/
+	@install -m 644 include/jwt-cpp/*.h $(DESTDIR)$(PREFIX)/include/jwt-cpp
+	@echo Install done
 
 -include $(OBJ:%=$(DEP_DIR)/%.d)
