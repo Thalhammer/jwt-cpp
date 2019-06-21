@@ -2,7 +2,9 @@ Source: jwt-cpp
 Section: devel
 Priority: optional
 Maintainer: Dominik Thalhammer <dominik@thalhammer.it>
-Build-Depends: debhelper (>= 10)
+Build-Depends: debhelper (>= 9),
+	libssl-dev,
+	libgtest-dev (>= 1.8.1~)
 Standards-Version: 4.1.4
 Homepage: https://github.com/Thalhammer/jwt-cpp
 Vcs-Git: https://github.com/Thalhammer/jwt-cpp.git

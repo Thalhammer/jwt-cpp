@@ -61,7 +61,7 @@ clean:
 check: $(OUTFILE)
 	./$(OUTFILE)
 
-install: check
+install:
 	@echo Installing headers
 	@install -d $(DESTDIR)$(PREFIX)/include/jwt-cpp/
 	@install -m 644 include/jwt-cpp/*.h $(DESTDIR)$(PREFIX)/include/jwt-cpp
