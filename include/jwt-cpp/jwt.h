@@ -791,6 +791,16 @@ namespace jwt {
 		{}
 #endif
 
+		template<typename Iterator>
+		claim(Iterator start, Iterator end)
+			: val(picojson::array())
+		{
+			auto& arr = val.get<picojson::array>();
+			for(; start != end; start++) {
+				arr.push_back(picojson::value(*start));
+			}
+		}
+
 		/**
 		 * Get wrapped json object
 		 * \return Wrapped json object

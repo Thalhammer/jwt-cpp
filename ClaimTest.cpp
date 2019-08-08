@@ -31,3 +31,15 @@ TEST(ClaimTest, SetAudienceAsString) {
 		.sign(jwt::algorithm::hs256("test"));
 	ASSERT_EQ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0.ny5Fa0vzAg7tNL95KWg_ecBNd3XP3tdAzq0SFA6diY4", token);
 }
+
+TEST(ClaimTest, SetArray) {
+	std::vector<int64_t> vect = {
+		100,
+		20,
+		10
+	};
+	auto token = jwt::create()
+		.set_payload_claim("test", jwt::claim(vect.begin(), vect.end()))
+		.sign(jwt::algorithm::none{});
+	ASSERT_EQ(token, "eyJhbGciOiJub25lIn0.eyJ0ZXN0IjpbMTAwLDIwLDEwXX0.");
+}
