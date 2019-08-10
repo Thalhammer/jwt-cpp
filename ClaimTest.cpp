@@ -43,3 +43,12 @@ TEST(ClaimTest, SetArray) {
 		.sign(jwt::algorithm::none{});
 	ASSERT_EQ(token, "eyJhbGciOiJub25lIn0.eyJ0ZXN0IjpbMTAwLDIwLDEwXX0.");
 }
+
+TEST(ClaimTest, SetAlgorithm) {
+	auto token = jwt::create()
+		.set_algorithm("test")
+		.sign(jwt::algorithm::none{});
+
+	auto decoded_token = jwt::decode(token);
+	ASSERT_EQ(decoded_token.get_algorithm(), "test");
+}

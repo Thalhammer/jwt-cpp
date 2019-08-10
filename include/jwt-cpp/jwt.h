@@ -1333,7 +1333,7 @@ namespace jwt {
 			picojson::object obj_header;
 			obj_header["alg"] = picojson::value(algo.name());
 			for (auto& e : header_claims) {
-				obj_header.insert({ e.first, e.second.to_json() });
+				obj_header[e.first] = e.second.to_json();
 			}
 			picojson::object obj_payload;
 			for (auto& e : payload_claims) {
