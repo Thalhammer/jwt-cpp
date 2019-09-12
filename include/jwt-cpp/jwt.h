@@ -18,7 +18,7 @@
 #endif
 
 #ifndef JWT_CLAIM_EXPLICIT
-#define JWT_CLAIM_EXPLICIT 0
+#define JWT_CLAIM_EXPLICIT 1
 #endif
 
 namespace jwt {
@@ -617,7 +617,7 @@ namespace jwt {
 			 * \param public_key_password Password to decrypt public key pem.
 			 * \param privat_key_password Password to decrypt private key pem.
 			 */
-			rs256(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
+			explicit rs256(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: rsa(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "RS256")
 			{}
 		};
@@ -632,7 +632,7 @@ namespace jwt {
 			 * \param public_key_password Password to decrypt public key pem.
 			 * \param privat_key_password Password to decrypt private key pem.
 			 */
-			rs384(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
+			explicit rs384(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: rsa(public_key, private_key, public_key_password, private_key_password, EVP_sha384, "RS384")
 			{}
 		};
@@ -647,7 +647,7 @@ namespace jwt {
 			 * \param public_key_password Password to decrypt public key pem.
 			 * \param privat_key_password Password to decrypt private key pem.
 			 */
-			rs512(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
+			explicit rs512(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: rsa(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "RS512")
 			{}
 		};
@@ -662,7 +662,7 @@ namespace jwt {
 			 * \param public_key_password Password to decrypt public key pem.
 			 * \param privat_key_password Password to decrypt private key pem.
 			 */
-			es256(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
+			explicit es256(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "ES256")
 			{}
 		};
@@ -677,7 +677,7 @@ namespace jwt {
 			 * \param public_key_password Password to decrypt public key pem.
 			 * \param privat_key_password Password to decrypt private key pem.
 			 */
-			es384(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
+			explicit es384(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha384, "ES384")
 			{}
 		};
@@ -692,7 +692,7 @@ namespace jwt {
 			 * \param public_key_password Password to decrypt public key pem.
 			 * \param privat_key_password Password to decrypt private key pem.
 			 */
-			es512(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
+			explicit es512(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "ES512")
 			{}
 		};
@@ -708,7 +708,7 @@ namespace jwt {
 			 * \param public_key_password Password to decrypt public key pem.
 			 * \param privat_key_password Password to decrypt private key pem.
 			 */
-			ps256(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
+			explicit ps256(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: pss(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "PS256")
 			{}
 		};
@@ -723,7 +723,7 @@ namespace jwt {
 			 * \param public_key_password Password to decrypt public key pem.
 			 * \param privat_key_password Password to decrypt private key pem.
 			 */
-			ps384(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
+			explicit ps384(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: pss(public_key, private_key, public_key_password, private_key_password, EVP_sha384, "PS384")
 			{}
 		};
@@ -738,7 +738,7 @@ namespace jwt {
 			 * \param public_key_password Password to decrypt public key pem.
 			 * \param privat_key_password Password to decrypt private key pem.
 			 */
-			ps512(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
+			explicit ps512(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: pss(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "PS512")
 			{}
 		};
