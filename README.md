@@ -50,7 +50,7 @@ Creating a token (and signing) is equally easy.
 auto token = jwt::create()
 	.set_issuer("auth0")
 	.set_type("JWS")
-	.set_payload_claim("sample", std::string("test"))
+	.set_payload_claim("sample", jwt::claim(std::string("test")))
 	.sign(jwt::algorithm::hs256{"secret"});
 ```
 
