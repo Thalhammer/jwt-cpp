@@ -387,11 +387,11 @@ namespace jwt {
 				if(ECDSA_do_verify((const unsigned char*)hash.data(), hash.size(), &sig, pkey.get()) != 1)
 					throw signature_verification_exception("Invalid signature");
 #else
-				ECDSA_SIG *sig = ECDSA_SIG_new();
+				std::unique_ptr<ECDSA_SIG, decltype(&ECDSA_SIG_free)> sig(ECDSA_SIG_new(), ECDSA_SIG_free);
 
-				ECDSA_SIG_set0(sig, r.get(), s.get());
+				ECDSA_SIG_set0(sig.get(), r.release(), s.release());
 
-				if(ECDSA_do_verify((const unsigned char*)hash.data(), hash.size(), sig, pkey.get()) != 1)
+				if(ECDSA_do_verify((const unsigned char*)hash.data(), hash.size(), sig.get(), pkey.get()) != 1)
 					throw signature_verification_exception("Invalid signature");
 #endif
 			}
