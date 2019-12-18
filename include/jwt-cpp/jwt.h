@@ -312,8 +312,8 @@ namespace jwt {
 			 * \param md Pointer to hash function
 			 * \param name Name of the algorithm
 			 */
-			ecdsa(const std::string& public_key, const std::string& private_key, const std::string& public_key_password, const std::string& private_key_password, const EVP_MD*(*md)(), const std::string& name)
-				: md(md), alg_name(name)
+			ecdsa(const std::string& public_key, const std::string& private_key, const std::string& public_key_password, const std::string& private_key_password, const EVP_MD*(*md)(), const std::string& name, size_t siglen)
+				: md(md), alg_name(name), signature_length(siglen)
 			{
 				if (!public_key.empty()) {
 					std::unique_ptr<BIO, decltype(&BIO_free_all)> pubkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
@@ -360,14 +360,22 @@ namespace jwt {
 					throw signature_generation_exception();
 #ifdef OPENSSL10
 
-				return bn2raw(sig->r) + bn2raw(sig->s);
+				auto rr = bn2raw(sig->r);
+				auto rs = bn2raw(sig->s);
 #else
 				const BIGNUM *r;
 				const BIGNUM *s;
 				ECDSA_SIG_get0(sig.get(), &r, &s);
-				return bn2raw(r) + bn2raw(s);
+				auto rr = bn2raw(r);
+				auto rs = bn2raw(s);
 #endif
+				if(rr.size() > signature_length/2 || rs.size() > signature_length/2)
+					throw std::logic_error("bignum size exceeded expected length");
+				while(rr.size() != signature_length/2) rr = '\0' + rr;
+				while(rs.size() != signature_length/2) rs = '\0' + rs;
+				return rr + rs;
 			}
+
 			/**
 			 * Check if signature is valid
 			 * \param data The data to check signature against
@@ -417,8 +425,6 @@ namespace jwt {
 				std::string res;
 				res.resize(BN_num_bytes(bn));
 				BN_bn2bin(bn, (unsigned char*)res.data());
-				if(res.size()%2 == 1 && res[0] == 0x00)
-					return res.substr(1);
 				return res;
 			}
 			/**
@@ -427,11 +433,6 @@ namespace jwt {
 			 * \return BIGNUM representation
 			 */
 			static std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw) {
-				if(static_cast<uint8_t>(raw[0]) >= 0x80) {
-					std::string str(1, 0x00);
-					str += raw;
-					return std::unique_ptr<BIGNUM, decltype(&BN_free)>(BN_bin2bn((const unsigned char*)str.data(), str.size(), nullptr), BN_free);
-				}
 				return std::unique_ptr<BIGNUM, decltype(&BN_free)>(BN_bin2bn((const unsigned char*)raw.data(), raw.size(), nullptr), BN_free);
 			}
 
@@ -465,6 +466,8 @@ namespace jwt {
 			const EVP_MD*(*md)();
 			/// Algorithmname
 			const std::string alg_name;
+			/// Length of the resulting signature
+			const size_t signature_length;
 		};
 
 		/**
@@ -663,7 +666,7 @@ namespace jwt {
 			 * \param privat_key_password Password to decrypt private key pem.
 			 */
 			explicit es256(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
-				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "ES256")
+				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "ES256", 64)
 			{}
 		};
 		/**
@@ -678,7 +681,7 @@ namespace jwt {
 			 * \param privat_key_password Password to decrypt private key pem.
 			 */
 			explicit es384(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
-				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha384, "ES384")
+				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha384, "ES384", 96)
 			{}
 		};
 		/**
@@ -693,7 +696,7 @@ namespace jwt {
 			 * \param privat_key_password Password to decrypt private key pem.
 			 */
 			explicit es512(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
-				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "ES512")
+				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "ES512", 132)
 			{}
 		};
 
