@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "include/jwt-cpp/base.h"
+#include "jwt-cpp/base.h"
 
 TEST(BaseTest, Base64Decode) {
 	ASSERT_EQ("1", jwt::base::decode<jwt::alphabet::base64>("MQ=="));

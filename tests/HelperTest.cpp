@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "include/jwt-cpp/jwt.h"
+#include "jwt-cpp/jwt.h"
 
 namespace {
     extern std::string google_cert;

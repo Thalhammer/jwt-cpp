@@ -29,3 +29,5 @@ set(JWT_HEADERS
    ${JWT_INCLUDE_PATH}/jwt-cpp/jwt.h)
 
 install(FILES ${JWT_HEADERS} DESTINATION include/jwt-cpp)
+
+add_subdirectory(tests)
