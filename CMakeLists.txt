@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.8)
 include(${CMAKE_TOOLCHAIN_FILE})
 
+option(BUILD_TESTS "Configure CMake to build tests (or not)" ON)
+
 project(jwt-cpp)
 
 SET(CMAKE_CXX_STANDARD 14)
@@ -30,4 +32,6 @@ set(JWT_HEADERS
 
 install(FILES ${JWT_HEADERS} DESTINATION include/jwt-cpp)
 
-add_subdirectory(tests)
+if(BUILD_TESTS)
+   add_subdirectory(tests)
+endif()

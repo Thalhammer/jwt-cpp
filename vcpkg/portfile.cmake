@@ -8,7 +8,9 @@ vcpkg_from_github(
     SHA512 ae83c205dbb340dedc58d0d3f0e2453c4edcf5ce43b401f49d02692dc8a2a4b7260f1ced05ddfa7c1d5d6f92446e232629ddbdf67a58a119b50c5c8163591598
     PATCHES fix-warning.patch)
 
-vcpkg_configure_cmake(SOURCE_PATH ${SOURCE_PATH}/jwt-cpp)
+vcpkg_configure_cmake(
+     SOURCE_PATH ${SOURCE_PATH}/jwt-cpp
+     OPTIONS -DBUILD_TESTS=OFF)
 
 # Copy the constexpr header files
 vcpkg_install_cmake()
