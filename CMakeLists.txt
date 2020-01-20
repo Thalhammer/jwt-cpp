@@ -26,6 +26,8 @@ set(JWT_HEADERS ${JWT_INCLUDE_PATH}/jwt-cpp/base.h
                 ${JWT_INCLUDE_PATH}/jwt-cpp/jwt.h)
 
 install(FILES ${JWT_HEADERS} DESTINATION include/jwt-cpp)
+install(TARGETS jwt-cpp EXPORT jwt-cpp DESTINATION cmake/jwt-cpp)
+install(EXPORT jwt-cpp DESTINATION cmake/jwt-cpp)
 
 if(BUILD_TESTS)
   add_subdirectory(tests)
