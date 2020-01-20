@@ -1,0 +1,2 @@
+@PACKAGE_INIT@
+include(${CMAKE_INSTALL_PREFIX}/jwt-cpp/jwt-cpp.cmake)
