@@ -1,0 +1,4 @@
+@PACKAGE_INIT@
+set_and_check(jwt-cpp_INCLUDE_DIR "@PACKAGE_jwt-cpp_INCLUDE_DIR@")
+
+check_required_components(jwt-cpp)

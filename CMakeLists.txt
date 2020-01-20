@@ -28,7 +28,25 @@ set(JWT_HEADERS
    ${JWT_INCLUDE_PATH}/jwt-cpp/base.h
    ${JWT_INCLUDE_PATH}/jwt-cpp/jwt.h)
 
+include(CMakePackageConfigHelpers)
+set(INCLUDE_DIR include)
+
+configure_package_config_file(
+  cmake/jwt-cpp-config.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config.cmake
+  INSTALL_DESTINATION ${CMAKE_INSTALL_PREFIX}/jwt-cpp/cmake
+  PATH_VARS INCLUDE_DIR)
+
+write_basic_package_version_file(
+  ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-version.cmake
+  VERSION 0.3.1 # TBA
+  COMPATIBILITY ExactVersion)
+
 install(FILES ${JWT_HEADERS} DESTINATION include/jwt-cpp)
+install(FILES
+          ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config.cmake
+          ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-version.cmake
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/cmake/jwt-cpp)
 
 if(BUILD_TESTS)
    add_subdirectory(tests)
