@@ -1,5 +1,0 @@
-@PACKAGE_INIT@
-
-set(jwt-cpp_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include)
-
-include(${CMAKE_INSTALL_PREFIX}/include)

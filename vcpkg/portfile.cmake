@@ -15,8 +15,6 @@ vcpkg_configure_cmake(
 # Copy the constexpr header files
 vcpkg_install_cmake()
 
-vcpkg_test_cmake(PACKAGE_NAME jwt-cpp)
-
 # Put the licence file where vcpkg expects it
 file(COPY ${SOURCE_PATH}/LICENSE
      DESTINATION ${CURRENT_PACKAGES_DIR}/share/jwt-cpp)
