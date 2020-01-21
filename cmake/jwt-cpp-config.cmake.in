@@ -1,2 +1,6 @@
 @PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro) 
+find_dependency(OpenSSL REQUIRED)
+
 include(${CMAKE_INSTALL_PREFIX}/jwt-cpp/jwt-cpp.cmake)

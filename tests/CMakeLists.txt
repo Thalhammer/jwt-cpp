@@ -13,7 +13,7 @@ set(TEST_SOURCES
 add_executable(jwt-cpp-test ${TEST_SOURCES})
 
 target_link_libraries(
-  jwt-cpp-test PRIVATE jwt-cpp GTest::gtest GTest::gtest_main GTest::gmock
+  jwt-cpp-test PRIVATE jwt-cpp::jwt-cpp GTest::gtest GTest::gtest_main GTest::gmock
                        GTest::gmock_main)
 
 add_test(AllTests jwt-cpp-test)

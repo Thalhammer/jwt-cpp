@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.8)
-project(jwt-cpp-test)
+include(${CMAKE_TOOLCHAIN_FILE})
 
-find_package(jwt-cpp REQUIRED)
+project(jwt-cpp-test)
+find_package(jwt-cpp CONFIG REQUIRED)
 
 add_executable(jwt-cpp-test print-claims.cpp)
-target_link_libraries(jwt-cpp-test PRIVATE jwt-cpp:jwt-cpp)
+target_link_libraries(jwt-cpp-test jwt-cpp::jwt-cpp)
