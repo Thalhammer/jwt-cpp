@@ -5,7 +5,7 @@ option(BUILD_TESTS "Configure CMake to build tests (or not)" ON)
 
 project(jwt-cpp)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(OpenSSL 1.1 REQUIRED)
@@ -13,7 +13,7 @@ find_package(OpenSSL 1.1 REQUIRED)
 add_library(jwt-cpp INTERFACE)
 add_library(jwt-cpp::jwt-cpp ALIAS jwt-cpp)
 
-target_compile_features(jwt-cpp INTERFACE cxx_std_14)
+target_compile_features(jwt-cpp INTERFACE cxx_std_11)
 
 set(JWT_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(
