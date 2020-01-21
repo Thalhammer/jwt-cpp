@@ -24,6 +24,7 @@ target_link_libraries(jwt-cpp INTERFACE OpenSSL::SSL OpenSSL::Crypto)
 
 set(JWT_HEADERS ${JWT_INCLUDE_PATH}/jwt-cpp/base.h
                 ${JWT_INCLUDE_PATH}/jwt-cpp/jwt.h)
+set(PICO_HEADER ${JWT_INCLUDE_PATH}/picojson/picojson.h)
 
 include(CMakePackageConfigHelpers)
 set(INCLUDE_INSTALL_DIR include)
@@ -39,6 +40,7 @@ write_basic_package_version_file(
   COMPATIBILITY ExactVersion)
 
 install(FILES ${JWT_HEADERS} DESTINATION include/jwt-cpp)
+install(FILES ${PICO_HEADER} DESTINATION include/picojson)
 install(
   TARGETS jwt-cpp
   EXPORT jwt-cpp
