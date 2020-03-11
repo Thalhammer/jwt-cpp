@@ -446,6 +446,53 @@ TEST(TokenTest, VerifyTokenPS256Fail) {
 	ASSERT_THROW(verify.verify(decoded_token), jwt::signature_verification_exception);
 }
 
+TEST(TokenTest, ThrowInvalidKeyLength) {
+	// We should throw if passed the wrong size
+	ASSERT_THROW(jwt::algorithm::es256(ecdsa384_pub_key, ""), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es256("", ecdsa384_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es256(ecdsa384_pub_key, ecdsa384_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es256(ecdsa521_pub_key, ""), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es256("", ecdsa521_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es256(ecdsa521_pub_key, ecdsa521_priv_key), jwt::ecdsa_exception);
+
+	// But also if only one cert has the wrong size
+	ASSERT_THROW(jwt::algorithm::es256(ecdsa256_pub_key, ecdsa384_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es256(ecdsa256_pub_key, ecdsa521_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es256(ecdsa384_pub_key, ecdsa256_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es256(ecdsa521_pub_key, ecdsa256_priv_key), jwt::ecdsa_exception);
+
+
+	ASSERT_THROW(jwt::algorithm::es384(ecdsa256_pub_key, ""), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es384("", ecdsa256_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es384(ecdsa256_pub_key, ecdsa256_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es384(ecdsa521_pub_key, ""), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es384("", ecdsa521_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es384(ecdsa521_pub_key, ecdsa521_priv_key), jwt::ecdsa_exception);
+
+	ASSERT_THROW(jwt::algorithm::es384(ecdsa384_pub_key, ecdsa256_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es384(ecdsa384_pub_key, ecdsa521_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es384(ecdsa256_pub_key, ecdsa384_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es384(ecdsa521_pub_key, ecdsa384_priv_key), jwt::ecdsa_exception);
+
+
+	ASSERT_THROW(jwt::algorithm::es512(ecdsa256_pub_key, ""), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es512("", ecdsa256_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es512(ecdsa256_pub_key, ecdsa256_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es512(ecdsa384_pub_key, ""), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es512("", ecdsa384_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es512(ecdsa384_pub_key, ecdsa384_priv_key), jwt::ecdsa_exception);
+
+	ASSERT_THROW(jwt::algorithm::es512(ecdsa521_pub_key, ecdsa256_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es512(ecdsa521_pub_key, ecdsa384_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es512(ecdsa256_pub_key, ecdsa521_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es512(ecdsa384_pub_key, ecdsa521_priv_key), jwt::ecdsa_exception);
+
+	// Make sure we do not throw if the correct params are passed
+	ASSERT_NO_THROW(jwt::algorithm::es256(ecdsa256_pub_key, ecdsa256_priv_key));
+	ASSERT_NO_THROW(jwt::algorithm::es384(ecdsa384_pub_key, ecdsa384_priv_key));
+	ASSERT_NO_THROW(jwt::algorithm::es512(ecdsa521_pub_key, ecdsa521_priv_key));
+}
+
 namespace {
 	std::string rsa_priv_key = R"(-----BEGIN PRIVATE KEY-----
 MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQC4ZtdaIrd1BPIJ
