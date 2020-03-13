@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 include(${CMAKE_TOOLCHAIN_FILE})
 
 option(BUILD_TESTS "Configure CMake to build tests (or not)" ON)
+option(EXTERNAL_PICOJSON "Use find_package() to locate the pixojson header" OFF)
 
 project(jwt-cpp)
 
@@ -9,6 +10,9 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(OpenSSL 1.1 REQUIRED)
+if(EXTERNAL_PICOJSIN)
+   find_package(picojson REQUIRED)
+endif()
 
 add_library(jwt-cpp INTERFACE)
 add_library(jwt-cpp::jwt-cpp ALIAS jwt-cpp)
@@ -20,11 +24,13 @@ target_include_directories(
   jwt-cpp INTERFACE $<BUILD_INTERFACE:${JWT_INCLUDE_PATH}>
                     $<INSTALL_INTERFACE:include>)
 
-target_link_libraries(jwt-cpp INTERFACE OpenSSL::SSL OpenSSL::Crypto)
+target_link_libraries(jwt-cpp INTERFACE OpenSSL::SSL OpenSSL::Crypto $<EXTERNAL_PICOJSON:picojson::picojson>)
 
 set(JWT_HEADERS ${JWT_INCLUDE_PATH}/jwt-cpp/base.h
                 ${JWT_INCLUDE_PATH}/jwt-cpp/jwt.h)
-set(PICO_HEADER ${JWT_INCLUDE_PATH}/picojson/picojson.h)
+if(EXTERNAL_PICOJSON)
+   set(PICO_HEADER ${JWT_INCLUDE_PATH}/picojson/picojson.h)
+endif()
 
 include(CMakePackageConfigHelpers)
 set(INCLUDE_INSTALL_DIR include)
@@ -40,7 +46,10 @@ write_basic_package_version_file(
   COMPATIBILITY ExactVersion)
 
 install(FILES ${JWT_HEADERS} DESTINATION include/jwt-cpp)
-install(FILES ${PICO_HEADER} DESTINATION include/picojson)
+if(EXTERNAL_PICOJSON)
+   install(FILES ${PICO_HEADER} DESTINATION include/picojson)
+endif()
+
 install(
   TARGETS jwt-cpp
   EXPORT jwt-cpp
