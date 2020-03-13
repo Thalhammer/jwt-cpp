@@ -5,7 +5,7 @@ if(CMAKE_TOOLCHAIN_FILE)
 endif()
 
 option(BUILD_TESTS "Configure CMake to build tests (or not)" ON)
-option(EXTERNAL_PICOJSON "Use find_package() to locate the pixojson header" OFF)
+option(EXTERNAL_PICOJSON "Use find_package() to locate the picojson header" OFF)
 
 project(jwt-cpp)
 
