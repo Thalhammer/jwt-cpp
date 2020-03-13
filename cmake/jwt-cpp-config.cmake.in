@@ -1,6 +1,12 @@
 @PACKAGE_INIT@
 
+set(USE_EXTERNAL_PICOJSON @EXTERNAL_PICOJSON@)
+
 include(CMakeFindDependencyMacro) 
 find_dependency(OpenSSL REQUIRED)
+
+if(USE_EXTERNAL_PICOJSON)
+   find_dependency(picojson REQUIRED)
+endif()
 
 include(${CMAKE_INSTALL_PREFIX}/jwt-cpp/jwt-cpp.cmake)
