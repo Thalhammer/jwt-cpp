@@ -38,7 +38,7 @@ set(INCLUDE_INSTALL_DIR include)
 configure_package_config_file(
   ${CMAKE_CURRENT_LIST_DIR}/cmake/jwt-cpp-config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config.cmake INSTALL_DESTINATION
-  ${CMAKE_INSTALL_PREFIX}/jwt-cpp/cmake PATH_VARS INCLUDE_INSTALL_DIR)
+  ${CMAKE_INSTALL_PREFIX}/jwt-cpp/cmake PATH_VARS INCLUDE_INSTALL_DIR EXTERNAL_PICOJSON)
 
 write_basic_package_version_file(
   ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-version.cmake
