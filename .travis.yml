@@ -8,6 +8,7 @@ install:
   - sudo apt update
   - sudo apt install libgtest-dev
   - (cd /usr/src/gtest && sudo `which cmake` .)
+  - sudo make -C /usr/src/gtest
   - sudo make -C /usr/src/gtest install
   - wget -O /tmp/openssl-1.1.0f.tar.gz https://www.openssl.org/source/openssl-1.1.0f.tar.gz
   - tar -xzvf /tmp/openssl-1.1.0f.tar.gz -C /tmp
