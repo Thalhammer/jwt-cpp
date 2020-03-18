@@ -1,6 +1,5 @@
 enable_testing()
-
-find_package(GTest CONFIG REQUIRED)
+include(GoogleTest)
 
 set(TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/BaseTest.cpp
@@ -12,8 +11,6 @@ set(TEST_SOURCES
 
 add_executable(jwt-cpp-test ${TEST_SOURCES})
 
-target_link_libraries(
-  jwt-cpp-test PRIVATE jwt-cpp::jwt-cpp GTest::gtest GTest::gtest_main GTest::gmock
-                       GTest::gmock_main)
+target_link_libraries(jwt-cpp-test PRIVATE jwt-cpp::jwt-cpp gtest gtest_main pthread)
 
-add_test(AllTests jwt-cpp-test)
+gtest_add_tests(TARGET      jwt-cpp-test)

@@ -13,7 +13,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(OpenSSL 1.1 REQUIRED)
-if(EXTERNAL_PICOJSIN)
+if(EXTERNAL_PICOJSON)
    find_package(picojson REQUIRED)
 endif()
 
@@ -27,7 +27,7 @@ target_include_directories(
   jwt-cpp INTERFACE $<BUILD_INTERFACE:${JWT_INCLUDE_PATH}>
                     $<INSTALL_INTERFACE:include>)
 
-target_link_libraries(jwt-cpp INTERFACE OpenSSL::SSL OpenSSL::Crypto $<EXTERNAL_PICOJSON:picojson::picojson>)
+target_link_libraries(jwt-cpp INTERFACE OpenSSL::SSL OpenSSL::Crypto)
 
 set(JWT_HEADERS ${JWT_INCLUDE_PATH}/jwt-cpp/base.h
                 ${JWT_INCLUDE_PATH}/jwt-cpp/jwt.h)
