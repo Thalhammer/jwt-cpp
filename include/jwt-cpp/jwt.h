@@ -329,6 +329,9 @@ namespace jwt {
 					pkey.reset(PEM_read_bio_EC_PUBKEY(pubkey_bio.get(), nullptr, nullptr, (void*)public_key_password.c_str()), EC_KEY_free);
 					if (!pkey)
 						throw ecdsa_exception("failed to load public key: PEM_read_bio_EC_PUBKEY failed:" + std::string(ERR_error_string(ERR_get_error(), NULL)));
+					size_t keysize = EC_GROUP_get_degree(EC_KEY_get0_group(pkey.get()));
+					if(keysize != signature_length*4 && (signature_length != 132 || keysize != 521))
+						throw ecdsa_exception("invalid key size");
 				}
 
 				if (!private_key.empty()) {
@@ -338,6 +341,9 @@ namespace jwt {
 					pkey.reset(PEM_read_bio_ECPrivateKey(privkey_bio.get(), nullptr, nullptr, const_cast<char*>(private_key_password.c_str())), EC_KEY_free);
 					if (!pkey)
 						throw rsa_exception("failed to load private key: PEM_read_bio_ECPrivateKey failed");
+					size_t keysize = EC_GROUP_get_degree(EC_KEY_get0_group(pkey.get()));
+					if(keysize != signature_length*4 && (signature_length != 132 || keysize != 521))
+						throw ecdsa_exception("invalid key size");
 				}
 				if(!pkey)
 					throw rsa_exception("at least one of public or private key need to be present");

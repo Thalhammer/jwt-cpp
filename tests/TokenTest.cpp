@@ -8,9 +8,15 @@ namespace {
 	extern std::string rsa512_priv_key;
 	extern std::string rsa512_pub_key;
 	extern std::string rsa512_pub_key_invalid;
-	extern std::string ecdsa_priv_key;
-	extern std::string ecdsa_pub_key;
-	extern std::string ecdsa_pub_key_invalid;
+	extern std::string ecdsa256_priv_key;
+	extern std::string ecdsa256_pub_key;
+	extern std::string ecdsa256_pub_key_invalid;
+	extern std::string ecdsa384_priv_key;
+	extern std::string ecdsa384_pub_key;
+	extern std::string ecdsa384_pub_key_invalid;
+	extern std::string ecdsa521_priv_key;
+	extern std::string ecdsa521_pub_key;
+	extern std::string ecdsa521_pub_key_invalid;
 }
 
 TEST(TokenTest, DecodeToken) {
@@ -110,12 +116,12 @@ TEST(TokenTest, CreateTokenES256) {
 	auto token = jwt::create()
 		.set_issuer("auth0")
 		.set_type("JWS")
-		.sign(jwt::algorithm::es256("", ecdsa_priv_key, "", ""));
+		.sign(jwt::algorithm::es256("", ecdsa256_priv_key, "", ""));
 
 	auto decoded = jwt::decode(token);
 
-	ASSERT_THROW(jwt::verify().allow_algorithm(jwt::algorithm::es256(ecdsa_pub_key_invalid, "", "", "")).verify(decoded), jwt::signature_verification_exception);
-	ASSERT_NO_THROW(jwt::verify().allow_algorithm(jwt::algorithm::es256(ecdsa_pub_key, "", "", "")).verify(decoded));
+	ASSERT_THROW(jwt::verify().allow_algorithm(jwt::algorithm::es256(ecdsa256_pub_key_invalid, "", "", "")).verify(decoded), jwt::signature_verification_exception);
+	ASSERT_NO_THROW(jwt::verify().allow_algorithm(jwt::algorithm::es256(ecdsa256_pub_key, "", "", "")).verify(decoded));
 }
 
 TEST(TokenTest, CreateTokenES256NoPrivate) {
@@ -124,7 +130,53 @@ TEST(TokenTest, CreateTokenES256NoPrivate) {
 		auto token = jwt::create()
 			.set_issuer("auth0")
 			.set_type("JWS")
-			.sign(jwt::algorithm::es256(ecdsa_pub_key, "", "", ""));
+			.sign(jwt::algorithm::es256(ecdsa256_pub_key, "", "", ""));
+	}(), jwt::signature_generation_exception);
+}
+
+TEST(TokenTest, CreateTokenES384) {
+	
+	auto token = jwt::create()
+		.set_issuer("auth0")
+		.set_type("JWS")
+		.sign(jwt::algorithm::es384("", ecdsa384_priv_key, "", ""));
+
+	auto decoded = jwt::decode(token);
+
+	ASSERT_THROW(jwt::verify().allow_algorithm(jwt::algorithm::es384(ecdsa384_pub_key_invalid, "", "", "")).verify(decoded), jwt::signature_verification_exception);
+	ASSERT_NO_THROW(jwt::verify().allow_algorithm(jwt::algorithm::es384(ecdsa384_pub_key, "", "", "")).verify(decoded));
+}
+
+TEST(TokenTest, CreateTokenES384NoPrivate) {
+	
+	ASSERT_THROW([](){
+		auto token = jwt::create()
+			.set_issuer("auth0")
+			.set_type("JWS")
+			.sign(jwt::algorithm::es384(ecdsa384_pub_key, "", "", ""));
+	}(), jwt::signature_generation_exception);
+}
+
+TEST(TokenTest, CreateTokenES512) {
+	
+	auto token = jwt::create()
+		.set_issuer("auth0")
+		.set_type("JWS")
+		.sign(jwt::algorithm::es512("", ecdsa521_priv_key, "", ""));
+
+	auto decoded = jwt::decode(token);
+
+	ASSERT_THROW(jwt::verify().allow_algorithm(jwt::algorithm::es512(ecdsa521_pub_key_invalid, "", "", "")).verify(decoded), jwt::signature_verification_exception);
+	ASSERT_NO_THROW(jwt::verify().allow_algorithm(jwt::algorithm::es512(ecdsa521_pub_key, "", "", "")).verify(decoded));
+}
+
+TEST(TokenTest, CreateTokenES512NoPrivate) {
+	
+	ASSERT_THROW([](){
+		auto token = jwt::create()
+			.set_issuer("auth0")
+			.set_type("JWS")
+			.sign(jwt::algorithm::es512(ecdsa521_pub_key, "", "", ""));
 	}(), jwt::signature_generation_exception);
 }
 
@@ -172,7 +224,6 @@ TEST(TokenTest, VerifyTokenRS256PrivateOnly) {
 
 	verify.verify(decoded_token);
 }
-
 
 TEST(TokenTest, VerifyTokenRS256Fail) {
 	std::string token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
@@ -296,7 +347,7 @@ TEST(TokenTest, VerifyFail) {
 TEST(TokenTest, VerifyTokenES256) {
 	const std::string token = "eyJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJhdXRoMCJ9.4iVk3-Y0v4RT4_9IaQlp-8dZ_4fsTzIylgrPTDLrEvTHBTyVS3tgPbr2_IZfLETtiKRqCg0aQ5sh9eIsTTwB1g";
 
-	auto verify = jwt::verify().allow_algorithm(jwt::algorithm::es256(ecdsa_pub_key, "", "", ""));
+	auto verify = jwt::verify().allow_algorithm(jwt::algorithm::es256(ecdsa256_pub_key, "", "", ""));
 	auto decoded_token = jwt::decode(token);
 
 	verify.verify(decoded_token);
@@ -306,7 +357,45 @@ TEST(TokenTest, VerifyTokenES256Fail) {
 	const std::string token = "eyJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJhdXRoMCJ9.4iVk3-Y0v4RT4_9IaQlp-8dZ_4fsTzIylgrPTDLrEvTHBTyVS3tgPbr2_IZfLETtiKRqCg0aQ5sh9eIsTTwB1g";
 
 	auto verify = jwt::verify()
-		.allow_algorithm(jwt::algorithm::es256(ecdsa_pub_key_invalid, "", "", ""));
+		.allow_algorithm(jwt::algorithm::es256(ecdsa256_pub_key_invalid, "", "", ""));
+	auto decoded_token = jwt::decode(token);
+
+	ASSERT_THROW(verify.verify(decoded_token), jwt::signature_verification_exception);
+}
+
+TEST(TokenTest, VerifyTokenES384) {
+	const std::string token = "eyJhbGciOiJFUzM4NCIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.nTUwWanmj_K1VZM5it1ES-1FbnmRDL-lH3V_Fem-AhMur9Q61yZfKIydrpdavkm_SMxEsUGPVoqkpoEsjFjrtzMDs5s9yaFYD_ydiy1dsn9VbcI55voA3XwEcWFiPHri";
+
+	auto verify = jwt::verify().allow_algorithm(jwt::algorithm::es384(ecdsa384_pub_key, "", "", ""));
+	auto decoded_token = jwt::decode(token);
+
+	verify.verify(decoded_token);
+}
+
+TEST(TokenTest, VerifyTokenES384Fail) {
+	const std::string token = "eyJhbGciOiJFUzM4NCIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.nTUwWanmj_K1VZM5it1ES-1FbnmRDL-lH3V_Fem-AhMur9Q61yZfKIydrpdavkm_SMxEsUGPVoqkpoEsjFjrtzMDs5s9yaFYD_ydiy1dsn9VbcI55voA3XwEcWFiPHri";
+
+	auto verify = jwt::verify()
+		.allow_algorithm(jwt::algorithm::es384(ecdsa384_pub_key_invalid, "", "", ""));
+	auto decoded_token = jwt::decode(token);
+
+	ASSERT_THROW(verify.verify(decoded_token), jwt::signature_verification_exception);
+}
+
+TEST(TokenTest, VerifyTokenES521) {
+	const std::string token = "eyJhbGciOiJFUzUxMiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.ASF5hh9_Jyujzm3GRBttoth-3I6lCcwqun9Tt7Ekz9_23BN6-BFgwKidECWCNc4VINEqFEFdApC2y3YRdkpKX2etAWI7yYudAlxJ7Z17m6GwAoLOGaeNonsaKOe1UnC5W86eoXrCoPRgzsFTpKIb8NiolcYWjIY-r8gQd7BZ7whaj9Ft";
+
+	auto verify = jwt::verify().allow_algorithm(jwt::algorithm::es512(ecdsa521_pub_key, "", "", ""));
+	auto decoded_token = jwt::decode(token);
+
+	verify.verify(decoded_token);
+}
+
+TEST(TokenTest, VerifyTokenES521Fail) {
+	const std::string token = "eyJhbGciOiJFUzUxMiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.ASF5hh9_Jyujzm3GRBttoth-3I6lCcwqun9Tt7Ekz9_23BN6-BFgwKidECWCNc4VINEqFEFdApC2y3YRdkpKX2etAWI7yYudAlxJ7Z17m6GwAoLOGaeNonsaKOe1UnC5W86eoXrCoPRgzsFTpKIb8NiolcYWjIY-r8gQd7BZ7whaj9Ft";
+
+	auto verify = jwt::verify()
+		.allow_algorithm(jwt::algorithm::es512(ecdsa521_pub_key_invalid, "", "", ""));
 	auto decoded_token = jwt::decode(token);
 
 	ASSERT_THROW(verify.verify(decoded_token), jwt::signature_verification_exception);
@@ -355,6 +444,53 @@ TEST(TokenTest, VerifyTokenPS256Fail) {
 	auto decoded_token = jwt::decode(token);
 
 	ASSERT_THROW(verify.verify(decoded_token), jwt::signature_verification_exception);
+}
+
+TEST(TokenTest, ThrowInvalidKeyLength) {
+	// We should throw if passed the wrong size
+	ASSERT_THROW(jwt::algorithm::es256(ecdsa384_pub_key, ""), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es256("", ecdsa384_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es256(ecdsa384_pub_key, ecdsa384_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es256(ecdsa521_pub_key, ""), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es256("", ecdsa521_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es256(ecdsa521_pub_key, ecdsa521_priv_key), jwt::ecdsa_exception);
+
+	// But also if only one cert has the wrong size
+	ASSERT_THROW(jwt::algorithm::es256(ecdsa256_pub_key, ecdsa384_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es256(ecdsa256_pub_key, ecdsa521_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es256(ecdsa384_pub_key, ecdsa256_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es256(ecdsa521_pub_key, ecdsa256_priv_key), jwt::ecdsa_exception);
+
+
+	ASSERT_THROW(jwt::algorithm::es384(ecdsa256_pub_key, ""), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es384("", ecdsa256_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es384(ecdsa256_pub_key, ecdsa256_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es384(ecdsa521_pub_key, ""), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es384("", ecdsa521_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es384(ecdsa521_pub_key, ecdsa521_priv_key), jwt::ecdsa_exception);
+
+	ASSERT_THROW(jwt::algorithm::es384(ecdsa384_pub_key, ecdsa256_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es384(ecdsa384_pub_key, ecdsa521_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es384(ecdsa256_pub_key, ecdsa384_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es384(ecdsa521_pub_key, ecdsa384_priv_key), jwt::ecdsa_exception);
+
+
+	ASSERT_THROW(jwt::algorithm::es512(ecdsa256_pub_key, ""), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es512("", ecdsa256_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es512(ecdsa256_pub_key, ecdsa256_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es512(ecdsa384_pub_key, ""), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es512("", ecdsa384_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es512(ecdsa384_pub_key, ecdsa384_priv_key), jwt::ecdsa_exception);
+
+	ASSERT_THROW(jwt::algorithm::es512(ecdsa521_pub_key, ecdsa256_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es512(ecdsa521_pub_key, ecdsa384_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es512(ecdsa256_pub_key, ecdsa521_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es512(ecdsa384_pub_key, ecdsa521_priv_key), jwt::ecdsa_exception);
+
+	// Make sure we do not throw if the correct params are passed
+	ASSERT_NO_THROW(jwt::algorithm::es256(ecdsa256_pub_key, ecdsa256_priv_key));
+	ASSERT_NO_THROW(jwt::algorithm::es384(ecdsa384_pub_key, ecdsa384_priv_key));
+	ASSERT_NO_THROW(jwt::algorithm::es512(ecdsa521_pub_key, ecdsa521_priv_key));
 }
 
 namespace {
@@ -434,16 +570,51 @@ VTr4+KEY+IeLvubHVmLUhbE5NgWXxrRpGasDqzKhCTmsa2Ysf712rl57SlH0Wz/M
 r3F7aM9YpErzeYLrl0GhQr9BVJxOvXcVd4kmY+XkiCcrkyS1cnghnllh+LCwQu1s
 YwIDAQAB
 -----END PUBLIC KEY-----)";
-	std::string ecdsa_priv_key = R"(-----BEGIN PRIVATE KEY-----
+	std::string ecdsa521_priv_key = R"(-----BEGIN EC PRIVATE KEY-----
+MIHcAgEBBEIAuZxTZjLIZM5hxgZX+JRrqt5FKpAEg/meZ7m9aSE3XbRITqtfz1Uy
+h2Srn7o8+4j/jQpwHTTHZThy10u5jMjaR+mgBwYFK4EEACOhgYkDgYYABAFFah0k
+6m4ddp/tUN/ObrKKwSCp4QUZdiAMaC9eY1HyNBPuuEsH5qCfeY5lmeJwSUpzCosn
+rgW8M2hQ4Kr5V9OXrgHLA5WVtH6//sSkUY2/xYuqc7/Ln8gI5ddtr1qG64Xtgs05
+/CNajSjFZeLm76llakvYiBTTH/ii8hIfrwukW9IP7Q==
+-----END EC PRIVATE KEY-----)";
+	std::string ecdsa521_pub_key = R"(-----BEGIN PUBLIC KEY-----
+MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQBRWodJOpuHXaf7VDfzm6yisEgqeEF
+GXYgDGgvXmNR8jQT7rhLB+agn3mOZZnicElKcwqLJ64FvDNoUOCq+VfTl64BywOV
+lbR+v/7EpFGNv8WLqnO/y5/ICOXXba9ahuuF7YLNOfwjWo0oxWXi5u+pZWpL2IgU
+0x/4ovISH68LpFvSD+0=
+-----END PUBLIC KEY-----)";
+	std::string ecdsa521_pub_key_invalid = R"(-----BEGIN PUBLIC KEY-----
+MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQB3l84szH3VOII+Qp4TGgRqCps1q7N
+/41ucX90sVKT+6Z2FgYqGsfDcViWBdcjRQLL69LGApcvGGSa1MiYXmLWBYAAKriR
+7S63iNLzarnq1WnCH+GowDMl127CPoSW4LmMqV5rJLJQNwfiy+N0wph/Adnqqb+6
+w1N7aVXutqCx02T/jrQ=
+-----END PUBLIC KEY-----)";
+	std::string ecdsa384_priv_key = R"(-----BEGIN EC PRIVATE KEY-----
+MIGkAgEBBDCrPXJDgQDtNRpM0qNUW/zN1vrCvOVH1CsItVZ+1NeGB+w/2whnIXJQ
+K7U5C1ETPHagBwYFK4EEACKhZANiAAR0JjvVJXc3u1I/7vt5mxzPtAIi1VIqxCwN
+wgISZVySTYZQzyicW2GfhMlFCow28LzqTwH/eCymAvnTAmpK/P1hXhNcnxDBZNOU
+WMbMLFcQrg2wwpIb/k/IXobNwjNPRBo=
+-----END EC PRIVATE KEY-----)";
+	std::string ecdsa384_pub_key = R"(-----BEGIN PUBLIC KEY-----
+MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEdCY71SV3N7tSP+77eZscz7QCItVSKsQs
+DcICEmVckk2GUM8onFthn4TJRQqMNvC86k8B/3gspgL50wJqSvz9YV4TXJ8QwWTT
+lFjGzCxXEK4NsMKSG/5PyF6GzcIzT0Qa
+-----END PUBLIC KEY-----)";
+	std::string ecdsa384_pub_key_invalid = R"(-----BEGIN PUBLIC KEY-----
+MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE7TAJMuqdY9JYXrv2p06bXhLmRddkCQZ6
+4BJeTNGz59QqbHk5+6avGj2lXK+c9rr0vejbts5A50WF1E4b7ItLxEIONfSbF74Q
+sQ4dg7kzXiz+XX/aEVqH1HlIa9YAJPaH
+-----END PUBLIC KEY-----)";
+	std::string ecdsa256_priv_key = R"(-----BEGIN PRIVATE KEY-----
 MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgPGJGAm4X1fvBuC1z
 SpO/4Izx6PXfNMaiKaS5RUkFqEGhRANCAARCBvmeksd3QGTrVs2eMrrfa7CYF+sX
 sjyGg+Bo5mPKGH4Gs8M7oIvoP9pb/I85tdebtKlmiCZHAZE5w4DfJSV6
 -----END PRIVATE KEY-----)";
-	std::string ecdsa_pub_key = R"(-----BEGIN PUBLIC KEY-----
+	std::string ecdsa256_pub_key = R"(-----BEGIN PUBLIC KEY-----
 MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEQgb5npLHd0Bk61bNnjK632uwmBfr
 F7I8hoPgaOZjyhh+BrPDO6CL6D/aW/yPObXXm7SpZogmRwGROcOA3yUleg==
 -----END PUBLIC KEY-----)";
-	std::string ecdsa_pub_key_invalid = R"(-----BEGIN PUBLIC KEY-----
+	std::string ecdsa256_pub_key_invalid = R"(-----BEGIN PUBLIC KEY-----
 MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEoBUyo8CQAFPeYPvv78ylh5MwFZjT
 CLQeb042TjiMJxG+9DLFmRSMlBQ9T/RsLLc+PmpB1+7yPAR+oR5gZn3kJQ==
 -----END PUBLIC KEY-----)";
