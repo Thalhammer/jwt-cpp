@@ -20,4 +20,4 @@ install:
 script:
   - cmake .
   - make
-  - ./jwt-cpp-test
+  - ./tests/jwt-cpp-test
