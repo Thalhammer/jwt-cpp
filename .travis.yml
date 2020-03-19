@@ -11,11 +11,6 @@ install:
   - sudo make -C /usr/src/gtest
   - sudo ln -s /usr/src/gtest/libgtest.a /usr/lib/libgtest.a
   - sudo ln -s /usr/src/gtest/libgtest_main.a /usr/lib/libgtest_main.a
-  - wget -O /tmp/openssl-1.1.0f.tar.gz https://www.openssl.org/source/openssl-1.1.0f.tar.gz
-  - tar -xzvf /tmp/openssl-1.1.0f.tar.gz -C /tmp
-  - (cd /tmp/openssl-1.1.0f && ./config -Wl,--enable-new-dtags,-rpath,'$(LIBRPATH)')
-  - make -C /tmp/openssl-1.1.0f
-  - sudo make -C /tmp/openssl-1.1.0f install
 
 script:
   - cmake .
