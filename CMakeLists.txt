@@ -12,7 +12,7 @@ project(jwt-cpp)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(OpenSSL 1.1 REQUIRED)
+find_package(OpenSSL 1.0.2 REQUIRED)
 if(EXTERNAL_PICOJSON)
    find_package(picojson REQUIRED)
 endif()
