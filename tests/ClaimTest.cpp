@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "include/jwt-cpp/jwt.h"
+#include "jwt-cpp/jwt.h"
 
 TEST(ClaimTest, AudienceAsString) {
 	std::string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0.WZnM3SIiSRHsbO3O7Z2bmIzTJ4EC32HRBKfLznHhrh4";

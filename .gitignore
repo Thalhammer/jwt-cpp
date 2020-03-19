@@ -309,3 +309,5 @@ test
 .vscode
 
 docs
+
+build/*
