@@ -18,7 +18,7 @@
 #endif
 
 #ifndef JWT_CLAIM_EXPLICIT
-#define JWT_CLAIM_EXPLICIT 1
+#define JWT_CLAIM_EXPLICIT explicit
 #endif
 
 namespace jwt {
@@ -772,33 +772,18 @@ namespace jwt {
 		claim()
 			: val()
 		{}
-#if JWT_CLAIM_EXPLICIT
-		explicit claim(std::string s)
+		JWT_CLAIM_EXPLICIT claim(std::string s)
 			: val(std::move(s))
 		{}
-		explicit claim(const date& s)
+		JWT_CLAIM_EXPLICIT claim(const date& s)
 			: val(int64_t(std::chrono::system_clock::to_time_t(s)))
 		{}
-		explicit claim(const std::set<std::string>& s)
+		JWT_CLAIM_EXPLICIT claim(const std::set<std::string>& s)
 			: val(picojson::array(s.cbegin(), s.cend()))
 		{}
-		explicit claim(const picojson::value& val)
+		JWT_CLAIM_EXPLICIT claim(const picojson::value& val)
 			: val(val)
 		{}
-#else
-		claim(std::string s)
-			: val(std::move(s))
-		{}
-		claim(const date& s)
-			: val(int64_t(std::chrono::system_clock::to_time_t(s)))
-		{}
-		claim(const std::set<std::string>& s)
-			: val(picojson::array(s.cbegin(), s.cend()))
-		{}
-		claim(const picojson::value& val)
-			: val(val)
-		{}
-#endif
 
 		template<typename Iterator>
 		claim(Iterator start, Iterator end)
