@@ -804,6 +804,15 @@ namespace jwt {
 		}
 
 		/**
+		 * Parse input stream into wrapped json object
+		 * \return input stream
+		 */
+		inline std::istream& operator>>(std::istream& is)
+		{
+			return is >> val;
+		}
+
+		/**
 		 * Get type of contained object
 		 * \return Type
 		 * \throws std::logic_error An internal error occured
@@ -1587,4 +1596,15 @@ namespace jwt {
 	decoded_jwt decode(const std::string& token) {
 		return decoded_jwt(token);
 	}
+}
+
+
+inline std::istream& operator>>(std::istream& is, jwt::claim c)
+{
+	return c.operator>>(is);
+}
+
+inline std::ostream& operator<<(std::ostream& os, jwt::claim c)
+{
+	return os << c.to_json();
 }
