@@ -18,7 +18,7 @@
 #endif
 
 #ifndef JWT_CLAIM_EXPLICIT
-#define JWT_CLAIM_EXPLICIT 1
+#define JWT_CLAIM_EXPLICIT explicit
 #endif
 
 namespace jwt {
@@ -772,33 +772,18 @@ namespace jwt {
 		claim()
 			: val()
 		{}
-#if JWT_CLAIM_EXPLICIT
-		explicit claim(std::string s)
+		JWT_CLAIM_EXPLICIT claim(std::string s)
 			: val(std::move(s))
 		{}
-		explicit claim(const date& s)
+		JWT_CLAIM_EXPLICIT claim(const date& s)
 			: val(int64_t(std::chrono::system_clock::to_time_t(s)))
 		{}
-		explicit claim(const std::set<std::string>& s)
+		JWT_CLAIM_EXPLICIT claim(const std::set<std::string>& s)
 			: val(picojson::array(s.cbegin(), s.cend()))
 		{}
-		explicit claim(const picojson::value& val)
+		JWT_CLAIM_EXPLICIT claim(const picojson::value& val)
 			: val(val)
 		{}
-#else
-		claim(std::string s)
-			: val(std::move(s))
-		{}
-		claim(const date& s)
-			: val(int64_t(std::chrono::system_clock::to_time_t(s)))
-		{}
-		claim(const std::set<std::string>& s)
-			: val(picojson::array(s.cbegin(), s.cend()))
-		{}
-		claim(const picojson::value& val)
-			: val(val)
-		{}
-#endif
 
 		template<typename Iterator>
 		claim(Iterator start, Iterator end)
@@ -816,6 +801,15 @@ namespace jwt {
 		 */
 		picojson::value to_json() const {
 			return val;
+		}
+
+		/**
+		 * Parse input stream into wrapped json object
+		 * \return input stream
+		 */
+		inline std::istream& operator>>(std::istream& is)
+		{
+			return is >> val;
 		}
 
 		/**
@@ -1602,4 +1596,14 @@ namespace jwt {
 	decoded_jwt decode(const std::string& token) {
 		return decoded_jwt(token);
 	}
+}
+
+inline std::istream& operator>>(std::istream& is, jwt::claim& c)
+{
+	return c.operator>>(is);
+}
+
+inline std::ostream& operator<<(std::ostream& os, const jwt::claim& c)
+{
+	return os << c.to_json();
 }
