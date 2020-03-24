@@ -1598,13 +1598,12 @@ namespace jwt {
 	}
 }
 
-
-inline std::istream& operator>>(std::istream& is, jwt::claim c)
+inline std::istream& operator>>(std::istream& is, jwt::claim& c)
 {
 	return c.operator>>(is);
 }
 
-inline std::ostream& operator<<(std::ostream& os, jwt::claim c)
+inline std::ostream& operator<<(std::ostream& os, const jwt::claim& c)
 {
 	return os << c.to_json();
 }
