@@ -53,7 +53,7 @@ TEST(ClaimTest, SetObject) {
 	auto token = jwt::create()
 		.set_payload_claim("namespace", object)
 		.sign(jwt::algorithm::hs256("test"));
-	ASSERT_EQ(token, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lc3BhY2UiOnsiYXBpLXgiOlsxXX19.IgUI50puuP1CsyvFYiYJmUdajzUoFYdKl5TnTIIy5EA");
+	ASSERT_EQ(token, "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lc3BhY2UiOnsiYXBpLXgiOlsxXX19.F8I6I2RcSF98bKa0IpIz09fRZtHr1CWnWKx2za-tFQA");
 }
 
 TEST(ClaimTest, SetAlgorithm) {
