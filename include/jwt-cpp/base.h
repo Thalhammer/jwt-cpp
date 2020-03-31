@@ -44,6 +44,10 @@ namespace jwt {
 		static std::string decode(const std::string& base) {
 			return decode(base, T::data(), T::fill());
 		}
+		template<typename T>
+		static std::string pad(const std::string& base) {
+			return pad(base, T::fill());
+		}
 
 	private:
 		static std::string encode(const std::string& bin, const std::array<char, 64>& alphabet, const std::string& fill) {
@@ -163,6 +167,15 @@ namespace jwt {
 			}
 
 			return res;
+		}
+		
+		static std::string pad(const std::string& bin, const std::string& fill)
+		{   
+			const auto missingPadding = input.length() % 4;
+			for (size_t i = 0; i < missingPadding; i++)
+			{
+				input += fill;
+			}
 		}
 	};
 }
