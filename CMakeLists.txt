@@ -31,7 +31,7 @@ target_link_libraries(jwt-cpp INTERFACE OpenSSL::SSL OpenSSL::Crypto)
 
 set(JWT_HEADERS ${JWT_INCLUDE_PATH}/jwt-cpp/base.h
                 ${JWT_INCLUDE_PATH}/jwt-cpp/jwt.h)
-if(EXTERNAL_PICOJSON)
+if(NOT EXTERNAL_PICOJSON)
    set(PICO_HEADER ${JWT_INCLUDE_PATH}/picojson/picojson.h)
 endif()
 
@@ -49,7 +49,7 @@ write_basic_package_version_file(
   COMPATIBILITY ExactVersion)
 
 install(FILES ${JWT_HEADERS} DESTINATION include/jwt-cpp)
-if(EXTERNAL_PICOJSON)
+if(NOT EXTERNAL_PICOJSON)
    install(FILES ${PICO_HEADER} DESTINATION include/picojson)
 endif()
 
