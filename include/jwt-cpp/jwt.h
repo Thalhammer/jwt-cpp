@@ -1139,36 +1139,9 @@ namespace jwt {
 			signature = signature_base64 = token.substr(payload_end + 1);
 
 			// Fix padding: JWT requires padding to get removed
-			auto fix_padding = [](std::string& str) {
-				switch (str.size() % 4) {
-				case 1:
-					str += alphabet::base64url::fill();
-#ifdef __has_cpp_attribute
-#if __has_cpp_attribute(fallthrough)
-					[[fallthrough]];
-#endif
-#endif
-				case 2:
-					str += alphabet::base64url::fill();
-#ifdef __has_cpp_attribute
-#if __has_cpp_attribute(fallthrough)
-					[[fallthrough]];
-#endif
-#endif
-				case 3:
-					str += alphabet::base64url::fill();
-#ifdef __has_cpp_attribute
-#if __has_cpp_attribute(fallthrough)
-					[[fallthrough]];
-#endif
-#endif
-				default:
-					break;
-				}
-			};
-			fix_padding(header);
-			fix_padding(payload);
-			fix_padding(signature);
+			header = base::pad<alphabet::base64url>(header);
+			payload = base::pad<alphabet::base64url>(payload);
+			signature = base::pad<alphabet::base64url>(signature);
 
 			header = base::decode<alphabet::base64url>(header);
 			payload = base::decode<alphabet::base64url>(payload);
@@ -1344,10 +1317,7 @@ namespace jwt {
 			}
 
 			auto encode = [](const std::string& data) {
-				auto base = base::encode<alphabet::base64url>(data);
-				auto pos = base.find(alphabet::base64url::fill());
-				base = base.substr(0, pos);
-				return base;
+				return base::trim<alphabet::base64url>(base::encode<alphabet::base64url>(data));
 			};
 
 			std::string header = encode(picojson::value(obj_header).serialize());
