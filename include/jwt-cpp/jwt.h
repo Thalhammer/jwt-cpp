@@ -13,7 +13,7 @@
 #include <openssl/err.h>
 
 //If openssl version less than 1.1
-#if OPENSSL_VERSION_NUMBER < 269484032
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 #define OPENSSL10
 #endif
 
