@@ -2,6 +2,16 @@
 #include <string>
 #include <array>
 
+#ifdef __has_cpp_attribute
+#if __has_cpp_attribute(fallthrough)
+#define JWT_FALLTHROUGH [[fallthrough]]
+#endif
+#endif
+
+#ifdef JWT_FALLTHROUGH
+#define JWT_FALLTHROUGH
+#endif
+
 namespace jwt {
 	namespace alphabet {
 		struct base64 {
@@ -177,25 +187,13 @@ namespace jwt {
 		{				switch (base.size() % 4) {
 				case 1:
 					base += fill;
-#ifdef __has_cpp_attribute
-#if __has_cpp_attribute(fallthrough)
-					[[fallthrough]];
-#endif
-#endif
+					JWT_FALLTHROUGH;
 				case 2:
 					base += fill;
-#ifdef __has_cpp_attribute
-#if __has_cpp_attribute(fallthrough)
-					[[fallthrough]];
-#endif
-#endif
+					JWT_FALLTHROUGH;
 				case 3:
 					base += fill;
-#ifdef __has_cpp_attribute
-#if __has_cpp_attribute(fallthrough)
-					[[fallthrough]];
-#endif
-#endif
+					JWT_FALLTHROUGH;
 				default:
 					break;
 		}
