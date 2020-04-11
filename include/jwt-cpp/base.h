@@ -138,7 +138,7 @@ namespace jwt {
 			auto get_sextet = [&](size_t offset) {
 				for (size_t i = 0; i < alphabet.size(); i++) {
 					if (alphabet[i] == base[offset])
-						return i;
+						return static_cast<uint32_t>(i);
 				}
 				throw std::runtime_error("Invalid input");
 			};
