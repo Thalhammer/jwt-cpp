@@ -8,7 +8,7 @@
 #endif
 #endif
 
-#ifdef JWT_FALLTHROUGH
+#ifndef JWT_FALLTHROUGH
 #define JWT_FALLTHROUGH
 #endif
 
@@ -183,23 +183,26 @@ namespace jwt {
 			return res;
 		}
 		
-		static std::string pad(const std::string& base, const std::string& fill)
-		{				switch (base.size() % 4) {
+		static std::string pad(const std::string& base, const std::string& fill) {
+			std::string padding;
+			switch (base.size() % 4) {
 				case 1:
-					base += fill;
+					padding += fill;
 					JWT_FALLTHROUGH;
 				case 2:
-					base += fill;
+					padding += fill;
 					JWT_FALLTHROUGH;
 				case 3:
-					base += fill;
+					padding += fill;
 					JWT_FALLTHROUGH;
 				default:
 					break;
+			}
+
+			return base + padding;
 		}
-		
-		static std::string trim(const std::string& base, const std::string& fill)
-		{
+
+		static std::string trim(const std::string& base, const std::string& fill) {
 			auto pos = base.find(fill);
 			return base.substr(0, pos);
 		}
