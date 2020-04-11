@@ -122,6 +122,33 @@ namespace jwt {
 				throw rsa_exception("failed to load private key: PEM_read_bio_PrivateKey failed");
 			return pkey;
 		}
+		
+		/**
+		 * Convert a OpenSSL BIGNUM to a std::string
+		 * \param bn BIGNUM to convert
+		 * \return bignum as string
+		 */
+		inline
+#ifdef OPENSSL10
+		static std::string bn2raw(BIGNUM* bn)
+#else
+		static std::string bn2raw(const BIGNUM* bn)
+#endif
+		{
+			std::string res;
+			res.resize(BN_num_bytes(bn));
+			BN_bn2bin(bn, (unsigned char*)res.data());
+			return res;
+		}
+		/**
+		 * Convert an std::string to a OpenSSL BIGNUM
+		 * \param raw String to convert
+		 * \return BIGNUM representation
+		 */
+		inline
+		static std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw) {
+			return std::unique_ptr<BIGNUM, decltype(&BN_free)>(BN_bin2bn((const unsigned char*)raw.data(), raw.size(), nullptr), BN_free);
+		}
 	}
 
 	namespace algorithm {
@@ -372,8 +399,8 @@ namespace jwt {
 				const BIGNUM *r;
 				const BIGNUM *s;
 				ECDSA_SIG_get0(sig.get(), &r, &s);
-				auto rr = bn2raw(r);
-				auto rs = bn2raw(s);
+				auto rr = helper::bn2raw(r);
+				auto rs = helper::bn2raw(s);
 #endif
 				if(rr.size() > signature_length/2 || rs.size() > signature_length/2)
 					throw std::logic_error("bignum size exceeded expected length");
@@ -390,8 +417,8 @@ namespace jwt {
 			 */
 			void verify(const std::string& data, const std::string& signature) const {
 				const std::string hash = generate_hash(data);
-				auto r = raw2bn(signature.substr(0, signature.size() / 2));
-				auto s = raw2bn(signature.substr(signature.size() / 2));
+				auto r = helper::raw2bn(signature.substr(0, signature.size() / 2));
+				auto s = helper::raw2bn(signature.substr(signature.size() / 2));
 
 #ifdef OPENSSL10
 				ECDSA_SIG sig;
@@ -417,31 +444,6 @@ namespace jwt {
 				return alg_name;
 			}
 		private:
-			/**
-			 * Convert a OpenSSL BIGNUM to a std::string
-			 * \param bn BIGNUM to convert
-			 * \return bignum as string
-			 */
-#ifdef OPENSSL10
-			static std::string bn2raw(BIGNUM* bn)
-#else
-			static std::string bn2raw(const BIGNUM* bn)
-#endif
-			{
-				std::string res;
-				res.resize(BN_num_bytes(bn));
-				BN_bn2bin(bn, (unsigned char*)res.data());
-				return res;
-			}
-			/**
-			 * Convert an std::string to a OpenSSL BIGNUM
-			 * \param raw String to convert
-			 * \return BIGNUM representation
-			 */
-			static std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw) {
-				return std::unique_ptr<BIGNUM, decltype(&BN_free)>(BN_bin2bn((const unsigned char*)raw.data(), raw.size(), nullptr), BN_free);
-			}
-
 			/**
 			 * Hash the provided data using the hash function specified in constructor
 			 * \param data Data to hash
