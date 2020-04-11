@@ -1,7 +1,6 @@
 #pragma once
 #include <string>
 #include <array>
-#include <regex>
 
 namespace jwt {
 	namespace alphabet {
@@ -174,20 +173,37 @@ namespace jwt {
 			return res;
 		}
 		
-		static std::string pad(const std::string& bin, const std::string& base)
-		{
-			auto input = base;
-			const auto missingPadding = input.length() % 4;
-			for (size_t i = 0; i < missingPadding; i++)
-			{
-				input += fill;
-			}
-			return input;
+		static std::string pad(const std::string& base, const std::string& fill)
+		{				switch (base.size() % 4) {
+				case 1:
+					base += fill;
+#ifdef __has_cpp_attribute
+#if __has_cpp_attribute(fallthrough)
+					[[fallthrough]];
+#endif
+#endif
+				case 2:
+					base += fill;
+#ifdef __has_cpp_attribute
+#if __has_cpp_attribute(fallthrough)
+					[[fallthrough]];
+#endif
+#endif
+				case 3:
+					base += fill;
+#ifdef __has_cpp_attribute
+#if __has_cpp_attribute(fallthrough)
+					[[fallthrough]];
+#endif
+#endif
+				default:
+					break;
 		}
 		
 		static std::string trim(const std::string& base, const std::string& fill)
-		{   
-			return std::regex_replace(base, std::regex{ fill }, "");
+		{
+			auto pos = base.find(fill);
+			return base.substr(0, pos);
 		}
 	};
 }
