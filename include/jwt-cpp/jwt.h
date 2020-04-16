@@ -1509,16 +1509,8 @@ namespace jwt {
 					}
 				}
 				else if (c.get_type() == claim::type::object) {
-					auto s1 = c.serialize();
-					auto s2 = jc.serialize();
-					if (s1.size() != s2.size())
+					if( c.to_json().serialize() != jc.to_json().serialize())
 						throw token_verification_exception("claim " + key + " does not match expected");
-					auto it1 = s1.cbegin();
-					auto it2 = s2.cbegin();
-					while (it1 != s1.cend() && it2 != s2.cend()) {
-						if (*it1++ != *it2++)
-							throw token_verification_exception("claim " + key + " does not match expected");
-					}
 				}
 				else if (c.get_type() == claim::type::string) {
 					if (c.as_string() != jc.as_string())
