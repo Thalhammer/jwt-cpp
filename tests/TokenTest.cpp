@@ -351,7 +351,10 @@ TEST(TokenTest, VerifyFail) {
 	}
 	{
 		jwt::claim object;
-		std::stringstream{R"({ "test": null })"} >> object;
+		std::istringstream iss{R"({ "test": null })"};
+		iss >> object;
+		ASSERT_EQ(object.get_type() , jwt::claim::type::object);
+
 		auto verify = jwt::verify()
 			.allow_algorithm(jwt::algorithm::none{})
 			.with_issuer("auth0")
