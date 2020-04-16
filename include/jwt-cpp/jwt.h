@@ -1441,6 +1441,13 @@ namespace jwt {
 		 */
 		verifier& with_audience(const std::set<std::string>& aud) { return with_claim("aud", claim(aud)); }
 		/**
+		 * Set an audience to check for.
+		 * If the specified audiences is not present in the token the check fails.
+		 * \param aud Audience to check for.
+		 * \return *this to allow chaining
+		 */
+		verifier& with_audience(const std::string& aud) { return with_claim("aud", claim(aud)); }
+		/**
 		 * Set an id to check for.
 		 * Check is casesensitive.
 		 * \param id ID to check for.
@@ -1492,6 +1499,18 @@ namespace jwt {
 				else if (c.get_type() == claim::type::array) {
 					auto s1 = c.as_set();
 					auto s2 = jc.as_set();
+					if (s1.size() != s2.size())
+						throw token_verification_exception("claim " + key + " does not match expected");
+					auto it1 = s1.cbegin();
+					auto it2 = s2.cbegin();
+					while (it1 != s1.cend() && it2 != s2.cend()) {
+						if (*it1++ != *it2++)
+							throw token_verification_exception("claim " + key + " does not match expected");
+					}
+				}
+				else if (c.get_type() == claim::type::object) {
+					auto s1 = c.serialize();
+					auto s2 = jc.serialize();
 					if (s1.size() != s2.size())
 						throw token_verification_exception("claim " + key + " does not match expected");
 					auto it1 = s1.cbegin();
