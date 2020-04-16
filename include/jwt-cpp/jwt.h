@@ -74,7 +74,6 @@ namespace jwt {
 	namespace helper {
 		inline
 		std::string extract_pubkey_from_cert(const std::string& certstr, const std::string& pw = "") {
-			// TODO: Cannot find the exact version this change happended
 #if OPENSSL_VERSION_NUMBER <= 0x10100003L
 			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(BIO_new_mem_buf(const_cast<char*>(certstr.data()), certstr.size()), BIO_free_all);
 #else
@@ -399,8 +398,8 @@ namespace jwt {
 					throw signature_generation_exception();
 #ifdef OPENSSL10
 
-				auto rr = bn2raw(sig->r);
-				auto rs = bn2raw(sig->s);
+				auto rr = helper::bn2raw(sig->r);
+				auto rs = helper::bn2raw(sig->s);
 #else
 				const BIGNUM *r;
 				const BIGNUM *s;
