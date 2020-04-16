@@ -117,7 +117,7 @@ namespace jwt {
 		std::shared_ptr<EVP_PKEY> load_private_key_from_string(const std::string& key, const std::string& password = "") {
 			std::unique_ptr<BIO, decltype(&BIO_free_all)> privkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
 			const int len = static_cast<int>(key.size());
-			if ((size_t)BIO_write(privkey_bio.get(), key.data(), len) != len)
+			if (BIO_write(privkey_bio.get(), key.data(), len) != len)
 				throw rsa_exception("failed to load private key: bio_write failed");
 			std::shared_ptr<EVP_PKEY> pkey(PEM_read_bio_PrivateKey(privkey_bio.get(), nullptr, nullptr, const_cast<char*>(password.c_str())), EVP_PKEY_free);
 			if (!pkey)
