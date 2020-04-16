@@ -332,6 +332,13 @@ TEST(TokenTest, VerifyFail) {
 		auto verify = jwt::verify()
 			.allow_algorithm(jwt::algorithm::none{})
 			.with_issuer("auth0")
+			.with_audience("test");
+		ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+	}
+	{
+		auto verify = jwt::verify()
+			.allow_algorithm(jwt::algorithm::none{})
+			.with_issuer("auth0")
 			.with_subject("test");
 		ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
 	}
@@ -340,6 +347,15 @@ TEST(TokenTest, VerifyFail) {
 			.allow_algorithm(jwt::algorithm::none{})
 			.with_issuer("auth0")
 			.with_claim("myclaim", jwt::claim(std::string("test")));
+		ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+	}
+	{
+		jwt::claim object;
+		std::stringstream{R"{ "test": null }"} >> object;
+		auto verify = jwt::verify()
+			.allow_algorithm(jwt::algorithm::none{})
+			.with_issuer("auth0")
+			.with_claim("myclaim", object);
 		ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
 	}
 }
