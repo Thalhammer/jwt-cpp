@@ -325,7 +325,7 @@ TEST(TokenTest, VerifyFail) {
 		auto verify = jwt::verify()
 			.allow_algorithm(jwt::algorithm::none{})
 			.with_issuer("auth0")
-			.with_audience({ "test" });
+			.with_audience(std::set<std::string>{ "test" });
 		ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
 	}
 	{
