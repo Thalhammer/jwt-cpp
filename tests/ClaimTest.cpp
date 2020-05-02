@@ -44,6 +44,18 @@ TEST(ClaimTest, SetArray) {
 	ASSERT_EQ(token, "eyJhbGciOiJub25lIn0.eyJ0ZXN0IjpbMTAwLDIwLDEwXX0.");
 }
 
+TEST(ClaimTest, SetObject) {
+	std::istringstream iss{"{\"api-x\": [1]}"};
+	jwt::claim object;
+	iss >> object;
+	ASSERT_EQ(object.get_type() , jwt::claim::type::object);
+
+	auto token = jwt::create()
+		.set_payload_claim("namespace", object)
+		.sign(jwt::algorithm::hs256("test"));
+	ASSERT_EQ(token, "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lc3BhY2UiOnsiYXBpLXgiOlsxXX19.F8I6I2RcSF98bKa0IpIz09fRZtHr1CWnWKx2za-tFQA");
+}
+
 TEST(ClaimTest, SetAlgorithm) {
 	auto token = jwt::create()
 		.set_algorithm("test")
