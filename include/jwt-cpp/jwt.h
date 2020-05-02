@@ -13,7 +13,7 @@
 #include <openssl/err.h>
 
 //If openssl version less than 1.1
-#if OPENSSL_VERSION_NUMBER < 269484032
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 #define OPENSSL10
 #endif
 
@@ -74,11 +74,10 @@ namespace jwt {
 	namespace helper {
 		inline
 		std::string extract_pubkey_from_cert(const std::string& certstr, const std::string& pw = "") {
-			// TODO: Cannot find the exact version this change happended
 #if OPENSSL_VERSION_NUMBER <= 0x10100003L
 			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(BIO_new_mem_buf(const_cast<char*>(certstr.data()), certstr.size()), BIO_free_all);
 #else
-			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(BIO_new_mem_buf(certstr.data(), certstr.size()), BIO_free_all);
+			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(BIO_new_mem_buf(certstr.data(), static_cast<int>(certstr.size())), BIO_free_all);
 #endif
 			std::unique_ptr<BIO, decltype(&BIO_free_all)> keybio(BIO_new(BIO_s_mem()), BIO_free_all);
 
@@ -99,10 +98,12 @@ namespace jwt {
 			std::unique_ptr<BIO, decltype(&BIO_free_all)> pubkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
 			if(key.substr(0, 27) == "-----BEGIN CERTIFICATE-----") {
 				auto epkey = helper::extract_pubkey_from_cert(key, password);
-				if ((size_t)BIO_write(pubkey_bio.get(), epkey.data(), epkey.size()) != epkey.size())
+				const int len = static_cast<int>(epkey.size());
+				if (BIO_write(pubkey_bio.get(), epkey.data(), len) != len)
 					throw rsa_exception("failed to load public key: bio_write failed");
 			} else {
-				if ((size_t)BIO_write(pubkey_bio.get(), key.data(), key.size()) != key.size())
+				const int len = static_cast<int>(key.size());
+				if (BIO_write(pubkey_bio.get(), key.data(), len) != len)
 					throw rsa_exception("failed to load public key: bio_write failed");
 			}
 			
@@ -115,12 +116,40 @@ namespace jwt {
 		inline
 		std::shared_ptr<EVP_PKEY> load_private_key_from_string(const std::string& key, const std::string& password = "") {
 			std::unique_ptr<BIO, decltype(&BIO_free_all)> privkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
-			if ((size_t)BIO_write(privkey_bio.get(), key.data(), key.size()) != key.size())
+			const int len = static_cast<int>(key.size());
+			if (BIO_write(privkey_bio.get(), key.data(), len) != len)
 				throw rsa_exception("failed to load private key: bio_write failed");
 			std::shared_ptr<EVP_PKEY> pkey(PEM_read_bio_PrivateKey(privkey_bio.get(), nullptr, nullptr, const_cast<char*>(password.c_str())), EVP_PKEY_free);
 			if (!pkey)
 				throw rsa_exception("failed to load private key: PEM_read_bio_PrivateKey failed");
 			return pkey;
+		}
+		
+		/**
+		 * Convert a OpenSSL BIGNUM to a std::string
+		 * \param bn BIGNUM to convert
+		 * \return bignum as string
+		 */
+		inline
+#ifdef OPENSSL10
+		static std::string bn2raw(BIGNUM* bn)
+#else
+		static std::string bn2raw(const BIGNUM* bn)
+#endif
+		{
+			std::string res;
+			res.resize(BN_num_bytes(bn));
+			BN_bn2bin(bn, (unsigned char*)res.data());
+			return res;
+		}
+		/**
+		 * Convert an std::string to a OpenSSL BIGNUM
+		 * \param raw String to convert
+		 * \return BIGNUM representation
+		 */
+		inline
+		static std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw) {
+			return std::unique_ptr<BIGNUM, decltype(&BN_free)>(BN_bin2bn((const unsigned char*)raw.data(), static_cast<int>(raw.size()), nullptr), BN_free);
 		}
 	}
 
@@ -166,9 +195,9 @@ namespace jwt {
 			 */
 			std::string sign(const std::string& data) const {
 				std::string res;
-				res.resize(EVP_MAX_MD_SIZE);
-				unsigned int len = res.size();
-				if (HMAC(md(), secret.data(), secret.size(), (const unsigned char*)data.data(), data.size(), (unsigned char*)res.data(), &len) == nullptr)
+				res.resize(static_cast<size_t>(EVP_MAX_MD_SIZE));
+				unsigned int len = static_cast<unsigned int>(res.size());
+				if (HMAC(md(), secret.data(), static_cast<int>(secret.size()), (const unsigned char*)data.data(), static_cast<int>(data.size()), (unsigned char*)res.data(), &len) == nullptr)
 					throw signature_generation_exception();
 				res.resize(len);
 				return res;
@@ -280,7 +309,7 @@ namespace jwt {
 					throw signature_verification_exception("failed to verify signature: VerifyInit failed");
 				if (!EVP_VerifyUpdate(ctx.get(), data.data(), data.size()))
 					throw signature_verification_exception("failed to verify signature: VerifyUpdate failed");
-				auto res = EVP_VerifyFinal(ctx.get(), (const unsigned char*)signature.data(), signature.size(), pkey.get());
+				auto res = EVP_VerifyFinal(ctx.get(), (const unsigned char*)signature.data(), static_cast<unsigned int>(signature.size()), pkey.get());
 				if (res != 1)
 					throw signature_verification_exception("evp verify final failed: " + std::to_string(res) + " " + ERR_error_string(ERR_get_error(), NULL));
 			}
@@ -319,10 +348,12 @@ namespace jwt {
 					std::unique_ptr<BIO, decltype(&BIO_free_all)> pubkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
 					if(public_key.substr(0, 27) == "-----BEGIN CERTIFICATE-----") {
 						auto epkey = helper::extract_pubkey_from_cert(public_key, public_key_password);
-						if ((size_t)BIO_write(pubkey_bio.get(), epkey.data(), epkey.size()) != epkey.size())
+						const int len = static_cast<int>(epkey.size());
+						if (BIO_write(pubkey_bio.get(), epkey.data(), len) != len)
 							throw ecdsa_exception("failed to load public key: bio_write failed");
 					} else  {
-						if ((size_t)BIO_write(pubkey_bio.get(), public_key.data(), public_key.size()) != public_key.size())
+						const int len = static_cast<int>(public_key.size());
+						if (BIO_write(pubkey_bio.get(), public_key.data(), len) != len)
 							throw ecdsa_exception("failed to load public key: bio_write failed");
 					}
 
@@ -336,7 +367,8 @@ namespace jwt {
 
 				if (!private_key.empty()) {
 					std::unique_ptr<BIO, decltype(&BIO_free_all)> privkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
-					if ((size_t)BIO_write(privkey_bio.get(), private_key.data(), private_key.size()) != private_key.size())
+						const int len = static_cast<int>(private_key.size());
+					if (BIO_write(privkey_bio.get(), private_key.data(), len) != len)
 						throw ecdsa_exception("failed to load private key: bio_write failed");
 					pkey.reset(PEM_read_bio_ECPrivateKey(privkey_bio.get(), nullptr, nullptr, const_cast<char*>(private_key_password.c_str())), EC_KEY_free);
 					if (!pkey)
@@ -361,19 +393,19 @@ namespace jwt {
 				const std::string hash = generate_hash(data);
 
 				std::unique_ptr<ECDSA_SIG, decltype(&ECDSA_SIG_free)>
-					sig(ECDSA_do_sign((const unsigned char*)hash.data(), hash.size(), pkey.get()), ECDSA_SIG_free);
+					sig(ECDSA_do_sign((const unsigned char*)hash.data(), static_cast<int>(hash.size()), pkey.get()), ECDSA_SIG_free);
 				if(!sig)
 					throw signature_generation_exception();
 #ifdef OPENSSL10
 
-				auto rr = bn2raw(sig->r);
-				auto rs = bn2raw(sig->s);
+				auto rr = helper::bn2raw(sig->r);
+				auto rs = helper::bn2raw(sig->s);
 #else
 				const BIGNUM *r;
 				const BIGNUM *s;
 				ECDSA_SIG_get0(sig.get(), &r, &s);
-				auto rr = bn2raw(r);
-				auto rs = bn2raw(s);
+				auto rr = helper::bn2raw(r);
+				auto rs = helper::bn2raw(s);
 #endif
 				if(rr.size() > signature_length/2 || rs.size() > signature_length/2)
 					throw std::logic_error("bignum size exceeded expected length");
@@ -390,8 +422,8 @@ namespace jwt {
 			 */
 			void verify(const std::string& data, const std::string& signature) const {
 				const std::string hash = generate_hash(data);
-				auto r = raw2bn(signature.substr(0, signature.size() / 2));
-				auto s = raw2bn(signature.substr(signature.size() / 2));
+				auto r = helper::raw2bn(signature.substr(0, signature.size() / 2));
+				auto s = helper::raw2bn(signature.substr(signature.size() / 2));
 
 #ifdef OPENSSL10
 				ECDSA_SIG sig;
@@ -405,7 +437,7 @@ namespace jwt {
 
 				ECDSA_SIG_set0(sig.get(), r.release(), s.release());
 
-				if(ECDSA_do_verify((const unsigned char*)hash.data(), hash.size(), sig.get(), pkey.get()) != 1)
+				if(ECDSA_do_verify((const unsigned char*)hash.data(), static_cast<int>(hash.size()), sig.get(), pkey.get()) != 1)
 					throw signature_verification_exception("Invalid signature");
 #endif
 			}
@@ -417,31 +449,6 @@ namespace jwt {
 				return alg_name;
 			}
 		private:
-			/**
-			 * Convert a OpenSSL BIGNUM to a std::string
-			 * \param bn BIGNUM to convert
-			 * \return bignum as string
-			 */
-#ifdef OPENSSL10
-			static std::string bn2raw(BIGNUM* bn)
-#else
-			static std::string bn2raw(const BIGNUM* bn)
-#endif
-			{
-				std::string res;
-				res.resize(BN_num_bytes(bn));
-				BN_bn2bin(bn, (unsigned char*)res.data());
-				return res;
-			}
-			/**
-			 * Convert an std::string to a OpenSSL BIGNUM
-			 * \param raw String to convert
-			 * \return BIGNUM representation
-			 */
-			static std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw) {
-				return std::unique_ptr<BIGNUM, decltype(&BN_free)>(BN_bin2bn((const unsigned char*)raw.data(), raw.size(), nullptr), BN_free);
-			}
-
 			/**
 			 * Hash the provided data using the hash function specified in constructor
 			 * \param data Data to hash
@@ -533,7 +540,7 @@ namespace jwt {
 				const int size = RSA_size(key.get());
 				
 				std::string sig(size, 0x00);
-				if(!RSA_public_decrypt(signature.size(), (const unsigned char*)signature.data(), (unsigned char*)sig.data(), key.get(), RSA_NO_PADDING))
+				if(!RSA_public_decrypt(static_cast<int>(signature.size()), (const unsigned char*)signature.data(), (unsigned char*)sig.data(), key.get(), RSA_NO_PADDING))
 					throw signature_verification_exception("Invalid signature");
 				
 				if(!RSA_verify_PKCS1_PSS_mgf1(key.get(), (const unsigned char*)hash.data(), md(), md(), (const unsigned char*)sig.data(), -1))
@@ -1139,36 +1146,9 @@ namespace jwt {
 			signature = signature_base64 = token.substr(payload_end + 1);
 
 			// Fix padding: JWT requires padding to get removed
-			auto fix_padding = [](std::string& str) {
-				switch (str.size() % 4) {
-				case 1:
-					str += alphabet::base64url::fill();
-#ifdef __has_cpp_attribute
-#if __has_cpp_attribute(fallthrough)
-					[[fallthrough]];
-#endif
-#endif
-				case 2:
-					str += alphabet::base64url::fill();
-#ifdef __has_cpp_attribute
-#if __has_cpp_attribute(fallthrough)
-					[[fallthrough]];
-#endif
-#endif
-				case 3:
-					str += alphabet::base64url::fill();
-#ifdef __has_cpp_attribute
-#if __has_cpp_attribute(fallthrough)
-					[[fallthrough]];
-#endif
-#endif
-				default:
-					break;
-				}
-			};
-			fix_padding(header);
-			fix_padding(payload);
-			fix_padding(signature);
+			header = base::pad<alphabet::base64url>(header);
+			payload = base::pad<alphabet::base64url>(payload);
+			signature = base::pad<alphabet::base64url>(signature);
 
 			header = base::decode<alphabet::base64url>(header);
 			payload = base::decode<alphabet::base64url>(payload);
@@ -1344,10 +1324,7 @@ namespace jwt {
 			}
 
 			auto encode = [](const std::string& data) {
-				auto base = base::encode<alphabet::base64url>(data);
-				auto pos = base.find(alphabet::base64url::fill());
-				base = base.substr(0, pos);
-				return base;
+				return base::trim<alphabet::base64url>(base::encode<alphabet::base64url>(data));
 			};
 
 			std::string header = encode(picojson::value(obj_header).serialize());
