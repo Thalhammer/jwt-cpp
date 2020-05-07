@@ -45,7 +45,7 @@ configure_package_config_file(
 
 write_basic_package_version_file(
   ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-version.cmake
-  VERSION 0.3.1 # TBA
+  VERSION 0.4.0
   COMPATIBILITY ExactVersion)
 
 install(FILES ${JWT_HEADERS} DESTINATION include/jwt-cpp)
