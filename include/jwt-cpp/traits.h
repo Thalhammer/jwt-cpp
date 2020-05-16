@@ -1,4 +1,5 @@
 #pragma once
+#include <type_traits>
 
 namespace jwt {
     namespace json {
@@ -19,7 +20,7 @@ namespace jwt {
             typename number, 
             typename integer,
             typename boolean, 
-            /*typename null = nullptr*/>
+            typename null = void>
         struct traits {
             using value = value;
             using type = type;
@@ -29,7 +30,9 @@ namespace jwt {
             using number = number;
             using boolean = boolean;
             using integer = integer;
-            // using null = null;
+            using null = null;
+
+            static_assert(std::is_constructible<value, object>::value);
         };
     }
 }
