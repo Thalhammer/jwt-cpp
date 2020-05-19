@@ -39,16 +39,16 @@ TEST(ClaimTest, SetArray) {
 		10
 	};
 	auto token = jwt::create()
-		.set_payload_claim("test", jwt::claim(vect.begin(), vect.end()))
+		.set_payload_claim("test", jwt::claim<jwt::picojson_traits>(vect.begin(), vect.end()))
 		.sign(jwt::algorithm::none{});
 	ASSERT_EQ(token, "eyJhbGciOiJub25lIn0.eyJ0ZXN0IjpbMTAwLDIwLDEwXX0.");
 }
 
 TEST(ClaimTest, SetObject) {
 	std::istringstream iss{"{\"api-x\": [1]}"};
-	jwt::claim object;
+	jwt::claim<jwt::picojson_traits> object;
 	iss >> object;
-	ASSERT_EQ(object.get_type() , jwt::claim::type::object);
+	ASSERT_EQ(object.get_type() , jwt::json::type::object);
 
 	auto token = jwt::create()
 		.set_payload_claim("namespace", object)
