@@ -2,7 +2,6 @@
 #define PICOJSON_USE_INT64
 #include "picojson/picojson.h"
 #include "base.h"
-#include "traits.h"
 #include <set>
 #include <chrono>
 #include <unordered_map>
@@ -761,110 +760,121 @@ namespace jwt {
 		};
 	}
 
-	struct picojson_traits : jwt::json::traits<
-		picojson::value, 
-		picojson::object, 
-		picojson::array, 
-		std::string, 
-		double,
-		int64_t, 
-		bool> {
-		static jwt::json::type get_type(const traits::value& val) {
-			using jwt::json::type;
+	namespace json {
+		enum class type {
+			null, 
+			boolean, 
+			integer,
+			number, 
+			string, 
+			array, 
+			object, 
+		};
+	}
 
-			if (val.is<picojson::null>()) return type::null;
-			else if (val.is<bool>()) return type::boolean;
-			else if (val.is<int64_t>()) return type::integer;
-			else if (val.is<double>()) return type::number;
-			else if (val.is<std::string>()) return type::string;
-			else if (val.is<picojson::array>()) return type::array;
-			else if (val.is<picojson::object>()) return type::object;
-			else throw std::logic_error("invalid type");
-		}
+	namespace details{
+		struct picojson_traits{
+			json::type get_type(const picojson::value& val) {
+				using json::type;
 
-		static traits::object as_object(const traits::value& val) {
-			if (!val.is<traits::object>())
-				throw std::bad_cast();
-			return val.get<traits::object>();
-		}
-
-		static traits::string as_string(const traits::value& val) {
-			if (!val.is<traits::string>())
-				throw std::bad_cast();
-			return val.get<traits::string>();
-		}
-
-		static traits::array as_array(const traits::value& val) {
-			if (!val.is<traits::array>())
-				throw std::bad_cast();
-			return val.get<traits::array>();
-		}
-
-		static std::set<traits::string> as_set(const traits::value& val) {
-			std::set<traits::string> res;
-			for(auto& e : as_array(val)) {
-				if(!e.is<traits::string>())
-					throw std::bad_cast();
-				res.insert(e.get<traits::string>());
+				if (val.is<picojson::null>()) return type::null;
+				else if (val.is<bool>()) return type::boolean;
+				else if (val.is<int64_t>()) return type::integer;
+				else if (val.is<double>()) return type::number;
+				else if (val.is<std::string>()) return type::string;
+				else if (val.is<picojson::array>()) return type::array;
+				else if (val.is<picojson::object>()) return type::object;
+				else throw std::logic_error("invalid type");
 			}
-			return res;
-		}
 
-		static traits::integer as_int(const traits::value& val) {
-			if (!val.is<traits::integer>())
-				throw std::bad_cast();
-			return val.get<traits::integer>();
-		}
+			static picojson::object as_object(const picojson::value& val) {
+				if (!val.is<picojson::object>())
+					throw std::bad_cast();
+				return val.get<picojson::object>();
+			}
 
-		static traits::boolean as_bool(const traits::value& val) {
-			if (!val.is<traits::boolean>())
-				throw std::bad_cast();
-			return val.get<traits::boolean>();
-		}
+			static std::string as_string(const picojson::value& val) {
+				if (!val.is<std::string>())
+					throw std::bad_cast();
+				return val.get<std::string>();
+			}
 
-		static traits::number as_number(const traits::value& val) {
-			if (!val.is<traits::number>())
-				throw std::bad_cast();
-			return val.get<traits::number>();
-		}
+			static picojson::array as_array(const picojson::value& val) {
+				if (!val.is<picojson::array>())
+					throw std::bad_cast();
+				return val.get<picojson::array>();
+			}
 
-		static bool parse(traits::value& val, traits::string str){
-			return picojson::parse(val, str).empty();
-		}
-	};
+			static std::set<std::string> as_set(const picojson::value& val) {
+				std::set<std::string> res;
+				for(auto& e : as_array(val)) {
+					if(!e.is<std::string>())
+						throw std::bad_cast();
+					res.insert(e.get<std::string>());
+				}
+				return res;
+			}
 
-	/**
-	 * Convenience wrapper for JSON value
-	 */
-	template<typename traits = picojson_traits>
-	class claim {
-		typename traits::value val;
-	public:
-		using set = std::set<typename traits::string>;
+			static int64_t as_int(const picojson::value& val) {
+				if (!val.is<int64_t>())
+					throw std::bad_cast();
+				return val.get<int64_t>();
+			}
 
-		claim() = default;
+			static bool as_bool(const picojson::value& val) {
+				if (!val.is<bool>())
+					throw std::bad_cast();
+				return val.get<bool>();
+			}
 
-		JWT_CLAIM_EXPLICIT claim(typename traits::string s)
+			static double as_number(const picojson::value& val) {
+				if (!val.is<double>())
+					throw std::bad_cast();
+				return val.get<double>();
+			}
+
+			static bool parse(picojson::value& val, std::string str){
+				return picojson::parse(val, str).empty();
+			}
+		};
+	}
+
+	template<typename value_type = picojson::value,
+				template<typename, typename, typename...> class object_type = picojson::object,
+				template<typename, typename...> class array_type = picojson::array,
+				class string_type = std::string,
+				class boolean_type = bool, class integer_type = int64_t,
+				class number_type = double,
+				typename traits = details::picojson_traits>
+	class basic_claim {
+			value_type val;
+		public:
+			using set = std::set<string_type>;
+
+		basic_claim() = default;
+
+		JWT_CLAIM_EXPLICIT basic_claim(string_type s)
 			: val(std::move(s))
 		{}
-		JWT_CLAIM_EXPLICIT claim(const date& d)
-			: val(int64_t(std::chrono::system_clock::to_time_t(d)))
+
+		JWT_CLAIM_EXPLICIT basic_claim(const date& d)
+			: val(integer_type(std::chrono::system_clock::to_time_t(d)))
 		{}
 
-		JWT_CLAIM_EXPLICIT claim(typename traits::array a)
+		JWT_CLAIM_EXPLICIT basic_claim(array_type a)
 			: val(std::move(a))
 		{}
 
-		JWT_CLAIM_EXPLICIT claim(const typename traits::value& v)
+		JWT_CLAIM_EXPLICIT basic_claim(const value_type& v)
 			: val(v)
 		{}
 
-		JWT_CLAIM_EXPLICIT claim(typename traits::value&& v)
+		JWT_CLAIM_EXPLICIT basic_claim(value_type&& v)
 			: val(std::move(v))
 		{}
 
-		claim(set s)
-			: val(typename traits::array(s.begin(), s.end()))
+		JWT_CLAIM_EXPLICIT basic_claim(const set& s)
+			: val(array_type(s.begin(), s.end()))
 		{}
 
 		template<typename Iterator>
@@ -876,7 +886,7 @@ namespace jwt {
 		 * Get wrapped json object
 		 * \return Wrapped json object
 		 */
-		typename traits::value to_json() const {
+		value_type to_json() const {
 			return val;
 		}
 
@@ -884,7 +894,7 @@ namespace jwt {
 		 * Parse input stream into wrapped json object
 		 * \return input stream
 		 */
-		inline std::istream& operator>>(std::istream& is)
+		std::istream& operator>>(std::istream& is)
 		{
 			return is >> val;
 		}
@@ -903,9 +913,10 @@ namespace jwt {
 		 * \return content as string
 		 * \throws std::bad_cast Content was not a string
 		 */
-		typename traits::string as_string() const {
+		string_type as_string() const {
 			return traits::as_string(val);
 		}
+
 		/**
 		 * Get the contained object as a date
 		 * \return content as date
@@ -920,9 +931,10 @@ namespace jwt {
 		 * \return content as array
 		 * \throws std::bad_cast Content was not an array
 		 */
-		typename traits::array as_array() const {
+		array_type as_array() const {
 			return traits::as_array(val);
 		}
+
 		/**
 		 * Get the contained object as a set of strings
 		 * \return content as set of strings
@@ -931,22 +943,25 @@ namespace jwt {
 		set as_set() const {
 			return traits::as_set(val);
 		}
+
 		/**
 		 * Get the contained object as an integer
 		 * \return content as int
 		 * \throws std::bad_cast Content was not an int
 		 */
-		typename traits::integer as_int() const {
+		integer_type as_int() const {
 			return traits::as_int(val);
 		}
+
 		/**
 		 * Get the contained object as a bool
 		 * \return content as bool
 		 * \throws std::bad_cast Content was not a bool
 		 */
-		typename traits::boolean as_bool() const {
+		boolean_type as_bool() const {
 			return traits::as_bool(val);
 		}
+
 		/**
 		 * Get the contained object as a number
 		 * \return content as double
@@ -958,13 +973,36 @@ namespace jwt {
 	};
 
 	/**
+	 * Convenience wrapper for JSON value
+	 */
+	using claim = basic_claim<>;
+
+#define JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES \
+	typename value_type, \
+		template<typename, typename, typename...> class object_type, \
+		template<typename, typename...> class array_type, \
+		class string_type, class boolean_type, class number_type, \
+		typename traits
+
+
+#define JWT_BASIC_CLAIM_TPL_DECLARATION \
+	template<JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES>
+
+#define JWT_BASIC_CLAIM_TPL \
+	value_type, object_type, array_type, string_type, \
+		boolean_type, number_type, traits
+
+	using basic_claim_t = 
+		basic_claim<JWT_BASIC_CLAIM_TPL>
+
+	/**
 	 * Base class that represents a token payload.
 	 * Contains Convenience accessors for common claims.
 	 */
-	template<typename traits = picojson_traits>
+	JWT_BASIC_CLAIM_TPL_DECLARATION
 	class payload {
 	protected:
-		std::unordered_map<std::string, claim<traits>> payload_claims;
+		std::unordered_map<std::string, basic_claim_t> payload_claims;
 	public:
 		/**
 		 * Check if issuer is present ("iss")
@@ -1007,23 +1045,23 @@ namespace jwt {
 		 * \throws std::runtime_error If claim was not present
 		 * \throws std::bad_cast Claim was present but not a string (Should not happen in a valid token)
 		 */
-		typename traits::string get_issuer() const { return get_payload_claim("iss").as_string(); }
+		string_type get_issuer() const { return get_payload_claim("iss").as_string(); }
 		/**
 		 * Get subject claim
 		 * \return subject as string
 		 * \throws std::runtime_error If claim was not present
 		 * \throws std::bad_cast Claim was present but not a string (Should not happen in a valid token)
 		 */
-		typename traits::string get_subject() const { return get_payload_claim("sub").as_string(); }
+		string_type get_subject() const { return get_payload_claim("sub").as_string(); }
 		/**
 		 * Get audience claim
 		 * \return audience as a set of strings
 		 * \throws std::runtime_error If claim was not present
 		 * \throws std::bad_cast Claim was present but not a set (Should not happen in a valid token)
 		 */
-		typename claim<traits>::set get_audience() const { 
+		typename basic_claim::set get_audience() const { 
 			auto aud = get_payload_claim("aud");
-			if(aud.get_type() == jwt::json::type::string) return { aud.as_string()};
+			if(aud.get_type() == json::type::string) return { aud.as_string()};
 			else return aud.as_set();
 		}
 		/**
@@ -1053,18 +1091,18 @@ namespace jwt {
 		 * \throws std::runtime_error If claim was not present
 		 * \throws std::bad_cast Claim was present but not a string (Should not happen in a valid token)
 		 */
-		const std::string& get_id() const { return get_payload_claim("jti").as_string(); }
+		string_type get_id() const { return get_payload_claim("jti").as_string(); }
 		/**
 		 * Check if a payload claim is present
 		 * \return true if claim was present, false otherwise
 		 */
-		bool has_payload_claim(const std::string& name) const noexcept { return payload_claims.count(name) != 0; }
+		bool has_payload_claim(const string_type& name) const noexcept { return payload_claims.count(name) != 0; }
 		/**
 		 * Get payload claim
 		 * \return Requested claim
 		 * \throws std::runtime_error If claim was not present
 		 */
-		claim<traits> get_payload_claim(const std::string& name) const {
+		basic_claim_t get_payload_claim(const string_type& name) const {
 			if (!has_payload_claim(name))
 				throw std::runtime_error("claim not found");
 			return payload_claims.at(name);
@@ -1073,17 +1111,17 @@ namespace jwt {
 		 * Get all payload claims
 		 * \return map of claims
 		 */
-		std::unordered_map<std::string, claim<traits>> get_payload_claims() const { return payload_claims; }
+		std::unordered_map<std::string, basic_claim_t> get_payload_claims() const { return payload_claims; }
 	};
 
 	/**
 	 * Base class that represents a token header.
 	 * Contains Convenience accessors for common claims.
 	 */
-	template<typename traits = picojson_traits>
+	JWT_BASIC_CLAIM_TPL_DECLARATION
 	class header {
 	protected:
-		std::unordered_map<std::string, claim<traits>> header_claims;
+		std::unordered_map<std::string, basic_claim_t> header_claims;
 	public:
 		/**
 		 * Check if algortihm is present ("alg")
@@ -1111,39 +1149,39 @@ namespace jwt {
 		 * \throws std::runtime_error If claim was not present
 		 * \throws std::bad_cast Claim was present but not a string (Should not happen in a valid token)
 		 */
-		typename traits::string get_algorithm() const { return get_header_claim("alg").as_string(); }
+		string_type get_algorithm() const { return get_header_claim("alg").as_string(); }
 		/**
 		 * Get type claim
 		 * \return type as a string
 		 * \throws std::runtime_error If claim was not present
 		 * \throws std::bad_cast Claim was present but not a string (Should not happen in a valid token)
 		 */
-		typename traits::string get_type() const { return get_header_claim("typ").as_string(); }
+		string_type get_type() const { return get_header_claim("typ").as_string(); }
 		/**
 		 * Get content type claim
 		 * \return content type as string
 		 * \throws std::runtime_error If claim was not present
 		 * \throws std::bad_cast Claim was present but not a string (Should not happen in a valid token)
 		 */
-		typename traits::string get_content_type() const { return get_header_claim("cty").as_string(); }
+		string_type get_content_type() const { return get_header_claim("cty").as_string(); }
 		/**
 		 * Get key id claim
 		 * \return key id as string
 		 * \throws std::runtime_error If claim was not present
 		 * \throws std::bad_cast Claim was present but not a string (Should not happen in a valid token)
 		 */
-		typename traits::string get_key_id() const { return get_header_claim("kid").as_string(); }
+		string_type get_key_id() const { return get_header_claim("kid").as_string(); }
 		/**
 		 * Check if a header claim is present
 		 * \return true if claim was present, false otherwise
 		 */
-		bool has_header_claim(const std::string& name) const noexcept { return header_claims.count(name) != 0; }
+		bool has_header_claim(const string_type& name) const noexcept { return header_claims.count(name) != 0; }
 		/**
 		 * Get header claim
 		 * \return Requested claim
 		 * \throws std::runtime_error If claim was not present
 		 */
-		const claim<traits>& get_header_claim(const std::string& name) const {
+		const basic_claim_t& get_header_claim(const string_type& name) const {
 			if (!has_header_claim(name))
 				throw std::runtime_error("claim not found");
 			return header_claims.at(name);
@@ -1152,14 +1190,14 @@ namespace jwt {
 		 * Get all header claims
 		 * \return map of claims
 		 */
-		std::unordered_map<std::string, claim<traits>> get_header_claims() const { return header_claims; }
+		std::unordered_map<std::string, basic_claim_t> get_header_claims() const { return header_claims; }
 	};
 
 	/**
 	 * Class containing all information about a decoded token
 	 */
-	template<typename traits = picojson_traits>
-	class decoded_jwt : public header<traits>, public payload<traits> {
+	JWT_BASIC_CLAIM_TPL_DECLARATION
+	class decoded_jwt : public header<JWT_BASIC_CLAIM_TPL>, public payload<JWT_BASIC_CLAIM_TPL> {
 	protected:
 		/// Unmodifed token, as passed to constructor
 		const std::string token;
@@ -1206,20 +1244,20 @@ namespace jwt {
 			signature = base::decode<alphabet::base64url>(signature);
 
 			auto parse_claims = [](const std::string& str) {
-				std::unordered_map<std::string, claim<traits>> res;
-				typename traits::value val;
+				std::unordered_map<std::string, basic_claim_t> res;
+				value_type val;
 				if (!traits::parse(val, str))
 					throw std::runtime_error("Invalid json");
 
 				for (auto& e : traits::as_object(val)) {
-					res.insert({ e.first, claim<traits>(e.second) });
+					res.insert({ e.first, basic_claim_t(e.second) });
 				}
 
 				return res;
 			};
 
-			jwt::header<traits>::header_claims = parse_claims(header);
-			jwt::payload<traits>::payload_claims = parse_claims(payload);
+			header_claims = parse_claims(header);
+			payload_claims = parse_claims(payload);
 		}
 
 		/**
@@ -1264,10 +1302,10 @@ namespace jwt {
 	 * Builder class to build and sign a new token
 	 * Use jwt::create() to get an instance of this class.
 	 */
-	template<typename traits = picojson_traits>
+	JWT_BASIC_CLAIM_TPL_DECLARATION
 	class builder {
-		std::unordered_map<std::string, claim<traits>> header_claims;
-		std::unordered_map<std::string, claim<traits>> payload_claims;
+		std::unordered_map<std::string, basic_claim_t> header_claims;
+		std::unordered_map<std::string, basic_claim_t> payload_claims;
 
 	public:
 		builder() {}
@@ -1277,87 +1315,87 @@ namespace jwt {
 		 * \param c Claim to add
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_header_claim(const std::string& id, claim<traits> c) { header_claims[id] = std::move(c); return *this; }
+		builder& set_header_claim(const string_type& id, basic_claim_t c) { header_claims[id] = std::move(c); return *this; }
 		/**
 		 * Set a payload claim.
 		 * \param id Name of the claim
 		 * \param c Claim to add
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_payload_claim(const std::string& id, claim<traits> c) { payload_claims[id] = std::move(c); return *this; }
+		builder& set_payload_claim(const string_type& id, basic_claim_t c) { payload_claims[id] = std::move(c); return *this; }
 		/**
 		 * Set algorithm claim
 		 * You normally don't need to do this, as the algorithm is automatically set if you don't change it.
 		 * \param str Name of algorithm
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_algorithm(typename traits::string str) { return set_header_claim("alg", claim<traits>(str)); }
+		builder& set_algorithm(string_type str) { return set_header_claim("alg", basic_claim_t(str)); }
 		/**
 		 * Set type claim
 		 * \param str Type to set
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_type(typename traits::string str) { return set_header_claim("typ", claim<traits>(str)); }
+		builder& set_type(string_type str) { return set_header_claim("typ", basic_claim_t(str)); }
 		/**
 		 * Set content type claim
 		 * \param str Type to set
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_content_type(typename traits::string str) { return set_header_claim("cty", claim<traits>(str)); }
+		builder& set_content_type(string_type str) { return set_header_claim("cty", basic_claim_t(str)); }
 		/**
 		 * Set key id claim
 		 * \param str Key id to set
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_key_id(typename traits::string str) { return set_header_claim("kid", claim<traits>(str)); }
+		builder& set_key_id(string_type str) { return set_header_claim("kid", basic_claim_t(str)); }
 		/**
 		 * Set issuer claim
 		 * \param str Issuer to set
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_issuer(typename traits::string str) { return set_payload_claim("iss", claim<traits>(str)); }
+		builder& set_issuer(string_type str) { return set_payload_claim("iss", basic_claim_t(str)); }
 		/**
 		 * Set subject claim
 		 * \param str Subject to set
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_subject(typename traits::string str) { return set_payload_claim("sub", claim<traits>(str)); }
+		builder& set_subject(string_type str) { return set_payload_claim("sub", basic_claim_t(str)); }
 		/**
 		 * Set audience claim
 		 * \param l Audience set
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_audience(typename claim<traits>::set l) { return set_payload_claim("aud", claim<traits>(l)); }
+		builder& set_audience(typename basic_claim::set l) { return set_payload_claim("aud", basic_claim_t(l)); }
 		/**
 		 * Set audience claim
 		 * \param aud Single audience
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_audience(typename traits::string aud) { return set_payload_claim("aud", claim<traits>(aud)); }
+		builder& set_audience(string_type aud) { return set_payload_claim("aud", basic_claim_t(aud)); }
 		/**
 		 * Set expires at claim
 		 * \param d Expires time
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_expires_at(const date& d) { return set_payload_claim("exp", claim<traits>(d)); }
+		builder& set_expires_at(const date& d) { return set_payload_claim("exp", basic_claim_t(d)); }
 		/**
 		 * Set not before claim
 		 * \param d First valid time
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_not_before(const date& d) { return set_payload_claim("nbf", claim<traits>(d)); }
+		builder& set_not_before(const date& d) { return set_payload_claim("nbf", basic_claim_t(d)); }
 		/**
 		 * Set issued at claim
 		 * \param d Issued at time, should be current time
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_issued_at(const date& d) { return set_payload_claim("iat", claim<traits>(d)); }
+		builder& set_issued_at(const date& d) { return set_payload_claim("iat", basic_claim_t(d)); }
 		/**
 		 * Set id claim
 		 * \param str ID to set
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_id(const std::string& str) { return set_payload_claim("jti", claim<traits>(str)); }
+		builder& set_id(const string_type& str) { return set_payload_claim("jti", basic_claim_t(str)); }
 
 		/**
 		 * Sign token and return result
@@ -1366,12 +1404,12 @@ namespace jwt {
 		 */
 		template<typename T>
 		std::string sign(const T& algo) const {
-			typename traits::object obj_header;
-			obj_header["alg"] = typename traits::value(algo.name());
+			object_type obj_header;
+			obj_header["alg"] = value_type(algo.name());
 			for (auto& e : header_claims) {
 				obj_header[e.first] = e.second.to_json();
 			}
-			typename traits::object obj_payload;
+			object_type obj_payload;
 			for (auto& e : payload_claims) {
 				obj_payload.insert({ e.first, e.second.to_json() });
 			}
@@ -1380,8 +1418,8 @@ namespace jwt {
 				return base::trim<alphabet::base64url>(base::encode<alphabet::base64url>(data));
 			};
 
-			std::string header = encode(typename traits::value(obj_header).serialize());
-			std::string payload = encode(typename traits::value(obj_payload).serialize());
+			std::string header = encode(value_type(obj_header).serialize());
+			std::string payload = encode(value_type(obj_payload).serialize());
 
 			std::string token = header + "." + payload;
 
@@ -1392,7 +1430,7 @@ namespace jwt {
 	/**
 	 * Verifier class used to check if a decoded token contains all claims required by your application and has a valid signature.
 	 */
-	template<typename Clock, typename traits = picojson_traits>
+	template<typename Clock, JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES>
 	class verifier {
 		struct algo_base {
 			virtual ~algo_base() {}
@@ -1408,7 +1446,7 @@ namespace jwt {
 		};
 
 		/// Required claims
-		std::unordered_map<std::string, claim<traits>> claims;
+		std::unordered_map<std::string, basic_claim_t> claims;
 		/// Leeway time for exp, nbf and iat
 		size_t default_leeway = 0;
 		/// Instance of clock type
@@ -1434,63 +1472,63 @@ namespace jwt {
 		 * \param leeway Set leeway to use for expires at.
 		 * \return *this to allow chaining
 		 */
-		verifier& expires_at_leeway(size_t leeway) { return with_claim("exp", claim<traits>(std::chrono::system_clock::from_time_t(leeway))); }
+		verifier& expires_at_leeway(size_t leeway) { return with_claim("exp", basic_claim_t(std::chrono::system_clock::from_time_t(leeway))); }
 		/**
 		 * Set leeway for not before.
 		 * If not specified the default leeway will be used.
 		 * \param leeway Set leeway to use for not before.
 		 * \return *this to allow chaining
 		 */
-		verifier& not_before_leeway(size_t leeway) { return with_claim("nbf", claim<traits>(std::chrono::system_clock::from_time_t(leeway))); }
+		verifier& not_before_leeway(size_t leeway) { return with_claim("nbf", basic_claim_t(std::chrono::system_clock::from_time_t(leeway))); }
 		/**
 		 * Set leeway for issued at.
 		 * If not specified the default leeway will be used.
 		 * \param leeway Set leeway to use for issued at.
 		 * \return *this to allow chaining
 		 */
-		verifier& issued_at_leeway(size_t leeway) { return with_claim("iat", claim<traits>(std::chrono::system_clock::from_time_t(leeway))); }
+		verifier& issued_at_leeway(size_t leeway) { return with_claim("iat", basic_claim_t(std::chrono::system_clock::from_time_t(leeway))); }
 		/**
 		 * Set an issuer to check for.
 		 * Check is casesensitive.
 		 * \param iss Issuer to check for.
 		 * \return *this to allow chaining
 		 */
-		verifier& with_issuer(const std::string& iss) { return with_claim("iss", claim<traits>(iss)); }
+		verifier& with_issuer(const string_type& iss) { return with_claim("iss", basic_claim_t(iss)); }
 		/**
 		 * Set a subject to check for.
 		 * Check is casesensitive.
 		 * \param sub Subject to check for.
 		 * \return *this to allow chaining
 		 */
-		verifier& with_subject(const std::string& sub) { return with_claim("sub", claim<traits>(sub)); }
+		verifier& with_subject(const string_type& sub) { return with_claim("sub", basic_claim_t(sub)); }
 		/**
 		 * Set an audience to check for.
 		 * If any of the specified audiences is not present in the token the check fails.
 		 * \param aud Audience to check for.
 		 * \return *this to allow chaining
 		 */
-		verifier& with_audience(const std::set<std::string>& aud) { return with_claim("aud", claim<traits>(aud)); }
+		verifier& with_audience(const basic_claim_t::set& aud) { return with_claim("aud", basic_claim_t(aud)); }
 		/**
 		 * Set an audience to check for.
 		 * If the specified audiences is not present in the token the check fails.
 		 * \param aud Audience to check for.
 		 * \return *this to allow chaining
 		 */
-		verifier& with_audience(const std::string& aud) { return with_claim("aud", claim<traits>(aud)); }
+		verifier& with_audience(const string_type& aud) { return with_claim("aud", basic_claim_t(aud)); }
 		/**
 		 * Set an id to check for.
 		 * Check is casesensitive.
 		 * \param id ID to check for.
 		 * \return *this to allow chaining
 		 */
-		verifier& with_id(const std::string& id) { return with_claim("jti", claim<traits>(id)); }
+		verifier& with_id(const string_type& id) { return with_claim("jti", basic_claim_t(id)); }
 		/**
 		 * Specify a claim to check for.
 		 * \param name Name of the claim to check for
 		 * \param c Claim to check for
 		 * \return *this to allow chaining
 		 */
-		verifier& with_claim(const std::string& name, claim<traits> c) { claims[name] = c; return *this; }
+		verifier& with_claim(const std::string& name, basic_claim_t c) { claims[name] = c; return *this; }
 
 		/**
 		 * Add an algorithm available for checking.
@@ -1508,7 +1546,7 @@ namespace jwt {
 		 * \param jwt Token to check
 		 * \throws token_verification_exception Verification failed
 		 */
-		void verify(const decoded_jwt<traits>& jwt) const {
+		void verify(const decoded_jwt<JWT_BASIC_CLAIM_TPL>& jwt) const {
 			const std::string data = jwt.get_header_base64() + "." + jwt.get_payload_base64();
 			const std::string sig = jwt.get_signature();
 			const std::string& algo = jwt.get_algorithm();
@@ -1516,17 +1554,17 @@ namespace jwt {
 				throw token_verification_exception("wrong algorithm");
 			algs.at(algo)->verify(data, sig);
 
-			auto assert_claim_eq = [](const decoded_jwt<traits>& jwt, const std::string& key, const claim<traits>& c) {
+			auto assert_claim_eq = [](const decoded_jwt<JWT_BASIC_CLAIM_TPL>& jwt, const std::string& key, const basic_claim_t& c) {
 				if (!jwt.has_payload_claim(key))
 					throw token_verification_exception("decoded_jwt is missing " + key + " claim");
 				auto jc = jwt.get_payload_claim(key);
 				if (jc.get_type() != c.get_type())
 					throw token_verification_exception("claim " + key + " type mismatch");
-				if (c.get_type() == jwt::json::type::integer) {
+				if (c.get_type() == json::type::integer) {
 					if (c.as_date() != jc.as_date())
 						throw token_verification_exception("claim " + key + " does not match expected");
 				}
-				else if (c.get_type() == jwt::json::type::array) {
+				else if (c.get_type() == json::type::array) {
 					auto s1 = c.as_set();
 					auto s2 = jc.as_set();
 					if (s1.size() != s2.size())
@@ -1538,11 +1576,11 @@ namespace jwt {
 							throw token_verification_exception("claim " + key + " does not match expected");
 					}
 				}
-				else if (c.get_type() == jwt::json::type::object) {
+				else if (c.get_type() == json::type::object) {
 					if( c.to_json().serialize() != jc.to_json().serialize())
 						throw token_verification_exception("claim " + key + " does not match expected");
 				}
-				else if (c.get_type() == jwt::json::type::string) {
+				else if (c.get_type() == json::type::string) {
 					if (c.as_string() != jc.as_string())
 						throw token_verification_exception("claim " + key + " does not match expected");
 				}
@@ -1595,9 +1633,9 @@ namespace jwt {
 	 * \param c Clock instance to use
 	 * \return verifier instance
 	 */
-	template<typename Clock = picojson_traits>
-	verifier<Clock> verify(Clock c) {
-		return verifier<Clock>(c);
+	template<typename Clock, JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES>
+	verifier<Clock, JWT_BASIC_CLAIM_TPL> verify(Clock c) {
+		return verifier<Clock, JWT_BASIC_CLAIM_TPL>(c);
 	}
 
 	/**
@@ -1614,16 +1652,16 @@ namespace jwt {
 	 * \return verifier instance
 	 */
     inline
-	verifier<default_clock> verify() {
-		return verify<default_clock>({});
+	verifier<default_clock, claim> verify() {
+		return verify<default_clock, claim>({});
 	}
 
 	/**
 	 * Return a builder instance to create a new token
 	 */
-	template <typename traits = picojson_traits>
-	builder<traits> create() {
-		return builder<traits>();
+	JWT_BASIC_CLAIM_TPL_DECLARATION
+	builder<JWT_BASIC_CLAIM_TPL> create() {
+		return builder<JWT_BASIC_CLAIM_TPL>();
 	}
 
 	/**
@@ -1633,20 +1671,20 @@ namespace jwt {
 	 * \throws std::invalid_argument Token is not in correct format
 	 * \throws std::runtime_error Base64 decoding failed or invalid json
 	 */
-	template <typename traits = picojson_traits>
-	decoded_jwt<traits> decode(const std::string& token) {
-		return decoded_jwt<traits>(token);
+	JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES
+	decoded_jwt<JWT_BASIC_CLAIM_TPL> decode(const std::string& token) {
+		return decoded_jwt<JWT_BASIC_CLAIM_TPL>(token);
 	}
 }
 
-template <typename traits = jwt::picojson_traits>
-std::istream& operator>>(std::istream& is, jwt::claim<traits>& c)
+JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES
+std::istream& operator>>(std::istream& is, jwt::basic_claim_t& c)
 {
 	return c.operator>>(is);
 }
 
-template <typename traits = jwt::picojson_traits>
-std::ostream& operator<<(std::ostream& os, const jwt::claim<traits>& c)
+JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES
+std::ostream& operator<<(std::ostream& os, const jwt::basic_claim_t& c)
 {
 	return os << c.to_json();
 }
