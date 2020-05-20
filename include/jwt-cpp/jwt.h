@@ -859,6 +859,10 @@ namespace jwt {
 			: val(v)
 		{}
 
+		JWT_CLAIM_EXPLICIT claim(typename traits::value&& v)
+			: val(std::move(v))
+		{}
+
 		claim(set s)
 			: val(typename traits::array(s.begin(), s.end()))
 		{}
