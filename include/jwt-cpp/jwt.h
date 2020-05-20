@@ -840,10 +840,11 @@ namespace jwt {
 	}
 
 	template<typename value_type = picojson::value,
-				template<typename, typename, typename...> class object_type = picojson::object,
-				template<typename, typename...> class array_type = picojson::array,
+				class object_type = picojson::object,
+				class array_type = picojson::array,
 				class string_type = std::string,
-				class boolean_type = bool, class integer_type = int64_t,
+				class boolean_type = bool,
+				class integer_type = int64_t,
 				class number_type = double,
 				typename traits = details::picojson_traits>
 	class basic_claim {
@@ -878,7 +879,7 @@ namespace jwt {
 		{}
 
 		template<typename Iterator>
-		claim(Iterator begin, Iterator end)
+		basic_claim(Iterator begin, Iterator end)
 			: val(typename traits::array(begin, end))
 		{}
 
@@ -979,8 +980,8 @@ namespace jwt {
 
 #define JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES \
 	typename value_type, \
-		template<typename, typename, typename...> class object_type, \
-		template<typename, typename...> class array_type, \
+		class object_type, \
+		class array_type, \
 		class string_type, class boolean_type, class number_type, \
 		typename traits
 
@@ -992,15 +993,13 @@ namespace jwt {
 	value_type, object_type, array_type, string_type, \
 		boolean_type, number_type, traits
 
-	using basic_claim_t = 
-		basic_claim<JWT_BASIC_CLAIM_TPL>
-
 	/**
 	 * Base class that represents a token payload.
 	 * Contains Convenience accessors for common claims.
 	 */
 	JWT_BASIC_CLAIM_TPL_DECLARATION
 	class payload {
+		using basic_claim_t = basic_claim<JWT_BASIC_CLAIM_TPL>;
 	protected:
 		std::unordered_map<std::string, basic_claim_t> payload_claims;
 	public:
@@ -1059,7 +1058,7 @@ namespace jwt {
 		 * \throws std::runtime_error If claim was not present
 		 * \throws std::bad_cast Claim was present but not a set (Should not happen in a valid token)
 		 */
-		typename basic_claim::set get_audience() const { 
+		typename basic_claim_t::set get_audience() const { 
 			auto aud = get_payload_claim("aud");
 			if(aud.get_type() == json::type::string) return { aud.as_string()};
 			else return aud.as_set();
@@ -1120,6 +1119,7 @@ namespace jwt {
 	 */
 	JWT_BASIC_CLAIM_TPL_DECLARATION
 	class header {
+		using basic_claim_t = basic_claim<JWT_BASIC_CLAIM_TPL>;
 	protected:
 		std::unordered_map<std::string, basic_claim_t> header_claims;
 	public:
@@ -1244,6 +1244,7 @@ namespace jwt {
 			signature = base::decode<alphabet::base64url>(signature);
 
 			auto parse_claims = [](const std::string& str) {
+				using basic_claim_t = basic_claim<JWT_BASIC_CLAIM_TPL>;
 				std::unordered_map<std::string, basic_claim_t> res;
 				value_type val;
 				if (!traits::parse(val, str))
@@ -1256,8 +1257,8 @@ namespace jwt {
 				return res;
 			};
 
-			header_claims = parse_claims(header);
-			payload_claims = parse_claims(payload);
+			jwt::header<JWT_BASIC_CLAIM_TPL>::header_claims = parse_claims(header);
+			jwt::payload<JWT_BASIC_CLAIM_TPL>::payload_claims = parse_claims(payload);
 		}
 
 		/**
@@ -1304,6 +1305,7 @@ namespace jwt {
 	 */
 	JWT_BASIC_CLAIM_TPL_DECLARATION
 	class builder {
+		using basic_claim_t = basic_claim<JWT_BASIC_CLAIM_TPL>;
 		std::unordered_map<std::string, basic_claim_t> header_claims;
 		std::unordered_map<std::string, basic_claim_t> payload_claims;
 
@@ -1365,7 +1367,7 @@ namespace jwt {
 		 * \param l Audience set
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_audience(typename basic_claim::set l) { return set_payload_claim("aud", basic_claim_t(l)); }
+		builder& set_audience(typename basic_claim_t::set l) { return set_payload_claim("aud", basic_claim_t(l)); }
 		/**
 		 * Set audience claim
 		 * \param aud Single audience
@@ -1445,6 +1447,7 @@ namespace jwt {
 			}
 		};
 
+		using basic_claim_t = basic_claim<JWT_BASIC_CLAIM_TPL>;
 		/// Required claims
 		std::unordered_map<std::string, basic_claim_t> claims;
 		/// Leeway time for exp, nbf and iat
@@ -1507,7 +1510,7 @@ namespace jwt {
 		 * \param aud Audience to check for.
 		 * \return *this to allow chaining
 		 */
-		verifier& with_audience(const basic_claim_t::set& aud) { return with_claim("aud", basic_claim_t(aud)); }
+		verifier& with_audience(const typename basic_claim_t::set& aud) { return with_claim("aud", basic_claim_t(aud)); }
 		/**
 		 * Set an audience to check for.
 		 * If the specified audiences is not present in the token the check fails.
@@ -1651,9 +1654,9 @@ namespace jwt {
 	 * Create a verifier using the default clock
 	 * \return verifier instance
 	 */
-    inline
-	verifier<default_clock, claim> verify() {
-		return verify<default_clock, claim>({});
+		inline
+		verifier<default_clock, picojson::value, picojson::object, picojson::array, std::string, bool, int64_t, double, details::picojson_traits> verify() {
+		return verify<default_clock, picojson::value, picojson::object, picojson::array, std::string, bool, int64_t, double, details::picojson_traits>({});
 	}
 
 	/**
@@ -1671,20 +1674,20 @@ namespace jwt {
 	 * \throws std::invalid_argument Token is not in correct format
 	 * \throws std::runtime_error Base64 decoding failed or invalid json
 	 */
-	JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES
+	JWT_BASIC_CLAIM_TPL_DECLARATION
 	decoded_jwt<JWT_BASIC_CLAIM_TPL> decode(const std::string& token) {
 		return decoded_jwt<JWT_BASIC_CLAIM_TPL>(token);
 	}
 }
 
-JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES
-std::istream& operator>>(std::istream& is, jwt::basic_claim_t& c)
+JWT_BASIC_CLAIM_TPL_DECLARATION
+std::istream& operator>>(std::istream& is, jwt::basic_claim<JWT_BASIC_CLAIM_TPL>& c)
 {
 	return c.operator>>(is);
 }
 
-JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES
-std::ostream& operator<<(std::ostream& os, const jwt::basic_claim_t& c)
+JWT_BASIC_CLAIM_TPL_DECLARATION
+std::ostream& operator<<(std::ostream& os, const jwt::basic_claim<JWT_BASIC_CLAIM_TPL>& c)
 {
 	return os << c.to_json();
 }
