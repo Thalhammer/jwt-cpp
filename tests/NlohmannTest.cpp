@@ -82,6 +82,8 @@ struct nlohmann_traits {
 TEST(ClaimTest, NholmannTest) {
   const auto claim = jwt::basic_claim<nlohmann::json::value_type, nlohmann::json::object_t, nlohmann::json::array_t,
                         std::string, double, int64_t, bool>(std::string("string"));
+  const auto array = jwt::basic_claim<nlohmann::json::value_type, nlohmann::json::object_t, nlohmann::json::array_t,
+                        std::string, double, int64_t, bool>(std::set<std::string>{"string", "string"});
 
   std::string token =
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0."
