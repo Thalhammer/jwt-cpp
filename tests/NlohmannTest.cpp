@@ -26,10 +26,10 @@ struct nlohmann_traits {
       throw std::logic_error("invalid type");
   }
 
-  static json::value_t as_object(const json &val) {
+  static json::object_t as_object(const json &val) {
     if (val.type() != json::value_t::object)
       throw std::bad_cast();
-    return val.get<json::value_t>();
+    return val.get<json::object_t>();
   }
 
   static std::string as_string(const json &val) {
