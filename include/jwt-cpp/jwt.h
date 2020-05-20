@@ -774,7 +774,7 @@ namespace jwt {
 
 	namespace details{
 		struct picojson_traits{
-			json::type get_type(const picojson::value& val) {
+			static json::type get_type(const picojson::value& val) {
 				using json::type;
 
 				if (val.is<picojson::null>()) return type::null;
@@ -880,7 +880,7 @@ namespace jwt {
 
 		template<typename Iterator>
 		basic_claim(Iterator begin, Iterator end)
-			: val(typename traits::array(begin, end))
+			: val(array_type(begin, end))
 		{}
 
 		/**
@@ -968,7 +968,7 @@ namespace jwt {
 		 * \return content as double
 		 * \throws std::bad_cast Content was not a number
 		 */
-		typename traits::number as_number() const {
+		number_type as_number() const {
 			return traits::as_number(val);
 		}
 	};
@@ -979,19 +979,17 @@ namespace jwt {
 	using claim = basic_claim<>;
 
 #define JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES \
-	typename value_type, \
-		class object_type, \
-		class array_type, \
-		class string_type, class boolean_type, class number_type, \
+	typename value_type, class object_type, class array_type, \
+		class string_type, class boolean_type, \
+		class integer_type, class number_type, \
 		typename traits
-
 
 #define JWT_BASIC_CLAIM_TPL_DECLARATION \
 	template<JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES>
 
 #define JWT_BASIC_CLAIM_TPL \
 	value_type, object_type, array_type, string_type, \
-		boolean_type, number_type, traits
+		boolean_type, integer_type, number_type, traits
 
 	/**
 	 * Base class that represents a token payload.
@@ -1250,8 +1248,8 @@ namespace jwt {
 				if (!traits::parse(val, str))
 					throw std::runtime_error("Invalid json");
 
-				for (auto& e : traits::as_object(val)) {
-					res.insert({ e.first, basic_claim_t(e.second) });
+				for (auto e : traits::as_object(val)) {
+					res.emplace(e.first, basic_claim_t(e.second));
 				}
 
 				return res;
@@ -1654,9 +1652,9 @@ namespace jwt {
 	 * Create a verifier using the default clock
 	 * \return verifier instance
 	 */
-		inline
-		verifier<default_clock, picojson::value, picojson::object, picojson::array, std::string, bool, int64_t, double, details::picojson_traits> verify() {
-		return verify<default_clock, picojson::value, picojson::object, picojson::array, std::string, bool, int64_t, double, details::picojson_traits>({});
+	inline
+	verifier<default_clock, picojson::value, picojson::object, picojson::array, std::string, bool, int64_t, double, details::picojson_traits> verify() {
+		return verify<default_clock, picojson::value, picojson::object, picojson::array, std::string, bool, int64_t, double, details::picojson_traits>(default_clock{});
 	}
 
 	/**
@@ -1668,6 +1666,13 @@ namespace jwt {
 	}
 
 	/**
+	 * Return a picojson builder instance to create a new token
+	 */
+	builder<picojson::value, picojson::object, picojson::array, std::string, bool, int64_t, double, details::picojson_traits> create() {
+		return builder<picojson::value, picojson::object, picojson::array, std::string, bool, int64_t, double, details::picojson_traits>();
+	}
+
+	/**
 	 * Decode a token
 	 * \param token Token to decode
 	 * \return Decoded token
@@ -1675,8 +1680,19 @@ namespace jwt {
 	 * \throws std::runtime_error Base64 decoding failed or invalid json
 	 */
 	JWT_BASIC_CLAIM_TPL_DECLARATION
-	decoded_jwt<JWT_BASIC_CLAIM_TPL> decode(const std::string& token) {
+	decoded_jwt<JWT_BASIC_CLAIM_TPL> decode(const string_type& token) {
 		return decoded_jwt<JWT_BASIC_CLAIM_TPL>(token);
+	}
+
+	/**
+	 * Decode a token
+	 * \param token Token to decode
+	 * \return Decoded token
+	 * \throws std::invalid_argument Token is not in correct format
+	 * \throws std::runtime_error Base64 decoding failed or invalid json
+	 */
+	decoded_jwt<picojson::value, picojson::object, picojson::array, std::string, bool, int64_t, double, details::picojson_traits> decode(const std::string& token) {
+		return decoded_jwt<picojson::value, picojson::object, picojson::array, std::string, bool, int64_t, double, details::picojson_traits>(token);
 	}
 }
 

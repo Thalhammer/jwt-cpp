@@ -2,12 +2,10 @@
 #include "nlohmann/json.hpp"
 #include <gtest/gtest.h>
 
-struct nlohmann_traits
-    : jwt::json::traits<nlohmann::json, nlohmann::json, nlohmann::json,
-                        std::string, double, int64_t, bool> {
+struct nlohmann_traits {
   using json = nlohmann::json;
 
-  static jwt::json::type get_type(const traits::value &val) {
+  static jwt::json::type get_type(const json &val) {
     using jwt::json::type;
 
     if (val.type() == json::value_t::null)
@@ -28,63 +26,68 @@ struct nlohmann_traits
       throw std::logic_error("invalid type");
   }
 
-  static traits::object as_object(const traits::value &val) {
+  static json::value_t as_object(const json &val) {
     if (val.type() != json::value_t::object)
       throw std::bad_cast();
-    return val.get<traits::object>();
+    return val.get<json::value_t>();
   }
 
-  static traits::string as_string(const traits::value &val) {
+  static std::string as_string(const json &val) {
     if (val.type() != json::value_t::string)
       throw std::bad_cast();
-    return val.get<traits::string>();
+    return val.get<std::string>();
   }
 
-  static traits::array as_array(const traits::value &val) {
+  static json::array_t as_array(const json &val) {
     if (val.type() != json::value_t::array)
       throw std::bad_cast();
-    return val.get<traits::array>();
+    return val.get<json::array_t>();
   }
 
-  static std::set<traits::string> as_set(const traits::value &val) {
-    std::set<traits::string> res;
+  static std::set<std::string> as_set(const json &val) {
+    std::set<std::string> res;
     for (auto &e : as_array(val)) {
       if (val.type() != json::value_t::string)
         throw std::bad_cast();
-      res.insert(e.get<traits::string>());
+      res.insert(e.get<std::string>());
     }
     return res;
   }
 
-  static traits::integer as_int(const traits::value &val) {
+  static int64_t as_int(const json &val) {
     if (val.type() != json::value_t::number_integer)
       throw std::bad_cast();
-    return val.get<traits::integer>();
+    return val.get<int64_t>();
   }
 
-  static traits::boolean as_bool(const traits::value &val) {
+  static bool as_bool(const json &val) {
     if (val.type() != json::value_t::boolean)
       throw std::bad_cast();
-    return val.get<traits::boolean>();
+    return val.get<bool>();
   }
 
-  static traits::number as_number(const traits::value &val) {
+  static double as_number(const json &val) {
     if (val.type() != json::value_t::number_float)
       throw std::bad_cast();
-    return val.get<traits::number>();
+    return val.get<double>();
   }
 
-  static bool parse(traits::value &val, traits::string str) {
+  static bool parse(json &val, std::string str) {
     val = json::parse(str.begin(), str.end());
     return true;
   }
 };
 
+
 TEST(ClaimTest, NholmannTest) {
+  const auto claim = jwt::basic_claim<nlohmann::json::value_type, nlohmann::json::object_t, nlohmann::json::array_t,
+                        std::string, double, int64_t, bool>(std::string("string"));
+
   std::string token =
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0."
       "WZnM3SIiSRHsbO3O7Z2bmIzTJ4EC32HRBKfLznHhrh4";
-  auto decoded = jwt::decode(token);
+  auto decoded = jwt::decode<nlohmann::json::value_type, nlohmann::json::object_t, nlohmann::json::array_t,
+                        std::string, double, int64_t, bool, nlohmann_traits>(token);
 
   ASSERT_TRUE(decoded.has_algorithm());
   ASSERT_TRUE(decoded.has_type());
