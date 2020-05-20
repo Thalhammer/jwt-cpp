@@ -1668,6 +1668,7 @@ namespace jwt {
 	/**
 	 * Return a picojson builder instance to create a new token
 	 */
+	inline
 	builder<picojson::value, picojson::object, picojson::array, std::string, bool, int64_t, double, details::picojson_traits> create() {
 		return builder<picojson::value, picojson::object, picojson::array, std::string, bool, int64_t, double, details::picojson_traits>();
 	}
@@ -1691,6 +1692,7 @@ namespace jwt {
 	 * \throws std::invalid_argument Token is not in correct format
 	 * \throws std::runtime_error Base64 decoding failed or invalid json
 	 */
+	inline
 	decoded_jwt<picojson::value, picojson::object, picojson::array, std::string, bool, int64_t, double, details::picojson_traits> decode(const std::string& token) {
 		return decoded_jwt<picojson::value, picojson::object, picojson::array, std::string, bool, int64_t, double, details::picojson_traits>(token);
 	}
