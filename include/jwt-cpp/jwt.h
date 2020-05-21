@@ -1420,6 +1420,7 @@ namespace jwt {
 			std::ostringstream iss;
 			iss << value_type(obj_header);
 			std::string header = encode(iss.str());
+			iss.str(std::string());
 			iss.clear();
 			iss << value_type(obj_payload);
 			std::string payload = encode(iss.str());
