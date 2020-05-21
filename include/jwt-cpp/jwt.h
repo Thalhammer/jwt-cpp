@@ -6,6 +6,7 @@
 #include <chrono>
 #include <unordered_map>
 #include <memory>
+#include <sstream>
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 #include <openssl/pem.h>
@@ -762,21 +763,20 @@ namespace jwt {
 
 	namespace json {
 		enum class type {
-			null, 
-			boolean, 
+			null,
+			boolean,
 			integer,
-			number, 
-			string, 
-			array, 
-			object, 
+			number,
+			string,
+			array,
+			object,
 		};
 	}
 
-	namespace details{
-		struct picojson_traits{
+	namespace details {
+		struct picojson_traits {
 			static json::type get_type(const picojson::value& val) {
 				using json::type;
-
 				if (val.is<picojson::null>()) return type::null;
 				else if (val.is<bool>()) return type::boolean;
 				else if (val.is<int64_t>()) return type::integer;
@@ -850,127 +850,127 @@ namespace jwt {
 	class basic_claim {
 			value_type val;
 		public:
-			using set = std::set<string_type>;
+			using set_t = std::set<string_type>;
 
-		basic_claim() = default;
+			basic_claim() = default;
 
-		JWT_CLAIM_EXPLICIT basic_claim(string_type s)
-			: val(std::move(s))
-		{}
+			JWT_CLAIM_EXPLICIT basic_claim(string_type s)
+				: val(std::move(s))
+			{}
 
-		JWT_CLAIM_EXPLICIT basic_claim(const date& d)
-			: val(integer_type(std::chrono::system_clock::to_time_t(d)))
-		{}
+			JWT_CLAIM_EXPLICIT basic_claim(const date& d)
+				: val(integer_type(std::chrono::system_clock::to_time_t(d)))
+			{}
 
-		JWT_CLAIM_EXPLICIT basic_claim(array_type a)
-			: val(std::move(a))
-		{}
+			JWT_CLAIM_EXPLICIT basic_claim(array_type a)
+				: val(std::move(a))
+			{}
 
-		JWT_CLAIM_EXPLICIT basic_claim(const value_type& v)
-			: val(v)
-		{}
+			JWT_CLAIM_EXPLICIT basic_claim(const value_type& v)
+				: val(v)
+			{}
 
-		JWT_CLAIM_EXPLICIT basic_claim(value_type&& v)
-			: val(std::move(v))
-		{}
+			JWT_CLAIM_EXPLICIT basic_claim(value_type&& v)
+				: val(std::move(v))
+			{}
 
-		JWT_CLAIM_EXPLICIT basic_claim(const set& s)
-			: val(array_type(s.begin(), s.end()))
-		{}
+			JWT_CLAIM_EXPLICIT basic_claim(const set_t& s)
+				: val(array_type(s.begin(), s.end()))
+			{}
 
-		template<typename Iterator>
-		basic_claim(Iterator begin, Iterator end)
-			: val(array_type(begin, end))
-		{}
+			template<typename Iterator>
+			basic_claim(Iterator begin, Iterator end)
+				: val(array_type(begin, end))
+			{}
 
-		/**
-		 * Get wrapped json object
-		 * \return Wrapped json object
-		 */
-		value_type to_json() const {
-			return val;
-		}
+			/**
+			 * Get wrapped json object
+			 * \return Wrapped json object
+			 */
+			value_type to_json() const {
+				return val;
+			}
 
-		/**
-		 * Parse input stream into wrapped json object
-		 * \return input stream
-		 */
-		std::istream& operator>>(std::istream& is)
-		{
-			return is >> val;
-		}
+			/**
+			 * Parse input stream into wrapped json object
+			 * \return input stream
+			 */
+			std::istream& operator>>(std::istream& is)
+			{
+				return is >> val;
+			}
 
-		/**
-		 * Get type of contained object
-		 * \return Type
-		 * \throws std::logic_error An internal error occured
-		 */
-		json::type get_type() const {
-			return traits::get_type(val);
-		}
+			/**
+			 * Get type of contained object
+			 * \return Type
+			 * \throws std::logic_error An internal error occured
+			 */
+			json::type get_type() const {
+				return traits::get_type(val);
+			}
 
-		/**
-		 * Get the contained object as a string
-		 * \return content as string
-		 * \throws std::bad_cast Content was not a string
-		 */
-		string_type as_string() const {
-			return traits::as_string(val);
-		}
+			/**
+			 * Get the contained object as a string
+			 * \return content as string
+			 * \throws std::bad_cast Content was not a string
+			 */
+			string_type as_string() const {
+				return traits::as_string(val);
+			}
 
-		/**
-		 * Get the contained object as a date
-		 * \return content as date
-		 * \throws std::bad_cast Content was not a date
-		 */
-		date as_date() const {
-			return std::chrono::system_clock::from_time_t(as_int());
-		}
+			/**
+			 * Get the contained object as a date
+			 * \return content as date
+			 * \throws std::bad_cast Content was not a date
+			 */
+			date as_date() const {
+				return std::chrono::system_clock::from_time_t(as_int());
+			}
 
-		/**
-		 * Get the contained object as an array
-		 * \return content as array
-		 * \throws std::bad_cast Content was not an array
-		 */
-		array_type as_array() const {
-			return traits::as_array(val);
-		}
+			/**
+			 * Get the contained object as an array
+			 * \return content as array
+			 * \throws std::bad_cast Content was not an array
+			 */
+			array_type as_array() const {
+				return traits::as_array(val);
+			}
 
-		/**
-		 * Get the contained object as a set of strings
-		 * \return content as set of strings
-		 * \throws std::bad_cast Content was not a set
-		 */
-		set as_set() const {
-			return traits::as_set(val);
-		}
+			/**
+			 * Get the contained object as a set of strings
+			 * \return content as set of strings
+			 * \throws std::bad_cast Content was not a set
+			 */
+			set_t as_set() const {
+				return traits::as_set(val);
+			}
 
-		/**
-		 * Get the contained object as an integer
-		 * \return content as int
-		 * \throws std::bad_cast Content was not an int
-		 */
-		integer_type as_int() const {
-			return traits::as_int(val);
-		}
+			/**
+			 * Get the contained object as an integer
+			 * \return content as int
+			 * \throws std::bad_cast Content was not an int
+			 */
+			integer_type as_int() const {
+				return traits::as_int(val);
+			}
 
-		/**
-		 * Get the contained object as a bool
-		 * \return content as bool
-		 * \throws std::bad_cast Content was not a bool
-		 */
-		boolean_type as_bool() const {
-			return traits::as_bool(val);
-		}
+			/**
+			 * Get the contained object as a bool
+			 * \return content as bool
+			 * \throws std::bad_cast Content was not a bool
+			 */
+			boolean_type as_bool() const {
+				return traits::as_bool(val);
+			}
 
-		/**
-		 * Get the contained object as a number
-		 * \return content as double
-		 * \throws std::bad_cast Content was not a number
-		 */
-		number_type as_number() const {
-			return traits::as_number(val);
-		}
+			/**
+			 * Get the contained object as a number
+			 * \return content as double
+			 * \throws std::bad_cast Content was not a number
+			 */
+			number_type as_number() const {
+				return traits::as_number(val);
+			}
 	};
 
 	/**
@@ -980,16 +980,15 @@ namespace jwt {
 
 #define JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES \
 	typename value_type, class object_type, class array_type, \
-		class string_type, class boolean_type, \
-		class integer_type, class number_type, \
-		typename traits
+	class string_type, class boolean_type, class integer_type, \
+	class number_type, typename traits \
 
 #define JWT_BASIC_CLAIM_TPL_DECLARATION \
 	template<JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES>
 
 #define JWT_BASIC_CLAIM_TPL \
 	value_type, object_type, array_type, string_type, \
-		boolean_type, integer_type, number_type, traits
+	boolean_type, integer_type, number_type, traits
 
 	/**
 	 * Base class that represents a token payload.
@@ -1056,7 +1055,7 @@ namespace jwt {
 		 * \throws std::runtime_error If claim was not present
 		 * \throws std::bad_cast Claim was present but not a set (Should not happen in a valid token)
 		 */
-		typename basic_claim_t::set get_audience() const { 
+		typename basic_claim_t::set_t get_audience() const { 
 			auto aud = get_payload_claim("aud");
 			if(aud.get_type() == json::type::string) return { aud.as_string()};
 			else return aud.as_set();
@@ -1179,7 +1178,7 @@ namespace jwt {
 		 * \return Requested claim
 		 * \throws std::runtime_error If claim was not present
 		 */
-		const basic_claim_t& get_header_claim(const string_type& name) const {
+		basic_claim_t get_header_claim(const string_type& name) const {
 			if (!has_header_claim(name))
 				throw std::runtime_error("claim not found");
 			return header_claims.at(name);
@@ -1365,7 +1364,7 @@ namespace jwt {
 		 * \param l Audience set
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_audience(typename basic_claim_t::set l) { return set_payload_claim("aud", basic_claim_t(l)); }
+		builder& set_audience(typename basic_claim_t::set_t l) { return set_payload_claim("aud", basic_claim_t(l)); }
 		/**
 		 * Set audience claim
 		 * \param aud Single audience
@@ -1418,8 +1417,12 @@ namespace jwt {
 				return base::trim<alphabet::base64url>(base::encode<alphabet::base64url>(data));
 			};
 
-			std::string header = encode(value_type(obj_header).serialize());
-			std::string payload = encode(value_type(obj_payload).serialize());
+			std::ostringstream iss;
+			iss << value_type(obj_header);
+			std::string header = encode(iss.str());
+			iss.clear();
+			iss << value_type(obj_payload);
+			std::string payload = encode(iss.str());
 
 			std::string token = header + "." + payload;
 
@@ -1508,7 +1511,7 @@ namespace jwt {
 		 * \param aud Audience to check for.
 		 * \return *this to allow chaining
 		 */
-		verifier& with_audience(const typename basic_claim_t::set& aud) { return with_claim("aud", basic_claim_t(aud)); }
+		verifier& with_audience(const typename basic_claim_t::set_t& aud) { return with_claim("aud", basic_claim_t(aud)); }
 		/**
 		 * Set an audience to check for.
 		 * If the specified audiences is not present in the token the check fails.
