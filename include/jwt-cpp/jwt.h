@@ -1582,7 +1582,12 @@ namespace jwt {
 					}
 				}
 				else if (c.get_type() == json::type::object) {
-					if( c.to_json().serialize() != jc.to_json().serialize())
+					auto serialize = [](const value_type& value) {
+						std::ostringstream oss;
+						oss << value;
+						return oss.str();
+					};
+					if( serialize(c.to_json()) != serialize(jc.to_json()))
 						throw token_verification_exception("claim " + key + " does not match expected");
 				}
 				else if (c.get_type() == json::type::string) {

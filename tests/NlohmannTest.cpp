@@ -144,3 +144,14 @@ TEST(NholmannTest, SetObject) {
 		.sign(jwt::algorithm::hs256("test"));
 	ASSERT_EQ(token, "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lc3BhY2UiOnsiYXBpLXgiOlsxXX19.F8I6I2RcSF98bKa0IpIz09fRZtHr1CWnWKx2za-tFQA");
 }
+
+TEST(NholmannTest, VerifyTokenHS256) {
+	std::string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
+
+	auto verify = jwt::verify<jwt::default_clock, JWT_NHOLMANN_CLAIM_TPL>({})
+		.allow_algorithm(jwt::algorithm::hs256{ "secret" })
+		.with_issuer("auth0");
+
+	auto decoded_token = jwt::decode<JWT_NHOLMANN_CLAIM_TPL>(token);
+	verify.verify(decoded_token);
+}
