@@ -811,14 +811,19 @@ namespace jwt {
 
 		template <typename T>
 		using get_type_t = decltype(T::get_type);
-
 		template <typename T>
 		using supports_get_type = is_detected<get_type_t, T>;
 
+		template <typename T>
+		using as_object_t = decltype(T::as_object);
+		template <typename T>
+		using supports_as_object = is_detected<as_object_t, T>;
+
 		template<typename T>
 		struct is_json_traits {
-			static constexpr auto value = 
-				supports_get_type<T>::value;
+			static constexpr auto value =
+				supports_get_type<T>::value && 
+				supports_as_object<T>::value;
 		};
 
 		struct picojson_traits {
