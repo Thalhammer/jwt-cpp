@@ -774,6 +774,53 @@ namespace jwt {
 	}
 
 	namespace details {
+		template <typename ...Ts> struct make_void
+		{
+			using type = void;
+		};
+		template <typename ...Ts> using void_t = typename make_void<Ts...>::type;
+		struct nonesuch
+		{
+			nonesuch() = delete;
+			~nonesuch() = delete;
+			nonesuch(nonesuch const&) = delete;
+			nonesuch(nonesuch const&&) = delete;
+			void operator=(nonesuch const&) = delete;
+			void operator=(nonesuch&&) = delete;
+		};
+
+		template <class Default,
+				class AlwaysVoid,
+				template <class...> class Op,
+				class... Args>
+		struct detector
+		{
+			using value_t = std::false_type;
+			using type = Default;
+		};
+
+		template <class Default, template <class...> class Op, class... Args>
+		struct detector<Default, void_t<Op<Args...>>, Op, Args...>
+		{
+			using value_t = std::true_type;
+			using type = Op<Args...>;
+		};
+
+		template <template <class...> class Op, class... Args>
+		using is_detected = typename detector<nonesuch, void, Op, Args...>::value_t;
+
+		template <typename T>
+		using get_type_t = decltype(T::get_type);
+
+		template <typename T>
+		using supports_get_type = is_detected<get_type_t, T>;
+
+		template<typename T>
+		struct is_json_traits {
+			static constexpr auto value = 
+				supports_get_type<T>::value;
+		};
+
 		struct picojson_traits {
 			static json::type get_type(const picojson::value& val) {
 				using json::type;
@@ -848,6 +895,8 @@ namespace jwt {
 				class number_type = double,
 				typename traits = details::picojson_traits>
 	class basic_claim {
+		static_assert(details::is_json_traits<traits>::value, "traits must satisfy is_json_traits");
+
 			value_type val;
 		public:
 			using set_t = std::set<string_type>;
