@@ -795,34 +795,38 @@ namespace jwt {
 				class... Args>
 		struct detector
 		{
-			using value_t = std::false_type;
+			using value = std::false_type;
 			using type = Default;
 		};
 
 		template <class Default, template <class...> class Op, class... Args>
 		struct detector<Default, void_t<Op<Args...>>, Op, Args...>
 		{
-			using value_t = std::true_type;
+			using value = std::true_type;
 			using type = Op<Args...>;
 		};
 
 		template <template <class...> class Op, class... Args>
-		using is_detected = typename detector<nonesuch, void, Op, Args...>::value_t;
+		using is_detected = typename detector<nonesuch, void, Op, Args...>::value;
 
 		template <typename T>
-		using get_type_t = decltype(T::get_type);
-		template <typename T>
-		using supports_get_type = is_detected<get_type_t, T>;
+		using get_type_function = decltype(T::get_type);
+
+		template <typename T, typename value_type>
+		using is_get_type_signature = typename std::is_same<get_type_function<T>, json::type(const value_type&)>;
 
 		template <typename T>
-		using as_object_t = decltype(T::as_object);
-		template <typename T>
-		using supports_as_object = is_detected<as_object_t, T>;
+		using supports_get_type = is_detected<get_type_function, T>;
 
-		template<typename T>
+		template <typename T>
+		using as_object_function = decltype(T::as_object);
+		template <typename T>
+		using supports_as_object = is_detected<as_object_function, T>;
+
+		template<typename T, typename value_type>
 		struct is_json_traits {
 			static constexpr auto value =
-				supports_get_type<T>::value && 
+				supports_get_type<T>::value && is_get_type_signature<T, value_type>::value &&
 				supports_as_object<T>::value;
 		};
 
@@ -900,7 +904,7 @@ namespace jwt {
 				class number_type = double,
 				typename traits = details::picojson_traits>
 	class basic_claim {
-		static_assert(details::is_json_traits<traits>::value, "traits must satisfy is_json_traits");
+		static_assert(details::is_json_traits<traits, value_type>::value, "traits must satisfy is_json_traits");
 
 			value_type val;
 		public:
