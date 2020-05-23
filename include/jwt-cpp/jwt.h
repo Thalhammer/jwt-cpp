@@ -820,14 +820,22 @@ namespace jwt {
 
 		template <typename T>
 		using as_object_function = decltype(T::as_object);
-		template <typename T>
-		using supports_as_object = is_detected<as_object_function, T>;
+
+		template <typename T, typename value_type, typename object_type>
+		using is_as_object_signature = typename std::is_same<as_object_function<T>, object_type(const value_type&)>;
+
+		template <typename T, typename value_type, typename object_type>
+		struct supports_as_object {
+			static constexpr auto value =
+				is_detected<as_object_function, T>::value &&
+				std::is_function<as_object_function<T>>::value &&
+				is_as_object_signature<T, value_type, object_type>::value;
+		};
 
 		template<typename T, typename value_type>
 		struct is_json_traits {
 			static constexpr auto value =
-				supports_get_type<T>::value && is_get_type_signature<T, value_type>::value &&
-				supports_as_object<T>::value;
+				supports_get_type<T>::value && is_get_type_signature<T, value_type>::value;
 		};
 
 		struct picojson_traits {
@@ -905,12 +913,17 @@ namespace jwt {
 				typename traits = details::picojson_traits>
 	class basic_claim {
 		static_assert(details::is_json_traits<traits, value_type>::value, "traits must satisfy is_json_traits");
+		static_assert(details::supports_as_object<traits, value_type, object_type>::value, "traits must provide as_object");
 
 			value_type val;
 		public:
 			using set_t = std::set<string_type>;
 
 			basic_claim() = default;
+			basic_claim(const basic_claim&) = default;
+			basic_claim(basic_claim&&) = default;
+			basic_claim& operator=(const basic_claim&) = default;
+			basic_claim& operator=(basic_claim&&) = default;
 
 			JWT_CLAIM_EXPLICIT basic_claim(string_type s)
 				: val(std::move(s))
@@ -924,11 +937,7 @@ namespace jwt {
 				: val(std::move(a))
 			{}
 
-			JWT_CLAIM_EXPLICIT basic_claim(const value_type& v)
-				: val(v)
-			{}
-
-			JWT_CLAIM_EXPLICIT basic_claim(value_type&& v)
+			JWT_CLAIM_EXPLICIT basic_claim(value_type v)
 				: val(std::move(v))
 			{}
 
