@@ -76,6 +76,10 @@ struct nlohmann_traits {
 		val = json::parse(str.begin(), str.end());
 		return true;
 	}
+
+	static std::string serialize(const json &val) {
+		return val.dump();
+	}
 };
 
 #define JWT_NHOLMANN_CLAIM_TPL \

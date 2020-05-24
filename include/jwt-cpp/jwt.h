@@ -900,22 +900,26 @@ namespace jwt {
 			static bool parse(picojson::value& val, std::string str){
 				return picojson::parse(val, str).empty();
 			}
+
+			static std::string serialize(const picojson::value& val){
+				return val.serialize();
+			}
 		};
 	}
 
 	template<typename value_type = picojson::value,
-				class object_type = picojson::object,
-				class array_type = picojson::array,
-				class string_type = std::string,
-				class boolean_type = bool,
-				class integer_type = int64_t,
-				class number_type = double,
-				typename traits = details::picojson_traits>
+		class object_type = picojson::object,
+		class array_type = picojson::array,
+		class string_type = std::string,
+		class boolean_type = bool,
+		class integer_type = int64_t,
+		class number_type = double,
+		typename traits = details::picojson_traits>
 	class basic_claim {
 		static_assert(details::is_json_traits<traits, value_type>::value, "traits must satisfy is_json_traits");
 		static_assert(details::supports_as_object<traits, value_type, object_type>::value, "traits must provide as_object");
 
-			value_type val;
+		value_type val;
 		public:
 			using set_t = std::set<string_type>;
 
@@ -1041,7 +1045,7 @@ namespace jwt {
 	};
 
 	/**
-	 * Convenience wrapper for JSON value
+	 * Convenience wrapper for JSON claim
 	 */
 	using claim = basic_claim<>;
 
@@ -1484,14 +1488,8 @@ namespace jwt {
 				return base::trim<alphabet::base64url>(base::encode<alphabet::base64url>(data));
 			};
 
-			std::ostringstream iss;
-			iss << value_type(obj_header);
-			std::string header = encode(iss.str());
-			iss.str(std::string());
-			iss.clear();
-			iss << value_type(obj_payload);
-			std::string payload = encode(iss.str());
-
+			std::string header = encode(traits::serialize(value_type(obj_header)));
+			std::string payload = encode(traits::serialize(value_type(obj_payload)));
 			std::string token = header + "." + payload;
 
 			return token + "." + encode(algo.sign(token));
@@ -1649,12 +1647,7 @@ namespace jwt {
 					}
 				}
 				else if (c.get_type() == json::type::object) {
-					auto serialize = [](const value_type& value) {
-						std::ostringstream oss;
-						oss << value;
-						return oss.str();
-					};
-					if( serialize(c.to_json()) != serialize(jc.to_json()))
+					if (traits::serialize(c.to_json()) != traits::serialize(jc.to_json()))
 						throw token_verification_exception("claim " + key + " does not match expected");
 				}
 				else if (c.get_type() == json::type::string) {
