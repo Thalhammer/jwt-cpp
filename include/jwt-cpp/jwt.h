@@ -815,8 +815,13 @@ namespace jwt {
 		template <typename T, typename value_type>
 		using is_get_type_signature = typename std::is_same<get_type_function<T>, json::type(const value_type&)>;
 
-		template <typename T>
-		using supports_get_type = is_detected<get_type_function, T>;
+		template <typename T, typename value_type>
+		struct supports_get_type {
+			static constexpr auto value =
+				is_detected<get_type_function, T>::value && 
+				std::is_function<get_type_function<T>>::value &&
+				is_get_type_signature<T, value_type>::value;
+		};
 
 		template <typename T>
 		using as_object_function = decltype(T::as_object);
@@ -832,10 +837,18 @@ namespace jwt {
 				is_as_object_signature<T, value_type, object_type>::value;
 		};
 
-		template<typename T, typename value_type>
-		struct is_json_traits {
+		template <typename T>
+		using as_array_function = decltype(T::as_array);
+
+		template <typename T, typename value_type, typename array_type>
+		using is_as_array_signature = typename std::is_same<as_array_function<T>, array_type(const value_type&)>;
+
+		template <typename T, typename value_type, typename array_type>
+		struct supports_as_array {
 			static constexpr auto value =
-				supports_get_type<T>::value && is_get_type_signature<T, value_type>::value;
+				is_detected<as_array_function, T>::value &&
+				std::is_function<as_array_function<T>>::value &&
+				is_as_array_signature<T, value_type, array_type>::value;
 		};
 
 		struct picojson_traits {
@@ -907,6 +920,9 @@ namespace jwt {
 		};
 	}
 
+	/**
+	 * generic JSON claim
+	 */
 	template<typename value_type = picojson::value,
 		class object_type = picojson::object,
 		class array_type = picojson::array,
@@ -916,10 +932,14 @@ namespace jwt {
 		class number_type = double,
 		typename traits = details::picojson_traits>
 	class basic_claim {
-		static_assert(details::is_json_traits<traits, value_type>::value, "traits must satisfy is_json_traits");
-		static_assert(details::supports_as_object<traits, value_type, object_type>::value, "traits must provide as_object");
+		// TODO: FixMe
+		static_assert(std::is_same<string_type, std::string>::value, "current this only supports an `std::string` due to the sining and base64 encoding that is required by JWT.");
 
-		value_type val;
+		static_assert(details::supports_get_type<traits, value_type>::value, "traits must provide `jwt::json::type get_type(const value_type&)`");
+		static_assert(details::supports_as_object<traits, value_type, object_type>::value, "traits must provide `object_type as_object(const value_type&)`");
+		static_assert(details::supports_as_array<traits, value_type, array_type>::value, "traits must provide `array_type as_object(const value_type&)`");
+
+			value_type val;
 		public:
 			using set_t = std::set<string_type>;
 
@@ -969,6 +989,15 @@ namespace jwt {
 			std::istream& operator>>(std::istream& is)
 			{
 				return is >> val;
+			}
+
+			/**
+			 * Serialize claim to output stream from wrapped json object
+			 * \return ouput stream
+			 */
+			std::ostream& operator<<(std::ostream& os)
+			{
+				return os << val;
 			}
 
 			/**
@@ -1598,7 +1627,7 @@ namespace jwt {
 		 * \param c Claim to check for
 		 * \return *this to allow chaining
 		 */
-		verifier& with_claim(const std::string& name, basic_claim_t c) { claims[name] = c; return *this; }
+		verifier& with_claim(const string_type& name, basic_claim_t c) { claims[name] = c; return *this; }
 
 		/**
 		 * Add an algorithm available for checking.
