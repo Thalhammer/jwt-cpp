@@ -895,6 +895,22 @@ namespace jwt {
 				is_as_integer_signature<T, value_type, integer_type>::value;
 		};
 
+		template<class...>
+		struct types {
+			using type = types;
+		};
+
+		template<class...> struct function_signature : std::false_type {};
+
+		template<class R, class Arg>
+		struct function_signature<R(Arg)> : std::true_type {
+			using args_t = typename std::decay<Arg>::type;
+			using return_t = typename std::decay<R>::type;
+			using signature_t = return_t(args_t);
+		};
+
+		template<class sig> struct function_signature : function_signature<decltype(sig)> {};
+
 		template <typename T>
 		using as_boolean_function = decltype(T::as_bool);
 
@@ -1021,6 +1037,8 @@ namespace jwt {
 		static_assert(details::supports_as_number<traits, value_type, number_type>::value, "traits must provide `number_type as_number(const value_type&)`");
 		static_assert(details::supports_as_integer<traits, value_type, integer_type>::value, "traits must provide `integer_type as_int(const value_type&)`");
 		static_assert(details::supports_as_boolean<traits, value_type, boolean_type>::value, "traits must provide `boolean_type as_bool(const value_type&)`");
+
+		static_assert(std::is_same<details::function_signature<details::as_object_function<traits>>::args_t, value_type>::value, "");
 
 			value_type val;
 		public:
