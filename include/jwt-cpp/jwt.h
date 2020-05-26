@@ -6,7 +6,6 @@
 #include <chrono>
 #include <unordered_map>
 #include <memory>
-#include <sstream>
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 #include <openssl/pem.h>
