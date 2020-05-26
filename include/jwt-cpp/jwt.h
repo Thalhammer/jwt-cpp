@@ -931,6 +931,26 @@ namespace jwt {
 		class integer_type = int64_t,
 		class number_type = double,
 		typename traits = details::picojson_traits>
+	class basic_claim;
+
+	/**
+	 * Convenience wrapper for JSON claim
+	 */
+	using claim = basic_claim<>;
+
+#define JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES \
+	typename value_type, class object_type, class array_type, \
+	class string_type, class boolean_type, class integer_type, \
+	class number_type, typename traits \
+
+#define JWT_BASIC_CLAIM_TPL_DECLARATION \
+	template<JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES>
+
+#define JWT_BASIC_CLAIM_TPL \
+	value_type, object_type, array_type, string_type, \
+	boolean_type, integer_type, number_type, traits
+
+	JWT_BASIC_CLAIM_TPL_DECLARATION
 	class basic_claim {
 		// TODO: FixMe
 		static_assert(std::is_same<string_type, std::string>::value, "current this only supports an `std::string` due to the sining and base64 encoding that is required by JWT.");
@@ -1072,23 +1092,6 @@ namespace jwt {
 				return traits::as_number(val);
 			}
 	};
-
-	/**
-	 * Convenience wrapper for JSON claim
-	 */
-	using claim = basic_claim<>;
-
-#define JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES \
-	typename value_type, class object_type, class array_type, \
-	class string_type, class boolean_type, class integer_type, \
-	class number_type, typename traits \
-
-#define JWT_BASIC_CLAIM_TPL_DECLARATION \
-	template<JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES>
-
-#define JWT_BASIC_CLAIM_TPL \
-	value_type, object_type, array_type, string_type, \
-	boolean_type, integer_type, number_type, traits
 
 	/**
 	 * Base class that represents a token payload.
