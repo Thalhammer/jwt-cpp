@@ -851,6 +851,62 @@ namespace jwt {
 				is_as_array_signature<T, value_type, array_type>::value;
 		};
 
+		template <typename T>
+		using as_string_function = decltype(T::as_string);
+
+		template <typename T, typename value_type, typename string_type>
+		using is_as_string_signature = typename std::is_same<as_string_function<T>, string_type(const value_type&)>;
+
+		template <typename T, typename value_type, typename string_type>
+		struct supports_as_string {
+			static constexpr auto value =
+				is_detected<as_string_function, T>::value &&
+				std::is_function<as_string_function<T>>::value &&
+				is_as_string_signature<T, value_type, string_type>::value;
+		};
+
+		template <typename T>
+		using as_number_function = decltype(T::as_number);
+
+		template <typename T, typename value_type, typename number_type>
+		using is_as_number_signature = typename std::is_same<as_number_function<T>, number_type(const value_type&)>;
+
+		template <typename T, typename value_type, typename number_type>
+		struct supports_as_number {
+			static constexpr auto value =
+				is_detected<as_number_function, T>::value &&
+				std::is_function<as_number_function<T>>::value &&
+				is_as_number_signature<T, value_type, number_type>::value;
+		};
+
+		template <typename T>
+		using as_integer_function = decltype(T::as_int);
+
+		template <typename T, typename value_type, typename integer_type>
+		using is_as_integer_signature = typename std::is_same<as_integer_function<T>, integer_type(const value_type&)>;
+
+		template <typename T, typename value_type, typename integer_type>
+		struct supports_as_integer {
+			static constexpr auto value =
+				is_detected<as_integer_function, T>::value &&
+				std::is_function<as_integer_function<T>>::value &&
+				is_as_integer_signature<T, value_type, integer_type>::value;
+		};
+
+		template <typename T>
+		using as_boolean_function = decltype(T::as_bool);
+
+		template <typename T, typename value_type, typename boolean_type>
+		using is_as_boolean_signature = typename std::is_same<as_boolean_function<T>, boolean_type(const value_type&)>;
+
+		template <typename T, typename value_type, typename boolean_type>
+		struct supports_as_boolean {
+			static constexpr auto value =
+				is_detected<as_boolean_function, T>::value &&
+				std::is_function<as_boolean_function<T>>::value &&
+				is_as_boolean_signature<T, value_type, boolean_type>::value;
+		};
+
 		struct picojson_traits {
 			static json::type get_type(const picojson::value& val) {
 				using json::type;
@@ -957,7 +1013,11 @@ namespace jwt {
 
 		static_assert(details::supports_get_type<traits, value_type>::value, "traits must provide `jwt::json::type get_type(const value_type&)`");
 		static_assert(details::supports_as_object<traits, value_type, object_type>::value, "traits must provide `object_type as_object(const value_type&)`");
-		static_assert(details::supports_as_array<traits, value_type, array_type>::value, "traits must provide `array_type as_object(const value_type&)`");
+		static_assert(details::supports_as_array<traits, value_type, array_type>::value, "traits must provide `array_type as_array(const value_type&)`");
+		static_assert(details::supports_as_string<traits, value_type, string_type>::value, "traits must provide `string_type as_string(const value_type&)`");
+		static_assert(details::supports_as_number<traits, value_type, number_type>::value, "traits must provide `number_type as_number(const value_type&)`");
+		static_assert(details::supports_as_integer<traits, value_type, integer_type>::value, "traits must provide `integer_type as_int(const value_type&)`");
+		static_assert(details::supports_as_boolean<traits, value_type, boolean_type>::value, "traits must provide `boolean_type as_bool(const value_type&)`");
 
 			value_type val;
 		public:
