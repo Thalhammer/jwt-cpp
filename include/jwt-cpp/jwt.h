@@ -874,6 +874,7 @@ namespace jwt {
 		template <typename T, typename value_type, typename number_type>
 		struct supports_as_number {
 			static constexpr auto value =
+				std::is_floating_point<number_type>::value &&
 				is_detected<as_number_function, T>::value &&
 				std::is_function<as_number_function<T>>::value &&
 				is_as_number_signature<T, value_type, number_type>::value;
@@ -888,6 +889,8 @@ namespace jwt {
 		template <typename T, typename value_type, typename integer_type>
 		struct supports_as_integer {
 			static constexpr auto value =
+				std::is_signed<integer_type>::value &&
+				not std::is_floating_point<integer_type>::value &&
 				is_detected<as_integer_function, T>::value &&
 				std::is_function<as_integer_function<T>>::value &&
 				is_as_integer_signature<T, value_type, integer_type>::value;
@@ -902,6 +905,7 @@ namespace jwt {
 		template <typename T, typename value_type, typename boolean_type>
 		struct supports_as_boolean {
 			static constexpr auto value =
+				std::is_convertible<boolean_type, bool>::value &&
 				is_detected<as_boolean_function, T>::value &&
 				std::is_function<as_boolean_function<T>>::value &&
 				is_as_boolean_signature<T, value_type, boolean_type>::value;
