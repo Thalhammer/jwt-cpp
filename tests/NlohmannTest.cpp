@@ -93,8 +93,6 @@ TEST(NholmannTest, BasicClaims) {
 	using nholmann_claim =
 			jwt::basic_claim<JWT_NHOLMANN_CLAIM_TPL>;
 
-	static_assert(jwt::details::is_basic_claim<nholmann_claim>::value, "must be basic claim");
-
 	const auto string = nholmann_claim(std::string("string"));
 	const auto array = nholmann_claim(std::set<std::string>{"string", "string"});
 	const auto integer = nholmann_claim(159816816);

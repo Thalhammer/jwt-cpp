@@ -1090,17 +1090,6 @@ namespace jwt {
 	value_type, object_type, array_type, string_type, \
 	boolean_type, integer_type, number_type, traits
 
-	namespace details {
-		template <template <typename...> class, template<typename...> class> 
-		struct is_same_template : std::false_type{};
-
-		template <template <typename...> class T>
-		struct is_same_template<T,T> : std::true_type{};
-
-		template<template <typename...> class basic_claim_type>
-		using is_basic_claim = is_same_template<basic_claim_type, basic_claim>;
-	}
-
 	/**
 	 * Base class that represents a token payload.
 	 * Contains Convenience accessors for common claims.
