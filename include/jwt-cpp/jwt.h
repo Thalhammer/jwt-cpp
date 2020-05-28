@@ -1574,7 +1574,8 @@ namespace jwt {
 		template<typename Algo, typename Encode>
 		std::string sign(const Algo& algo, Encode encode) const {
 			object_type obj_header = header_claims;
-			obj_header["alg"] = value_type(algo.name());  // If present in builder header claims, this will be overwritte
+			if(header_claims.count("alg") == 0)
+				obj_header["alg"] = value_type(algo.name());
 
 			string_type header = encode(traits::serialize(value_type(obj_header)));
 			string_type payload = encode(traits::serialize(value_type(payload_claims)));
