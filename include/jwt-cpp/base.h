@@ -143,7 +143,6 @@ namespace jwt {
 				throw std::runtime_error("Invalid input");
 			};
 
-			
 			size_t fast_size = size - size % 4;
 			for (size_t i = 0; i < fast_size;) {
 				uint32_t sextet_a = get_sextet(i++);

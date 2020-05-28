@@ -1000,7 +1000,7 @@ namespace jwt {
 #define JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES \
 	typename value_type, class object_type, class array_type, \
 	class string_type, class boolean_type, class integer_type, \
-	class number_type, typename traits \
+	class number_type, typename traits
 
 #define JWT_BASIC_CLAIM_TPL_DECLARATION \
 	template<JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES>
@@ -1164,7 +1164,7 @@ namespace jwt {
 	class payload {
 		using basic_claim_t = basic_claim<JWT_BASIC_CLAIM_TPL>;
 	protected:
-		std::unordered_map<std::string, basic_claim_t> payload_claims;
+		std::unordered_map<string_type, basic_claim_t> payload_claims;
 	public:
 		/**
 		 * Check if issuer is present ("iss")
@@ -1269,11 +1269,6 @@ namespace jwt {
 				throw std::runtime_error("claim not found");
 			return payload_claims.at(name);
 		}
-		/**
-		 * Get all payload claims
-		 * \return map of claims
-		 */
-		std::unordered_map<std::string, basic_claim_t> get_payload_claims() const { return payload_claims; }
 	};
 
 	/**
@@ -1284,7 +1279,7 @@ namespace jwt {
 	class header {
 		using basic_claim_t = basic_claim<JWT_BASIC_CLAIM_TPL>;
 	protected:
-		std::unordered_map<std::string, basic_claim_t> header_claims;
+		std::unordered_map<string_type, basic_claim_t> header_claims;
 	public:
 		/**
 		 * Check if algortihm is present ("alg")
@@ -1349,11 +1344,6 @@ namespace jwt {
 				throw std::runtime_error("claim not found");
 			return header_claims.at(name);
 		}
-		/**
-		 * Get all header claims
-		 * \return map of claims
-		 */
-		std::unordered_map<std::string, basic_claim_t> get_header_claims() const { return header_claims; }
 	};
 
 	/**
@@ -1406,9 +1396,9 @@ namespace jwt {
 			payload = base::decode<alphabet::base64url>(payload);
 			signature = base::decode<alphabet::base64url>(signature);
 
-			auto parse_claims = [](const std::string& str) {
+			auto parse_claims = [](const string_type& str) {
 				using basic_claim_t = basic_claim<JWT_BASIC_CLAIM_TPL>;
-				std::unordered_map<std::string, basic_claim_t> res;
+				std::unordered_map<string_type, basic_claim_t> res;
 				value_type val;
 				if (!traits::parse(val, str))
 					throw std::runtime_error("Invalid json");
@@ -1468,9 +1458,8 @@ namespace jwt {
 	 */
 	JWT_BASIC_CLAIM_TPL_DECLARATION
 	class builder {
-		using basic_claim_t = basic_claim<JWT_BASIC_CLAIM_TPL>;
-		std::unordered_map<std::string, basic_claim_t> header_claims;
-		std::unordered_map<std::string, basic_claim_t> payload_claims;
+		object_type header_claims;
+		object_type payload_claims;
 
 	public:
 		builder() {}
@@ -1480,114 +1469,129 @@ namespace jwt {
 		 * \param c Claim to add
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_header_claim(const string_type& id, basic_claim_t c) { header_claims[id] = std::move(c); return *this; }
+		builder& set_header_claim(const string_type& id, value_type c) { header_claims[id] = std::move(c); return *this; }
+		
+		/**
+		 * Set a header claim.
+		 * \param id Name of the claim
+		 * \param c Claim to add
+		 * \return *this to allow for method chaining
+		 */
+		builder& set_header_claim(const string_type& id, basic_claim<JWT_BASIC_CLAIM_TPL> c) { header_claims[id] = c.to_json(); return *this; }
 		/**
 		 * Set a payload claim.
 		 * \param id Name of the claim
 		 * \param c Claim to add
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_payload_claim(const string_type& id, basic_claim_t c) { payload_claims[id] = std::move(c); return *this; }
+		builder& set_payload_claim(const string_type& id, value_type c) { payload_claims[id] = std::move(c); return *this; }
+		/**
+		 * Set a payload claim.
+		 * \param id Name of the claim
+		 * \param c Claim to add
+		 * \return *this to allow for method chaining
+		 */
+		builder& set_payload_claim(const string_type& id, basic_claim<JWT_BASIC_CLAIM_TPL> c) { payload_claims[id] = c.to_json(); return *this; }
 		/**
 		 * Set algorithm claim
 		 * You normally don't need to do this, as the algorithm is automatically set if you don't change it.
 		 * \param str Name of algorithm
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_algorithm(string_type str) { return set_header_claim("alg", basic_claim_t(str)); }
+		builder& set_algorithm(string_type str) { return set_header_claim("alg", value_type(str)); }
 		/**
 		 * Set type claim
 		 * \param str Type to set
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_type(string_type str) { return set_header_claim("typ", basic_claim_t(str)); }
+		builder& set_type(string_type str) { return set_header_claim("typ", value_type(str)); }
 		/**
 		 * Set content type claim
 		 * \param str Type to set
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_content_type(string_type str) { return set_header_claim("cty", basic_claim_t(str)); }
+		builder& set_content_type(string_type str) { return set_header_claim("cty", value_type(str)); }
 		/**
 		 * Set key id claim
 		 * \param str Key id to set
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_key_id(string_type str) { return set_header_claim("kid", basic_claim_t(str)); }
+		builder& set_key_id(string_type str) { return set_header_claim("kid", value_type(str)); }
 		/**
 		 * Set issuer claim
 		 * \param str Issuer to set
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_issuer(string_type str) { return set_payload_claim("iss", basic_claim_t(str)); }
+		builder& set_issuer(string_type str) { return set_payload_claim("iss", value_type(str)); }
 		/**
 		 * Set subject claim
 		 * \param str Subject to set
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_subject(string_type str) { return set_payload_claim("sub", basic_claim_t(str)); }
+		builder& set_subject(string_type str) { return set_payload_claim("sub", value_type(str)); }
 		/**
 		 * Set audience claim
 		 * \param l Audience set
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_audience(typename basic_claim_t::set_t l) { return set_payload_claim("aud", basic_claim_t(l)); }
+		builder& set_audience(array_type a) { return set_payload_claim("aud", value_type(a)); }
 		/**
 		 * Set audience claim
 		 * \param aud Single audience
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_audience(string_type aud) { return set_payload_claim("aud", basic_claim_t(aud)); }
+		builder& set_audience(string_type aud) { return set_payload_claim("aud", value_type(aud)); }
 		/**
 		 * Set expires at claim
 		 * \param d Expires time
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_expires_at(const date& d) { return set_payload_claim("exp", basic_claim_t(d)); }
+		builder& set_expires_at(const date& d) { return set_payload_claim("exp", value_type(d)); }
 		/**
 		 * Set not before claim
 		 * \param d First valid time
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_not_before(const date& d) { return set_payload_claim("nbf", basic_claim_t(d)); }
+		builder& set_not_before(const date& d) { return set_payload_claim("nbf", value_type(d)); }
 		/**
 		 * Set issued at claim
 		 * \param d Issued at time, should be current time
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_issued_at(const date& d) { return set_payload_claim("iat", basic_claim_t(d)); }
+		builder& set_issued_at(const date& d) { return set_payload_claim("iat", value_type(d)); }
 		/**
 		 * Set id claim
 		 * \param str ID to set
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_id(const string_type& str) { return set_payload_claim("jti", basic_claim_t(str)); }
+		builder& set_id(const string_type& str) { return set_payload_claim("jti", value_type(str)); }
 
 		/**
 		 * Sign token and return result
 		 * \param algo Instance of an algorithm to sign the token with
 		 * \return Final token as a string
 		 */
-		template<typename T>
-		std::string sign(const T& algo) const {
-			object_type obj_header;
-			obj_header["alg"] = value_type(algo.name());
-			for (auto& e : header_claims) {
-				obj_header[e.first] = e.second.to_json();
-			}
-			object_type obj_payload;
-			for (auto& e : payload_claims) {
-				obj_payload.insert({ e.first, e.second.to_json() });
-			}
+		template<typename Algo, typename Encode>
+		std::string sign(const Algo& algo, Encode encode) const {
+			object_type obj_header = header_claims;
+			obj_header["alg"] = value_type(algo.name());  // If present in builder header claims, this will be overwritte
 
-			auto encode = [](const std::string& data) {
-				return base::trim<alphabet::base64url>(base::encode<alphabet::base64url>(data));
-			};
-
-			std::string header = encode(traits::serialize(value_type(obj_header)));
-			std::string payload = encode(traits::serialize(value_type(obj_payload)));
-			std::string token = header + "." + payload;
+			string_type header = encode(traits::serialize(value_type(obj_header)));
+			string_type payload = encode(traits::serialize(value_type(payload_claims)));
+			string_type token = header + "." + payload;
 
 			return token + "." + encode(algo.sign(token));
+		}
+		/**
+		 * Sign token and return result
+		 * \param algo Instance of an algorithm to sign the token with
+		 * \return Final token as a string
+		 */
+		template<typename Algo>
+		std::string sign(const Algo& algo) const {
+			return sign(algo, [](const string_type& data) {
+				return base::trim<alphabet::base64url>(base::encode<alphabet::base64url>(data));
+			});
 		}
 	};
 
@@ -1611,7 +1615,7 @@ namespace jwt {
 
 		using basic_claim_t = basic_claim<JWT_BASIC_CLAIM_TPL>;
 		/// Required claims
-		std::unordered_map<std::string, basic_claim_t> claims;
+		std::unordered_map<string_type, basic_claim_t> claims;
 		/// Leeway time for exp, nbf and iat
 		size_t default_leeway = 0;
 		/// Instance of clock type
