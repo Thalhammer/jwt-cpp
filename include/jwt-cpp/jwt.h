@@ -1371,30 +1371,41 @@ namespace jwt {
 		 * Constructor 
 		 * Parses a given token
 		 * \param token The token to parse
+		 * \param decode The token to parse
 		 * \throws std::invalid_argument Token is not in correct format
 		 * \throws std::runtime_error Base64 decoding failed or invalid json
 		 */
-		explicit decoded_jwt(const std::string& token)
+		/**
+		 * Constructor 
+		 * Parses a given token
+		 * Decodes using the jwt::base64url which supports an std::string
+		 * \param token The token to parse
+		 * \throws std::invalid_argument Token is not in correct format
+		 * \throws std::runtime_error Base64 decoding failed or invalid json
+		 */
+		decoded_jwt(const string_type& token)
+		: decoded_jwt(token, [](const string_type& token){
+				return base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(token));
+		})
+		{}
+
+		template<typename Decode>
+		decoded_jwt(const string_type& token, Decode decode)
 			: token(token)
 		{
 			auto hdr_end = token.find('.');
-			if (hdr_end == std::string::npos)
+			if (hdr_end == string_type::npos)
 				throw std::invalid_argument("invalid token supplied");
 			auto payload_end = token.find('.', hdr_end + 1);
-			if (payload_end == std::string::npos)
+			if (payload_end == string_type::npos)
 				throw std::invalid_argument("invalid token supplied");
-			header = header_base64 = token.substr(0, hdr_end);
-			payload = payload_base64 = token.substr(hdr_end + 1, payload_end - hdr_end - 1);
-			signature = signature_base64 = token.substr(payload_end + 1);
+			header_base64 = token.substr(0, hdr_end);
+			payload_base64 = token.substr(hdr_end + 1, payload_end - hdr_end - 1);
+			signature_base64 = token.substr(payload_end + 1);
 
-			// Fix padding: JWT requires padding to get removed
-			header = base::pad<alphabet::base64url>(header);
-			payload = base::pad<alphabet::base64url>(payload);
-			signature = base::pad<alphabet::base64url>(signature);
-
-			header = base::decode<alphabet::base64url>(header);
-			payload = base::decode<alphabet::base64url>(payload);
-			signature = base::decode<alphabet::base64url>(signature);
+			header = decode(header_base64);
+			payload = decode(payload_base64);
+			signature = decode(signature_base64);
 
 			auto parse_claims = [](const string_type& str) {
 				using basic_claim_t = basic_claim<JWT_BASIC_CLAIM_TPL>;
@@ -1572,7 +1583,7 @@ namespace jwt {
 		 * \return Final token as a string
 		 */
 		template<typename Algo, typename Encode>
-		std::string sign(const Algo& algo, Encode encode) const {
+		string_type sign(const Algo& algo, Encode encode) const {
 			object_type obj_header = header_claims;
 			if(header_claims.count("alg") == 0)
 				obj_header["alg"] = value_type(algo.name());
@@ -1589,7 +1600,7 @@ namespace jwt {
 		 * \return Final token as a string
 		 */
 		template<typename Algo>
-		std::string sign(const Algo& algo) const {
+		string_type sign(const Algo& algo) const {
 			return sign(algo, [](const string_type& data) {
 				return base::trim<alphabet::base64url>(base::encode<alphabet::base64url>(data));
 			});
