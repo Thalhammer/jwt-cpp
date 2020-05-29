@@ -1856,6 +1856,19 @@ namespace jwt {
 	/**
 	 * Decode a token
 	 * \param token Token to decode
+	 * \param decode function that will pad and base64url decode the token
+	 * \return Decoded token
+	 * \throws std::invalid_argument Token is not in correct format
+	 * \throws std::runtime_error Base64 decoding failed or invalid json
+	 */
+	template<JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES, typename Decode>
+	decoded_jwt<JWT_BASIC_CLAIM_TPL> decode(const string_type& token, Decode decode) {
+		return decoded_jwt<JWT_BASIC_CLAIM_TPL>(token, decode);
+	}
+
+	/**
+	 * Decode a token
+	 * \param token Token to decode
 	 * \return Decoded token
 	 * \throws std::invalid_argument Token is not in correct format
 	 * \throws std::runtime_error Base64 decoding failed or invalid json
