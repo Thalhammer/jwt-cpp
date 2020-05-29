@@ -1353,19 +1353,19 @@ namespace jwt {
 	class decoded_jwt : public header<JWT_BASIC_CLAIM_TPL>, public payload<JWT_BASIC_CLAIM_TPL> {
 	protected:
 		/// Unmodifed token, as passed to constructor
-		const std::string token;
+		const string_type token;
 		/// Header part decoded from base64
-		std::string header;
+		string_type header;
 		/// Unmodified header part in base64
-		std::string header_base64;
+		string_type header_base64;
 		/// Payload part decoded from base64
-		std::string payload;
+		string_type payload;
 		/// Unmodified payload part in base64
-		std::string payload_base64;
+		string_type payload_base64;
 		/// Signature part decoded from base64
-		std::string signature;
+		string_type signature;
 		/// Unmodified signature part in base64
-		std::string signature_base64;
+		string_type signature_base64;
 	public:
 		/**
 		 * Constructor 
@@ -1429,37 +1429,37 @@ namespace jwt {
 		 * Get token string, as passed to constructor
 		 * \return token as passed to constructor
 		 */
-		const std::string& get_token() const noexcept { return token; }
+		const string_type& get_token() const noexcept { return token; }
 		/**
 		 * Get header part as json string
 		 * \return header part after base64 decoding
 		 */
-		const std::string& get_header() const noexcept { return header; }
+		const string_type& get_header() const noexcept { return header; }
 		/**
 		 * Get payload part as json string
 		 * \return payload part after base64 decoding
 		 */
-		const std::string& get_payload() const noexcept { return payload; }
+		const string_type& get_payload() const noexcept { return payload; }
 		/**
 		 * Get signature part as json string
 		 * \return signature part after base64 decoding
 		 */
-		const std::string& get_signature() const noexcept { return signature; }
+		const string_type& get_signature() const noexcept { return signature; }
 		/**
 		 * Get header part as base64 string
 		 * \return header part before base64 decoding
 		 */
-		const std::string& get_header_base64() const noexcept { return header_base64; }
+		const string_type& get_header_base64() const noexcept { return header_base64; }
 		/**
 		 * Get payload part as base64 string
 		 * \return payload part before base64 decoding
 		 */
-		const std::string& get_payload_base64() const noexcept { return payload_base64; }
+		const string_type& get_payload_base64() const noexcept { return payload_base64; }
 		/**
 		 * Get signature part as base64 string
 		 * \return signature part before base64 decoding
 		 */
-		const std::string& get_signature_base64() const noexcept { return signature_base64; }
+		const string_type& get_signature_base64() const noexcept { return signature_base64; }
 
 	};
 
