@@ -109,7 +109,7 @@ namespace jwt {
 			
 			std::shared_ptr<EVP_PKEY> pkey(PEM_read_bio_PUBKEY(pubkey_bio.get(), nullptr, nullptr, (void*)password.c_str()), EVP_PKEY_free);
 			if (!pkey)
-				throw rsa_exception("failed to load public key: PEM_read_bio_PUBKEY failed:" + std::string(ERR_error_string(ERR_get_error(), NULL)));
+				throw rsa_exception("failed to load public key: PEM_read_bio_PUBKEY failed:" + std::string(ERR_error_string(ERR_get_error(), nullptr)));
 			return pkey;
 		}
 
@@ -196,7 +196,7 @@ namespace jwt {
 			std::string sign(const std::string& data) const {
 				std::string res;
 				res.resize(static_cast<size_t>(EVP_MAX_MD_SIZE));
-				unsigned int len = static_cast<unsigned int>(res.size());
+				auto len = static_cast<unsigned int>(res.size());
 				if (HMAC(md(), secret.data(), static_cast<int>(secret.size()), (const unsigned char*)data.data(), static_cast<int>(data.size()), (unsigned char*)res.data(), &len) == nullptr)
 					throw signature_generation_exception();
 				res.resize(len);
@@ -311,7 +311,7 @@ namespace jwt {
 					throw signature_verification_exception("failed to verify signature: VerifyUpdate failed");
 				auto res = EVP_VerifyFinal(ctx.get(), (const unsigned char*)signature.data(), static_cast<unsigned int>(signature.size()), pkey.get());
 				if (res != 1)
-					throw signature_verification_exception("evp verify final failed: " + std::to_string(res) + " " + ERR_error_string(ERR_get_error(), NULL));
+					throw signature_verification_exception("evp verify final failed: " + std::to_string(res) + " " + ERR_error_string(ERR_get_error(), nullptr));
 			}
 			/**
 			 * Returns the algorithm name provided to the constructor
@@ -359,7 +359,7 @@ namespace jwt {
 
 					pkey.reset(PEM_read_bio_EC_PUBKEY(pubkey_bio.get(), nullptr, nullptr, (void*)public_key_password.c_str()), EC_KEY_free);
 					if (!pkey)
-						throw ecdsa_exception("failed to load public key: PEM_read_bio_EC_PUBKEY failed:" + std::string(ERR_error_string(ERR_get_error(), NULL)));
+						throw ecdsa_exception("failed to load public key: PEM_read_bio_EC_PUBKEY failed:" + std::string(ERR_error_string(ERR_get_error(), nullptr)));
 					size_t keysize = EC_GROUP_get_degree(EC_KEY_get0_group(pkey.get()));
 					if(keysize != signature_length*4 && (signature_length != 132 || keysize != 521))
 						throw ecdsa_exception("invalid key size");
@@ -1478,7 +1478,7 @@ namespace jwt {
 		object_type payload_claims;
 
 	public:
-		builder() {}
+		builder() = default;
 		/**
 		 * Set a header claim.
 		 * \param id Name of the claim
