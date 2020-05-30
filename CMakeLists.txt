@@ -6,6 +6,7 @@ endif()
 
 option(BUILD_TESTS "Configure CMake to build tests (or not)" ON)
 option(EXTERNAL_PICOJSON "Use find_package() to locate the picojson header" OFF)
+option(NO_INSTALL_PICOJSON "Do not install the picojson header" OFF)
 
 project(jwt-cpp)
 
@@ -49,7 +50,7 @@ write_basic_package_version_file(
   COMPATIBILITY ExactVersion)
 
 install(FILES ${JWT_HEADERS} DESTINATION include/jwt-cpp)
-if(NOT EXTERNAL_PICOJSON)
+if(NOT EXTERNAL_PICOJSON AND NOT NO_INSTALL_PICOJSON)
    install(FILES ${PICO_HEADER} DESTINATION include/picojson)
 endif()
 
