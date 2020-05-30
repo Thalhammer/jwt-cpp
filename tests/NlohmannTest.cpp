@@ -235,7 +235,8 @@ struct nlohmann_wide_traits {
 	}
 
 	static bool parse(json &val, std::wstring str) {
-		val = json::parse(str.begin(), str.end());
+		std::string buf(str.begin(), str.end()) ;
+		val = json::parse(buf.begin(), buf.end());
 		return true;
 	}
 

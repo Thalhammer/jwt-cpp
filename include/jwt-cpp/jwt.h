@@ -1156,6 +1156,15 @@ namespace jwt {
 			}
 	};
 
+	namespace details {
+		template<class string_type, class data_type>
+		string_type make_string_type(data_type data) {
+			std::basic_stringstream<typename string_type::value_type, typename string_type::traits_type, typename string_type::allocator_type> stream;
+			stream << data;
+			return stream.str();
+		}
+	}
+
 	/**
 	 * Base class that represents a token payload.
 	 * Contains Convenience accessors for common claims.
@@ -1170,51 +1179,51 @@ namespace jwt {
 		 * Check if issuer is present ("iss")
 		 * \return true if present, false otherwise
 		 */
-		bool has_issuer() const noexcept { return has_payload_claim("iss"); }
+		bool has_issuer() const noexcept { return has_payload_claim(details::make_string_type<string_type>("iss")); }
 		/**
 		 * Check if subject is present ("sub")
 		 * \return true if present, false otherwise
 		 */
-		bool has_subject() const noexcept { return has_payload_claim("sub"); }
+		bool has_subject() const noexcept { return has_payload_claim(details::make_string_type<string_type>("sub")); }
 		/**
 		 * Check if audience is present ("aud")
 		 * \return true if present, false otherwise
 		 */
-		bool has_audience() const noexcept { return has_payload_claim("aud"); }
+		bool has_audience() const noexcept { return has_payload_claim(details::make_string_type<string_type>("aud")); }
 		/**
 		 * Check if expires is present ("exp")
 		 * \return true if present, false otherwise
 		 */
-		bool has_expires_at() const noexcept { return has_payload_claim("exp"); }
+		bool has_expires_at() const noexcept { return has_payload_claim(details::make_string_type<string_type>("exp")); }
 		/**
 		 * Check if not before is present ("nbf")
 		 * \return true if present, false otherwise
 		 */
-		bool has_not_before() const noexcept { return has_payload_claim("nbf"); }
+		bool has_not_before() const noexcept { return has_payload_claim(details::make_string_type<string_type>("nbf")); }
 		/**
 		 * Check if issued at is present ("iat")
 		 * \return true if present, false otherwise
 		 */
-		bool has_issued_at() const noexcept { return has_payload_claim("iat"); }
+		bool has_issued_at() const noexcept { return has_payload_claim(details::make_string_type<string_type>("iat")); }
 		/**
 		 * Check if token id is present ("jti")
 		 * \return true if present, false otherwise
 		 */
-		bool has_id() const noexcept { return has_payload_claim("jti"); }
+		bool has_id() const noexcept { return has_payload_claim(details::make_string_type<string_type>("jti")); }
 		/**
 		 * Get issuer claim
 		 * \return issuer as string
 		 * \throws std::runtime_error If claim was not present
 		 * \throws std::bad_cast Claim was present but not a string (Should not happen in a valid token)
 		 */
-		string_type get_issuer() const { return get_payload_claim("iss").as_string(); }
+		string_type get_issuer() const { return get_payload_claim(details::make_string_type<string_type>("iss")).as_string(); }
 		/**
 		 * Get subject claim
 		 * \return subject as string
 		 * \throws std::runtime_error If claim was not present
 		 * \throws std::bad_cast Claim was present but not a string (Should not happen in a valid token)
 		 */
-		string_type get_subject() const { return get_payload_claim("sub").as_string(); }
+		string_type get_subject() const { return get_payload_claim(details::make_string_type<string_type>("sub")).as_string(); }
 		/**
 		 * Get audience claim
 		 * \return audience as a set of strings
@@ -1222,7 +1231,7 @@ namespace jwt {
 		 * \throws std::bad_cast Claim was present but not a set (Should not happen in a valid token)
 		 */
 		typename basic_claim_t::set_t get_audience() const { 
-			auto aud = get_payload_claim("aud");
+			auto aud = get_payload_claim(details::make_string_type<string_type>("aud"));
 			if(aud.get_type() == json::type::string) return { aud.as_string()};
 			else return aud.as_set();
 		}
@@ -1232,28 +1241,28 @@ namespace jwt {
 		 * \throws std::runtime_error If claim was not present
 		 * \throws std::bad_cast Claim was present but not a date (Should not happen in a valid token)
 		 */
-		const date get_expires_at() const { return get_payload_claim("exp").as_date(); }
+		const date get_expires_at() const { return get_payload_claim(details::make_string_type<string_type>("exp")).as_date(); }
 		/**
 		 * Get not valid before claim
 		 * \return nbf date in utc
 		 * \throws std::runtime_error If claim was not present
 		 * \throws std::bad_cast Claim was present but not a date (Should not happen in a valid token)
 		 */
-		const date get_not_before() const { return get_payload_claim("nbf").as_date(); }
+		const date get_not_before() const { return get_payload_claim(details::make_string_type<string_type>("nbf")).as_date(); }
 		/**
 		 * Get issued at claim
 		 * \return issued at as date in utc
 		 * \throws std::runtime_error If claim was not present
 		 * \throws std::bad_cast Claim was present but not a date (Should not happen in a valid token)
 		 */
-		const date get_issued_at() const { return get_payload_claim("iat").as_date(); }
+		const date get_issued_at() const { return get_payload_claim(details::make_string_type<string_type>("iat")).as_date(); }
 		/**
 		 * Get id claim
 		 * \return id as string
 		 * \throws std::runtime_error If claim was not present
 		 * \throws std::bad_cast Claim was present but not a string (Should not happen in a valid token)
 		 */
-		string_type get_id() const { return get_payload_claim("jti").as_string(); }
+		string_type get_id() const { return get_payload_claim(details::make_string_type<string_type>("jti")).as_string(); }
 		/**
 		 * Check if a payload claim is present
 		 * \return true if claim was present, false otherwise
@@ -1285,50 +1294,50 @@ namespace jwt {
 		 * Check if algortihm is present ("alg")
 		 * \return true if present, false otherwise
 		 */
-		bool has_algorithm() const noexcept { return has_header_claim("alg"); }
+		bool has_algorithm() const noexcept { return has_header_claim(details::make_string_type<string_type>("alg")); }
 		/**
 		 * Check if type is present ("typ")
 		 * \return true if present, false otherwise
 		 */
-		bool has_type() const noexcept { return has_header_claim("typ"); }
+		bool has_type() const noexcept { return has_header_claim(details::make_string_type<string_type>("typ")); }
 		/**
 		 * Check if content type is present ("cty")
 		 * \return true if present, false otherwise
 		 */
-		bool has_content_type() const noexcept { return has_header_claim("cty"); }
+		bool has_content_type() const noexcept { return has_header_claim(details::make_string_type<string_type>("cty")); }
 		/**
 		 * Check if key id is present ("kid")
 		 * \return true if present, false otherwise
 		 */
-		bool has_key_id() const noexcept { return has_header_claim("kid"); }
+		bool has_key_id() const noexcept { return has_header_claim(details::make_string_type<string_type>("kid")); }
 		/**
 		 * Get algorithm claim
 		 * \return algorithm as string
 		 * \throws std::runtime_error If claim was not present
 		 * \throws std::bad_cast Claim was present but not a string (Should not happen in a valid token)
 		 */
-		string_type get_algorithm() const { return get_header_claim("alg").as_string(); }
+		string_type get_algorithm() const { return get_header_claim(details::make_string_type<string_type>("alg")).as_string(); }
 		/**
 		 * Get type claim
 		 * \return type as a string
 		 * \throws std::runtime_error If claim was not present
 		 * \throws std::bad_cast Claim was present but not a string (Should not happen in a valid token)
 		 */
-		string_type get_type() const { return get_header_claim("typ").as_string(); }
+		string_type get_type() const { return get_header_claim(details::make_string_type<string_type>("typ")).as_string(); }
 		/**
 		 * Get content type claim
 		 * \return content type as string
 		 * \throws std::runtime_error If claim was not present
 		 * \throws std::bad_cast Claim was present but not a string (Should not happen in a valid token)
 		 */
-		string_type get_content_type() const { return get_header_claim("cty").as_string(); }
+		string_type get_content_type() const { return get_header_claim(details::make_string_type<string_type>("cty")).as_string(); }
 		/**
 		 * Get key id claim
 		 * \return key id as string
 		 * \throws std::runtime_error If claim was not present
 		 * \throws std::bad_cast Claim was present but not a string (Should not happen in a valid token)
 		 */
-		string_type get_key_id() const { return get_header_claim("kid").as_string(); }
+		string_type get_key_id() const { return get_header_claim(details::make_string_type<string_type>("kid")).as_string(); }
 		/**
 		 * Check if a header claim is present
 		 * \return true if claim was present, false otherwise
@@ -1377,7 +1386,9 @@ namespace jwt {
 		 */
 		decoded_jwt(const string_type& token)
 		: decoded_jwt(token, [](const string_type& token){
-				return base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(token));
+				return details::make_string_type<string_type>(
+					base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(
+						details::make_string_type<std::string>(token))));
 		})
 		{}
 		/**
@@ -1508,73 +1519,73 @@ namespace jwt {
 		 * \param str Name of algorithm
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_algorithm(string_type str) { return set_header_claim("alg", value_type(str)); }
+		builder& set_algorithm(string_type str) { return set_header_claim(details::make_string_type<string_type>("alg"), value_type(str)); }
 		/**
 		 * Set type claim
 		 * \param str Type to set
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_type(string_type str) { return set_header_claim("typ", value_type(str)); }
+		builder& set_type(string_type str) { return set_header_claim(details::make_string_type<string_type>("typ"), value_type(str)); }
 		/**
 		 * Set content type claim
 		 * \param str Type to set
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_content_type(string_type str) { return set_header_claim("cty", value_type(str)); }
+		builder& set_content_type(string_type str) { return set_header_claim(details::make_string_type<string_type>("cty"), value_type(str)); }
 		/**
 		 * Set key id claim
 		 * \param str Key id to set
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_key_id(string_type str) { return set_header_claim("kid", value_type(str)); }
+		builder& set_key_id(string_type str) { return set_header_claim(details::make_string_type<string_type>("kid"), value_type(str)); }
 		/**
 		 * Set issuer claim
 		 * \param str Issuer to set
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_issuer(string_type str) { return set_payload_claim("iss", value_type(str)); }
+		builder& set_issuer(string_type str) { return set_payload_claim(details::make_string_type<string_type>("iss"), value_type(str)); }
 		/**
 		 * Set subject claim
 		 * \param str Subject to set
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_subject(string_type str) { return set_payload_claim("sub", value_type(str)); }
+		builder& set_subject(string_type str) { return set_payload_claim(details::make_string_type<string_type>("sub"), value_type(str)); }
 		/**
 		 * Set audience claim
 		 * \param a Audience set
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_audience(array_type a) { return set_payload_claim("aud", value_type(a)); }
+		builder& set_audience(array_type a) { return set_payload_claim(details::make_string_type<string_type>("aud"), value_type(a)); }
 		/**
 		 * Set audience claim
 		 * \param aud Single audience
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_audience(string_type aud) { return set_payload_claim("aud", value_type(aud)); }
+		builder& set_audience(string_type aud) { return set_payload_claim(details::make_string_type<string_type>("aud"), value_type(aud)); }
 		/**
 		 * Set expires at claim
 		 * \param d Expires time
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_expires_at(const date& d) { return set_payload_claim("exp", value_type(d)); }
+		builder& set_expires_at(const date& d) { return set_payload_claim(details::make_string_type<string_type>("exp"), value_type(d)); }
 		/**
 		 * Set not before claim
 		 * \param d First valid time
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_not_before(const date& d) { return set_payload_claim("nbf", value_type(d)); }
+		builder& set_not_before(const date& d) { return set_payload_claim(details::make_string_type<string_type>("nbf"), value_type(d)); }
 		/**
 		 * Set issued at claim
 		 * \param d Issued at time, should be current time
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_issued_at(const date& d) { return set_payload_claim("iat", value_type(d)); }
+		builder& set_issued_at(const date& d) { return set_payload_claim(details::make_string_type<string_type>("iat"), value_type(d)); }
 		/**
 		 * Set id claim
 		 * \param str ID to set
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_id(const string_type& str) { return set_payload_claim("jti", value_type(str)); }
+		builder& set_id(const string_type& str) { return set_payload_claim(details::make_string_type<string_type>("jti"), value_type(str)); }
 
 		/**
 		 * Sign token and return result
@@ -1583,15 +1594,18 @@ namespace jwt {
 		 */
 		template<typename Algo, typename Encode>
 		string_type sign(const Algo& algo, Encode encode) const {
+			const auto alg = details::make_string_type<string_type>("alg");
+			const auto dot = details::make_string_type<string_type>(".");
 			object_type obj_header = header_claims;
-			if(header_claims.count("alg") == 0)
-				obj_header["alg"] = value_type(algo.name());
+			if(header_claims.count(alg) == 0)
+				obj_header[alg] = value_type(algo.name());
 
 			string_type header = encode(traits::serialize(value_type(obj_header)));
 			string_type payload = encode(traits::serialize(value_type(payload_claims)));
-			string_type token = header + "." + payload;
+			string_type token = header + dot + payload;
 
-			return token + "." + encode(algo.sign(token));
+			return token + dot + encode(details::make_string_type<string_type>(
+				algo.sign(details::make_string_type<std::string>(token))));
 		}
 		/**
 		 * Sign token and return result
@@ -1601,7 +1615,9 @@ namespace jwt {
 		template<typename Algo>
 		string_type sign(const Algo& algo) const {
 			return sign(algo, [](const string_type& data) {
-				return base::trim<alphabet::base64url>(base::encode<alphabet::base64url>(data));
+				return details::make_string_type<string_type>(
+					base::trim<alphabet::base64url>(base::encode<alphabet::base64url>(
+						details::make_string_type<std::string>(data))));
 			});
 		}
 	};
@@ -1652,56 +1668,56 @@ namespace jwt {
 		 * \param leeway Set leeway to use for expires at.
 		 * \return *this to allow chaining
 		 */
-		verifier& expires_at_leeway(size_t leeway) { return with_claim("exp", basic_claim_t(std::chrono::system_clock::from_time_t(leeway))); }
+		verifier& expires_at_leeway(size_t leeway) { return with_claim(details::make_string_type<string_type>("exp"), basic_claim_t(std::chrono::system_clock::from_time_t(leeway))); }
 		/**
 		 * Set leeway for not before.
 		 * If not specified the default leeway will be used.
 		 * \param leeway Set leeway to use for not before.
 		 * \return *this to allow chaining
 		 */
-		verifier& not_before_leeway(size_t leeway) { return with_claim("nbf", basic_claim_t(std::chrono::system_clock::from_time_t(leeway))); }
+		verifier& not_before_leeway(size_t leeway) { return with_claim(details::make_string_type<string_type>("nbf"), basic_claim_t(std::chrono::system_clock::from_time_t(leeway))); }
 		/**
 		 * Set leeway for issued at.
 		 * If not specified the default leeway will be used.
 		 * \param leeway Set leeway to use for issued at.
 		 * \return *this to allow chaining
 		 */
-		verifier& issued_at_leeway(size_t leeway) { return with_claim("iat", basic_claim_t(std::chrono::system_clock::from_time_t(leeway))); }
+		verifier& issued_at_leeway(size_t leeway) { return with_claim(details::make_string_type<string_type>("iat"), basic_claim_t(std::chrono::system_clock::from_time_t(leeway))); }
 		/**
 		 * Set an issuer to check for.
 		 * Check is casesensitive.
 		 * \param iss Issuer to check for.
 		 * \return *this to allow chaining
 		 */
-		verifier& with_issuer(const string_type& iss) { return with_claim("iss", basic_claim_t(iss)); }
+		verifier& with_issuer(const string_type& iss) { return with_claim(details::make_string_type<string_type>("iss"), basic_claim_t(iss)); }
 		/**
 		 * Set a subject to check for.
 		 * Check is casesensitive.
 		 * \param sub Subject to check for.
 		 * \return *this to allow chaining
 		 */
-		verifier& with_subject(const string_type& sub) { return with_claim("sub", basic_claim_t(sub)); }
+		verifier& with_subject(const string_type& sub) { return with_claim(details::make_string_type<string_type>("sub"), basic_claim_t(sub)); }
 		/**
 		 * Set an audience to check for.
 		 * If any of the specified audiences is not present in the token the check fails.
 		 * \param aud Audience to check for.
 		 * \return *this to allow chaining
 		 */
-		verifier& with_audience(const typename basic_claim_t::set_t& aud) { return with_claim("aud", basic_claim_t(aud)); }
+		verifier& with_audience(const typename basic_claim_t::set_t& aud) { return with_claim(details::make_string_type<string_type>("aud"), basic_claim_t(aud)); }
 		/**
 		 * Set an audience to check for.
 		 * If the specified audiences is not present in the token the check fails.
 		 * \param aud Audience to check for.
 		 * \return *this to allow chaining
 		 */
-		verifier& with_audience(const string_type& aud) { return with_claim("aud", basic_claim_t(aud)); }
+		verifier& with_audience(const string_type& aud) { return with_claim(details::make_string_type<string_type>("aud"), basic_claim_t(aud)); }
 		/**
 		 * Set an id to check for.
 		 * Check is casesensitive.
 		 * \param id ID to check for.
 		 * \return *this to allow chaining
 		 */
-		verifier& with_id(const string_type& id) { return with_claim("jti", basic_claim_t(id)); }
+		verifier& with_id(const string_type& id) { return with_claim(details::make_string_type<string_type>("jti"), basic_claim_t(id)); }
 		/**
 		 * Specify a claim to check for.
 		 * \param name Name of the claim to check for
@@ -1727,42 +1743,45 @@ namespace jwt {
 		 * \throws token_verification_exception Verification failed
 		 */
 		void verify(const decoded_jwt<JWT_BASIC_CLAIM_TPL>& jwt) const {
-			const std::string data = jwt.get_header_base64() + "." + jwt.get_payload_base64();
-			const std::string sig = jwt.get_signature();
-			const std::string& algo = jwt.get_algorithm();
+			const string_type data = jwt.get_header_base64() + details::make_string_type<string_type>(".") + jwt.get_payload_base64();
+			const string_type sig = jwt.get_signature();
+			const std::string algo = details::make_string_type<std::string>(jwt.get_algorithm());
 			if (algs.count(algo) == 0)
 				throw token_verification_exception("wrong algorithm");
-			algs.at(algo)->verify(data, sig);
 
-			auto assert_claim_eq = [](const decoded_jwt<JWT_BASIC_CLAIM_TPL>& jwt, const std::string& key, const basic_claim_t& c) {
+			algs.at(algo)->verify(
+				details::make_string_type<std::string>(data),
+				details::make_string_type<std::string>(sig));
+
+			auto assert_claim_eq = [](const decoded_jwt<JWT_BASIC_CLAIM_TPL>& jwt, const string_type& key, const basic_claim_t& c) {
 				if (!jwt.has_payload_claim(key))
-					throw token_verification_exception("decoded_jwt is missing " + key + " claim");
+					throw token_verification_exception("decoded_jwt is missing " + details::make_string_type<std::string>(key) + " claim");
 				auto jc = jwt.get_payload_claim(key);
 				if (jc.get_type() != c.get_type())
-					throw token_verification_exception("claim " + key + " type mismatch");
+					throw token_verification_exception("claim " + details::make_string_type<std::string>(key) + " type mismatch");
 				if (c.get_type() == json::type::integer) {
 					if (c.as_date() != jc.as_date())
-						throw token_verification_exception("claim " + key + " does not match expected");
+						throw token_verification_exception("claim " + details::make_string_type<std::string>(key) + " does not match expected");
 				}
 				else if (c.get_type() == json::type::array) {
 					auto s1 = c.as_set();
 					auto s2 = jc.as_set();
 					if (s1.size() != s2.size())
-						throw token_verification_exception("claim " + key + " does not match expected");
+						throw token_verification_exception("claim " + details::make_string_type<std::string>(key) + " does not match expected");
 					auto it1 = s1.cbegin();
 					auto it2 = s2.cbegin();
 					while (it1 != s1.cend() && it2 != s2.cend()) {
 						if (*it1++ != *it2++)
-							throw token_verification_exception("claim " + key + " does not match expected");
+							throw token_verification_exception("claim " + details::make_string_type<std::string>(key) + " does not match expected");
 					}
 				}
 				else if (c.get_type() == json::type::object) {
 					if (traits::serialize(c.to_json()) != traits::serialize(jc.to_json()))
-						throw token_verification_exception("claim " + key + " does not match expected");
+						throw token_verification_exception("claim " + details::make_string_type<std::string>(key) + " does not match expected");
 				}
 				else if (c.get_type() == json::type::string) {
 					if (c.as_string() != jc.as_string())
-						throw token_verification_exception("claim " + key + " does not match expected");
+						throw token_verification_exception("claim " + details::make_string_type<std::string>(key) + " does not match expected");
 				}
 				else throw token_verification_exception("internal error");
 			};
@@ -1770,29 +1789,29 @@ namespace jwt {
 			auto time = clock.now();
 
 			if (jwt.has_expires_at()) {
-				auto leeway = claims.count("exp") == 1 ? std::chrono::system_clock::to_time_t(claims.at("exp").as_date()) : default_leeway;
+				auto leeway = claims.count(details::make_string_type<string_type>("exp")) == 1 ? std::chrono::system_clock::to_time_t(claims.at(details::make_string_type<string_type>("exp")).as_date()) : default_leeway;
 				auto exp = jwt.get_expires_at();
 				if (time > exp + std::chrono::seconds(leeway))
 					throw token_verification_exception("token expired");
 			}
 			if (jwt.has_issued_at()) {
-				auto leeway = claims.count("iat") == 1 ? std::chrono::system_clock::to_time_t(claims.at("iat").as_date()) : default_leeway;
+				auto leeway = claims.count(details::make_string_type<string_type>("iat")) == 1 ? std::chrono::system_clock::to_time_t(claims.at(details::make_string_type<string_type>("iat")).as_date()) : default_leeway;
 				auto iat = jwt.get_issued_at();
 				if (time < iat - std::chrono::seconds(leeway))
 					throw token_verification_exception("token expired");
 			}
 			if (jwt.has_not_before()) {
-				auto leeway = claims.count("nbf") == 1 ? std::chrono::system_clock::to_time_t(claims.at("nbf").as_date()) : default_leeway;
+				auto leeway = claims.count(details::make_string_type<string_type>("nbf")) == 1 ? std::chrono::system_clock::to_time_t(claims.at(details::make_string_type<string_type>("nbf")).as_date()) : default_leeway;
 				auto nbf = jwt.get_not_before();
 				if (time < nbf - std::chrono::seconds(leeway))
 					throw token_verification_exception("token expired");
 			}
 			for (auto& c : claims)
 			{
-				if (c.first == "exp" || c.first == "iat" || c.first == "nbf") {
+				if (c.first == details::make_string_type<string_type>("exp") || c.first == details::make_string_type<string_type>("iat") || c.first == details::make_string_type<string_type>("nbf")) {
 					// Nothing to do here, already checked
 				}
-				else if (c.first == "aud") {
+				else if (c.first == details::make_string_type<string_type>("aud")) {
 					if (!jwt.has_audience())
 						throw token_verification_exception("token doesn't contain the required audience");
 					auto aud = jwt.get_audience();
