@@ -2,84 +2,82 @@
 #include "jwt-cpp/jwt.h"
 #include "nlohmann/json.hpp"
 
-template<typename json_type = nlohmann::json>
 struct nlohmann_traits {
-	using json = json_type;
-	using value_enum = nlohmann::detail::value_t;
+	using json = nlohmann::json;
 
-	static jwt::json::type get_type(const typename json::value_t &val) {
+	static jwt::json::type get_type(const json &val) {
 		using jwt::json::type;
 
-		if (val.type() == value_enum::null)
+		if (val.type() == json::value_t::null)
 			return type::null;
-		else if (val.type() == value_enum::boolean)
+		else if (val.type() == json::value_t::boolean)
 			return type::boolean;
-		else if (val.type() == value_enum::number_integer)
+		else if (val.type() == json::value_t::number_integer)
 			return type::integer;
-		else if (val.type() == value_enum::number_float)
+		else if (val.type() == json::value_t::number_float)
 			return type::number;
-		else if (val.type() == value_enum::string)
+		else if (val.type() == json::value_t::string)
 			return type::string;
-		else if (val.type() == value_enum::array)
+		else if (val.type() == json::value_t::array)
 			return type::array;
-		else if (val.type() == value_enum::object)
+		else if (val.type() == json::value_t::object)
 			return type::object;
 		else
 			throw std::logic_error("invalid type");
 	}
 
-	static typename json::object_t as_object(const typename json::value_t &val) {
-		if (val.type() != value_enum::object)
+	static json::object_t as_object(const json &val) {
+		if (val.type() != json::value_t::object)
 			throw std::bad_cast();
-		return val.get<typename json::object_t>();
+		return val.get<json::object_t>();
 	}
 
-	static typename json::string_t as_string(const typename json::value_t &val) {
-		if (val.type() != value_enum::string)
+	static std::string as_string(const json &val) {
+		if (val.type() != json::value_t::string)
 			throw std::bad_cast();
-		return val.get<typename json::string_t>();
+		return val.get<std::string>();
 	}
 
-	static typename json::array_t as_array(const typename json::value_t &val) {
-		if (val.type() != value_enum::array)
+	static json::array_t as_array(const json &val) {
+		if (val.type() != json::value_t::array)
 			throw std::bad_cast();
-		return val.get<typename json::array_t>();
+		return val.get<json::array_t>();
 	}
 
-	static std::set<typename json::string_t> as_set(const typename json::value_t &val) {
-		std::set<typename json::string_t> res;
+	static std::set<std::string> as_set(const json &val) {
+		std::set<std::string> res;
 		for (auto &e : as_array(val)) {
-			if (val.type() != value_enum::string)
+			if (val.type() != json::value_t::string)
 				throw std::bad_cast();
-			res.insert(e.get<typename json::string_t>());
+			res.insert(e.get<std::string>());
 		}
 		return res;
 	}
 
-	static typename json::number_integer_t as_int(const typename json::value_t &val) {
-		if (val.type() != value_enum::number_integer)
+	static int64_t as_int(const json &val) {
+		if (val.type() != json::value_t::number_integer)
 			throw std::bad_cast();
-		return val.get<typename json::number_integer_t>();
+		return val.get<int64_t>();
 	}
 
-	static typename json::boolean_t as_bool(const typename json::value_t &val) {
-		if (val.type() != value_enum::boolean)
+	static bool as_bool(const json &val) {
+		if (val.type() != json::value_t::boolean)
 			throw std::bad_cast();
-		return val.get<typename json::boolean_t>();
+		return val.get<bool>();
 	}
 
-	static typename json::number_float_t as_number(const typename json::value_t &val) {
-		if (val.type() != value_enum::number_float)
+	static double as_number(const json &val) {
+		if (val.type() != json::value_t::number_float)
 			throw std::bad_cast();
-		return val.get<typename json::number_float_t>();
+		return val.get<double>();
 	}
 
-	static bool parse(typename json::value_t &val, typename json::string_t str) {
+	static bool parse(json &val, std::string str) {
 		val = json::parse(str.begin(), str.end());
 		return true;
 	}
 
-	static typename json::string_t serialize(const typename json::value_t &val) {
+	static std::string serialize(const json &val) {
 		return val.dump();
 	}
 };
@@ -89,7 +87,7 @@ struct nlohmann_traits {
 	nlohmann::json::array_t, nlohmann::json::string_t, \
 	nlohmann::json::boolean_t, \
 	nlohmann::json::number_integer_t, \
-	nlohmann::json::number_float_t, nlohmann_traits<>
+	nlohmann::json::number_float_t, nlohmann_traits
 
 TEST(NholmannTest, BasicClaims) {
 	using nholmann_claim =
@@ -162,22 +160,102 @@ TEST(NholmannTest, VerifyTokenHS256) {
 	verify.verify(decoded_token);
 }
 
+
 using wide_json = nlohmann::basic_json<
 							std::map, std::vector,std::wstring, bool,
 							std::int64_t, std::uint64_t, double>;
+struct nlohmann_wide_traits {
+	using json = wide_json;
+
+	static jwt::json::type get_type(const json &val) {
+		using jwt::json::type;
+
+		if (val.type() == json::value_t::null)
+			return type::null;
+		else if (val.type() == json::value_t::boolean)
+			return type::boolean;
+		else if (val.type() == json::value_t::number_integer)
+			return type::integer;
+		else if (val.type() == json::value_t::number_float)
+			return type::number;
+		else if (val.type() == json::value_t::string)
+			return type::string;
+		else if (val.type() == json::value_t::array)
+			return type::array;
+		else if (val.type() == json::value_t::object)
+			return type::object;
+		else
+			throw std::logic_error("invalid type");
+	}
+
+	static json::object_t as_object(const json &val) {
+		if (val.type() != json::value_t::object)
+			throw std::bad_cast();
+		return val.get<json::object_t>();
+	}
+
+	static std::wstring as_string(const json &val) {
+		if (val.type() != json::value_t::string)
+			throw std::bad_cast();
+		return val.get<std::wstring>();
+	}
+
+	static json::array_t as_array(const json &val) {
+		if (val.type() != json::value_t::array)
+			throw std::bad_cast();
+		return val.get<json::array_t>();
+	}
+
+	static std::set<std::wstring> as_set(const json &val) {
+		std::set<std::wstring> res;
+		for (auto &e : as_array(val)) {
+			if (val.type() != json::value_t::string)
+				throw std::bad_cast();
+			res.insert(e.get<std::wstring>());
+		}
+		return res;
+	}
+
+	static int64_t as_int(const json &val) {
+		if (val.type() != json::value_t::number_integer)
+			throw std::bad_cast();
+		return val.get<int64_t>();
+	}
+
+	static bool as_bool(const json &val) {
+		if (val.type() != json::value_t::boolean)
+			throw std::bad_cast();
+		return val.get<bool>();
+	}
+
+	static double as_number(const json &val) {
+		if (val.type() != json::value_t::number_float)
+			throw std::bad_cast();
+		return val.get<double>();
+	}
+
+	static bool parse(json &val, std::wstring str) {
+		val = json::parse(str.begin(), str.end());
+		return true;
+	}
+
+	static std::wstring serialize(const json &val) {
+		return val.dump();
+	}
+};
 
 #define JWT_NHOLMANN_WIDE_CLAIM_TPL \
 	wide_json::value_type, wide_json::object_t, \
 	wide_json::array_t, wide_json::string_t, \
 	wide_json::boolean_t, \
 	wide_json::number_integer_t, \
-	wide_json::number_float_t, nlohmann_traits<wide_json>
+	wide_json::number_float_t, nlohmann_wide_traits
 
 TEST(NholmannWideTest, AudienceAsString) {
 
 	std::wstring token =
-			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0."
-			"WZnM3SIiSRHsbO3O7Z2bmIzTJ4EC32HRBKfLznHhrh4";
+			L"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0."
+			L"WZnM3SIiSRHsbO3O7Z2bmIzTJ4EC32HRBKfLznHhrh4";
 	auto decoded =
 			jwt::decode<JWT_NHOLMANN_WIDE_CLAIM_TPL>(token);
 
@@ -193,11 +271,11 @@ TEST(NholmannWideTest, AudienceAsString) {
 	ASSERT_FALSE(decoded.has_issued_at());
 	ASSERT_FALSE(decoded.has_id());
 
-	ASSERT_EQ("HS256", decoded.get_algorithm());
-	ASSERT_EQ("JWT", decoded.get_type());
+	ASSERT_EQ(L"HS256", decoded.get_algorithm());
+	ASSERT_EQ(L"JWT", decoded.get_type());
 	auto aud = decoded.get_audience();
 	ASSERT_EQ(1, aud.size());
-	ASSERT_EQ("test", *aud.begin());
+	ASSERT_EQ(L"test", *aud.begin());
 }
 
 TEST(NholmannWideTest, SetArray) {
@@ -207,7 +285,7 @@ TEST(NholmannWideTest, SetArray) {
 		10
 	};
 	auto token = jwt::create<JWT_NHOLMANN_WIDE_CLAIM_TPL>()
-		.set_payload_claim("test", jwt::basic_claim<JWT_NHOLMANN_WIDE_CLAIM_TPL>(vect.begin(), vect.end()))
+		.set_payload_claim(L"test", jwt::basic_claim<JWT_NHOLMANN_WIDE_CLAIM_TPL>(vect.begin(), vect.end()))
 		.sign(jwt::algorithm::none{});
 	ASSERT_EQ(token, "eyJhbGciOiJub25lIn0.eyJ0ZXN0IjpbMTAwLDIwLDEwXX0.");
 }
@@ -219,17 +297,17 @@ TEST(NholmannWideTest, SetObject) {
 	ASSERT_EQ(object.get_type() , jwt::json::type::object);
 
 	auto token = jwt::create<JWT_NHOLMANN_WIDE_CLAIM_TPL>()
-		.set_payload_claim("namespace", object)
+		.set_payload_claim(L"namespace", object)
 		.sign(jwt::algorithm::hs256("test"));
-	ASSERT_EQ(token, "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lc3BhY2UiOnsiYXBpLXgiOlsxXX19.F8I6I2RcSF98bKa0IpIz09fRZtHr1CWnWKx2za-tFQA");
+	ASSERT_EQ(token, L"eyJhbGciOiJIUzI1NiJ9.eyJuYW1lc3BhY2UiOnsiYXBpLXgiOlsxXX19.F8I6I2RcSF98bKa0IpIz09fRZtHr1CWnWKx2za-tFQA");
 }
 
 TEST(NholmannWideTest, VerifyTokenHS256) {
-	std::string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
+	std::wstring token = L"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
 
 	auto verify = jwt::verify<jwt::default_clock, JWT_NHOLMANN_WIDE_CLAIM_TPL>({})
 		.allow_algorithm(jwt::algorithm::hs256{ "secret" })
-		.with_issuer("auth0");
+		.with_issuer(L"auth0");
 
 	auto decoded_token = jwt::decode<JWT_NHOLMANN_WIDE_CLAIM_TPL>(token);
 	verify.verify(decoded_token);

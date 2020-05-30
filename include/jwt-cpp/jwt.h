@@ -1012,7 +1012,7 @@ namespace jwt {
 	JWT_BASIC_CLAIM_TPL_DECLARATION
 	class basic_claim {
 		// TODO: FixMe
-		static_assert(std::is_same<string_type, std::string>::value, "current this only supports an `std::string` due to the sining and base64 encoding that is required by JWT.");
+		// static_assert(std::is_same<string_type, std::string>::value, "current this only supports an `std::string` due to the sining and base64 encoding that is required by JWT.");
 
 		static_assert(details::supports_get_type<traits, value_type>::value, "traits must provide `jwt::json::type get_type(const value_type&)`");
 		static_assert(details::supports_as_object<traits, value_type, object_type>::value, "traits must provide `object_type as_object(const value_type&)`");
