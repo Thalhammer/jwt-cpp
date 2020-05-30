@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <array>
+#include <stdexcept>
 
 #ifdef __has_cpp_attribute
 #if __has_cpp_attribute(fallthrough)
@@ -15,32 +16,22 @@
 namespace jwt {
 	namespace alphabet {
 		struct base64 {
-			static const std::array<char, 64>& data() {
-				static std::array<char, 64> data = {
+			static constexpr std::array<char, 64> data = {
 					{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
 					 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
 					 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-					 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'}};
-					return data;
-			}
-			static std::string fill() {
-				static constexpr auto fill = "=";
-				return fill;
-			}
+					 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'}
+			};
+			static constexpr auto fill = "=";
 		};
 		struct base64url {
-			static const std::array<char, 64>& data() {
-				static std::array<char, 64> data = {
+			static constexpr std::array<char, 64> data = {
 					{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
 					 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
 					 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-					 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'}};
-					return data;
-			}
-			static std::string fill() {
-				static constexpr auto fill = "%3d";
-				return fill;
-			}
+					 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'}
+			};
+			static constexpr auto fill = "%3d";
 		};
 	}
 
@@ -48,19 +39,19 @@ namespace jwt {
 	public:
 		template<typename T>
 		static std::string encode(const std::string& bin) {
-			return encode(bin, T::data(), T::fill());
+			return encode(bin, T::data, T::fill);
 		}
 		template<typename T>
 		static std::string decode(const std::string& base) {
-			return decode(base, T::data(), T::fill());
+			return decode(base, T::data, T::fill);
 		}
 		template<typename T>
 		static std::string pad(const std::string& base) {
-			return pad(base, T::fill());
+			return pad(base, T::fill);
 		}
 		template<typename T>
 		static std::string trim(const std::string& base) {
-			return trim(base, T::fill());
+			return trim(base, T::fill);
 		}
 
 	private:
