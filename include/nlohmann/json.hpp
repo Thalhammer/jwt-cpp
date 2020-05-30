@@ -13787,6 +13787,7 @@ template<typename BasicJsonType>
 class serializer
 {
     using string_t = typename BasicJsonType::string_t;
+    using char_t = typename string_t::value_type;
     using number_float_t = typename BasicJsonType::number_float_t;
     using number_integer_t = typename BasicJsonType::number_integer_t;
     using number_unsigned_t = typename BasicJsonType::number_unsigned_t;
@@ -13799,7 +13800,7 @@ class serializer
     @param[in] ichar  indentation character to use
     @param[in] error_handler_  how to react on decoding errors
     */
-    serializer(output_adapter_t<char> s, const char ichar,
+    serializer(output_adapter_t<char_t> s, const char ichar,
                error_handler_t error_handler_ = error_handler_t::strict)
         : o(std::move(s))
         , loc(std::localeconv())
@@ -14584,7 +14585,7 @@ class serializer
 
   private:
     /// the output of the serializer
-    output_adapter_t<char> o = nullptr;
+    output_adapter_t<char_t> o = nullptr;
 
     /// a (hopefully) large enough character buffer
     std::array<char, 64> number_buffer{{}};
@@ -16563,7 +16564,7 @@ class basic_json
                   const error_handler_t error_handler = error_handler_t::strict) const
     {
         string_t result;
-        serializer s(detail::output_adapter<char, string_t>(result), indent_char, error_handler);
+        serializer s(detail::output_adapter<typename string_t::value_type, string_t>(result), indent_char, error_handler);
 
         if (indent >= 0)
         {
