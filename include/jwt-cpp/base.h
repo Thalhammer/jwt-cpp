@@ -16,22 +16,34 @@
 namespace jwt {
 	namespace alphabet {
 		struct base64 {
-			static constexpr std::array<char, 64> data = {
-					{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
-					 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
-					 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-					 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'}
-			};
-			static constexpr auto fill = "=";
+			static const std::array<char, 64>& data() {
+				static constexpr std::array<char, 64> data = {
+						{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+						'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+						'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+						'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'}
+				};
+				return data;
+			}
+			static const std::string& fill() {
+				static std::string fill = "=";
+				return fill;
+			}
 		};
 		struct base64url {
-			static constexpr std::array<char, 64> data = {
-					{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
-					 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
-					 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-					 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'}
-			};
-			static constexpr auto fill = "%3d";
+			static const std::array<char, 64>& data() {
+				static constexpr std::array<char, 64> data = {
+						{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+						'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+						'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+						'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'}
+				};
+				return data;
+			}
+			static const std::string& fill() {
+				static std::string fill = "%3d";
+				return fill;
+			}
 		};
 	}
 
@@ -39,19 +51,19 @@ namespace jwt {
 	public:
 		template<typename T>
 		static std::string encode(const std::string& bin) {
-			return encode(bin, T::data, T::fill);
+			return encode(bin, T::data(), T::fill());
 		}
 		template<typename T>
 		static std::string decode(const std::string& base) {
-			return decode(base, T::data, T::fill);
+			return decode(base, T::data(), T::fill());
 		}
 		template<typename T>
 		static std::string pad(const std::string& base) {
-			return pad(base, T::fill);
+			return pad(base, T::fill());
 		}
 		template<typename T>
 		static std::string trim(const std::string& base) {
-			return trim(base, T::fill);
+			return trim(base, T::fill());
 		}
 
 	private:
