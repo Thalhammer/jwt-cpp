@@ -22,9 +22,9 @@ namespace jwt {
 					 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
 					 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'}};
 					return data;
-			};
-			static const std::string& fill() {
-				static std::string fill = "=";
+			}
+			static std::string fill() {
+				static constexpr auto fill = "=";
 				return fill;
 			}
 		};
@@ -36,9 +36,9 @@ namespace jwt {
 					 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
 					 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'}};
 					return data;
-			};
-			static const std::string& fill() {
-				static std::string fill = "%3d";
+			}
+			static std::string fill() {
+				static constexpr auto fill = "%3d";
 				return fill;
 			}
 		};
@@ -71,9 +71,9 @@ namespace jwt {
 			// clear incomplete bytes
 			size_t fast_size = size - size % 3;
 			for (size_t i = 0; i < fast_size;) {
-				uint32_t octet_a = (unsigned char)bin[i++];
-				uint32_t octet_b = (unsigned char)bin[i++];
-				uint32_t octet_c = (unsigned char)bin[i++];
+				uint32_t octet_a = static_cast<unsigned char>(bin[i++]);
+				uint32_t octet_b = static_cast<unsigned char>(bin[i++]);
+				uint32_t octet_c = static_cast<unsigned char>(bin[i++]);
 
 				uint32_t triple = (octet_a << 0x10) + (octet_b << 0x08) + octet_c;
 
@@ -88,9 +88,9 @@ namespace jwt {
 
 			size_t mod = size % 3;
 
-			uint32_t octet_a = fast_size < size ? (unsigned char)bin[fast_size++] : 0;
-			uint32_t octet_b = fast_size < size ? (unsigned char)bin[fast_size++] : 0;
-			uint32_t octet_c = fast_size < size ? (unsigned char)bin[fast_size++] : 0;
+			uint32_t octet_a = fast_size < size ? static_cast<unsigned char>(bin[fast_size++]) : 0;
+			uint32_t octet_b = fast_size < size ? static_cast<unsigned char>(bin[fast_size++]) : 0;
+			uint32_t octet_c = fast_size < size ? static_cast<unsigned char>(bin[fast_size++]) : 0;
 
 			uint32_t triple = (octet_a << 0x10) + (octet_b << 0x08) + octet_c;
 
@@ -155,9 +155,9 @@ namespace jwt {
 					+ (sextet_c << 1 * 6)
 					+ (sextet_d << 0 * 6);
 
-				res += (triple >> 2 * 8) & 0xFF;
-				res += (triple >> 1 * 8) & 0xFF;
-				res += (triple >> 0 * 8) & 0xFF;
+				res += static_cast<char>((triple >> 2 * 8) & 0xFFu);
+				res += static_cast<char>((triple >> 1 * 8) & 0xFFu);
+				res += static_cast<char>((triple >> 0 * 8) & 0xFFu);
 			}
 
 			if (fill_cnt == 0)
@@ -169,11 +169,11 @@ namespace jwt {
 			switch (fill_cnt) {
 			case 1:
 				triple |= (get_sextet(fast_size + 2) << 1 * 6);
-				res += (triple >> 2 * 8) & 0xFF;
-				res += (triple >> 1 * 8) & 0xFF;
+				res += static_cast<char>((triple >> 2 * 8) & 0xFFu);
+				res += static_cast<char>((triple >> 1 * 8) & 0xFFu);
 				break;
 			case 2:
-				res += (triple >> 2 * 8) & 0xFF;
+				res += static_cast<char>((triple >> 2 * 8) & 0xFFu);
 				break;
 			default:
 				break;

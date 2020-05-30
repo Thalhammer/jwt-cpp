@@ -248,7 +248,7 @@ namespace jwt {
 			 * \param public_key RSA public key in PEM format
 			 * \param private_key RSA private key or empty string if not available. If empty, signing will always fail.
 			 * \param public_key_password Password to decrypt public key pem.
-			 * \param privat_key_password Password to decrypt private key pem.
+			 * \param private_key_password Password to decrypt private key pem.
 			 * \param md Pointer to hash function
 			 * \param name Name of the algorithm
 			 */
@@ -337,7 +337,7 @@ namespace jwt {
 			 * \param public_key ECDSA public key in PEM format
 			 * \param private_key ECDSA private key or empty string if not available. If empty, signing will always fail.
 			 * \param public_key_password Password to decrypt public key pem.
-			 * \param privat_key_password Password to decrypt private key pem.
+			 * \param private_key_password Password to decrypt private key pem.
 			 * \param md Pointer to hash function
 			 * \param name Name of the algorithm
 			 */
@@ -492,7 +492,7 @@ namespace jwt {
 			 * \param public_key RSA public key in PEM format
 			 * \param private_key RSA private key or empty string if not available. If empty, signing will always fail.
 			 * \param public_key_password Password to decrypt public key pem.
-			 * \param privat_key_password Password to decrypt private key pem.
+			 * \param private_key_password Password to decrypt private key pem.
 			 * \param md Pointer to hash function
 			 * \param name Name of the algorithm
 			 */
@@ -631,7 +631,7 @@ namespace jwt {
 			 * \param public_key RSA public key in PEM format
 			 * \param private_key RSA private key or empty string if not available. If empty, signing will always fail.
 			 * \param public_key_password Password to decrypt public key pem.
-			 * \param privat_key_password Password to decrypt private key pem.
+			 * \param private_key_password Password to decrypt private key pem.
 			 */
 			explicit rs256(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: rsa(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "RS256")
@@ -646,7 +646,7 @@ namespace jwt {
 			 * \param public_key RSA public key in PEM format
 			 * \param private_key RSA private key or empty string if not available. If empty, signing will always fail.
 			 * \param public_key_password Password to decrypt public key pem.
-			 * \param privat_key_password Password to decrypt private key pem.
+			 * \param private_key_password Password to decrypt private key pem.
 			 */
 			explicit rs384(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: rsa(public_key, private_key, public_key_password, private_key_password, EVP_sha384, "RS384")
@@ -661,7 +661,7 @@ namespace jwt {
 			 * \param public_key RSA public key in PEM format
 			 * \param private_key RSA private key or empty string if not available. If empty, signing will always fail.
 			 * \param public_key_password Password to decrypt public key pem.
-			 * \param privat_key_password Password to decrypt private key pem.
+			 * \param private_key_password Password to decrypt private key pem.
 			 */
 			explicit rs512(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: rsa(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "RS512")
@@ -676,7 +676,7 @@ namespace jwt {
 			 * \param public_key ECDSA public key in PEM format
 			 * \param private_key ECDSA private key or empty string if not available. If empty, signing will always fail.
 			 * \param public_key_password Password to decrypt public key pem.
-			 * \param privat_key_password Password to decrypt private key pem.
+			 * \param private_key_password Password to decrypt private key pem.
 			 */
 			explicit es256(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "ES256", 64)
@@ -691,7 +691,7 @@ namespace jwt {
 			 * \param public_key ECDSA public key in PEM format
 			 * \param private_key ECDSA private key or empty string if not available. If empty, signing will always fail.
 			 * \param public_key_password Password to decrypt public key pem.
-			 * \param privat_key_password Password to decrypt private key pem.
+			 * \param private_key_password Password to decrypt private key pem.
 			 */
 			explicit es384(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha384, "ES384", 96)
@@ -706,7 +706,7 @@ namespace jwt {
 			 * \param public_key ECDSA public key in PEM format
 			 * \param private_key ECDSA private key or empty string if not available. If empty, signing will always fail.
 			 * \param public_key_password Password to decrypt public key pem.
-			 * \param privat_key_password Password to decrypt private key pem.
+			 * \param private_key_password Password to decrypt private key pem.
 			 */
 			explicit es512(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "ES512", 132)
@@ -722,7 +722,7 @@ namespace jwt {
 			 * \param public_key RSA public key in PEM format
 			 * \param private_key RSA private key or empty string if not available. If empty, signing will always fail.
 			 * \param public_key_password Password to decrypt public key pem.
-			 * \param privat_key_password Password to decrypt private key pem.
+			 * \param private_key_password Password to decrypt private key pem.
 			 */
 			explicit ps256(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: pss(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "PS256")
@@ -737,7 +737,7 @@ namespace jwt {
 			 * \param public_key RSA public key in PEM format
 			 * \param private_key RSA private key or empty string if not available. If empty, signing will always fail.
 			 * \param public_key_password Password to decrypt public key pem.
-			 * \param privat_key_password Password to decrypt private key pem.
+			 * \param private_key_password Password to decrypt private key pem.
 			 */
 			explicit ps384(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: pss(public_key, private_key, public_key_password, private_key_password, EVP_sha384, "PS384")
@@ -752,7 +752,7 @@ namespace jwt {
 			 * \param public_key RSA public key in PEM format
 			 * \param private_key RSA private key or empty string if not available. If empty, signing will always fail.
 			 * \param public_key_password Password to decrypt public key pem.
-			 * \param privat_key_password Password to decrypt private key pem.
+			 * \param private_key_password Password to decrypt private key pem.
 			 */
 			explicit ps512(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: pss(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "PS512")
@@ -768,7 +768,7 @@ namespace jwt {
 			number,
 			string,
 			array,
-			object,
+			object
 		};
 	}
 
@@ -1370,14 +1370,6 @@ namespace jwt {
 		/**
 		 * Constructor 
 		 * Parses a given token
-		 * \param token The token to parse
-		 * \param decode The token to parse
-		 * \throws std::invalid_argument Token is not in correct format
-		 * \throws std::runtime_error Base64 decoding failed or invalid json
-		 */
-		/**
-		 * Constructor 
-		 * Parses a given token
 		 * Decodes using the jwt::base64url which supports an std::string
 		 * \param token The token to parse
 		 * \throws std::invalid_argument Token is not in correct format
@@ -1388,7 +1380,14 @@ namespace jwt {
 				return base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(token));
 		})
 		{}
-
+		/**
+		 * Constructor 
+		 * Parses a given token
+		 * \param token The token to parse
+		 * \param decode The token to parse
+		 * \throws std::invalid_argument Token is not in correct format
+		 * \throws std::runtime_error Base64 decoding failed or invalid json
+		 */
 		template<typename Decode>
 		decoded_jwt(const string_type& token, Decode decode)
 			: token(token)
@@ -1542,7 +1541,7 @@ namespace jwt {
 		builder& set_subject(string_type str) { return set_payload_claim("sub", value_type(str)); }
 		/**
 		 * Set audience claim
-		 * \param l Audience set
+		 * \param a Audience set
 		 * \return *this to allow for method chaining
 		 */
 		builder& set_audience(array_type a) { return set_payload_claim("aud", value_type(a)); }
