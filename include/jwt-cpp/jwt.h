@@ -761,8 +761,11 @@ namespace jwt {
 	}
 
 	namespace json {
+		/**
+		 * Generic JSON types used in JWTs
+		 * This enum is to abstract the third party underlying types
+		 */
 		enum class type {
-			null,
 			boolean,
 			integer,
 			number,
@@ -773,11 +776,16 @@ namespace jwt {
 	}
 
 	namespace details {
-		template <typename ...Ts> struct make_void
+		// https://en.cppreference.com/w/cpp/types/void_t
+		template <typename ...Ts>
+		struct make_void
 		{
 			using type = void;
 		};
-		template <typename ...Ts> using void_t = typename make_void<Ts...>::type;
+
+		template <typename ...Ts>
+		using void_t = typename make_void<Ts...>::type;
+
 		struct nonesuch
 		{
 			nonesuch() = delete;
@@ -788,10 +796,8 @@ namespace jwt {
 			void operator=(nonesuch&&) = delete;
 		};
 
-		template <class Default,
-				class AlwaysVoid,
-				template <class...> class Op,
-				class... Args>
+		// https://en.cppreference.com/w/cpp/experimental/is_detected
+		template <class Default, class AlwaysVoid, template <class...> class Op, class... Args>
 		struct detector
 		{
 			using value = std::false_type;
@@ -808,113 +814,130 @@ namespace jwt {
 		template <template <class...> class Op, class... Args>
 		using is_detected = typename detector<nonesuch, void, Op, Args...>::value;
 
-		template <typename T>
-		using get_type_function = decltype(T::get_type);
+		template <typename traits_type>
+		using get_type_function = decltype(traits_type::get_type);
 
-		template <typename T, typename value_type>
-		using is_get_type_signature = typename std::is_same<get_type_function<T>, json::type(const value_type&)>;
+		template <typename traits_type, typename value_type>
+		using is_get_type_signature = typename std::is_same<get_type_function<traits_type>, json::type(const value_type&)>;
 
-		template <typename T, typename value_type>
+		template <typename traits_type, typename value_type>
 		struct supports_get_type {
 			static constexpr auto value =
-				is_detected<get_type_function, T>::value && 
-				std::is_function<get_type_function<T>>::value &&
-				is_get_type_signature<T, value_type>::value;
+				is_detected<get_type_function, traits_type>::value && 
+				std::is_function<get_type_function<traits_type>>::value &&
+				is_get_type_signature<traits_type, value_type>::value;
 		};
 
-		template <typename T>
-		using as_object_function = decltype(T::as_object);
+		template <typename traits_type>
+		using as_object_function = decltype(traits_type::as_object);
 
-		template <typename T, typename value_type, typename object_type>
-		using is_as_object_signature = typename std::is_same<as_object_function<T>, object_type(const value_type&)>;
+		template <typename traits_type, typename value_type, typename object_type>
+		using is_as_object_signature = typename std::is_same<as_object_function<traits_type>, object_type(const value_type&)>;
 
-		template <typename T, typename value_type, typename object_type>
+		template <typename traits_type, typename value_type, typename object_type>
 		struct supports_as_object {
 			static constexpr auto value =
-				is_detected<as_object_function, T>::value &&
-				std::is_function<as_object_function<T>>::value &&
-				is_as_object_signature<T, value_type, object_type>::value;
+			    std::is_constructible<value_type, object_type>::value &&
+				is_detected<as_object_function, traits_type>::value &&
+				std::is_function<as_object_function<traits_type>>::value &&
+				is_as_object_signature<traits_type, value_type, object_type>::value;
 		};
 
-		template <typename T>
-		using as_array_function = decltype(T::as_array);
+		template <typename traits_type>
+		using as_array_function = decltype(traits_type::as_array);
 
-		template <typename T, typename value_type, typename array_type>
-		using is_as_array_signature = typename std::is_same<as_array_function<T>, array_type(const value_type&)>;
+		template <typename traits_type, typename value_type, typename array_type>
+		using is_as_array_signature = typename std::is_same<as_array_function<traits_type>, array_type(const value_type&)>;
 
-		template <typename T, typename value_type, typename array_type>
+		template <typename traits_type, typename value_type, typename array_type>
 		struct supports_as_array {
 			static constexpr auto value =
-				is_detected<as_array_function, T>::value &&
-				std::is_function<as_array_function<T>>::value &&
-				is_as_array_signature<T, value_type, array_type>::value;
+			    std::is_constructible<value_type, array_type>::value &&
+				is_detected<as_array_function, traits_type>::value &&
+				std::is_function<as_array_function<traits_type>>::value &&
+				is_as_array_signature<traits_type, value_type, array_type>::value;
 		};
 
-		template <typename T>
-		using as_string_function = decltype(T::as_string);
+		template <typename traits_type>
+		using as_string_function = decltype(traits_type::as_string);
 
-		template <typename T, typename value_type, typename string_type>
-		using is_as_string_signature = typename std::is_same<as_string_function<T>, string_type(const value_type&)>;
+		template <typename traits_type, typename value_type, typename string_type>
+		using is_as_string_signature = typename std::is_same<as_string_function<traits_type>, string_type(const value_type&)>;
 
-		template <typename T, typename value_type, typename string_type>
+		template <typename traits_type, typename value_type, typename string_type>
 		struct supports_as_string {
 			static constexpr auto value =
-				is_detected<as_string_function, T>::value &&
-				std::is_function<as_string_function<T>>::value &&
-				is_as_string_signature<T, value_type, string_type>::value;
+			    std::is_constructible<value_type, string_type>::value &&
+				is_detected<as_string_function, traits_type>::value &&
+				std::is_function<as_string_function<traits_type>>::value &&
+				is_as_string_signature<traits_type, value_type, string_type>::value;
 		};
 
-		template <typename T>
-		using as_number_function = decltype(T::as_number);
+		template <typename traits_type>
+		using as_number_function = decltype(traits_type::as_number);
 
-		template <typename T, typename value_type, typename number_type>
-		using is_as_number_signature = typename std::is_same<as_number_function<T>, number_type(const value_type&)>;
+		template <typename traits_type, typename value_type, typename number_type>
+		using is_as_number_signature = typename std::is_same<as_number_function<traits_type>, number_type(const value_type&)>;
 
-		template <typename T, typename value_type, typename number_type>
+		template <typename traits_type, typename value_type, typename number_type>
 		struct supports_as_number {
 			static constexpr auto value =
 				std::is_floating_point<number_type>::value &&
-				is_detected<as_number_function, T>::value &&
-				std::is_function<as_number_function<T>>::value &&
-				is_as_number_signature<T, value_type, number_type>::value;
+			    std::is_constructible<value_type, number_type>::value &&
+				is_detected<as_number_function, traits_type>::value &&
+				std::is_function<as_number_function<traits_type>>::value &&
+				is_as_number_signature<traits_type, value_type, number_type>::value;
 		};
 
-		template <typename T>
-		using as_integer_function = decltype(T::as_int);
+		template <typename traits_type>
+		using as_integer_function = decltype(traits_type::as_int);
 
-		template <typename T, typename value_type, typename integer_type>
-		using is_as_integer_signature = typename std::is_same<as_integer_function<T>, integer_type(const value_type&)>;
+		template <typename traits_type, typename value_type, typename integer_type>
+		using is_as_integer_signature = typename std::is_same<as_integer_function<traits_type>, integer_type(const value_type&)>;
 
-		template <typename T, typename value_type, typename integer_type>
+		template <typename traits_type, typename value_type, typename integer_type>
 		struct supports_as_integer {
 			static constexpr auto value =
 				std::is_signed<integer_type>::value &&
 				not std::is_floating_point<integer_type>::value &&
-				is_detected<as_integer_function, T>::value &&
-				std::is_function<as_integer_function<T>>::value &&
-				is_as_integer_signature<T, value_type, integer_type>::value;
+			    std::is_constructible<value_type, integer_type>::value &&
+				is_detected<as_integer_function, traits_type>::value &&
+				std::is_function<as_integer_function<traits_type>>::value &&
+				is_as_integer_signature<traits_type, value_type, integer_type>::value;
 		};
 
-		template <typename T>
-		using as_boolean_function = decltype(T::as_bool);
+		template <typename traits_type>
+		using as_boolean_function = decltype(traits_type::as_bool);
 
-		template <typename T, typename value_type, typename boolean_type>
-		using is_as_boolean_signature = typename std::is_same<as_boolean_function<T>, boolean_type(const value_type&)>;
+		template <typename traits_type, typename value_type, typename boolean_type>
+		using is_as_boolean_signature = typename std::is_same<as_boolean_function<traits_type>, boolean_type(const value_type&)>;
 
-		template <typename T, typename value_type, typename boolean_type>
+		template <typename traits_type, typename value_type, typename boolean_type>
 		struct supports_as_boolean {
 			static constexpr auto value =
 				std::is_convertible<boolean_type, bool>::value &&
-				is_detected<as_boolean_function, T>::value &&
-				std::is_function<as_boolean_function<T>>::value &&
-				is_as_boolean_signature<T, value_type, boolean_type>::value;
+			    std::is_constructible<value_type, boolean_type>::value &&
+				is_detected<as_boolean_function, traits_type>::value &&
+				std::is_function<as_boolean_function<traits_type>>::value &&
+				is_as_boolean_signature<traits_type, value_type, boolean_type>::value;
+		};
+
+		template<typename value_type>
+		struct is_valid_json_value {
+			static constexpr auto value =
+				std::is_default_constructible<value_type>::value &&
+				std::is_constructible<value_type, const value_type&>::value && // a more generic is_copy_constructible
+				std::is_move_constructible<value_type>::value &&
+				std::is_assignable<value_type, value_type>::value &&
+				std::is_copy_assignable<value_type>::value &&
+				std::is_move_assignable<value_type>::value;
+				// TODO: Stream operators
 		};
 
 		struct picojson_traits {
 			static json::type get_type(const picojson::value& val) {
 				using json::type;
-				if (val.is<picojson::null>()) return type::null;
-				else if (val.is<bool>()) return type::boolean;
+				if (val.is<bool>()) return type::boolean;
 				else if (val.is<int64_t>()) return type::integer;
 				else if (val.is<double>()) return type::number;
 				else if (val.is<std::string>()) return type::string;
@@ -980,34 +1003,45 @@ namespace jwt {
 	}
 
 	/**
-	 * generic JSON claim
+	 * Generic claim wrapper
+	 * 
+	 * \tparam value_type : type for a generic JSON value
+	 * \tparam object_type : type for a JSON object
+	 * \tparam array_type : type for a JSON array
+	 * \tparam string_type : type for a JSON string
+	 * \tparam number_type : type for a JSON floating point number
+	 * \tparam integer_type : type for a JSON integer number
+	 * \tparam boolean_type : type for a JSON boolean
 	 */
 	template<typename value_type = picojson::value,
 		class object_type = picojson::object,
 		class array_type = picojson::array,
 		class string_type = std::string,
-		class boolean_type = bool,
-		class integer_type = int64_t,
 		class number_type = double,
+		class integer_type = int64_t,
+		class boolean_type = bool,
 		typename traits = details::picojson_traits>
 	class basic_claim;
 
 	/**
-	 * Convenience wrapper for JSON claim
+	 * Default JSON claim
+	 * 
+	 * This type is the default specialization of the \ref basic_claim class which
+	 * uses the standard template types.
 	 */
 	using claim = basic_claim<>;
 
 #define JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES \
 	typename value_type, class object_type, class array_type, \
-	class string_type, class boolean_type, class integer_type, \
-	class number_type, typename traits
+	class string_type, class number_type, class integer_type, \
+	class boolean_type, typename traits
 
 #define JWT_BASIC_CLAIM_TPL_DECLARATION \
 	template<JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES>
 
 #define JWT_BASIC_CLAIM_TPL \
 	value_type, object_type, array_type, string_type, \
-	boolean_type, integer_type, number_type, traits
+	number_type, integer_type, boolean_type, traits
 
 	JWT_BASIC_CLAIM_TPL_DECLARATION
 	class basic_claim {
@@ -1018,6 +1052,9 @@ namespace jwt {
 		*/
 		static_assert(std::is_same<string_type, std::string>::value, "string_type must be a std::string.");
 
+		static_assert(details::is_valid_json_value<value_type>::value, "value type must meet basic requirements, default constructor, copyable, moveable");
+		// TODO: valid object_type "key string_stype, value value_type, interable"
+		// TODO: valid array_type "value value_type, iterable"
 		static_assert(details::supports_get_type<traits, value_type>::value, "traits must provide `jwt::json::type get_type(const value_type&)`");
 		static_assert(details::supports_as_object<traits, value_type, object_type>::value, "traits must provide `object_type as_object(const value_type&)`");
 		static_assert(details::supports_as_array<traits, value_type, array_type>::value, "traits must provide `array_type as_array(const value_type&)`");
@@ -1039,23 +1076,18 @@ namespace jwt {
 			JWT_CLAIM_EXPLICIT basic_claim(string_type s)
 				: val(std::move(s))
 			{}
-
 			JWT_CLAIM_EXPLICIT basic_claim(const date& d)
 				: val(integer_type(std::chrono::system_clock::to_time_t(d)))
 			{}
-
 			JWT_CLAIM_EXPLICIT basic_claim(array_type a)
 				: val(std::move(a))
 			{}
-
 			JWT_CLAIM_EXPLICIT basic_claim(value_type v)
 				: val(std::move(v))
 			{}
-
 			JWT_CLAIM_EXPLICIT basic_claim(const set_t& s)
 				: val(array_type(s.begin(), s.end()))
 			{}
-
 			template<typename Iterator>
 			basic_claim(Iterator begin, Iterator end)
 				: val(array_type(begin, end))
@@ -1838,8 +1870,8 @@ namespace jwt {
 	 * \return verifier instance
 	 */
 	inline
-	verifier<default_clock, picojson::value, picojson::object, picojson::array, std::string, bool, int64_t, double, details::picojson_traits> verify() {
-		return verify<default_clock, picojson::value, picojson::object, picojson::array, std::string, bool, int64_t, double, details::picojson_traits>(default_clock{});
+	verifier<default_clock, picojson::value, picojson::object, picojson::array, std::string, double, int64_t, bool, details::picojson_traits> verify() {
+		return verify<default_clock, picojson::value, picojson::object, picojson::array, std::string, double, int64_t, bool, details::picojson_traits>(default_clock{});
 	}
 
 	/**
@@ -1854,8 +1886,8 @@ namespace jwt {
 	 * Return a picojson builder instance to create a new token
 	 */
 	inline
-	builder<picojson::value, picojson::object, picojson::array, std::string, bool, int64_t, double, details::picojson_traits> create() {
-		return builder<picojson::value, picojson::object, picojson::array, std::string, bool, int64_t, double, details::picojson_traits>();
+	builder<picojson::value, picojson::object, picojson::array, std::string, double, int64_t, bool, details::picojson_traits> create() {
+		return builder<picojson::value, picojson::object, picojson::array, std::string, double, int64_t, bool, details::picojson_traits>();
 	}
 
 	/**
@@ -1891,8 +1923,8 @@ namespace jwt {
 	 * \throws std::runtime_error Base64 decoding failed or invalid json
 	 */
 	inline
-	decoded_jwt<picojson::value, picojson::object, picojson::array, std::string, bool, int64_t, double, details::picojson_traits> decode(const std::string& token) {
-		return decoded_jwt<picojson::value, picojson::object, picojson::array, std::string, bool, int64_t, double, details::picojson_traits>(token);
+	decoded_jwt<picojson::value, picojson::object, picojson::array, std::string, double, int64_t, bool, details::picojson_traits> decode(const std::string& token) {
+		return decoded_jwt<picojson::value, picojson::object, picojson::array, std::string, double, int64_t, bool, details::picojson_traits>(token);
 	}
 }
 

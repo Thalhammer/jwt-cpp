@@ -8,9 +8,7 @@ struct nlohmann_traits {
 	static jwt::json::type get_type(const json &val) {
 		using jwt::json::type;
 
-		if (val.type() == json::value_t::null)
-			return type::null;
-		else if (val.type() == json::value_t::boolean)
+		if (val.type() == json::value_t::boolean)
 			return type::boolean;
 		else if (val.type() == json::value_t::number_integer)
 			return type::integer;
@@ -85,9 +83,9 @@ struct nlohmann_traits {
 #define JWT_NHOLMANN_CLAIM_TPL \
 	nlohmann::json::value_type, nlohmann::json::object_t, \
 	nlohmann::json::array_t, nlohmann::json::string_t, \
-	nlohmann::json::boolean_t, \
+	nlohmann::json::number_float_t, \
 	nlohmann::json::number_integer_t, \
-	nlohmann::json::number_float_t, nlohmann_traits
+	nlohmann::json::boolean_t, nlohmann_traits
 
 TEST(NholmannTest, BasicClaims) {
 	using nholmann_claim =
