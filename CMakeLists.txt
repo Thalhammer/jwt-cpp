@@ -14,6 +14,11 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(OpenSSL 1.0.2 REQUIRED)
+
+if(BUILD_TESTS)
+   find_package(GTest REQUIRED)
+endif()
+  
 if(EXTERNAL_PICOJSON)
    find_package(picojson REQUIRED)
 endif()
