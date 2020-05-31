@@ -776,6 +776,7 @@ namespace jwt {
 	}
 
 	namespace details {
+		namespace impl {
 		// https://en.cppreference.com/w/cpp/types/void_t
 		template <typename ...Ts>
 		struct make_void
@@ -810,9 +811,13 @@ namespace jwt {
 			using value = std::true_type;
 			using type = Op<Args...>;
 		};
+		}
 
 		template <template <class...> class Op, class... Args>
-		using is_detected = typename detector<nonesuch, void, Op, Args...>::value;
+		using is_detected = typename impl::detector<impl::nonesuch, void, Op, Args...>::value;
+
+		template <template <class...> class Op, class... Args>
+		using is_detected_t = typename impl::detector<impl::nonesuch, void, Op, Args...>::type;
 
 		template <typename traits_type>
 		using get_type_function = decltype(traits_type::get_type);
@@ -962,16 +967,6 @@ namespace jwt {
 				if (!val.is<picojson::array>())
 					throw std::bad_cast();
 				return val.get<picojson::array>();
-			}
-
-			static std::set<std::string> as_set(const picojson::value& val) {
-				std::set<std::string> res;
-				for(auto& e : as_array(val)) {
-					if(!e.is<std::string>())
-						throw std::bad_cast();
-					res.insert(e.get<std::string>());
-				}
-				return res;
 			}
 
 			static int64_t as_int(const picojson::value& val) {
@@ -1158,10 +1153,14 @@ namespace jwt {
 			/**
 			 * Get the contained object as a set of strings
 			 * \return content as set of strings
-			 * \throws std::bad_cast Content was not a set
+			 * \throws std::bad_cast Content was not an array of string
 			 */
 			set_t as_set() const {
-				return traits::as_set(val);
+				set_t res;
+				for(auto& e : traits::as_array(val)) {
+					res.insert(traits::as_string(e));
+			}
+				return res;
 			}
 
 			/**
@@ -1617,10 +1616,16 @@ namespace jwt {
 		/**
 		 * Sign token and return result
 		 * \param algo Instance of an algorithm to sign the token with
+		 * \param encode Callable to transform the serialized json to base64 with no padding
 		 * \return Final token as a string
+		 * 
+		 * \note If the 'alg' header in not set in the token it will be set to `algo.name()`
 		 */
 		template<typename Algo, typename Encode>
 		string_type sign(const Algo& algo, Encode encode) const {
+			// TODO: is valid algo
+			// TODO: is valid encode
+
 			object_type obj_header = header_claims;
 			if(header_claims.count("alg") == 0)
 				obj_header["alg"] = value_type(algo.name());
@@ -1633,6 +1638,9 @@ namespace jwt {
 		}
 		/**
 		 * Sign token and return result
+		 * 
+		 * using the `jwt::base` functions provided
+		 * 
 		 * \param algo Instance of an algorithm to sign the token with
 		 * \return Final token as a string
 		 */
@@ -1865,13 +1873,17 @@ namespace jwt {
 		}
 	};
 
+	#define DEFAULT_PICOJSON_TYPES \
+		picojson::value, picojson::object, picojson::array, std::string, \
+		double, int64_t, bool, details::picojson_traits
+
 	/**
 	 * Create a verifier using the default clock
 	 * \return verifier instance
 	 */
 	inline
-	verifier<default_clock, picojson::value, picojson::object, picojson::array, std::string, double, int64_t, bool, details::picojson_traits> verify() {
-		return verify<default_clock, picojson::value, picojson::object, picojson::array, std::string, double, int64_t, bool, details::picojson_traits>(default_clock{});
+	verifier<default_clock, DEFAULT_PICOJSON_TYPES> verify() {
+		return verify<default_clock, DEFAULT_PICOJSON_TYPES>(default_clock{});
 	}
 
 	/**
@@ -1886,8 +1898,8 @@ namespace jwt {
 	 * Return a picojson builder instance to create a new token
 	 */
 	inline
-	builder<picojson::value, picojson::object, picojson::array, std::string, double, int64_t, bool, details::picojson_traits> create() {
-		return builder<picojson::value, picojson::object, picojson::array, std::string, double, int64_t, bool, details::picojson_traits>();
+	builder<DEFAULT_PICOJSON_TYPES> create() {
+		return builder<DEFAULT_PICOJSON_TYPES>();
 	}
 
 	/**
@@ -1923,8 +1935,8 @@ namespace jwt {
 	 * \throws std::runtime_error Base64 decoding failed or invalid json
 	 */
 	inline
-	decoded_jwt<picojson::value, picojson::object, picojson::array, std::string, double, int64_t, bool, details::picojson_traits> decode(const std::string& token) {
-		return decoded_jwt<picojson::value, picojson::object, picojson::array, std::string, double, int64_t, bool, details::picojson_traits>(token);
+	decoded_jwt<DEFAULT_PICOJSON_TYPES> decode(const std::string& token) {
+		return decoded_jwt<DEFAULT_PICOJSON_TYPES>(token);
 	}
 }
 

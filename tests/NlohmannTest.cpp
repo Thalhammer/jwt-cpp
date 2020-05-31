@@ -42,16 +42,6 @@ struct nlohmann_traits {
 		return val.get<json::array_t>();
 	}
 
-	static std::set<std::string> as_set(const json &val) {
-		std::set<std::string> res;
-		for (auto &e : as_array(val)) {
-			if (val.type() != json::value_t::string)
-				throw std::bad_cast();
-			res.insert(e.get<std::string>());
-		}
-		return res;
-	}
-
 	static int64_t as_int(const json &val) {
 		if (val.type() != json::value_t::number_integer)
 			throw std::bad_cast();
