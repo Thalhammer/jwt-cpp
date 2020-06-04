@@ -939,6 +939,19 @@ namespace jwt {
 				// TODO: Stream operators
 		};
 
+		template<typename value_type, typename string_type, typename object_type>
+		struct is_valid_json_object {
+			static constexpr auto value =
+				std::is_same<typename object_type::mapped_type, value_type>::value &&
+				std::is_same<typename object_type::key_type, string_type>::value;
+		};
+
+		template<typename value_type, typename array_type>
+		struct is_valid_json_array {
+			static constexpr auto value =
+				std::is_same<typename array_type::value_type, value_type>::value;
+		};
+
 		struct picojson_traits {
 			static json::type get_type(const picojson::value& val) {
 				using json::type;
@@ -998,7 +1011,9 @@ namespace jwt {
 	}
 
 	/**
-	 * Generic claim wrapper
+	 * \brief a class to store a generic JSON value as claim
+	 * 
+	 * The default template parameters use [picojson](https://github.com/kazuho/picojson)
 	 * 
 	 * \tparam value_type : type for a generic JSON value
 	 * \tparam object_type : type for a JSON object
@@ -1007,6 +1022,8 @@ namespace jwt {
 	 * \tparam number_type : type for a JSON floating point number
 	 * \tparam integer_type : type for a JSON integer number
 	 * \tparam boolean_type : type for a JSON boolean
+	 * 
+	 * \see [RFC 7519: JSON Web Token (JWT)](https://tools.ietf.org/html/rfc7519)
 	 */
 	template<typename value_type = picojson::value,
 		class object_type = picojson::object,
@@ -1048,8 +1065,8 @@ namespace jwt {
 		static_assert(std::is_same<string_type, std::string>::value, "string_type must be a std::string.");
 
 		static_assert(details::is_valid_json_value<value_type>::value, "value type must meet basic requirements, default constructor, copyable, moveable");
-		// TODO: valid object_type "key string_stype, value value_type, interable"
-		// TODO: valid array_type "value value_type, iterable"
+		static_assert(details::is_valid_json_object<value_type, string_type, object_type>::value, "object_type much a string_type to value_type container");
+		static_assert(details::is_valid_json_array<value_type, array_type>::value, "");
 		static_assert(details::supports_get_type<traits, value_type>::value, "traits must provide `jwt::json::type get_type(const value_type&)`");
 		static_assert(details::supports_as_object<traits, value_type, object_type>::value, "traits must provide `object_type as_object(const value_type&)`");
 		static_assert(details::supports_as_array<traits, value_type, array_type>::value, "traits must provide `array_type as_array(const value_type&)`");
@@ -1383,6 +1400,18 @@ namespace jwt {
 		}
 	};
 
+	namespace details {
+		template <typename decode_type, typename string_type>
+		using is_decode_signature = typename std::is_same<decode_type, string_type(const string_type&)>;
+
+		template <typename decode_type, typename string_type>
+		struct is_valid_decode {
+			static constexpr auto value =
+				std::is_function<decode_type>::value &&
+				is_decode_signature<decode_type, string_type>::value;
+		};
+	}
+
 	/**
 	 * Class containing all information about a decoded token
 	 */
@@ -1429,6 +1458,8 @@ namespace jwt {
 		decoded_jwt(const string_type& token, Decode decode)
 			: token(token)
 		{
+			//static_assert(details::is_valid_decode<Decode, string_type>::value, "");
+
 			auto hdr_end = token.find('.');
 			if (hdr_end == string_type::npos)
 				throw std::invalid_argument("invalid token supplied");
