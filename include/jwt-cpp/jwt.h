@@ -409,8 +409,8 @@ namespace jwt {
 #endif
 				if(rr.size() > signature_length/2 || rs.size() > signature_length/2)
 					throw std::logic_error("bignum size exceeded expected length");
-				while(rr.size() != signature_length/2) rr = '\0' + rr;
-				while(rs.size() != signature_length/2) rs = '\0' + rs;
+				rr.insert(0, signature_length/2 - rr.size(), '\0');
+				rs.insert(0, signature_length/2 - rs.size(), '\0');
 				return rr + rs;
 			}
 
@@ -1000,7 +1000,7 @@ namespace jwt {
 				return val.get<double>();
 			}
 
-			static bool parse(picojson::value& val, std::string str){
+			static bool parse(picojson::value& val, const std::string& str){
 				return picojson::parse(val, str).empty();
 			}
 
@@ -1081,9 +1081,9 @@ namespace jwt {
 
 			basic_claim() = default;
 			basic_claim(const basic_claim&) = default;
-			basic_claim(basic_claim&&) = default;
+			basic_claim(basic_claim&&) noexcept = default;
 			basic_claim& operator=(const basic_claim&) = default;
-			basic_claim& operator=(basic_claim&&) = default;
+			basic_claim& operator=(basic_claim&&) noexcept = default;
 
 			JWT_CLAIM_EXPLICIT basic_claim(string_type s)
 				: val(std::move(s))
@@ -1470,7 +1470,7 @@ namespace jwt {
 				if (!traits::parse(val, str))
 					throw std::runtime_error("Invalid json");
 
-				for (auto e : traits::as_object(val)) {
+				for (const auto& e : traits::as_object(val)) {
 					res.emplace(e.first, basic_claim_t(e.second));
 				}
 
@@ -1678,14 +1678,14 @@ namespace jwt {
 	template<typename Clock, JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES>
 	class verifier {
 		struct algo_base {
-			virtual ~algo_base() {}
+			virtual ~algo_base() = default;
 			virtual void verify(const std::string& data, const std::string& sig) = 0;
 		};
 		template<typename T>
 		struct algo : public algo_base {
 			T alg;
 			explicit algo(T a) : alg(a) {}
-			virtual void verify(const std::string& data, const std::string& sig) override {
+			void verify(const std::string& data, const std::string& sig) override {
 				alg.verify(data, sig);
 			}
 		};
