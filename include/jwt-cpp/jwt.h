@@ -1400,18 +1400,6 @@ namespace jwt {
 		}
 	};
 
-	namespace details {
-		template <typename decode_type, typename string_type>
-		using is_decode_signature = typename std::is_same<decode_type, string_type(const string_type&)>;
-
-		template <typename decode_type, typename string_type>
-		struct is_valid_decode {
-			static constexpr auto value =
-				std::is_function<decode_type>::value &&
-				is_decode_signature<decode_type, string_type>::value;
-		};
-	}
-
 	/**
 	 * Class containing all information about a decoded token
 	 */
@@ -1449,6 +1437,9 @@ namespace jwt {
 		/**
 		 * Constructor 
 		 * Parses a given token
+		 * \tparam Decode is callabled, taking a string_type and returns a string_type.
+		 * It should ensure the padding of the input and then base64url decode and 
+		 * return the results.
 		 * \param token The token to parse
 		 * \param decode The token to parse
 		 * \throws std::invalid_argument Token is not in correct format
@@ -1458,8 +1449,6 @@ namespace jwt {
 		decoded_jwt(const string_type& token, Decode decode)
 			: token(token)
 		{
-			//static_assert(details::is_valid_decode<Decode, string_type>::value, "");
-
 			auto hdr_end = token.find('.');
 			if (hdr_end == string_type::npos)
 				throw std::invalid_argument("invalid token supplied");
@@ -1646,6 +1635,9 @@ namespace jwt {
 
 		/**
 		 * Sign token and return result
+		 * \tparam Algo Callable method which takes a string_type and return the signed input as a string_type
+		 * \tparam Encode Callable method which takes a string_type and base64url safe encodes it,
+		 * MUST return the result with no padding; trim the result.
 		 * \param algo Instance of an algorithm to sign the token with
 		 * \param encode Callable to transform the serialized json to base64 with no padding
 		 * \return Final token as a string
@@ -1654,9 +1646,6 @@ namespace jwt {
 		 */
 		template<typename Algo, typename Encode>
 		string_type sign(const Algo& algo, Encode encode) const {
-			// TODO: is valid algo
-			// TODO: is valid encode
-
 			object_type obj_header = header_claims;
 			if(header_claims.count("alg") == 0)
 				obj_header["alg"] = value_type(algo.name());
