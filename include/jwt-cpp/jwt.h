@@ -196,7 +196,7 @@ namespace jwt {
 			 * Sign jwt data
 			 * \param data The data to sign
 			 * \return HMAC signature for the given data
-			 * \throws signature_generation_exception
+			 * \throw signature_generation_exception
 			 */
 			std::string sign(const std::string& data) const {
 				std::string res;
@@ -211,7 +211,7 @@ namespace jwt {
 			 * Check if signature is valid
 			 * \param data The data to check signature against
 			 * \param signature Signature provided by the jwt
-			 * \throws signature_verification_exception If the provided signature does not match
+			 * \throw signature_verification_exception If the provided signature does not match
 			 */
 			void verify(const std::string& data, const std::string& signature) const {
 				try {
@@ -271,7 +271,7 @@ namespace jwt {
 			 * Sign jwt data
 			 * \param data The data to sign
 			 * \return RSA signature for the given data
-			 * \throws signature_generation_exception
+			 * \throw signature_generation_exception
 			 */
 			std::string sign(const std::string& data) const {
 #ifdef OPENSSL10
@@ -300,7 +300,7 @@ namespace jwt {
 			 * Check if signature is valid
 			 * \param data The data to check signature against
 			 * \param signature Signature provided by the jwt
-			 * \throws signature_verification_exception If the provided signature does not match
+			 * \throw signature_verification_exception If the provided signature does not match
 			 */
 			void verify(const std::string& data, const std::string& signature) const {
 #ifdef OPENSSL10
@@ -392,7 +392,7 @@ namespace jwt {
 			 * Sign jwt data
 			 * \param data The data to sign
 			 * \return ECDSA signature for the given data
-			 * \throws signature_generation_exception
+			 * \throw signature_generation_exception
 			 */
 			std::string sign(const std::string& data) const {
 				const std::string hash = generate_hash(data);
@@ -423,7 +423,7 @@ namespace jwt {
 			 * Check if signature is valid
 			 * \param data The data to check signature against
 			 * \param signature Signature provided by the jwt
-			 * \throws signature_verification_exception If the provided signature does not match
+			 * \throw signature_verification_exception If the provided signature does not match
 			 */
 			void verify(const std::string& data, const std::string& signature) const {
 				const std::string hash = generate_hash(data);
@@ -515,7 +515,7 @@ namespace jwt {
 			 * Sign jwt data
 			 * \param data The data to sign
 			 * \return ECDSA signature for the given data
-			 * \throws signature_generation_exception
+			 * \throw signature_generation_exception
 			 */
 			std::string sign(const std::string& data) const {
 				auto hash = this->generate_hash(data);
@@ -536,7 +536,7 @@ namespace jwt {
 			 * Check if signature is valid
 			 * \param data The data to check signature against
 			 * \param signature Signature provided by the jwt
-			 * \throws signature_verification_exception If the provided signature does not match
+			 * \throw signature_verification_exception If the provided signature does not match
 			 */
 			void verify(const std::string& data, const std::string& signature) const {
 				auto hash = this->generate_hash(data);
@@ -1100,15 +1100,16 @@ namespace jwt {
 	JWT_BASIC_CLAIM_TPL_DECLARATION
 	class basic_claim {
 		/**
-		 * The reason this is the case is to provide an expressive abstraction. For more information
-		 * take the time to read https://github.com/nlohmann/json/issues/774. It maybe expanded to support
-		 * custome string types.
+		 * The reason behind this is to provide an expressive abstraction without
+		 * over complexifying the API. For more information take the time to read
+		 * https://github.com/nlohmann/json/issues/774. It maybe be expanded to
+		 * support custom string types.
 		*/
 		static_assert(std::is_same<string_type, std::string>::value, "string_type must be a std::string.");
 
 		static_assert(details::is_valid_json_types<value_type, string_type, object_type, array_type>::value, "must staisfy json container requirements");
 		static_assert(details::is_valid_traits<JWT_BASIC_CLAIM_TPL>::value, "traits must satisfy requirements");
-		
+
 			value_type val;
 		public:
 			using set_t = std::set<string_type>;
@@ -1141,15 +1142,15 @@ namespace jwt {
 			{}
 
 			/**
-			 * Get wrapped json object
-			 * \return Wrapped json object
+			 * Get wrapped JSON value
+			 * \return Wrapped JSON value
 			 */
 			value_type to_json() const {
 				return val;
 			}
 
 			/**
-			 * Parse input stream into wrapped json object
+			 * Parse input stream into underlying JSON value
 			 * \return input stream
 			 */
 			std::istream& operator>>(std::istream& is)
@@ -1158,7 +1159,7 @@ namespace jwt {
 			}
 
 			/**
-			 * Serialize claim to output stream from wrapped json object
+			 * Serialize claim to output stream from wrapped JSON value
 			 * \return ouput stream
 			 */
 			std::ostream& operator<<(std::ostream& os)
@@ -1167,45 +1168,45 @@ namespace jwt {
 			}
 
 			/**
-			 * Get type of contained object
+			 * Get type of contained JSON value
 			 * \return Type
-			 * \throws std::logic_error An internal error occured
+			 * \throw std::logic_error An internal error occured
 			 */
 			json::type get_type() const {
 				return traits::get_type(val);
 			}
 
 			/**
-			 * Get the contained object as a string
+			 * Get the contained JSON value as a string
 			 * \return content as string
-			 * \throws std::bad_cast Content was not a string
+			 * \throw std::bad_cast Content was not a string
 			 */
 			string_type as_string() const {
 				return traits::as_string(val);
 			}
 
 			/**
-			 * Get the contained object as a date
+			 * Get the contained JSON value as a date
 			 * \return content as date
-			 * \throws std::bad_cast Content was not a date
+			 * \throw std::bad_cast Content was not a date
 			 */
 			date as_date() const {
 				return std::chrono::system_clock::from_time_t(as_int());
 			}
 
 			/**
-			 * Get the contained object as an array
+			 * Get the contained JSON value as an array
 			 * \return content as array
-			 * \throws std::bad_cast Content was not an array
+			 * \throw std::bad_cast Content was not an array
 			 */
 			array_type as_array() const {
 				return traits::as_array(val);
 			}
 
 			/**
-			 * Get the contained object as a set of strings
+			 * Get the contained JSON value as a set of strings
 			 * \return content as set of strings
-			 * \throws std::bad_cast Content was not an array of string
+			 * \throw std::bad_cast Content was not an array of string
 			 */
 			set_t as_set() const {
 				set_t res;
@@ -1216,27 +1217,27 @@ namespace jwt {
 			}
 
 			/**
-			 * Get the contained object as an integer
+			 * Get the contained JSON value as an integer
 			 * \return content as int
-			 * \throws std::bad_cast Content was not an int
+			 * \throw std::bad_cast Content was not an int
 			 */
 			integer_type as_int() const {
 				return traits::as_int(val);
 			}
 
 			/**
-			 * Get the contained object as a bool
+			 * Get the contained JSON value as a bool
 			 * \return content as bool
-			 * \throws std::bad_cast Content was not a bool
+			 * \throw std::bad_cast Content was not a bool
 			 */
 			boolean_type as_bool() const {
 				return traits::as_bool(val);
 			}
 
 			/**
-			 * Get the contained object as a number
+			 * Get the contained JSON value as a number
 			 * \return content as double
-			 * \throws std::bad_cast Content was not a number
+			 * \throw std::bad_cast Content was not a number
 			 */
 			number_type as_number() const {
 				return traits::as_number(val);
@@ -1291,22 +1292,22 @@ namespace jwt {
 		/**
 		 * Get issuer claim
 		 * \return issuer as string
-		 * \throws std::runtime_error If claim was not present
-		 * \throws std::bad_cast Claim was present but not a string (Should not happen in a valid token)
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
 		 */
 		string_type get_issuer() const { return get_payload_claim("iss").as_string(); }
 		/**
 		 * Get subject claim
 		 * \return subject as string
-		 * \throws std::runtime_error If claim was not present
-		 * \throws std::bad_cast Claim was present but not a string (Should not happen in a valid token)
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
 		 */
 		string_type get_subject() const { return get_payload_claim("sub").as_string(); }
 		/**
 		 * Get audience claim
 		 * \return audience as a set of strings
-		 * \throws std::runtime_error If claim was not present
-		 * \throws std::bad_cast Claim was present but not a set (Should not happen in a valid token)
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a set (Should not happen in a valid token)
 		 */
 		typename basic_claim_t::set_t get_audience() const { 
 			auto aud = get_payload_claim("aud");
@@ -1318,29 +1319,29 @@ namespace jwt {
 		/**
 		 * Get expires claim
 		 * \return expires as a date in utc
-		 * \throws std::runtime_error If claim was not present
-		 * \throws std::bad_cast Claim was present but not a date (Should not happen in a valid token)
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a date (Should not happen in a valid token)
 		 */
 		date get_expires_at() const { return get_payload_claim("exp").as_date(); }
 		/**
 		 * Get not valid before claim
 		 * \return nbf date in utc
-		 * \throws std::runtime_error If claim was not present
-		 * \throws std::bad_cast Claim was present but not a date (Should not happen in a valid token)
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a date (Should not happen in a valid token)
 		 */
 		date get_not_before() const { return get_payload_claim("nbf").as_date(); }
 		/**
 		 * Get issued at claim
 		 * \return issued at as date in utc
-		 * \throws std::runtime_error If claim was not present
-		 * \throws std::bad_cast Claim was present but not a date (Should not happen in a valid token)
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a date (Should not happen in a valid token)
 		 */
 		date get_issued_at() const { return get_payload_claim("iat").as_date(); }
 		/**
 		 * Get id claim
 		 * \return id as string
-		 * \throws std::runtime_error If claim was not present
-		 * \throws std::bad_cast Claim was present but not a string (Should not happen in a valid token)
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
 		 */
 		string_type get_id() const { return get_payload_claim("jti").as_string(); }
 		/**
@@ -1351,7 +1352,7 @@ namespace jwt {
 		/**
 		 * Get payload claim
 		 * \return Requested claim
-		 * \throws std::runtime_error If claim was not present
+		 * \throw std::runtime_error If claim was not present
 		 */
 		basic_claim_t get_payload_claim(const string_type& name) const {
 			if (!has_payload_claim(name))
@@ -1393,29 +1394,29 @@ namespace jwt {
 		/**
 		 * Get algorithm claim
 		 * \return algorithm as string
-		 * \throws std::runtime_error If claim was not present
-		 * \throws std::bad_cast Claim was present but not a string (Should not happen in a valid token)
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
 		 */
 		string_type get_algorithm() const { return get_header_claim("alg").as_string(); }
 		/**
 		 * Get type claim
 		 * \return type as a string
-		 * \throws std::runtime_error If claim was not present
-		 * \throws std::bad_cast Claim was present but not a string (Should not happen in a valid token)
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
 		 */
 		string_type get_type() const { return get_header_claim("typ").as_string(); }
 		/**
 		 * Get content type claim
 		 * \return content type as string
-		 * \throws std::runtime_error If claim was not present
-		 * \throws std::bad_cast Claim was present but not a string (Should not happen in a valid token)
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
 		 */
 		string_type get_content_type() const { return get_header_claim("cty").as_string(); }
 		/**
 		 * Get key id claim
 		 * \return key id as string
-		 * \throws std::runtime_error If claim was not present
-		 * \throws std::bad_cast Claim was present but not a string (Should not happen in a valid token)
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
 		 */
 		string_type get_key_id() const { return get_header_claim("kid").as_string(); }
 		/**
@@ -1426,7 +1427,7 @@ namespace jwt {
 		/**
 		 * Get header claim
 		 * \return Requested claim
-		 * \throws std::runtime_error If claim was not present
+		 * \throw std::runtime_error If claim was not present
 		 */
 		basic_claim_t get_header_claim(const string_type& name) const {
 			if (!has_header_claim(name))
@@ -1461,8 +1462,8 @@ namespace jwt {
 		 * Parses a given token
 		 * Decodes using the jwt::base64url which supports an std::string
 		 * \param token The token to parse
-		 * \throws std::invalid_argument Token is not in correct format
-		 * \throws std::runtime_error Base64 decoding failed or invalid json
+		 * \throw std::invalid_argument Token is not in correct format
+		 * \throw std::runtime_error Base64 decoding failed or invalid json
 		 */
 		JWT_CLAIM_EXPLICIT decoded_jwt(const string_type& token)
 		: decoded_jwt(token, [](const string_type& token){
@@ -1477,8 +1478,8 @@ namespace jwt {
 		 * return the results.
 		 * \param token The token to parse
 		 * \param decode The token to parse
-		 * \throws std::invalid_argument Token is not in correct format
-		 * \throws std::runtime_error Base64 decoding failed or invalid json
+		 * \throw std::invalid_argument Token is not in correct format
+		 * \throw std::runtime_error Base64 decoding failed or invalid json
 		 */
 		template<typename Decode>
 		decoded_jwt(const string_type& token, Decode decode)
@@ -1824,7 +1825,7 @@ namespace jwt {
 		/**
 		 * Verify the given token.
 		 * \param jwt Token to check
-		 * \throws token_verification_exception Verification failed
+		 * \throw token_verification_exception Verification failed
 		 */
 		void verify(const decoded_jwt<JWT_BASIC_CLAIM_TPL>& jwt) const {
 			const string_type data = jwt.get_header_base64() + "." + jwt.get_payload_base64();
@@ -1961,8 +1962,8 @@ namespace jwt {
 	 * \param token Token to decode
 	 * \param decode function that will pad and base64url decode the token
 	 * \return Decoded token
-	 * \throws std::invalid_argument Token is not in correct format
-	 * \throws std::runtime_error Base64 decoding failed or invalid json
+	 * \throw std::invalid_argument Token is not in correct format
+	 * \throw std::runtime_error Base64 decoding failed or invalid json
 	 */
 	template<JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES, typename Decode>
 	decoded_jwt<JWT_BASIC_CLAIM_TPL> decode(const string_type& token, Decode decode) {
@@ -1973,8 +1974,8 @@ namespace jwt {
 	 * Decode a token
 	 * \param token Token to decode
 	 * \return Decoded token
-	 * \throws std::invalid_argument Token is not in correct format
-	 * \throws std::runtime_error Base64 decoding failed or invalid json
+	 * \throw std::invalid_argument Token is not in correct format
+	 * \throw std::runtime_error Base64 decoding failed or invalid json
 	 */
 	JWT_BASIC_CLAIM_TPL_DECLARATION
 	decoded_jwt<JWT_BASIC_CLAIM_TPL> decode(const string_type& token) {
@@ -1985,8 +1986,8 @@ namespace jwt {
 	 * Decode a token
 	 * \param token Token to decode
 	 * \return Decoded token
-	 * \throws std::invalid_argument Token is not in correct format
-	 * \throws std::runtime_error Base64 decoding failed or invalid json
+	 * \throw std::invalid_argument Token is not in correct format
+	 * \throw std::runtime_error Base64 decoding failed or invalid json
 	 */
 	inline
 	decoded_jwt<DEFAULT_PICOJSON_TYPES> decode(const std::string& token) {
