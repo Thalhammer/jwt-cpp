@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.8)
 
 if(CMAKE_TOOLCHAIN_FILE)
-   include(${CMAKE_TOOLCHAIN_FILE})
+  include(${CMAKE_TOOLCHAIN_FILE})
 endif()
 
 option(BUILD_TESTS "Configure CMake to build tests (or not)" ON)
@@ -16,11 +16,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(OpenSSL 1.0.2 REQUIRED)
 
 if(BUILD_TESTS)
-   find_package(GTest REQUIRED)
+  find_package(GTest REQUIRED)
 endif()
-  
+
 if(EXTERNAL_PICOJSON)
-   find_package(picojson REQUIRED)
+  find_package(picojson REQUIRED)
 endif()
 
 add_library(jwt-cpp INTERFACE)
@@ -38,7 +38,7 @@ target_link_libraries(jwt-cpp INTERFACE OpenSSL::SSL OpenSSL::Crypto)
 set(JWT_HEADERS ${JWT_INCLUDE_PATH}/jwt-cpp/base.h
                 ${JWT_INCLUDE_PATH}/jwt-cpp/jwt.h)
 if(NOT EXTERNAL_PICOJSON)
-   set(PICO_HEADER ${JWT_INCLUDE_PATH}/picojson/picojson.h)
+  set(PICO_HEADER ${JWT_INCLUDE_PATH}/picojson/picojson.h)
 endif()
 
 include(CMakePackageConfigHelpers)
@@ -46,8 +46,12 @@ set(INCLUDE_INSTALL_DIR include)
 
 configure_package_config_file(
   ${CMAKE_CURRENT_LIST_DIR}/cmake/jwt-cpp-config.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config.cmake INSTALL_DESTINATION
-  ${CMAKE_INSTALL_PREFIX}/jwt-cpp/cmake PATH_VARS INCLUDE_INSTALL_DIR EXTERNAL_PICOJSON)
+  ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config.cmake
+  INSTALL_DESTINATION
+  ${CMAKE_INSTALL_PREFIX}/jwt-cpp/cmake
+  PATH_VARS
+  INCLUDE_INSTALL_DIR
+  EXTERNAL_PICOJSON)
 
 write_basic_package_version_file(
   ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-version.cmake
@@ -56,7 +60,7 @@ write_basic_package_version_file(
 
 install(FILES ${JWT_HEADERS} DESTINATION include/jwt-cpp)
 if(NOT EXTERNAL_PICOJSON AND NOT NO_INSTALL_PICOJSON)
-   install(FILES ${PICO_HEADER} DESTINATION include/picojson)
+  install(FILES ${PICO_HEADER} DESTINATION include/picojson)
 endif()
 
 install(
