@@ -1,7 +1,9 @@
-#pragma once
-#include <string>
+#ifndef JWT_CPP_BASE_H
+#define JWT_CPP_BASE_H
+
 #include <array>
 #include <stdexcept>
+#include <string>
 
 #ifdef __has_cpp_attribute
 #if __has_cpp_attribute(fallthrough)
@@ -17,7 +19,7 @@ namespace jwt {
 	namespace alphabet {
 		struct base64 {
 			static const std::array<char, 64>& data() {
-				static constexpr std::array<char, 64> data = {
+				static constexpr std::array<char, 64> data {
 						{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
 						'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
 						'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
@@ -26,13 +28,13 @@ namespace jwt {
 				return data;
 			}
 			static const std::string& fill() {
-				static std::string fill = "=";
+				static std::string fill{ "=" };
 				return fill;
 			}
 		};
 		struct base64url {
 			static const std::array<char, 64>& data() {
-				static constexpr std::array<char, 64> data = {
+				static constexpr std::array<char, 64> data {
 						{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
 						'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
 						'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
@@ -41,11 +43,11 @@ namespace jwt {
 				return data;
 			}
 			static const std::string& fill() {
-				static std::string fill = "%3d";
+				static std::string fill{ "%3d" };
 				return fill;
 			}
 		};
-	}
+	}  // namespace alphabet
 
 	class base {
 	public:
@@ -158,9 +160,9 @@ namespace jwt {
 					+ (sextet_c << 1 * 6)
 					+ (sextet_d << 0 * 6);
 
-				res += static_cast<char>((triple >> 2 * 8) & 0xFFu);
-				res += static_cast<char>((triple >> 1 * 8) & 0xFFu);
-				res += static_cast<char>((triple >> 0 * 8) & 0xFFu);
+				res += static_cast<char>((triple >> 2 * 8) & 0xFFU);
+				res += static_cast<char>((triple >> 1 * 8) & 0xFFU);
+				res += static_cast<char>((triple >> 0 * 8) & 0xFFU);
 			}
 
 			if (fill_cnt == 0)
@@ -172,11 +174,11 @@ namespace jwt {
 			switch (fill_cnt) {
 			case 1:
 				triple |= (get_sextet(fast_size + 2) << 1 * 6);
-				res += static_cast<char>((triple >> 2 * 8) & 0xFFu);
-				res += static_cast<char>((triple >> 1 * 8) & 0xFFu);
+				res += static_cast<char>((triple >> 2 * 8) & 0xFFU);
+				res += static_cast<char>((triple >> 1 * 8) & 0xFFU);
 				break;
 			case 2:
-				res += static_cast<char>((triple >> 2 * 8) & 0xFFu);
+				res += static_cast<char>((triple >> 2 * 8) & 0xFFU);
 				break;
 			default:
 				break;
@@ -209,4 +211,6 @@ namespace jwt {
 			return base.substr(0, pos);
 		}
 	};
-}
+}  // namespace jwt
+
+#endif

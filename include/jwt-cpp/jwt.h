@@ -1,16 +1,20 @@
-#pragma once
+#ifndef JWT_CPP_JWT_H
+#define JWT_CPP_JWT_H
+
 #define PICOJSON_USE_INT64
 #include "picojson/picojson.h"
 #include "base.h"
-#include <set>
-#include <chrono>
-#include <unordered_map>
-#include <memory>
+
+#include <openssl/ec.h>
+#include <openssl/err.h>
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 #include <openssl/pem.h>
-#include <openssl/ec.h>
-#include <openssl/err.h>
+
+#include <chrono>
+#include <memory>
+#include <set>
+#include <unordered_map>
 
 //If openssl version less than 1.1
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
@@ -149,9 +153,9 @@ namespace jwt {
 		 */
 		inline
 		static std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw) {
-			return std::unique_ptr<BIGNUM, decltype(&BN_free)>(BN_bin2bn((const unsigned char*)raw.data(), static_cast<int>(raw.size()), nullptr), BN_free);
+			return std::unique_ptr<BIGNUM, decltype(&BN_free)>(BN_bin2bn(reinterpret_cast<const unsigned char*>(raw.data()), static_cast<int>(raw.size()), nullptr), BN_free);
 		}
-	}
+	}  // namespace helper
 
 	namespace algorithm {
 		/**
@@ -197,7 +201,7 @@ namespace jwt {
 				std::string res;
 				res.resize(static_cast<size_t>(EVP_MAX_MD_SIZE));
 				auto len = static_cast<unsigned int>(res.size());
-				if (HMAC(md(), secret.data(), static_cast<int>(secret.size()), (const unsigned char*)data.data(), static_cast<int>(data.size()), (unsigned char*)res.data(), &len) == nullptr)
+				if (HMAC(md(), secret.data(), static_cast<int>(secret.size()), reinterpret_cast<const unsigned char*>(data.data()), static_cast<int>(data.size()), (unsigned char*)res.data(), &len) == nullptr)
 					throw signature_generation_exception();
 				res.resize(len);
 				return res;
@@ -309,7 +313,7 @@ namespace jwt {
 					throw signature_verification_exception("failed to verify signature: VerifyInit failed");
 				if (!EVP_VerifyUpdate(ctx.get(), data.data(), data.size()))
 					throw signature_verification_exception("failed to verify signature: VerifyUpdate failed");
-				auto res = EVP_VerifyFinal(ctx.get(), (const unsigned char*)signature.data(), static_cast<unsigned int>(signature.size()), pkey.get());
+				auto res = EVP_VerifyFinal(ctx.get(), reinterpret_cast<const unsigned char*>(signature.data()), static_cast<unsigned int>(signature.size()), pkey.get());
 				if (res != 1)
 					throw signature_verification_exception("evp verify final failed: " + std::to_string(res) + " " + ERR_error_string(ERR_get_error(), nullptr));
 			}
@@ -393,7 +397,7 @@ namespace jwt {
 				const std::string hash = generate_hash(data);
 
 				std::unique_ptr<ECDSA_SIG, decltype(&ECDSA_SIG_free)>
-					sig(ECDSA_do_sign((const unsigned char*)hash.data(), static_cast<int>(hash.size()), pkey.get()), ECDSA_SIG_free);
+					sig(ECDSA_do_sign(reinterpret_cast<const unsigned char*>(hash.data()), static_cast<int>(hash.size()), pkey.get()), ECDSA_SIG_free);
 				if(!sig)
 					throw signature_generation_exception();
 #ifdef OPENSSL10
@@ -437,7 +441,7 @@ namespace jwt {
 
 				ECDSA_SIG_set0(sig.get(), r.release(), s.release());
 
-				if(ECDSA_do_verify((const unsigned char*)hash.data(), static_cast<int>(hash.size()), sig.get(), pkey.get()) != 1)
+				if(ECDSA_do_verify(reinterpret_cast<const unsigned char*>(hash.data()), static_cast<int>(hash.size()), sig.get(), pkey.get()) != 1)
 					throw signature_verification_exception("Invalid signature");
 #endif
 			}
@@ -519,11 +523,11 @@ namespace jwt {
 				const int size = RSA_size(key.get());
 
 				std::string padded(size, 0x00);
-				if (!RSA_padding_add_PKCS1_PSS_mgf1(key.get(), (unsigned char*)padded.data(), (const unsigned char*)hash.data(), md(), md(), -1))  
+				if (!RSA_padding_add_PKCS1_PSS_mgf1(key.get(), (unsigned char*)padded.data(), reinterpret_cast<const unsigned char*>(hash.data()), md(), md(), -1))  
 					throw signature_generation_exception("failed to create signature: RSA_padding_add_PKCS1_PSS_mgf1 failed");
 
 				std::string res(size, 0x00);
-				if (RSA_private_encrypt(size, (const unsigned char*)padded.data(), (unsigned char*)res.data(), key.get(), RSA_NO_PADDING) < 0)
+				if (RSA_private_encrypt(size, reinterpret_cast<const unsigned char*>(padded.data()), (unsigned char*)res.data(), key.get(), RSA_NO_PADDING) < 0)
 					throw signature_generation_exception("failed to create signature: RSA_private_encrypt failed");
 				return res;
 			}
@@ -540,10 +544,10 @@ namespace jwt {
 				const int size = RSA_size(key.get());
 				
 				std::string sig(size, 0x00);
-				if(!RSA_public_decrypt(static_cast<int>(signature.size()), (const unsigned char*)signature.data(), (unsigned char*)sig.data(), key.get(), RSA_NO_PADDING))
+				if(!RSA_public_decrypt(static_cast<int>(signature.size()), reinterpret_cast<const unsigned char*>(signature.data()), (unsigned char*)sig.data(), key.get(), RSA_NO_PADDING))
 					throw signature_verification_exception("Invalid signature");
 				
-				if(!RSA_verify_PKCS1_PSS_mgf1(key.get(), (const unsigned char*)hash.data(), md(), md(), (const unsigned char*)sig.data(), -1))
+				if(!RSA_verify_PKCS1_PSS_mgf1(key.get(), reinterpret_cast<const unsigned char*>(hash.data()), md(), md(), reinterpret_cast<const unsigned char*>(sig.data()), -1))
 					throw signature_verification_exception("Invalid signature");
 			}
 			/**
@@ -758,7 +762,7 @@ namespace jwt {
 				: pss(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "PS512")
 			{}
 		};
-	}
+	}  // namespace algorithm
 
 	namespace json {
 		/**
@@ -773,7 +777,7 @@ namespace jwt {
 			array,
 			object
 		};
-	}
+	}  // namespace json
 
 	namespace details {
 		namespace impl {
@@ -811,7 +815,7 @@ namespace jwt {
 			using value = std::true_type;
 			using type = Op<Args...>;
 		};
-		}
+		}  // namespace impl
 
 		template <template <class...> class Op, class... Args>
 		using is_detected = typename impl::detector<impl::nonesuch, void, Op, Args...>::value;
@@ -956,12 +960,13 @@ namespace jwt {
 			static json::type get_type(const picojson::value& val) {
 				using json::type;
 				if (val.is<bool>()) return type::boolean;
-				else if (val.is<int64_t>()) return type::integer;
-				else if (val.is<double>()) return type::number;
-				else if (val.is<std::string>()) return type::string;
-				else if (val.is<picojson::array>()) return type::array;
-				else if (val.is<picojson::object>()) return type::object;
-				else throw std::logic_error("invalid type");
+				if (val.is<int64_t>()) return type::integer;
+				if (val.is<double>()) return type::number;
+				if (val.is<std::string>()) return type::string;
+				if (val.is<picojson::array>()) return type::array;
+				if (val.is<picojson::object>()) return type::object;
+
+				throw std::logic_error("invalid type");
 			}
 
 			static picojson::object as_object(const picojson::value& val) {
@@ -1008,7 +1013,7 @@ namespace jwt {
 				return val.serialize();
 			}
 		};
-	}
+	}  // namespace details
 
 	/**
 	 * \brief a class to store a generic JSON value as claim
@@ -1084,6 +1089,7 @@ namespace jwt {
 			basic_claim(basic_claim&&) noexcept = default;
 			basic_claim& operator=(const basic_claim&) = default;
 			basic_claim& operator=(basic_claim&&) noexcept = default;
+			~basic_claim() = default;
 
 			JWT_CLAIM_EXPLICIT basic_claim(string_type s)
 				: val(std::move(s))
@@ -1277,8 +1283,8 @@ namespace jwt {
 			auto aud = get_payload_claim("aud");
 			if(aud.get_type() == json::type::string)
 				return { aud.as_string() };
-			else
-				return aud.as_set();
+			
+			return aud.as_set();
 		}
 		/**
 		 * Get expires claim
@@ -1286,21 +1292,21 @@ namespace jwt {
 		 * \throws std::runtime_error If claim was not present
 		 * \throws std::bad_cast Claim was present but not a date (Should not happen in a valid token)
 		 */
-		const date get_expires_at() const { return get_payload_claim("exp").as_date(); }
+		date get_expires_at() const { return get_payload_claim("exp").as_date(); }
 		/**
 		 * Get not valid before claim
 		 * \return nbf date in utc
 		 * \throws std::runtime_error If claim was not present
 		 * \throws std::bad_cast Claim was present but not a date (Should not happen in a valid token)
 		 */
-		const date get_not_before() const { return get_payload_claim("nbf").as_date(); }
+		date get_not_before() const { return get_payload_claim("nbf").as_date(); }
 		/**
 		 * Get issued at claim
 		 * \return issued at as date in utc
 		 * \throws std::runtime_error If claim was not present
 		 * \throws std::bad_cast Claim was present but not a date (Should not happen in a valid token)
 		 */
-		const date get_issued_at() const { return get_payload_claim("iat").as_date(); }
+		date get_issued_at() const { return get_payload_claim("iat").as_date(); }
 		/**
 		 * Get id claim
 		 * \return id as string
@@ -1429,7 +1435,7 @@ namespace jwt {
 		 * \throws std::invalid_argument Token is not in correct format
 		 * \throws std::runtime_error Base64 decoding failed or invalid json
 		 */
-		decoded_jwt(const string_type& token)
+		JWT_CLAIM_EXPLICIT decoded_jwt(const string_type& token)
 		: decoded_jwt(token, [](const string_type& token){
 				return base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(token));
 		})
@@ -1678,7 +1684,6 @@ namespace jwt {
 	template<typename Clock, JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES>
 	class verifier {
 		struct algo_base {
-			virtual ~algo_base() = default;
 			virtual void verify(const std::string& data, const std::string& sig) = 0;
 		};
 		template<typename T>
@@ -1958,7 +1963,7 @@ namespace jwt {
 	decoded_jwt<DEFAULT_PICOJSON_TYPES> decode(const std::string& token) {
 		return decoded_jwt<DEFAULT_PICOJSON_TYPES>(token);
 	}
-}
+}  // namespace jwt
 
 JWT_BASIC_CLAIM_TPL_DECLARATION
 std::istream& operator>>(std::istream& is, jwt::basic_claim<JWT_BASIC_CLAIM_TPL>& c)
@@ -1971,3 +1976,5 @@ std::ostream& operator<<(std::ostream& os, const jwt::basic_claim<JWT_BASIC_CLAI
 {
 	return os << c.to_json();
 }
+
+#endif
