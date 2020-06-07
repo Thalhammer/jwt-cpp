@@ -3,7 +3,10 @@
 
 #define PICOJSON_USE_INT64
 #include "picojson/picojson.h"
+
+#ifndef DISABLE_BASE64
 #include "base.h"
+#endif
 
 #include <openssl/ec.h>
 #include <openssl/err.h>
@@ -1457,6 +1460,7 @@ namespace jwt {
 		/// Unmodified signature part in base64
 		string_type signature_base64;
 	public:
+	#ifndef DISABLE_BASE64
 		/**
 		 * Constructor 
 		 * Parses a given token
@@ -1470,6 +1474,7 @@ namespace jwt {
 				return base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(token));
 		})
 		{}
+	#endif
 		/**
 		 * Constructor 
 		 * Parses a given token
@@ -1692,6 +1697,7 @@ namespace jwt {
 
 			return token + "." + encode(algo.sign(token));
 		}
+	#ifndef DISABLE_BASE64
 		/**
 		 * Sign token and return result
 		 * 
@@ -1706,6 +1712,7 @@ namespace jwt {
 				return base::trim<alphabet::base64url>(base::encode<alphabet::base64url>(data));
 			});
 		}
+	#endif
 	};
 
 	/**

@@ -7,6 +7,7 @@ endif()
 option(BUILD_TESTS "Configure CMake to build tests (or not)" ON)
 option(EXTERNAL_PICOJSON "Use find_package() to locate the picojson header" OFF)
 option(NO_INSTALL_PICOJSON "Do not install the picojson header" OFF)
+option(DISABLE_JWT_CPP_BASE64 "Do not include the base64 implementation from this library" OFF)
 
 project(jwt-cpp)
 
@@ -14,10 +15,6 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(OpenSSL 1.0.2 REQUIRED)
-
-if(BUILD_TESTS)
-  find_package(GTest REQUIRED)
-endif()
 
 if(EXTERNAL_PICOJSON)
   find_package(picojson REQUIRED)
@@ -27,6 +24,10 @@ add_library(jwt-cpp INTERFACE)
 add_library(jwt-cpp::jwt-cpp ALIAS jwt-cpp)
 
 target_compile_features(jwt-cpp INTERFACE cxx_std_11)
+
+if(DISABLE_JWT_CPP_BASE64)
+  target_compile_options(jwt-cpp INTERFACE DISABLE_BASE64)
+endif()
 
 set(JWT_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(
@@ -55,7 +56,7 @@ configure_package_config_file(
 
 write_basic_package_version_file(
   ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-version.cmake
-  VERSION 0.4.0
+  VERSION 0.5.0-dev
   COMPATIBILITY ExactVersion)
 
 install(FILES ${JWT_HEADERS} DESTINATION include/jwt-cpp)
