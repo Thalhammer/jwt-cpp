@@ -932,6 +932,29 @@ namespace jwt {
 				is_as_boolean_signature<traits_type, value_type, boolean_type>::value;
 		};
 
+		template<typename value_type, class object_type, class array_type,
+					class string_type, class number_type, class integer_type,
+					class boolean_type, typename traits>
+		struct is_valid_traits {
+			// Internal assertions for better feedback
+			static_assert(supports_get_type<traits, value_type>::value, "traits must provide `jwt::json::type get_type(const value_type&)`");
+			static_assert(supports_as_object<traits, value_type, object_type>::value, "traits must provide `object_type as_object(const value_type&)`");
+			static_assert(supports_as_array<traits, value_type, array_type>::value, "traits must provide `array_type as_array(const value_type&)`");
+			static_assert(supports_as_string<traits, value_type, string_type>::value, "traits must provide `string_type as_string(const value_type&)`");
+			static_assert(supports_as_number<traits, value_type, number_type>::value, "traits must provide `number_type as_number(const value_type&)`");
+			static_assert(supports_as_integer<traits, value_type, integer_type>::value, "traits must provide `integer_type as_int(const value_type&)`");
+			static_assert(supports_as_boolean<traits, value_type, boolean_type>::value, "traits must provide `boolean_type as_bool(const value_type&)`");
+
+			static constexpr auto value =
+				supports_get_type<traits, value_type>::value &&
+				supports_as_object<traits, value_type, object_type>::value &&
+				supports_as_array<traits, value_type, array_type>::value &&
+				supports_as_string<traits, value_type, string_type>::value &&
+				supports_as_number<traits, value_type, number_type>::value &&
+				supports_as_integer<traits, value_type, integer_type>::value &&
+				supports_as_boolean<traits, value_type, boolean_type>::value;
+		};
+
 		template<typename value_type>
 		struct is_valid_json_value {
 			static constexpr auto value =
@@ -955,6 +978,19 @@ namespace jwt {
 		struct is_valid_json_array {
 			static constexpr auto value =
 				std::is_same<typename array_type::value_type, value_type>::value;
+		};
+
+		template<typename value_type, typename string_type, typename object_type, typename array_type>
+		struct is_valid_json_types {
+			// Internal assertions for better feedback
+			static_assert(is_valid_json_value<value_type>::value, "value type must meet basic requirements, default constructor, copyable, moveable");
+			static_assert(is_valid_json_object<value_type, string_type, object_type>::value, "object_type must be a string_type to value_type container");
+			static_assert(is_valid_json_array<value_type, array_type>::value, "array_type must be a container of value_type");
+		
+			static constexpr auto value =
+				is_valid_json_object<value_type, string_type, object_type>::value &&
+				is_valid_json_value<value_type>::value &&
+				is_valid_json_array<value_type, array_type>::value;
 		};
 
 		struct picojson_traits {
@@ -1070,17 +1106,9 @@ namespace jwt {
 		*/
 		static_assert(std::is_same<string_type, std::string>::value, "string_type must be a std::string.");
 
-		static_assert(details::is_valid_json_value<value_type>::value, "value type must meet basic requirements, default constructor, copyable, moveable");
-		static_assert(details::is_valid_json_object<value_type, string_type, object_type>::value, "object_type much a string_type to value_type container");
-		static_assert(details::is_valid_json_array<value_type, array_type>::value, "");
-		static_assert(details::supports_get_type<traits, value_type>::value, "traits must provide `jwt::json::type get_type(const value_type&)`");
-		static_assert(details::supports_as_object<traits, value_type, object_type>::value, "traits must provide `object_type as_object(const value_type&)`");
-		static_assert(details::supports_as_array<traits, value_type, array_type>::value, "traits must provide `array_type as_array(const value_type&)`");
-		static_assert(details::supports_as_string<traits, value_type, string_type>::value, "traits must provide `string_type as_string(const value_type&)`");
-		static_assert(details::supports_as_number<traits, value_type, number_type>::value, "traits must provide `number_type as_number(const value_type&)`");
-		static_assert(details::supports_as_integer<traits, value_type, integer_type>::value, "traits must provide `integer_type as_int(const value_type&)`");
-		static_assert(details::supports_as_boolean<traits, value_type, boolean_type>::value, "traits must provide `boolean_type as_bool(const value_type&)`");
-
+		static_assert(details::is_valid_json_types<value_type, string_type, object_type, array_type>::value, "must staisfy json container requirements");
+		static_assert(details::is_valid_traits<JWT_BASIC_CLAIM_TPL>::value, "traits must satisfy requirements");
+		
 			value_type val;
 		public:
 			using set_t = std::set<string_type>;
@@ -1181,7 +1209,7 @@ namespace jwt {
 			 */
 			set_t as_set() const {
 				set_t res;
-				for(auto& e : traits::as_array(val)) {
+				for(const auto& e : traits::as_array(val)) {
 					res.insert(traits::as_string(e));
 			}
 				return res;
