@@ -15,6 +15,7 @@
 #include <memory>
 #include <set>
 #include <unordered_map>
+#include <utility>
 
 //If openssl version less than 1.1
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
@@ -89,7 +90,7 @@ namespace jwt {
 			if (!cert) throw rsa_exception("Error loading cert into memory");
 			std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)> key(X509_get_pubkey(cert.get()), EVP_PKEY_free);
 			if(!key) throw rsa_exception("Error getting public key from certificate");
-			if(!PEM_write_bio_PUBKEY(keybio.get(), key.get())) throw rsa_exception("Error writing public key data in PEM format");
+			if(PEM_write_bio_PUBKEY(keybio.get(), key.get()) == 0) throw rsa_exception("Error writing public key data in PEM format");
 			char* ptr = nullptr;
 			auto len = BIO_get_mem_data(keybio.get(), &ptr);
 			if(len <= 0 || ptr == nullptr) throw rsa_exception("Failed to convert pubkey to pem");
@@ -111,7 +112,7 @@ namespace jwt {
 					throw rsa_exception("failed to load public key: bio_write failed");
 			}
 			
-			std::shared_ptr<EVP_PKEY> pkey(PEM_read_bio_PUBKEY(pubkey_bio.get(), nullptr, nullptr, (void*)password.c_str()), EVP_PKEY_free);
+			std::shared_ptr<EVP_PKEY> pkey(PEM_read_bio_PUBKEY(pubkey_bio.get(), nullptr, nullptr, (void*)password.data()), EVP_PKEY_free);  // NOLINT(google-readability-casting) requires `const_cast`
 			if (!pkey)
 				throw rsa_exception("failed to load public key: PEM_read_bio_PUBKEY failed:" + std::string(ERR_error_string(ERR_get_error(), nullptr)));
 			return pkey;
@@ -143,7 +144,7 @@ namespace jwt {
 		{
 			std::string res;
 			res.resize(BN_num_bytes(bn));
-			BN_bn2bin(bn, (unsigned char*)res.data());
+			BN_bn2bin(bn, (unsigned char*)res.data());  // NOLINT(google-readability-casting) requires `const_cast`
 			return res;
 		}
 		/**
@@ -165,11 +166,11 @@ namespace jwt {
 		 */
 		struct none {
 			/// Return an empty string
-			std::string sign(const std::string&) const {
+			std::string sign(const std::string& /*unused*/) const {
 				return "";
 			}
 			/// Check if the given signature is empty. JWT's with "none" algorithm should not contain a signature.
-			void verify(const std::string&, const std::string& signature) const {
+			void verify(const std::string& /*unused*/, const std::string& signature) const {
 				if (!signature.empty())
 					throw signature_verification_exception();
 			}
@@ -188,8 +189,8 @@ namespace jwt {
 			 * \param md Pointer to hash function
 			 * \param name Name of the algorithm
 			 */
-			hmacsha(std::string key, const EVP_MD*(*md)(), const std::string& name)
-				: secret(std::move(key)), md(md), alg_name(name)
+			hmacsha(std::string key, const EVP_MD*(*md)(), std::string  name)
+				: secret(std::move(key)), md(md), alg_name(std::move(name))
 			{}
 			/**
 			 * Sign jwt data
@@ -201,7 +202,7 @@ namespace jwt {
 				std::string res;
 				res.resize(static_cast<size_t>(EVP_MAX_MD_SIZE));
 				auto len = static_cast<unsigned int>(res.size());
-				if (HMAC(md(), secret.data(), static_cast<int>(secret.size()), reinterpret_cast<const unsigned char*>(data.data()), static_cast<int>(data.size()), (unsigned char*)res.data(), &len) == nullptr)
+				if (HMAC(md(), secret.data(), static_cast<int>(secret.size()), reinterpret_cast<const unsigned char*>(data.data()), static_cast<int>(data.size()), (unsigned char*)res.data(), &len) == nullptr)  // NOLINT(google-readability-casting) requires `const_cast`
 					throw signature_generation_exception();
 				res.resize(len);
 				return res;
@@ -256,8 +257,8 @@ namespace jwt {
 			 * \param md Pointer to hash function
 			 * \param name Name of the algorithm
 			 */
-			rsa(const std::string& public_key, const std::string& private_key, const std::string& public_key_password, const std::string& private_key_password, const EVP_MD*(*md)(), const std::string& name)
-				: md(md), alg_name(name)
+			rsa(const std::string& public_key, const std::string& private_key, const std::string& public_key_password, const std::string& private_key_password, const EVP_MD*(*md)(), std::string  name)
+				: md(md), alg_name(std::move(name))
 			{
 				if (!private_key.empty()) {
 					pkey = helper::load_private_key_from_string(private_key, private_key_password);
@@ -289,7 +290,7 @@ namespace jwt {
 
 				if (!EVP_SignUpdate(ctx.get(), data.data(), data.size()))
 					throw signature_generation_exception();
-				if (!EVP_SignFinal(ctx.get(), (unsigned char*)res.data(), &len, pkey.get()))
+				if (EVP_SignFinal(ctx.get(), (unsigned char*)res.data(), &len, pkey.get()) == 0)   // NOLINT(google-readability-casting) requires `const_cast`
 					throw signature_generation_exception();
 
 				res.resize(len);
@@ -345,8 +346,8 @@ namespace jwt {
 			 * \param md Pointer to hash function
 			 * \param name Name of the algorithm
 			 */
-			ecdsa(const std::string& public_key, const std::string& private_key, const std::string& public_key_password, const std::string& private_key_password, const EVP_MD*(*md)(), const std::string& name, size_t siglen)
-				: md(md), alg_name(name), signature_length(siglen)
+			ecdsa(const std::string& public_key, const std::string& private_key, const std::string& public_key_password, const std::string& private_key_password, const EVP_MD*(*md)(), std::string  name, size_t siglen)
+				: md(md), alg_name(std::move(name)), signature_length(siglen)
 			{
 				if (!public_key.empty()) {
 					std::unique_ptr<BIO, decltype(&BIO_free_all)> pubkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
@@ -361,7 +362,7 @@ namespace jwt {
 							throw ecdsa_exception("failed to load public key: bio_write failed");
 					}
 
-					pkey.reset(PEM_read_bio_EC_PUBKEY(pubkey_bio.get(), nullptr, nullptr, (void*)public_key_password.c_str()), EC_KEY_free);
+					pkey.reset(PEM_read_bio_EC_PUBKEY(pubkey_bio.get(), nullptr, nullptr, (void*)public_key_password.c_str()), EC_KEY_free);  // NOLINT(google-readability-casting) requires `const_cast`
 					if (!pkey)
 						throw ecdsa_exception("failed to load public key: PEM_read_bio_EC_PUBKEY failed:" + std::string(ERR_error_string(ERR_get_error(), nullptr)));
 					size_t keysize = EC_GROUP_get_degree(EC_KEY_get0_group(pkey.get()));
@@ -471,7 +472,7 @@ namespace jwt {
 				unsigned int len = 0;
 				std::string res;
 				res.resize(EVP_MD_CTX_size(ctx.get()));
-				if(EVP_DigestFinal(ctx.get(), (unsigned char*)res.data(), &len) == 0)
+				if(EVP_DigestFinal(ctx.get(), (unsigned char*)res.data(), &len) == 0) // NOLINT(google-readability-casting) requires `const_cast`
 					throw signature_generation_exception("EVP_DigestFinal failed");
 				res.resize(len);
 				return res;
@@ -500,8 +501,8 @@ namespace jwt {
 			 * \param md Pointer to hash function
 			 * \param name Name of the algorithm
 			 */
-			pss(const std::string& public_key, const std::string& private_key, const std::string& public_key_password, const std::string& private_key_password, const EVP_MD*(*md)(), const std::string& name)
-				: md(md), alg_name(name)
+			pss(const std::string& public_key, const std::string& private_key, const std::string& public_key_password, const std::string& private_key_password, const EVP_MD*(*md)(), std::string  name)
+				: md(md), alg_name(std::move(name))
 			{
 				if (!private_key.empty()) {
 					pkey = helper::load_private_key_from_string(private_key, private_key_password);
@@ -523,11 +524,11 @@ namespace jwt {
 				const int size = RSA_size(key.get());
 
 				std::string padded(size, 0x00);
-				if (!RSA_padding_add_PKCS1_PSS_mgf1(key.get(), (unsigned char*)padded.data(), reinterpret_cast<const unsigned char*>(hash.data()), md(), md(), -1))  
+				if (RSA_padding_add_PKCS1_PSS_mgf1(key.get(), (unsigned char*)padded.data(), reinterpret_cast<const unsigned char*>(hash.data()), md(), md(), -1) == 0) // NOLINT(google-readability-casting) requires `const_cast`
 					throw signature_generation_exception("failed to create signature: RSA_padding_add_PKCS1_PSS_mgf1 failed");
 
 				std::string res(size, 0x00);
-				if (RSA_private_encrypt(size, reinterpret_cast<const unsigned char*>(padded.data()), (unsigned char*)res.data(), key.get(), RSA_NO_PADDING) < 0)
+				if (RSA_private_encrypt(size, reinterpret_cast<const unsigned char*>(padded.data()), (unsigned char*)res.data(), key.get(), RSA_NO_PADDING) < 0) // NOLINT(google-readability-casting) requires `const_cast`
 					throw signature_generation_exception("failed to create signature: RSA_private_encrypt failed");
 				return res;
 			}
@@ -544,10 +545,10 @@ namespace jwt {
 				const int size = RSA_size(key.get());
 				
 				std::string sig(size, 0x00);
-				if(!RSA_public_decrypt(static_cast<int>(signature.size()), reinterpret_cast<const unsigned char*>(signature.data()), (unsigned char*)sig.data(), key.get(), RSA_NO_PADDING))
+				if(RSA_public_decrypt(static_cast<int>(signature.size()), reinterpret_cast<const unsigned char*>(signature.data()), (unsigned char*)sig.data(), key.get(), RSA_NO_PADDING) == 0) // NOLINT(google-readability-casting) requires `const_cast`
 					throw signature_verification_exception("Invalid signature");
 				
-				if(!RSA_verify_PKCS1_PSS_mgf1(key.get(), reinterpret_cast<const unsigned char*>(hash.data()), md(), md(), reinterpret_cast<const unsigned char*>(sig.data()), -1))
+				if(RSA_verify_PKCS1_PSS_mgf1(key.get(), reinterpret_cast<const unsigned char*>(hash.data()), md(), md(), reinterpret_cast<const unsigned char*>(sig.data()), -1) == 0)
 					throw signature_verification_exception("Invalid signature");
 			}
 			/**
@@ -576,7 +577,7 @@ namespace jwt {
 				unsigned int len = 0;
 				std::string res;
 				res.resize(EVP_MD_CTX_size(ctx.get()));
-				if(EVP_DigestFinal(ctx.get(), (unsigned char*)res.data(), &len) == 0)
+				if(EVP_DigestFinal(ctx.get(), (unsigned char*)res.data(), &len) == 0) // NOLINT(google-readability-casting) requires `const_cast`
 					throw signature_generation_exception("EVP_DigestFinal failed");
 				res.resize(len);
 				return res;
@@ -940,7 +941,7 @@ namespace jwt {
 				std::is_assignable<value_type, value_type>::value &&
 				std::is_copy_assignable<value_type>::value &&
 				std::is_move_assignable<value_type>::value;
-				// TODO: Stream operators
+				// TODO(cmcarthur): Stream operators
 		};
 
 		template<typename value_type, typename string_type, typename object_type>
