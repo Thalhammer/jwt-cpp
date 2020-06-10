@@ -1,5 +1,5 @@
 if(DISABLE_JWT_CPP_BASE64)
-  message(FATAL_ERROR "Tests requires the base63 support to be enabled!")
+  message(FATAL_ERROR "Tests requires the base64 support to be enabled!")
 endif()
 
 enable_testing()
