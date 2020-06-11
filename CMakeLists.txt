@@ -6,9 +6,10 @@ endif()
 
 option(BUILD_TESTS "Configure CMake to build tests (or not)" ON)
 option(EXTERNAL_PICOJSON "Use find_package() to locate the picojson header" OFF)
-option(NO_INSTALL_PICOJSON "Do not install the picojson header" OFF)
-option(DISABLE_JWT_CPP_BASE64 "Do not include the base64 implementation from this library" OFF)
-option(DISABLE_JWT_CPP_PICOJSON "Do not provide the picojson template specialiaze" OFF)
+option(DISABLE_JWT_CPP_BASE64
+       "Do not include the base64 implementation from this library" OFF)
+option(DISABLE_JWT_CPP_PICOJSON
+       "Do not provide the picojson template specialiaze" OFF)
 
 project(jwt-cpp)
 
@@ -41,8 +42,7 @@ target_include_directories(
 
 target_link_libraries(jwt-cpp INTERFACE OpenSSL::SSL OpenSSL::Crypto)
 
-set(JWT_HEADERS ${JWT_INCLUDE_PATH}/jwt-cpp/base.h
-                ${JWT_INCLUDE_PATH}/jwt-cpp/jwt.h)
+set(JWT_HEADERS ${JWT_INCLUDE_PATH}/jwt-cpp/base.h)
 if(NOT EXTERNAL_PICOJSON)
   set(PICO_HEADER ${JWT_INCLUDE_PATH}/picojson/picojson.h)
 endif()
@@ -64,8 +64,14 @@ write_basic_package_version_file(
   VERSION 0.5.0-dev
   COMPATIBILITY ExactVersion)
 
-install(FILES ${JWT_HEADERS} DESTINATION include/jwt-cpp)
-if(NOT EXTERNAL_PICOJSON AND NOT NO_INSTALL_PICOJSON)
+install(FILES "${JWT_INCLUDE_PATH}/jwt-cpp/jwt.h" DESTINATION include/jwt-cpp)
+
+if(NOT DISABLE_JWT_CPP_BASE64)
+  install(FILES "${JWT_INCLUDE_PATH}/jwt-cpp/base.h"
+          DESTINATION include/jwt-cpp)
+endif()
+
+if(NOT EXTERNAL_PICOJSON AND NOT DISABLE_JWT_CPP_PICOJSON)
   install(FILES ${PICO_HEADER} DESTINATION include/picojson)
 endif()
 
