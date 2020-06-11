@@ -8,6 +8,7 @@ option(BUILD_TESTS "Configure CMake to build tests (or not)" ON)
 option(EXTERNAL_PICOJSON "Use find_package() to locate the picojson header" OFF)
 option(NO_INSTALL_PICOJSON "Do not install the picojson header" OFF)
 option(DISABLE_JWT_CPP_BASE64 "Do not include the base64 implementation from this library" OFF)
+option(DISABLE_JWT_CPP_PICOJSON "Do not provide the picojson template specialiaze" OFF)
 
 project(jwt-cpp)
 
@@ -27,6 +28,10 @@ target_compile_features(jwt-cpp INTERFACE cxx_std_11)
 
 if(DISABLE_JWT_CPP_BASE64)
   target_compile_options(jwt-cpp INTERFACE DISABLE_BASE64)
+endif()
+
+if(DISABLE_JWT_CPP_PICOJSON)
+  target_compile_options(jwt-cpp INTERFACE DISABLE_PICOJSON)
 endif()
 
 set(JWT_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include)

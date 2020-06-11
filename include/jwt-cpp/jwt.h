@@ -1,8 +1,10 @@
 #ifndef JWT_CPP_JWT_H
 #define JWT_CPP_JWT_H
 
+#ifndef DISABLE_PICOJSON
 #define PICOJSON_USE_INT64
 #include "picojson/picojson.h"
+#endif
 
 #ifndef DISABLE_BASE64
 #include "base.h"
@@ -995,65 +997,19 @@ namespace jwt {
 				is_valid_json_value<value_type>::value &&
 				is_valid_json_array<value_type, array_type>::value;
 		};
-
-		struct picojson_traits {
-			static json::type get_type(const picojson::value& val) {
-				using json::type;
-				if (val.is<bool>()) return type::boolean;
-				if (val.is<int64_t>()) return type::integer;
-				if (val.is<double>()) return type::number;
-				if (val.is<std::string>()) return type::string;
-				if (val.is<picojson::array>()) return type::array;
-				if (val.is<picojson::object>()) return type::object;
-
-				throw std::logic_error("invalid type");
-			}
-
-			static picojson::object as_object(const picojson::value& val) {
-				if (!val.is<picojson::object>())
-					throw std::bad_cast();
-				return val.get<picojson::object>();
-			}
-
-			static std::string as_string(const picojson::value& val) {
-				if (!val.is<std::string>())
-					throw std::bad_cast();
-				return val.get<std::string>();
-			}
-
-			static picojson::array as_array(const picojson::value& val) {
-				if (!val.is<picojson::array>())
-					throw std::bad_cast();
-				return val.get<picojson::array>();
-			}
-
-			static int64_t as_int(const picojson::value& val) {
-				if (!val.is<int64_t>())
-					throw std::bad_cast();
-				return val.get<int64_t>();
-			}
-
-			static bool as_bool(const picojson::value& val) {
-				if (!val.is<bool>())
-					throw std::bad_cast();
-				return val.get<bool>();
-			}
-
-			static double as_number(const picojson::value& val) {
-				if (!val.is<double>())
-					throw std::bad_cast();
-				return val.get<double>();
-			}
-
-			static bool parse(picojson::value& val, const std::string& str){
-				return picojson::parse(val, str).empty();
-			}
-
-			static std::string serialize(const picojson::value& val){
-				return val.serialize();
-			}
-		};
 	}  // namespace details
+
+#define JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES \
+	typename value_type, class object_type, class array_type, \
+	class string_type, class number_type, class integer_type, \
+	class boolean_type, typename traits
+
+#define JWT_BASIC_CLAIM_TPL_DECLARATION \
+	template<JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES>
+
+#define JWT_BASIC_CLAIM_TPL \
+	value_type, object_type, array_type, string_type, \
+	number_type, integer_type, boolean_type, traits
 
 	/**
 	 * \brief a class to store a generic JSON value as claim
@@ -1070,36 +1026,6 @@ namespace jwt {
 	 * 
 	 * \see [RFC 7519: JSON Web Token (JWT)](https://tools.ietf.org/html/rfc7519)
 	 */
-	template<typename value_type = picojson::value,
-		class object_type = picojson::object,
-		class array_type = picojson::array,
-		class string_type = std::string,
-		class number_type = double,
-		class integer_type = int64_t,
-		class boolean_type = bool,
-		typename traits = details::picojson_traits>
-	class basic_claim;
-
-	/**
-	 * Default JSON claim
-	 * 
-	 * This type is the default specialization of the \ref basic_claim class which
-	 * uses the standard template types.
-	 */
-	using claim = basic_claim<>;
-
-#define JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES \
-	typename value_type, class object_type, class array_type, \
-	class string_type, class number_type, class integer_type, \
-	class boolean_type, typename traits
-
-#define JWT_BASIC_CLAIM_TPL_DECLARATION \
-	template<JWT_BASIC_CLAIM_TPL_DECLARATION_TYPES>
-
-#define JWT_BASIC_CLAIM_TPL \
-	value_type, object_type, array_type, string_type, \
-	number_type, integer_type, boolean_type, traits
-
 	JWT_BASIC_CLAIM_TPL_DECLARATION
 	class basic_claim {
 		/**
@@ -1935,33 +1861,12 @@ namespace jwt {
 		}
 	};
 
-	#define DEFAULT_PICOJSON_TYPES \
-		picojson::value, picojson::object, picojson::array, std::string, \
-		double, int64_t, bool, details::picojson_traits
-
-	/**
-	 * Create a verifier using the default clock
-	 * \return verifier instance
-	 */
-	inline
-	verifier<default_clock, DEFAULT_PICOJSON_TYPES> verify() {
-		return verify<default_clock, DEFAULT_PICOJSON_TYPES>(default_clock{});
-	}
-
 	/**
 	 * Return a builder instance to create a new token
 	 */
 	JWT_BASIC_CLAIM_TPL_DECLARATION
 	builder<JWT_BASIC_CLAIM_TPL> create() {
 		return builder<JWT_BASIC_CLAIM_TPL>();
-	}
-
-	/**
-	 * Return a picojson builder instance to create a new token
-	 */
-	inline
-	builder<DEFAULT_PICOJSON_TYPES> create() {
-		return builder<DEFAULT_PICOJSON_TYPES>();
 	}
 
 	/**
@@ -1989,6 +1894,93 @@ namespace jwt {
 		return decoded_jwt<JWT_BASIC_CLAIM_TPL>(token);
 	}
 
+#ifndef DISABLE_PICOJSON
+		struct picojson_traits {
+			static json::type get_type(const picojson::value& val) {
+				using json::type;
+				if (val.is<bool>()) return type::boolean;
+				if (val.is<int64_t>()) return type::integer;
+				if (val.is<double>()) return type::number;
+				if (val.is<std::string>()) return type::string;
+				if (val.is<picojson::array>()) return type::array;
+				if (val.is<picojson::object>()) return type::object;
+
+				throw std::logic_error("invalid type");
+			}
+
+			static picojson::object as_object(const picojson::value& val) {
+				if (!val.is<picojson::object>())
+					throw std::bad_cast();
+				return val.get<picojson::object>();
+			}
+
+			static std::string as_string(const picojson::value& val) {
+				if (!val.is<std::string>())
+					throw std::bad_cast();
+				return val.get<std::string>();
+			}
+
+			static picojson::array as_array(const picojson::value& val) {
+				if (!val.is<picojson::array>())
+					throw std::bad_cast();
+				return val.get<picojson::array>();
+			}
+
+			static int64_t as_int(const picojson::value& val) {
+				if (!val.is<int64_t>())
+					throw std::bad_cast();
+				return val.get<int64_t>();
+			}
+
+			static bool as_bool(const picojson::value& val) {
+				if (!val.is<bool>())
+					throw std::bad_cast();
+				return val.get<bool>();
+			}
+
+			static double as_number(const picojson::value& val) {
+				if (!val.is<double>())
+					throw std::bad_cast();
+				return val.get<double>();
+			}
+
+			static bool parse(picojson::value& val, const std::string& str){
+				return picojson::parse(val, str).empty();
+			}
+
+			static std::string serialize(const picojson::value& val){
+				return val.serialize();
+			}
+		};
+
+	#define DEFAULT_PICOJSON_TYPES \
+		picojson::value, picojson::object, picojson::array, std::string, \
+		double, int64_t, bool, picojson_traits
+
+	/**
+	 * Default JSON claim
+	 * 
+	 * This type is the default specialization of the \ref basic_claim class which
+	 * uses the standard template types.
+	 */
+	using claim = basic_claim<DEFAULT_PICOJSON_TYPES>;
+
+	/**
+	 * Create a verifier using the default clock
+	 * \return verifier instance
+	 */
+	inline
+	verifier<default_clock, DEFAULT_PICOJSON_TYPES> verify() {
+		return verify<default_clock, DEFAULT_PICOJSON_TYPES>(default_clock{});
+	}
+	/**
+	 * Return a picojson builder instance to create a new token
+	 */
+	inline
+	builder<DEFAULT_PICOJSON_TYPES> create() {
+		return builder<DEFAULT_PICOJSON_TYPES>();
+	}
+
 	/**
 	 * Decode a token
 	 * \param token Token to decode
@@ -2000,6 +1992,7 @@ namespace jwt {
 	decoded_jwt<DEFAULT_PICOJSON_TYPES> decode(const std::string& token) {
 		return decoded_jwt<DEFAULT_PICOJSON_TYPES>(token);
 	}
+#endif
 }  // namespace jwt
 
 JWT_BASIC_CLAIM_TPL_DECLARATION

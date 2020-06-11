@@ -1,3 +1,5 @@
+#define DISABLE_PICOJSON // Make sure JWT compiles with this flag
+
 #include <gtest/gtest.h>
 #include "jwt-cpp/jwt.h"
 #include "nlohmann/json.hpp"
