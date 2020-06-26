@@ -6,6 +6,13 @@
 
 struct nlohmann_traits {
 	using json = nlohmann::json;
+	using value_type = json;
+	using object_type = json::object_t;
+	using array_type = json::array_t;
+	using string_type = std::string;
+	using number_type = double;
+	using integer_type = int64_t;
+	using boolean_type = bool;
 
 	static jwt::json::type get_type(const json &val) {
 		using jwt::json::type;
@@ -80,8 +87,7 @@ struct nlohmann_traits {
 	nlohmann::json::boolean_t, nlohmann_traits
 
 TEST(NholmannTest, BasicClaims) {
-	using nholmann_claim =
-			jwt::basic_claim<JWT_NHOLMANN_CLAIM_TPL>;
+	using nholmann_claim = jwt::basic_claim<nlohmann_traits>;
 
 	const auto string = nholmann_claim(std::string("string"));
 	const auto array = nholmann_claim(std::set<std::string>{"string", "string"});
@@ -93,8 +99,7 @@ TEST(NholmannTest, AudienceAsString) {
 	std::string token =
 			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0."
 			"WZnM3SIiSRHsbO3O7Z2bmIzTJ4EC32HRBKfLznHhrh4";
-	auto decoded =
-			jwt::decode<JWT_NHOLMANN_CLAIM_TPL>(token);
+	auto decoded = jwt::decode<nlohmann_traits>(token);
 
 	ASSERT_TRUE(decoded.has_algorithm());
 	ASSERT_TRUE(decoded.has_type());
@@ -121,19 +126,19 @@ TEST(NholmannTest, SetArray) {
 		20,
 		10
 	};
-	auto token = jwt::create<JWT_NHOLMANN_CLAIM_TPL>()
-		.set_payload_claim("test", jwt::basic_claim<JWT_NHOLMANN_CLAIM_TPL>(vect.begin(), vect.end()))
+	auto token = jwt::create<nlohmann_traits>()
+		.set_payload_claim("test", jwt::basic_claim<nlohmann_traits>(vect.begin(), vect.end()))
 		.sign(jwt::algorithm::none{});
 	ASSERT_EQ(token, "eyJhbGciOiJub25lIn0.eyJ0ZXN0IjpbMTAwLDIwLDEwXX0.");
 }
 
 TEST(NholmannTest, SetObject) {
 	std::istringstream iss{"{\"api-x\": [1]}"};
-	jwt::basic_claim<JWT_NHOLMANN_CLAIM_TPL> object;
+	jwt::basic_claim<nlohmann_traits> object;
 	iss >> object;
 	ASSERT_EQ(object.get_type() , jwt::json::type::object);
 
-	auto token = jwt::create<JWT_NHOLMANN_CLAIM_TPL>()
+	auto token = jwt::create<nlohmann_traits>()
 		.set_payload_claim("namespace", object)
 		.sign(jwt::algorithm::hs256("test"));
 	ASSERT_EQ(token, "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lc3BhY2UiOnsiYXBpLXgiOlsxXX19.F8I6I2RcSF98bKa0IpIz09fRZtHr1CWnWKx2za-tFQA");
@@ -142,10 +147,10 @@ TEST(NholmannTest, SetObject) {
 TEST(NholmannTest, VerifyTokenHS256) {
 	std::string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
 
-	auto verify = jwt::verify<jwt::default_clock, JWT_NHOLMANN_CLAIM_TPL>({})
+	auto verify = jwt::verify<jwt::default_clock, nlohmann_traits>({})
 		.allow_algorithm(jwt::algorithm::hs256{ "secret" })
 		.with_issuer("auth0");
 
-	auto decoded_token = jwt::decode<JWT_NHOLMANN_CLAIM_TPL>(token);
+	auto decoded_token = jwt::decode<nlohmann_traits>(token);
 	verify.verify(decoded_token);
 }
