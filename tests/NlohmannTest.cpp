@@ -79,22 +79,15 @@ struct nlohmann_traits {
 	}
 };
 
-#define JWT_NHOLMANN_CLAIM_TPL \
-	nlohmann::json::value_type, nlohmann::json::object_t, \
-	nlohmann::json::array_t, nlohmann::json::string_t, \
-	nlohmann::json::number_float_t, \
-	nlohmann::json::number_integer_t, \
-	nlohmann::json::boolean_t, nlohmann_traits
+TEST(NlohmannTest, BasicClaims) {
+	using nlohmann_claim = jwt::basic_claim<nlohmann_traits>;
 
-TEST(NholmannTest, BasicClaims) {
-	using nholmann_claim = jwt::basic_claim<nlohmann_traits>;
-
-	const auto string = nholmann_claim(std::string("string"));
-	const auto array = nholmann_claim(std::set<std::string>{"string", "string"});
-	const auto integer = nholmann_claim(159816816);
+	const auto string = nlohmann_claim(std::string("string"));
+	const auto array = nlohmann_claim(std::set<std::string>{"string", "string"});
+	const auto integer = nlohmann_claim(159816816);
 }
 
-TEST(NholmannTest, AudienceAsString) {
+TEST(NlohmannTest, AudienceAsString) {
 
 	std::string token =
 			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0."
@@ -120,7 +113,7 @@ TEST(NholmannTest, AudienceAsString) {
 	ASSERT_EQ("test", *aud.begin());
 }
 
-TEST(NholmannTest, SetArray) {
+TEST(NlohmannTest, SetArray) {
 	std::vector<int64_t> vect = {
 		100,
 		20,
@@ -132,7 +125,7 @@ TEST(NholmannTest, SetArray) {
 	ASSERT_EQ(token, "eyJhbGciOiJub25lIn0.eyJ0ZXN0IjpbMTAwLDIwLDEwXX0.");
 }
 
-TEST(NholmannTest, SetObject) {
+TEST(NlohmannTest, SetObject) {
 	std::istringstream iss{"{\"api-x\": [1]}"};
 	jwt::basic_claim<nlohmann_traits> object;
 	iss >> object;
@@ -144,7 +137,7 @@ TEST(NholmannTest, SetObject) {
 	ASSERT_EQ(token, "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lc3BhY2UiOnsiYXBpLXgiOlsxXX19.F8I6I2RcSF98bKa0IpIz09fRZtHr1CWnWKx2za-tFQA");
 }
 
-TEST(NholmannTest, VerifyTokenHS256) {
+TEST(NlohmannTest, VerifyTokenHS256) {
 	std::string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
 
 	auto verify = jwt::verify<jwt::default_clock, nlohmann_traits>({})
