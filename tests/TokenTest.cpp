@@ -353,7 +353,7 @@ TEST(TokenTest, VerifyFail) {
 		jwt::claim object;
 		std::istringstream iss{R"({ "test": null })"};
 		iss >> object;
-		ASSERT_EQ(object.get_type() , jwt::claim::type::object);
+		ASSERT_EQ(object.get_type() , jwt::json::type::object);
 
 		auto verify = jwt::verify()
 			.allow_algorithm(jwt::algorithm::none{})

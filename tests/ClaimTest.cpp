@@ -48,7 +48,7 @@ TEST(ClaimTest, SetObject) {
 	std::istringstream iss{"{\"api-x\": [1]}"};
 	jwt::claim object;
 	iss >> object;
-	ASSERT_EQ(object.get_type() , jwt::claim::type::object);
+	ASSERT_EQ(object.get_type() , jwt::json::type::object);
 
 	auto token = jwt::create()
 		.set_payload_claim("namespace", object)

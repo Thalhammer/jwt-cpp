@@ -21,6 +21,15 @@ For the sake of completeness, here is a list of all supported algorithms:
 * PS384
 * PS512
 
+## Overview
+Since 0.5.0-dev, there is no hard dependency on a JSON library; instead there's a generic `basic_claim` which is templated around the types required. It requires the "value type", object, array, string, number, integer, and boolean types and a traits type.
+
+In order to maintain compatibility, [picojson](https://github.com/kazuho/picojson) is still used to provide a specialized `claim` along with all helpers. Defining `DISABLE_PICOJSON` will remove this optional dependency.
+
+For using other JSON libraries, the picojson implementation is a good reference.
+
+As for the base64 requirements of JWTs, this libary provides `base.h` with all the required implentation; However base64 implementations are very common, with varying degrees of performance. When providing your own base64 implementation, you can define `DISABLE_BASE64` to remove the jwt-cpp implementation.
+
 ## Examples
 Simple example of decoding a token and printing all claims:
 ```c++
