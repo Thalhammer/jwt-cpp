@@ -24,6 +24,11 @@
 #include <unordered_map>
 #include <utility>
 
+#ifdef __cpp_lib_void_t
+// We have std::void_t and std::make_void
+#include <type_traits>
+#endif
+
 //If openssl version less than 1.1
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
 #define OPENSSL10
@@ -789,6 +794,11 @@ namespace jwt {
 
 	namespace details {
 		namespace impl {
+
+#ifdef __cpp_lib_void_t
+		template <typename... Ts>
+		using void_t = std::void_t<Ts...>;
+#else
 		// https://en.cppreference.com/w/cpp/types/void_t
 		template <typename ...Ts>
 		struct make_void
@@ -798,7 +808,7 @@ namespace jwt {
 
 		template <typename ...Ts>
 		using void_t = typename make_void<Ts...>::type;
-
+#endif
 		struct nonesuch
 		{
 			nonesuch() = delete;
