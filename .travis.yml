@@ -16,7 +16,7 @@ script:
   - cmake .
   - make
   - ./tests/jwt-cpp-test
-  - make install
+  - sudo make install
   - cd example
   - cmake .
   - make
