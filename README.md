@@ -74,6 +74,8 @@ auto token = jwt::create()
 	.sign(jwt::algorithm::hs256{"secret"});
 ```
 
+> To see more examples working with RSA public and private keys, visit our [examples](example)!
+
 ## Contributing
 If you have an improvement or found a bug feel free to [open an issue](https://github.com/Thalhammer/jwt-cpp/issues/new) or add the change and create a pull request. If you file a bug please make sure to include as much information about your environment (compiler version, etc.) as possible to help reproduce the issue. If you add a new feature please make sure to also include test cases for it.
 
