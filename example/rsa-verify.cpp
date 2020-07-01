@@ -55,7 +55,12 @@ YwIDAQAB
                         rsa_pub_key, rsa_priv_key, "", ""))
                     .with_issuer("auth0");
 
-  auto decoded_token = jwt::decode(token);
+  auto decoded = jwt::decode(token);
 
-  verify.verify(decoded_token);
+  verify.verify(decoded);
+
+  for (auto &e : decoded.get_header_claims())
+    std::cout << e.first << " = " << e.second.to_json() << std::endl;
+  for (auto &e : decoded.get_payload_claims())
+    std::cout << e.first << " = " << e.second.to_json() << std::endl;
 }
