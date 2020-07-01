@@ -16,3 +16,7 @@ script:
   - cmake .
   - make
   - ./tests/jwt-cpp-test
+  - make install
+  - cd example
+  - cmake .
+  - make
