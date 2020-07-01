@@ -13,7 +13,6 @@ jobs:
     - name: run doxygen
       uses: mattnotmitt/doxygen-action@v1
       with:
-          working-directory: 'submodule/'
           doxyfile-path: 'docs/Doxygen'
    
     - name: deploy
