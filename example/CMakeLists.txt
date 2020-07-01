@@ -8,3 +8,6 @@ target_link_libraries(print-claims jwt-cpp::jwt-cpp)
 
 add_executable(rsa-create rsa-create.cpp)
 target_link_libraries(rsa-create jwt-cpp::jwt-cpp)
+
+add_executable(rsa-verify rsa-verify.cpp)
+target_link_libraries(rsa-verify jwt-cpp::jwt-cpp)

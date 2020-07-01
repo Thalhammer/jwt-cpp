@@ -40,13 +40,22 @@ AziMCxS+VrRPDM+zfvpIJg3JljAh3PJHDiLu902v9w+Iplu1WyoB2aPfitxEhRN0
 YwIDAQAB
 -----END PUBLIC KEY-----)";
 
-  auto token =
-      jwt::create()
-          .set_issuer("auth0")
-          .set_type("JWT")
-          .set_id("rsa-create-example")
-          .set_issued_at(std::chrono::system_clock::now())
-          .sign(jwt::algorithm::rs256(rsa_pub_key, rsa_priv_key, "", ""));
+  std::string token =
+      "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9."
+      "VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
+      "HAZCTQxa1Q8NppnpYV-hlqxh-X3Bb0JOePTGzjynpNZoJh2aHZD-"
+      "GKpZt7OO1Zp8AFWPZ3p8Cahq8536fD8RiBES9jRsvChZvOqA7gMcFc4"
+      "YD0iZhNIcI7a654u5yPYyTlf5kjR97prCf_OXWRn-bYY74zna4p_bP9oWCL4BkaoRcMxi-"
+      "IR7kmVcCnvbYqyIrKloXP2qPO442RBGqU7Ov9"
+      "sGQxiVqtRHKXZR9RbfvjrErY1KGiCp9M5i2bsUHadZEY44FE2jiOmx-"
+      "uc2z5c05CCXqVSpfCjWbh9gQ";
 
-  std::cout << "token:\n" << token << std::endl;
+  auto verify = jwt::verify()
+                    .allow_algorithm(jwt::algorithm::rs256(
+                        rsa_pub_key, rsa_priv_key, "", ""))
+                    .with_issuer("auth0");
+
+  auto decoded_token = jwt::decode(token);
+
+  verify.verify(decoded_token);
 }
