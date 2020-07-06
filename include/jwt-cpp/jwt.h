@@ -1440,8 +1440,8 @@ namespace jwt {
 				return res;
 			};
 
-			jwt::header<json_traits>::header_claims = parse_claims(header);
-			jwt::payload<json_traits>::payload_claims = parse_claims(payload);
+			this->header_claims = parse_claims(header);
+			this->payload_claims = parse_claims(payload);
 		}
 
 		/**
@@ -1479,7 +1479,20 @@ namespace jwt {
 		 * \return signature part before base64 decoding
 		 */
 		const typename json_traits::string_type& get_signature_base64() const noexcept { return signature_base64; }
-
+		/**
+		 * Get all payload claims
+		 * \return map of claims
+		 */
+		std::unordered_map<typename json_traits::string_type, basic_claim<json_traits>> get_payload_claims() const {
+			return this->payload_claims;
+		}
+		/**
+		 * Get all header claims
+		 * \return map of claims
+		 */
+		std::unordered_map<typename json_traits::string_type, basic_claim<json_traits>> get_header_claims() const {
+			return this->header_claims;
+		}
 	};
 
 	/**
@@ -1579,19 +1592,19 @@ namespace jwt {
 		 * \param d Expires time
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_expires_at(const date& d) { return set_payload_claim("exp", typename json_traits::value_type(d)); }
+		builder& set_expires_at(const date& d) { return set_payload_claim("exp", basic_claim<json_traits>(d)); }
 		/**
 		 * Set not before claim
 		 * \param d First valid time
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_not_before(const date& d) { return set_payload_claim("nbf", typename json_traits::value_type(d)); }
+		builder& set_not_before(const date& d) { return set_payload_claim("nbf", basic_claim<json_traits>(d)); }
 		/**
 		 * Set issued at claim
 		 * \param d Issued at time, should be current time
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_issued_at(const date& d) { return set_payload_claim("iat", typename json_traits::value_type(d)); }
+		builder& set_issued_at(const date& d) { return set_payload_claim("iat", basic_claim<json_traits>(d)); }
 		/**
 		 * Set id claim
 		 * \param str ID to set
