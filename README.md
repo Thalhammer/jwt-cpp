@@ -2,6 +2,7 @@
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/5f7055e294744901991fd0a1620b231d)](https://app.codacy.com/app/Thalhammer/jwt-cpp?utm_source=github.com&utm_medium=referral&utm_content=Thalhammer/jwt-cpp&utm_campaign=Badge_Grade_Settings)
 [![Build Status](https://travis-ci.com/Thalhammer/jwt-cpp.svg?branch=master)](https://travis-ci.com/Thalhammer/jwt-cpp)
+[![Coverage Status](https://coveralls.io/repos/github/prince-chrismc/jwt-cpp/badge.svg?branch=master)](https://coveralls.io/github/prince-chrismc/jwt-cpp?branch=master)
 
 A header only library for creating and validating json web tokens in c++.
 
