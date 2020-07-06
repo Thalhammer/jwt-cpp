@@ -1,0 +1,39 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      
+    - name: install cmake
+      uses: lukka/get-cmake@v3.17.2
+      
+    - name: configure
+      run: |
+        sudo apt update
+        sudo apt install libgtest-dev lcov
+        (cd /usr/src/gtest && sudo `which cmake` .)
+        sudo make -C /usr/src/gtest
+        sudo ln -s /usr/src/gtest/libgtest.a /usr/lib/libgtest.a
+        sudo ln -s /usr/src/gtest/libgtest_main.a /usr/lib/libgtest_main.a
+        mkdir build
+        cd build
+        cmake .. -DBUILD_TESTS=ON -DCOVERAGE=ON -DCMAKE_BUILD_TYPE=Debug
+        
+    - name: make
+      run: cd build && make jwt-cpp-test coverage
+      
+    - name: Coveralls GitHub Action
+      uses: coverallsapp/github-action@v1.1.1
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: build/coverage.info
