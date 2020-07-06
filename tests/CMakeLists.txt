@@ -35,3 +35,12 @@ target_link_libraries(jwt-cpp-test PRIVATE jwt-cpp::jwt-cpp GTest::GTest
                                            GTest::Main pthread)
 
 gtest_add_tests(TARGET jwt-cpp-test)
+
+if(${COVERAGE})
+  include("code-coverage")
+  setup_coverage(jwt-cpp-test)
+
+  set(COVERAGE_EXCLUDES "/usr/**" "/home/*/.conan/**" "*test*" "*build*" "*json*")
+  setup_target_for_coverage_lcov(NAME coverage EXECUTABLE
+                                 ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-test)
+endif()

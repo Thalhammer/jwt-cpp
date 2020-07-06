@@ -30,7 +30,7 @@ jobs:
         cmake .. -DBUILD_TESTS=ON -DCOVERAGE=ON -DCMAKE_BUILD_TYPE=Debug
         
     - name: make
-      run: make jwt-cpp-test coverage
+      run: cd build && make jwt-cpp-test coverage
       
     - name: Coveralls GitHub Action
       uses: coverallsapp/github-action@v1.1.1

@@ -5,6 +5,7 @@ if(CMAKE_TOOLCHAIN_FILE)
 endif()
 
 option(BUILD_TESTS "Configure CMake to build tests (or not)" ON)
+option(COVERAGE "Enable code coverage testing" OFF)
 option(EXTERNAL_PICOJSON "Use find_package() to locate the picojson header" OFF)
 option(DISABLE_JWT_CPP_BASE64
        "Do not include the base64 implementation from this library" OFF)
@@ -15,6 +16,8 @@ project(jwt-cpp)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 find_package(OpenSSL 1.0.2 REQUIRED)
 
