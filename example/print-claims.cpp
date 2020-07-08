@@ -6,5 +6,5 @@ int main(int argc, const char** argv) {
 	auto decoded = jwt::decode(token);
 
 	for(auto& e : decoded.get_payload_claims())
-		std::cout << e.first << " = " << e.second.to_json() << std::endl;
+		std::cout << e.first << " = " << e.second << std::endl;
 }
