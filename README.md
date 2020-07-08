@@ -29,7 +29,7 @@ For the sake of completeness, here is a list of all supported algorithms:
 
 ## Overview
 
-Since 0.5.0-dev, there is no hard dependency on a JSON library; instead there's a generic `jwt::basic_claim` which is templated around the types required. It requires the "value type", object, array, string, number, integer, and boolean types and a traits type.
+Since 0.5.0-dev, there is no hard dependency on a JSON library; instead there's a generic `jwt::basic_claim` which is templated around the types required.It requires a traits type, which defines types for a value, object, array, string, number, integer and boolean, as well as methods to translate between them.
 
 ```cpp
 jwt::basic_claim<my_favorite_json_library_traits> claim(json::object({{"json", true},{"example", 0}}));
@@ -94,13 +94,13 @@ auto token = jwt::create()
 
 ### Providing your own JSON Traits
 
-There are several key items that need to provide to a `jwt::basic_claim` in order for it to be interoptable with you JSON library of choice.
+There are several key items that need to be provided to a `jwt::basic_claim` in order for it to be interoptable with you JSON library of choice.
 
 * type specifications
 * conversion from genric "value type" to specific
 * serialization and parsing
 
-If ever you are not sure, the traits are heavily checked against static asserts to make sure you provide everything that's requires.
+If ever you are not sure, the traits are heavily checked against static asserts to make sure you provide everything that's required.
 
 ```cpp
 struct my_favorite_json_library_traits {
