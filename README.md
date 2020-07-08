@@ -32,7 +32,7 @@ Since 0.5.0-dev, there is no hard dependency on a JSON library; instead there's 
 jwt::basic_claim<my_favorite_json_library_traits> claim(json::object({{"json", true},{"example", 0}}));
 ```
 
-This allows for complete freedom when picking which libraries you want to use. For more information, [see below](#your-traits)
+This allows for complete freedom when picking which libraries you want to use. For more information, [see below](#providing-your-own-json-traits-your-traits)
 
 In order to maintain compatibility, [picojson](https://github.com/kazuho/picojson) is still used to provide a specialized `claim` along with all helpers. Defining `DISABLE_PICOJSON` will remove this optional dependency.
 
@@ -115,7 +115,7 @@ See [here](https://github.com/Thalhammer/jwt-cpp/issues/5) for more details. To 
 * include this library before you include windows.h
 * place ```#undef max``` and ```#undef min``` before you include this library
 
-## Providing your own JSON Traits {#your-traits}
+## Providing your own JSON Traits
 
 There are several key items that need to provide to a `jwt::basic_claim` in order for it to be interoptable with you JSON library of choice.
 - type specifications
