@@ -16,7 +16,13 @@
 #endif
 
 namespace jwt {
+	/**
+	 * \brief character maps when encoding and decoding
+	 */ 
 	namespace alphabet {
+		/**
+		 * \brief valid list of characted when working with [Base64](https://tools.ietf.org/html/rfc3548)
+		 */ 
 		struct base64 {
 			static const std::array<char, 64>& data() {
 				static constexpr std::array<char, 64> data {
@@ -32,6 +38,9 @@ namespace jwt {
 				return fill;
 			}
 		};
+		/**
+		 * \brief valid list of characted when working with [Base64URL](https://tools.ietf.org/html/rfc4648)
+		 */ 
 		struct base64url {
 			static const std::array<char, 64>& data() {
 				static constexpr std::array<char, 64> data {
@@ -49,6 +58,9 @@ namespace jwt {
 		};
 	}  // namespace alphabet
 
+	/**
+	 * \brief Alphabet generic methods for working with encoding/decoding the base64 family
+	 */ 
 	class base {
 	public:
 		template<typename T>
