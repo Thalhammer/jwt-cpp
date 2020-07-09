@@ -38,6 +38,13 @@
 #define JWT_CLAIM_EXPLICIT explicit
 #endif
 
+/**
+ * \brief JSON Web Token
+ * 
+ * A namespace to contain everything related to handling JSON Web Tokens, JWT for short,
+ * as a part of [RFC7519](https://tools.ietf.org/html/rfc7519), or alternatively for
+ * JWS (JSON Web Signature)from [RFC7515](https://tools.ietf.org/html/rfc7515)
+ */ 
 namespace jwt {
 	using date = std::chrono::system_clock::time_point;
 
@@ -88,6 +95,13 @@ namespace jwt {
 		{}
 	};
 
+	/**
+	 * \brief A collection for working with certificates
+	 * 
+	 * These _helpers_ are usefully when working with certificates OpenSSL APIs.
+	 * For example, when dealing with JWKS (JSON Web Key Set)[https://tools.ietf.org/html/rfc7517]
+	 * you maybe need to extract the modulus and exponent of an RSA Public Key.
+	 */ 
 	namespace helper {
 		inline
 		std::string extract_pubkey_from_cert(const std::string& certstr, const std::string& pw = "") {
@@ -170,18 +184,33 @@ namespace jwt {
 		}
 	}  // namespace helper
 
+	/**
+	 * \brief Various cryptographic algorithms when working with JWT
+	 * 
+	 * JWT (JSON Web Tokens) signatures are typically used as the payload for a JWS (JSON Web Signature) or
+	 * JWE (JSON Web Encryption). Both of these use various cryptographic as specified by [RFC7518](https://tools.ietf.org/html/rfc7518)
+	 * and are exposed through the a [JOSE Header](https://tools.ietf.org/html/rfc7515#section-4) which 
+	 * points to one of the JWA (JSON Web Algorithms)(https://tools.ietf.org/html/rfc7518#section-3.1)
+	 */
 	namespace algorithm {
 		/**
-		 * "none" algorithm.
+		 * \brief "none" algorithm.
 		 * 
 		 * Returns and empty signature and checks if the given signature is empty.
 		 */
 		struct none {
-			/// Return an empty string
+			/**
+			 * \brief Return an empty string
+			 */ 
 			std::string sign(const std::string& /*unused*/) const {
 				return "";
 			}
-			/// Check if the given signature is empty. JWT's with "none" algorithm should not contain a signature.
+			/**
+			 * \brief Check if the given signature is empty.
+			 * 
+			 * JWT's with "none" algorithm should not contain a signature.
+			 * \throw signature_verification_exception
+			 */ 
 			void verify(const std::string& /*unused*/, const std::string& signature) const {
 				if (!signature.empty())
 					throw signature_verification_exception();
@@ -192,7 +221,7 @@ namespace jwt {
 			}
 		};
 		/**
-		 * Base class for HMAC family of algorithms
+		 * \brief Base class for HMAC family of algorithms
 		 */
 		struct hmacsha {
 			/**
@@ -243,7 +272,7 @@ namespace jwt {
 			}
 			/**
 			 * Returns the algorithm name provided to the constructor
-			 * \return Algorithmname
+			 * \return algorithm's name
 			 */
 			std::string name() const {
 				return alg_name;
@@ -253,11 +282,11 @@ namespace jwt {
 			const std::string secret;
 			/// HMAC hash generator
 			const EVP_MD*(*md)();
-			/// Algorithmname
+			/// algorithm's name
 			const std::string alg_name;
 		};
 		/**
-		 * Base class for RSA family of algorithms
+		 * \brief Base class for RSA family of algorithms
 		 */
 		struct rsa {
 			/**
@@ -332,7 +361,7 @@ namespace jwt {
 			}
 			/**
 			 * Returns the algorithm name provided to the constructor
-			 * \return Algorithmname
+			 * \return algorithm's name
 			 */
 			std::string name() const {
 				return alg_name;
@@ -342,11 +371,11 @@ namespace jwt {
 			std::shared_ptr<EVP_PKEY> pkey;
 			/// Hash generator
 			const EVP_MD*(*md)();
-			/// Algorithmname
+			/// algorithm's name
 			const std::string alg_name;
 		};
 		/**
-		 * Base class for ECDSA family of algorithms
+		 * \brief Base class for ECDSA family of algorithms
 		 */
 		struct ecdsa {
 			/**
@@ -460,7 +489,7 @@ namespace jwt {
 			}
 			/**
 			 * Returns the algorithm name provided to the constructor
-			 * \return Algorithmname
+			 * \return algorithm's name
 			 */
 			std::string name() const {
 				return alg_name;
@@ -494,14 +523,14 @@ namespace jwt {
 			std::shared_ptr<EC_KEY> pkey;
 			/// Hash generator function
 			const EVP_MD*(*md)();
-			/// Algorithmname
+			/// algorithm's name
 			const std::string alg_name;
 			/// Length of the resulting signature
 			const size_t signature_length;
 		};
 
 		/**
-		 * Base class for PSS-RSA family of algorithms
+		 * \brief Base class for PSS-RSA family of algorithms
 		 */
 		struct pss {
 			/**
@@ -565,7 +594,7 @@ namespace jwt {
 			}
 			/**
 			 * Returns the algorithm name provided to the constructor
-			 * \return Algorithmname
+			 * \return algorithm's name
 			 */
 			std::string name() const {
 				return alg_name;
@@ -599,7 +628,7 @@ namespace jwt {
 			std::shared_ptr<EVP_PKEY> pkey;
 			/// Hash generator function
 			const EVP_MD*(*md)();
-			/// Algorithmname
+			/// algorithm's name
 			const std::string alg_name;
 		};
 
@@ -777,9 +806,13 @@ namespace jwt {
 		};
 	}  // namespace algorithm
 
+	/**
+	 * \brief JSON Abstractions for working with any library
+	 */ 
 	namespace json {
 		/**
-		 * Generic JSON types used in JWTs
+		 * \brief Generic JSON types used in JWTs
+		 * 
 		 * This enum is to abstract the third party underlying types
 		 */
 		enum class type {
@@ -1868,8 +1901,8 @@ namespace jwt {
 	 * Default clock class using std::chrono::system_clock as a backend.
 	 */
 	struct default_clock {
-		std::chrono::system_clock::time_point now() const {
-			return std::chrono::system_clock::now();
+		date now() const {
+			return date::clock::now();
 		}
 	};
 
