@@ -23,10 +23,12 @@
 #include <set>
 #include <unordered_map>
 #include <utility>
-
-#ifdef __cpp_lib_void_t
-// We have std::void_t and std::make_void
 #include <type_traits>
+
+#ifdef __has_include
+#if __has_include(<experimental/type_traits>)
+#include <experimental/type_traits>
+#endif
 #endif
 
 //If openssl version less than 1.1
@@ -826,8 +828,6 @@ namespace jwt {
 	}  // namespace json
 
 	namespace details {
-		namespace impl {
-
 #ifdef __cpp_lib_void_t
 		template <typename... Ts>
 		using void_t = std::void_t<Ts...>;
@@ -842,6 +842,14 @@ namespace jwt {
 		template <typename ...Ts>
 		using void_t = typename make_void<Ts...>::type;
 #endif
+
+#ifdef __cpp_lib_experimental_detect
+		template<template<typename...> class _Op, typename... _Args>
+		using is_detected = std::experimental::is_detected<_Op, _Args...>;
+
+		template<template<typename...> class _Op, typename... _Args>
+		using is_detected_t = std::experimental::detected_t<_Op, _Args...>;
+#else
 		struct nonesuch
 		{
 			nonesuch() = delete;
@@ -866,13 +874,13 @@ namespace jwt {
 			using value = std::true_type;
 			using type = Op<Args...>;
 		};
-		}  // namespace impl
 
 		template <template <class...> class Op, class... Args>
-		using is_detected = typename impl::detector<impl::nonesuch, void, Op, Args...>::value;
+		using is_detected = typename detector<nonesuch, void, Op, Args...>::value;
 
 		template <template <class...> class Op, class... Args>
-		using is_detected_t = typename impl::detector<impl::nonesuch, void, Op, Args...>::type;
+		using is_detected_t = typename detector<nonesuch, void, Op, Args...>::type;
+#endif
 
 		template <typename traits_type>
 		using get_type_function = decltype(traits_type::get_type);
