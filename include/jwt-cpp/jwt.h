@@ -25,9 +25,11 @@
 #include <utility>
 #include <type_traits>
 
+#if __cplusplus >= 201402L
 #ifdef __has_include
 #if __has_include(<experimental/type_traits>)
 #include <experimental/type_traits>
+#endif
 #endif
 #endif
 
