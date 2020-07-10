@@ -46,7 +46,7 @@ target_include_directories(
 target_link_libraries(jwt-cpp INTERFACE OpenSSL::SSL OpenSSL::Crypto)
 
 set(JWT_HEADERS ${JWT_INCLUDE_PATH}/jwt-cpp/base.h)
-if(NOT EXTERNAL_PICOJSON)
+if(NOT EXTERNAL_PICOJSON AND NOT DISABLE_JWT_CPP_PICOJSON)
   set(PICO_HEADER ${JWT_INCLUDE_PATH}/picojson/picojson.h)
 endif()
 
