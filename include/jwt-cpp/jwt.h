@@ -1692,6 +1692,7 @@ namespace jwt {
 	template<typename Clock, typename json_traits>
 	class verifier {
 		struct algo_base {
+			virtual ~algo_base() = default;
 			virtual void verify(const std::string& data, const std::string& sig) = 0;
 		};
 		template<typename T>
