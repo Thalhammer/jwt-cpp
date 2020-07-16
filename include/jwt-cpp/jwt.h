@@ -2368,7 +2368,9 @@ namespace jwt {
 						return;
 					}
 					auto aud = jwt.get_audience();
-					auto expected = c.second.as_set();
+					typename basic_claim_t::set_t expected = {};
+					if(c.second.get_type() == json::type::string) expected = { c.second.as_string() };
+					else expected = c.second.as_set();
 					for (auto& e : expected) {
 						if (aud.count(e) == 0) {
 							ec = error::token_verification_error::audience_missmatch;

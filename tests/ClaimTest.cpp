@@ -106,3 +106,27 @@ TEST(ClaimTest, AsDate) {
 	jwt::claim c(picojson::value((int64_t)10));
 	ASSERT_EQ(c.as_date(), std::chrono::system_clock::from_time_t(10));
 }
+
+TEST(ClaimTest, PicoJSONTraitsAccessorsThrow) {
+	jwt::picojson_traits::value_type val;
+	ASSERT_THROW(jwt::picojson_traits::as_array(val), std::bad_cast);
+	ASSERT_THROW(jwt::picojson_traits::as_bool(val), std::bad_cast);
+	ASSERT_THROW(jwt::picojson_traits::as_int(val), std::bad_cast);
+	ASSERT_THROW(jwt::picojson_traits::as_number(val), std::bad_cast);
+	ASSERT_THROW(jwt::picojson_traits::as_object(val), std::bad_cast);
+	ASSERT_THROW(jwt::picojson_traits::as_string(val), std::bad_cast);
+	ASSERT_THROW(jwt::picojson_traits::get_type(val), std::logic_error);
+}
+
+TEST(ClaimTest, PicoJSONTraitsAsBool) {
+	jwt::picojson_traits::value_type val(true);
+	ASSERT_EQ(jwt::picojson_traits::as_bool(val), true);
+	ASSERT_EQ(jwt::picojson_traits::get_type(val), jwt::json::type::boolean);
+}
+
+TEST(ClaimTest, PicoJSONTraitsAsDouble) {
+	jwt::picojson_traits::value_type val(10.0);
+	ASSERT_EQ(jwt::picojson_traits::as_number(val), (int)10);
+	ASSERT_EQ(jwt::picojson_traits::get_type(val), jwt::json::type::number);
+}
+
