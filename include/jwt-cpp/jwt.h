@@ -279,6 +279,8 @@ namespace jwt {
 					throw rsa_exception(ec.message());
 				if(ec.category() == signature_verification_error_category())
 					throw signature_verification_exception(ec.message());
+				if(ec.category() == signature_generation_error_category())
+					throw signature_generation_exception(ec.message());
 				if(ec.category() == token_verification_error_category())
 					throw token_verification_exception(ec.message());
 			}
