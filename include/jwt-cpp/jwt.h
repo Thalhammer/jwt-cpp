@@ -24,6 +24,7 @@
 #include <unordered_map>
 #include <utility>
 #include <type_traits>
+#include <system_error>
 
 #if __cplusplus >= 201402L
 #ifdef __has_include
@@ -52,51 +53,20 @@
 namespace jwt {
 	using date = std::chrono::system_clock::time_point;
 
-	struct signature_verification_exception : public std::runtime_error {
-		signature_verification_exception()
-			: std::runtime_error("signature verification failed")
-		{}
-		explicit signature_verification_exception(const std::string& msg)
-			: std::runtime_error(msg)
-		{}
-		explicit signature_verification_exception(const char* msg)
-			: std::runtime_error(msg)
-		{}
+	struct signature_verification_exception : public std::system_error {
+		using system_error::system_error;
 	};
-	struct signature_generation_exception : public std::runtime_error {
-		signature_generation_exception()
-			: std::runtime_error("signature generation failed")
-		{}
-		explicit signature_generation_exception(const std::string& msg)
-			: std::runtime_error(msg)
-		{}
-		explicit signature_generation_exception(const char* msg)
-			: std::runtime_error(msg)
-		{}
+	struct signature_generation_exception : public std::system_error {
+		using system_error::system_error;
 	};
-	struct rsa_exception : public std::runtime_error {
-		explicit rsa_exception(const std::string& msg)
-			: std::runtime_error(msg)
-		{}
-		explicit rsa_exception(const char* msg)
-			: std::runtime_error(msg)
-		{}
+	struct rsa_exception : public std::system_error {
+		using system_error::system_error;
 	};
-	struct ecdsa_exception : public std::runtime_error {
-		explicit ecdsa_exception(const std::string& msg)
-			: std::runtime_error(msg)
-		{}
-		explicit ecdsa_exception(const char* msg)
-			: std::runtime_error(msg)
-		{}
+	struct ecdsa_exception : public std::system_error {
+		using system_error::system_error;
 	};
-	struct token_verification_exception : public std::runtime_error {
-		token_verification_exception()
-			: std::runtime_error("token verification failed")
-		{}
-		explicit token_verification_exception(const std::string& msg)
-			: std::runtime_error("token verification failed: " + msg)
-		{}
+	struct token_verification_exception : public std::system_error {
+		using system_error::system_error;
 	};
 
 	/**
@@ -115,6 +85,7 @@ namespace jwt {
 			load_key_bio_write,
 			load_key_bio_read,
 			create_mem_bio_failed,
+			no_key_provided
 		};
 		/**
 		 * \brief Errorcategory for RSA errors
@@ -134,16 +105,61 @@ namespace jwt {
 					case rsa_error::load_key_bio_write: return "failed to load key: bio write failed";
 					case rsa_error::load_key_bio_read: return "failed to load key: bio read failed";
 					case rsa_error::create_mem_bio_failed: return "failed to create memory bio";
-					default: return "unknown error code";
+					case rsa_error::no_key_provided: return "at least one of public or private key need to be present";
+					default: return "unknown RSA error";
 					}
 				}
 			};
-			static rsa_error_cat cat = {};
+			static rsa_error_cat cat;
 			return cat;
 		}
 		
 		inline std::error_code make_error_code(rsa_error e) {
 			return {static_cast<int>(e), rsa_error_category()};
+		}
+/**
+		 * \brief Error related to processing of RSA signatures
+		 */
+		enum class ecdsa_error {
+			ok = 0,
+			cert_load_failed = 10,
+			get_key_failed,
+			write_key_failed,
+			convert_to_pem_failed,
+			load_key_bio_write,
+			load_key_bio_read,
+			create_mem_bio_failed,
+			no_key_provided,
+			invalid_key_size,
+			invalid_key
+		};
+		/**
+		 * \brief Errorcategory for RSA errors
+		 */
+		inline std::error_category& ecdsa_error_category() {
+			class ecdsa_error_cat : public std::error_category
+			{
+			public:
+				const char* name() const noexcept override { return "ecdsa_error"; };
+				std::string message(int ev) const override {
+					switch(static_cast<ecdsa_error>(ev)) {
+					case ecdsa_error::ok: return "no error";
+					case ecdsa_error::load_key_bio_write: return "failed to load key: bio write failed";
+					case ecdsa_error::load_key_bio_read: return "failed to load key: bio read failed";
+					case ecdsa_error::create_mem_bio_failed: return "failed to create memory bio";
+					case ecdsa_error::no_key_provided: return "at least one of public or private key need to be present";
+					case ecdsa_error::invalid_key_size: return "invalid key size";
+					case ecdsa_error::invalid_key: return "invalid key";
+					default: return "unknown ECDSA error";
+					}
+				}
+			};
+			static ecdsa_error_cat cat;
+			return cat;
+		}
+		
+		inline std::error_code make_error_code(ecdsa_error e) {
+			return {static_cast<int>(e), ecdsa_error_category()};
 		}
 
 		/**
@@ -165,7 +181,7 @@ namespace jwt {
 			class verification_error_cat : public std::error_category
 			{
 			public:
-				const char* name() const noexcept override { return "verification_error"; };
+				const char* name() const noexcept override { return "signature_verification_error"; };
 				std::string message(int ev) const override {
 					switch(static_cast<signature_verification_error>(ev)) {
 					case signature_verification_error::ok: return "no error";
@@ -175,11 +191,11 @@ namespace jwt {
 					case signature_verification_error::verifyupdate_failed: return "failed to verify signature: VerifyUpdate failed";
 					case signature_verification_error::verifyfinal_failed: return "failed to verify signature: VerifyFinal failed";
 					case signature_verification_error::get_key_failed: return "failed to verify signature: Could not get key";
-					default: return "unknown error code";
+					default: return "unknown signature verification error";
 					}
 				}
 			};
-			static verification_error_cat cat = {};
+			static verification_error_cat cat;
 			return cat;
 		}
 
@@ -226,7 +242,7 @@ namespace jwt {
 					case signature_generation_error::digestfinal_failed: return "failed to create signature: DigestFinal failed";
 					case signature_generation_error::rsa_padding_failed: return "failed to create signature: RSA_padding_add_PKCS1_PSS_mgf1 failed";
 					case signature_generation_error::rsa_private_encrypt_failed: return "failed to create signature: RSA_private_encrypt failed";
-					default: return "unknown error code";
+					default: return "unknown signature generation error";
 					}
 				}
 			};
@@ -256,12 +272,12 @@ namespace jwt {
 					switch(static_cast<token_verification_error>(ev)) {
 					case token_verification_error::ok: return "no error";
 					case token_verification_error::wrong_algorithm: return "wrong algorithm";
-					case token_verification_error::missing_claim: return "decoded_jwt is missing required claim";
+					case token_verification_error::missing_claim: return "decoded JWT is missing required claim(s)";
 					case token_verification_error::claim_type_missmatch: return "claim type does not match expected type";
 					case token_verification_error::claim_value_missmatch: return "claim value does not match expected value";
 					case token_verification_error::token_expired: return "token expired";
 					case token_verification_error::audience_missmatch: return "token doesn't contain the required audience";
-					default: return "unknown error code";
+					default: return "unknown token verification error";
 					}
 				}
 			};
@@ -276,13 +292,15 @@ namespace jwt {
 		inline void throw_if_error(std::error_code ec) {
 			if(ec) {
 				if(ec.category() == rsa_error_category())
-					throw rsa_exception(ec.message());
+					throw rsa_exception(ec);
+				if(ec.category() == ecdsa_error_category())
+					throw ecdsa_exception(ec);
 				if(ec.category() == signature_verification_error_category())
-					throw signature_verification_exception(ec.message());
+					throw signature_verification_exception(ec);
 				if(ec.category() == signature_generation_error_category())
-					throw signature_generation_exception(ec.message());
+					throw signature_generation_exception(ec);
 				if(ec.category() == token_verification_error_category())
-					throw token_verification_exception(ec.message());
+					throw token_verification_exception(ec);
 			}
 		}
 	}
@@ -291,6 +309,8 @@ namespace std
 {
 	template <>
 	struct is_error_code_enum<jwt::error::rsa_error> : true_type {};
+	template <>
+	struct is_error_code_enum<jwt::error::ecdsa_error> : true_type {};
 	template <>
 	struct is_error_code_enum<jwt::error::signature_verification_error> : true_type {};
 	template <>
@@ -325,28 +345,28 @@ namespace jwt {
 			std::unique_ptr<BIO, decltype(&BIO_free_all)> keybio(BIO_new(BIO_s_mem()), BIO_free_all);
 			if(!certbio || !keybio) {
 				ec = error::rsa_error::create_mem_bio_failed;
-				return "";
+				return {};
 			}
 
 			std::unique_ptr<X509, decltype(&X509_free)> cert(PEM_read_bio_X509(certbio.get(), nullptr, nullptr, const_cast<char*>(pw.c_str())), X509_free);
 			if (!cert) {
 				ec = error::rsa_error::cert_load_failed;
-				return "";
+				return {};
 			}
 			std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)> key(X509_get_pubkey(cert.get()), EVP_PKEY_free);
 			if(!key) {
 				ec = error::rsa_error::get_key_failed;
-				return "";
+				return {};
 			}
 			if(PEM_write_bio_PUBKEY(keybio.get(), key.get()) == 0) {
 				ec = error::rsa_error::write_key_failed;
-				return "";
+				return {};
 			}
 			char* ptr = nullptr;
 			auto len = BIO_get_mem_data(keybio.get(), &ptr);
 			if(len <= 0 || ptr == nullptr) {
 				ec = error::rsa_error::convert_to_pem_failed;
-				return "";
+				return {};
 			}
 			std::string res(ptr, len);
 			return res;
@@ -514,14 +534,14 @@ namespace jwt {
 			 * \brief Return an empty string
 			 */ 
 			std::string sign(const std::string& /*unused*/) const {
-				return "";
+				return {};
 			}
 			/**
 			 * \brief Return an empty string
 			 */ 
 			std::string sign(const std::string& /*unused*/, std::error_code& ec) const {
 				ec.clear();
-				return "";
+				return {};
 			}
 			/**
 			 * \brief Check if the given signature is empty.
@@ -589,7 +609,7 @@ namespace jwt {
 				auto len = static_cast<unsigned int>(res.size());
 				if (HMAC(md(), secret.data(), static_cast<int>(secret.size()), reinterpret_cast<const unsigned char*>(data.data()), static_cast<int>(data.size()), (unsigned char*)res.data(), &len) == nullptr) { // NOLINT(google-readability-casting) requires `const_cast` 
 					ec = error::signature_generation_error::hmac_failed;
-					return "";
+					return {};
 				}
 				res.resize(len);
 				return res;
@@ -666,7 +686,7 @@ namespace jwt {
 				} else if(!public_key.empty()) {
 					pkey = helper::load_public_key_from_string(public_key, public_key_password);
 				} else
-					throw rsa_exception("at least one of public or private key need to be present");
+					throw rsa_exception(error::rsa_error::no_key_provided);
 			}
 			/**
 			 * Sign jwt data
@@ -695,11 +715,11 @@ namespace jwt {
 #endif
 				if (!ctx) {
 					ec = error::signature_generation_error::create_context_failed;
-					return "";
+					return {};
 				}
 				if (!EVP_SignInit(ctx.get(), md())){
 					ec = error::signature_generation_error::signinit_failed;
-					return "";
+					return {};
 				}
 
 				std::string res;
@@ -708,11 +728,11 @@ namespace jwt {
 
 				if (!EVP_SignUpdate(ctx.get(), data.data(), data.size())){
 					ec = error::signature_generation_error::signupdate_failed;
-					return "";
+					return {};
 				}
 				if (EVP_SignFinal(ctx.get(), (unsigned char*)res.data(), &len, pkey.get()) == 0)  { // NOLINT(google-readability-casting) requires `const_cast`
 					ec = error::signature_generation_error::signfinal_failed;
-					return "";
+					return {};
 				}
 
 				res.resize(len);
@@ -793,42 +813,44 @@ namespace jwt {
 			{
 				if (!public_key.empty()) {
 					std::unique_ptr<BIO, decltype(&BIO_free_all)> pubkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
+					if(!pubkey_bio)
+						throw ecdsa_exception(error::ecdsa_error::create_mem_bio_failed);
 					if(public_key.substr(0, 27) == "-----BEGIN CERTIFICATE-----") {
 						auto epkey = helper::extract_pubkey_from_cert(public_key, public_key_password);
 						const int len = static_cast<int>(epkey.size());
 						if (BIO_write(pubkey_bio.get(), epkey.data(), len) != len)
-							throw ecdsa_exception("failed to load public key: bio_write failed");
+							throw ecdsa_exception(error::ecdsa_error::load_key_bio_write);
 					} else  {
 						const int len = static_cast<int>(public_key.size());
 						if (BIO_write(pubkey_bio.get(), public_key.data(), len) != len)
-							throw ecdsa_exception("failed to load public key: bio_write failed");
+							throw ecdsa_exception(error::ecdsa_error::load_key_bio_write);
 					}
 
 					pkey.reset(PEM_read_bio_EC_PUBKEY(pubkey_bio.get(), nullptr, nullptr, (void*)public_key_password.c_str()), EC_KEY_free);  // NOLINT(google-readability-casting) requires `const_cast`
 					if (!pkey)
-						throw ecdsa_exception("failed to load public key: PEM_read_bio_EC_PUBKEY failed:" + std::string(ERR_error_string(ERR_get_error(), nullptr)));
+						throw ecdsa_exception(error::ecdsa_error::load_key_bio_read);
 					size_t keysize = EC_GROUP_get_degree(EC_KEY_get0_group(pkey.get()));
 					if(keysize != signature_length*4 && (signature_length != 132 || keysize != 521))
-						throw ecdsa_exception("invalid key size");
+						throw ecdsa_exception(error::ecdsa_error::invalid_key_size);
 				}
 
 				if (!private_key.empty()) {
 					std::unique_ptr<BIO, decltype(&BIO_free_all)> privkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
 						const int len = static_cast<int>(private_key.size());
 					if (BIO_write(privkey_bio.get(), private_key.data(), len) != len)
-						throw ecdsa_exception("failed to load private key: bio_write failed");
+						throw ecdsa_exception(error::ecdsa_error::load_key_bio_write);
 					pkey.reset(PEM_read_bio_ECPrivateKey(privkey_bio.get(), nullptr, nullptr, const_cast<char*>(private_key_password.c_str())), EC_KEY_free);
 					if (!pkey)
-						throw ecdsa_exception("failed to load private key: PEM_read_bio_ECPrivateKey failed");
+						throw ecdsa_exception(error::ecdsa_error::load_key_bio_read);
 					size_t keysize = EC_GROUP_get_degree(EC_KEY_get0_group(pkey.get()));
 					if(keysize != signature_length*4 && (signature_length != 132 || keysize != 521))
-						throw ecdsa_exception("invalid key size");
+						throw ecdsa_exception(error::ecdsa_error::invalid_key_size);
 				}
 				if(!pkey)
-					throw ecdsa_exception("at least one of public or private key need to be present");
+					throw ecdsa_exception(error::ecdsa_error::no_key_provided);
 
 				if(EC_KEY_check_key(pkey.get()) == 0)
-					throw ecdsa_exception("failed to load key: key is invalid");
+					throw ecdsa_exception(error::ecdsa_error::invalid_key);
 			}
 			/**
 			 * Sign jwt data
@@ -851,13 +873,13 @@ namespace jwt {
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
 				const std::string hash = generate_hash(data, ec);
-				if(ec) return "";
+				if(ec) return {};
 
 				std::unique_ptr<ECDSA_SIG, decltype(&ECDSA_SIG_free)>
 					sig(ECDSA_do_sign(reinterpret_cast<const unsigned char*>(hash.data()), static_cast<int>(hash.size()), pkey.get()), ECDSA_SIG_free);
 				if(!sig) {
 					ec = error::signature_generation_error::ecdsa_do_sign_failed;
-					return "";
+					return {};
 				}
 #ifdef OPENSSL10
 
@@ -947,18 +969,18 @@ namespace jwt {
 #endif
 				if(EVP_DigestInit(ctx.get(), md()) == 0) {
 					ec = error::signature_generation_error::digestinit_failed;
-					return "";
+					return {};
 				}
 				if(EVP_DigestUpdate(ctx.get(), data.data(), data.size()) == 0) {
 					ec = error::signature_generation_error::digestupdate_failed;
-					return "";
+					return {};
 				}
 				unsigned int len = 0;
 				std::string res;
 				res.resize(EVP_MD_CTX_size(ctx.get()));
 				if(EVP_DigestFinal(ctx.get(), (unsigned char*)res.data(), &len) == 0) { // NOLINT(google-readability-casting) requires `const_cast`
 					ec = error::signature_generation_error::digestfinal_failed;
-					return "";
+					return {};
 				}
 				res.resize(len);
 				return res;
@@ -995,7 +1017,7 @@ namespace jwt {
 				} else if(!public_key.empty()) {
 					pkey = helper::load_public_key_from_string(public_key, public_key_password);
 				} else
-					throw rsa_exception("at least one of public or private key need to be present");
+					throw rsa_exception(error::rsa_error::no_key_provided);
 			}
 			/**
 			 * Sign jwt data
@@ -1018,25 +1040,25 @@ namespace jwt {
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
 				auto hash = this->generate_hash(data, ec);
-				if(ec) return "";
+				if(ec) return {};
 
 				std::unique_ptr<RSA, decltype(&RSA_free)> key(EVP_PKEY_get1_RSA(pkey.get()), RSA_free);
 				if(!key) {
 					ec = error::signature_generation_error::create_context_failed;
-					return "";
+					return {};
 				}
 				const int size = RSA_size(key.get());
 
 				std::string padded(size, 0x00);
 				if (RSA_padding_add_PKCS1_PSS_mgf1(key.get(), (unsigned char*)padded.data(), reinterpret_cast<const unsigned char*>(hash.data()), md(), md(), -1) == 0) { // NOLINT(google-readability-casting) requires `const_cast`
 					ec = error::signature_generation_error::rsa_padding_failed;
-					return "";
+					return {};
 				}
 
 				std::string res(size, 0x00);
 				if (RSA_private_encrypt(size, reinterpret_cast<const unsigned char*>(padded.data()), (unsigned char*)res.data(), key.get(), RSA_NO_PADDING) < 0) { // NOLINT(google-readability-casting) requires `const_cast`
 					ec = error::signature_generation_error::rsa_private_encrypt_failed;
-					return "";
+					return {};
 				}
 				return res;
 			}
@@ -1101,22 +1123,22 @@ namespace jwt {
 #endif
 				if(!ctx) {
 					ec = error::signature_generation_error::create_context_failed;
-					return "";
+					return {};
 				}
 				if(EVP_DigestInit(ctx.get(), md()) == 0) {
 					ec = error::signature_generation_error::digestinit_failed;
-					return "";
+					return {};
 				}
 				if(EVP_DigestUpdate(ctx.get(), data.data(), data.size()) == 0) {
 					ec = error::signature_generation_error::digestupdate_failed;
-					return "";
+					return {};
 				}
 				unsigned int len = 0;
 				std::string res;
 				res.resize(EVP_MD_CTX_size(ctx.get()));
 				if(EVP_DigestFinal(ctx.get(), (unsigned char*)res.data(), &len) == 0) { // NOLINT(google-readability-casting) requires `const_cast`
 					ec = error::signature_generation_error::digestfinal_failed;
-					return "";
+					return {};
 				}
 				res.resize(len);
 				return res;
@@ -2213,7 +2235,7 @@ namespace jwt {
 			typename json_traits::string_type token = header + "." + payload;
 
 			auto signature = algo.sign(token, ec);
-			if(ec) return "";
+			if(ec) return {};
 			return token + "." + encode(signature);
 		}
 	#ifndef DISABLE_BASE64
