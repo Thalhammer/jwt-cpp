@@ -533,25 +533,9 @@ namespace jwt {
 			/**
 			 * \brief Return an empty string
 			 */ 
-			std::string sign(const std::string& /*unused*/) const {
-				return {};
-			}
-			/**
-			 * \brief Return an empty string
-			 */ 
 			std::string sign(const std::string& /*unused*/, std::error_code& ec) const {
 				ec.clear();
 				return {};
-			}
-			/**
-			 * \brief Check if the given signature is empty.
-			 * 
-			 * JWT's with "none" algorithm should not contain a signature.
-			 * \throw signature_verification_exception
-			 */ 
-			void verify(const std::string& /*unused*/, const std::string& signature) const {
-				if (!signature.empty())
-					throw signature_verification_exception();
 			}
 			/**
 			 * \brief Check if the given signature is empty.
@@ -587,18 +571,6 @@ namespace jwt {
 			/**
 			 * Sign jwt data
 			 * \param data The data to sign
-			 * \return HMAC signature for the given data
-			 * \throw signature_generation_exception
-			 */
-			std::string sign(const std::string& data) const {
-				std::error_code ec;
-				auto res = sign(data, ec);
-				error::throw_if_error(ec);
-				return res;
-			}
-			/**
-			 * Sign jwt data
-			 * \param data The data to sign
 			 * \param ec error_code filled with details on error
 			 * \return HMAC signature for the given data
 			 */
@@ -618,36 +590,21 @@ namespace jwt {
 			 * Check if signature is valid
 			 * \param data The data to check signature against
 			 * \param signature Signature provided by the jwt
-			 * \throw signature_verification_exception If the provided signature does not match
-			 */
-			void verify(const std::string& data, const std::string& signature) const {
-				std::error_code ec;
-				verify(data, signature, ec);
-				error::throw_if_error(ec);
-			}
-			/**
-			 * Check if signature is valid
-			 * \param data The data to check signature against
-			 * \param signature Signature provided by the jwt
 			 * \param ec Filled with details about failure.
 			 */
 			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
 				ec.clear();
-				try {
-					auto res = sign(data);
-					bool matched = true;
-					for (size_t i = 0; i < std::min<size_t>(res.size(), signature.size()); i++)
-						if (res[i] != signature[i])
-							matched = false;
-					if (res.size() != signature.size())
+				auto res = sign(data, ec);
+				if(ec) return;
+				bool matched = true;
+				for (size_t i = 0; i < std::min<size_t>(res.size(), signature.size()); i++)
+					if (res[i] != signature[i])
 						matched = false;
-					if (!matched) {
-						ec = error::signature_verification_error::invalid_signature;
-						return;
-					}
-				}
-				catch (const signature_generation_exception&) {
+				if (res.size() != signature.size())
+					matched = false;
+				if (!matched) {
 					ec = error::signature_verification_error::invalid_signature;
+					return;
 				}
 			}
 			/**
@@ -691,18 +648,6 @@ namespace jwt {
 			/**
 			 * Sign jwt data
 			 * \param data The data to sign
-			 * \return RSA signature for the given data
-			 * \throw signature_generation_exception
-			 */
-			std::string sign(const std::string& data) const {
-				std::error_code ec;
-				auto res = sign(data, ec);
-				error::throw_if_error(ec);
-				return res;
-			}
-			/**
-			 * Sign jwt data
-			 * \param data The data to sign
 			 * \param ec error_code filled with details on error
 			 * \return RSA signature for the given data
 			 */
@@ -737,17 +682,6 @@ namespace jwt {
 
 				res.resize(len);
 				return res;
-			}
-			/**
-			 * Check if signature is valid
-			 * \param data The data to check signature against
-			 * \param signature Signature provided by the jwt
-			 * \throw signature_verification_exception If the provided signature does not match
-			 */
-			void verify(const std::string& data, const std::string& signature) const {
-				std::error_code ec;
-				verify(data, signature, ec);
-				error::throw_if_error(ec);
 			}
 			/**
 			 * Check if signature is valid
@@ -855,18 +789,6 @@ namespace jwt {
 			/**
 			 * Sign jwt data
 			 * \param data The data to sign
-			 * \return ECDSA signature for the given data
-			 * \throw signature_generation_exception
-			 */
-			std::string sign(const std::string& data) const {
-				std::error_code ec;
-				auto res = sign(data, ec);
-				error::throw_if_error(ec);
-				return res;
-			}
-			/**
-			 * Sign jwt data
-			 * \param data The data to sign
 			 * \param ec error_code filled with details on error
 			 * \return ECDSA signature for the given data
 			 */
@@ -897,18 +819,6 @@ namespace jwt {
 				rr.insert(0, signature_length/2 - rr.size(), '\0');
 				rs.insert(0, signature_length/2 - rs.size(), '\0');
 				return rr + rs;
-			}
-
-			/**
-			 * Check if signature is valid
-			 * \param data The data to check signature against
-			 * \param signature Signature provided by the jwt
-			 * \throw signature_verification_exception If the provided signature does not match
-			 */
-			void verify(const std::string& data, const std::string& signature) const {
-				std::error_code ec;
-				verify(data, signature, ec);
-				error::throw_if_error(ec);
 			}
 
 			/**
@@ -1019,18 +929,7 @@ namespace jwt {
 				} else
 					throw rsa_exception(error::rsa_error::no_key_provided);
 			}
-			/**
-			 * Sign jwt data
-			 * \param data The data to sign
-			 * \return ECDSA signature for the given data
-			 * \throw signature_generation_exception
-			 */
-			std::string sign(const std::string& data) const {
-				std::error_code ec;
-				auto res = sign(data, ec);
-				error::throw_if_error(ec);
-				return res;
-			}
+
 			/**
 			 * Sign jwt data
 			 * \param data The data to sign
@@ -1062,17 +961,7 @@ namespace jwt {
 				}
 				return res;
 			}
-			/**
-			 * Check if signature is valid
-			 * \param data The data to check signature against
-			 * \param signature Signature provided by the jwt
-			 * \throw signature_verification_exception If the provided signature does not match
-			 */
-			void verify(const std::string& data, const std::string& signature) const {
-				std::error_code ec;
-				verify(data, signature, ec);
-				error::throw_if_error(ec);
-			}
+
 			/**
 			 * Check if signature is valid
 			 * \param data The data to check signature against
@@ -2184,15 +2073,10 @@ namespace jwt {
 		 */
 		template<typename Algo, typename Encode>
 		typename json_traits::string_type sign(const Algo& algo, Encode encode) const {
-			typename json_traits::object_type obj_header = header_claims;
-			if(header_claims.count("alg") == 0)
-				obj_header["alg"] = typename json_traits::value_type(algo.name());
-
-			typename json_traits::string_type header = encode(json_traits::serialize(typename json_traits::value_type(obj_header)));
-			typename json_traits::string_type payload = encode(json_traits::serialize(typename json_traits::value_type(payload_claims)));
-			typename json_traits::string_type token = header + "." + payload;
-
-			return token + "." + encode(algo.sign(token));
+			std::error_code ec;
+			auto res = sign(algo, encode, ec);
+			error::throw_if_error(ec);
+			return res;
 		}
 	#ifndef DISABLE_BASE64
 		/**
@@ -2205,9 +2089,10 @@ namespace jwt {
 		 */
 		template<typename Algo>
 		typename json_traits::string_type sign(const Algo& algo) const {
-			return sign(algo, [](const typename json_traits::string_type& data) {
-				return base::trim<alphabet::base64url>(base::encode<alphabet::base64url>(data));
-			});
+			std::error_code ec;
+			auto res = sign(algo, ec);
+			error::throw_if_error(ec);
+			return res;
 		}
 	#endif
 
@@ -2264,16 +2149,12 @@ namespace jwt {
 	class verifier {
 		struct algo_base {
 			virtual ~algo_base() = default;
-			virtual void verify(const std::string& data, const std::string& sig) = 0;
 			virtual void verify(const std::string& data, const std::string& sig, std::error_code& ec) = 0;
 		};
 		template<typename T>
 		struct algo : public algo_base {
 			T alg;
 			explicit algo(T a) : alg(a) {}
-			void verify(const std::string& data, const std::string& sig) override {
-				alg.verify(data, sig);
-			}
 			void verify(const std::string& data, const std::string& sig, std::error_code& ec) override {
 				alg.verify(data, sig, ec);
 			}

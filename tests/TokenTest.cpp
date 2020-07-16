@@ -465,6 +465,103 @@ TEST(TokenTest, VerifyTokenPS256Fail) {
 	ASSERT_THROW(verify.verify(decoded_token), jwt::signature_verification_exception);
 }
 
+struct test_clock {
+	jwt::date n;
+	jwt::date now() const {
+		return n;
+	}
+};
+
+TEST(TokenTest, VerifyTokenExpireFail) {
+	auto token = jwt::create().set_expires_at(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
+	auto decoded_token = jwt::decode(token);
+
+	auto verify = jwt::verify<test_clock, jwt::picojson_traits>({std::chrono::system_clock::from_time_t(110)})
+		.allow_algorithm(jwt::algorithm::none{});
+	ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+	std::error_code ec;
+	ASSERT_NO_THROW(verify.verify(decoded_token, ec));
+	ASSERT_TRUE(ec);
+	ASSERT_EQ(ec.category(), jwt::error::token_verification_error_category());
+	ASSERT_EQ(ec.value(), static_cast<int>(jwt::error::token_verification_error::token_expired));
+}
+
+TEST(TokenTest, VerifyTokenExpire) {
+	auto token = jwt::create().set_expires_at(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
+	auto decoded_token = jwt::decode(token);
+
+	auto verify = jwt::verify<test_clock, jwt::picojson_traits>({std::chrono::system_clock::from_time_t(90)})
+		.allow_algorithm(jwt::algorithm::none{});
+	ASSERT_NO_THROW(verify.verify(decoded_token));
+	std::error_code ec;
+	ASSERT_NO_THROW(verify.verify(decoded_token, ec));
+	ASSERT_FALSE(ec);
+	ASSERT_EQ(ec.value(), 0);
+}
+
+TEST(TokenTest, VerifyTokenNBFFail) {
+	auto token = jwt::create().set_not_before(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
+	auto decoded_token = jwt::decode(token);
+
+	auto verify = jwt::verify<test_clock, jwt::picojson_traits>({std::chrono::system_clock::from_time_t(90)})
+		.allow_algorithm(jwt::algorithm::none{});
+	ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+	std::error_code ec;
+	ASSERT_NO_THROW(verify.verify(decoded_token, ec));
+	ASSERT_TRUE(ec);
+	ASSERT_EQ(ec.category(), jwt::error::token_verification_error_category());
+	ASSERT_EQ(ec.value(), static_cast<int>(jwt::error::token_verification_error::token_expired));
+}
+
+TEST(TokenTest, VerifyTokenNBF) {
+	auto token = jwt::create().set_not_before(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
+	auto decoded_token = jwt::decode(token);
+
+	auto verify = jwt::verify<test_clock, jwt::picojson_traits>({std::chrono::system_clock::from_time_t(110)})
+		.allow_algorithm(jwt::algorithm::none{});
+	ASSERT_NO_THROW(verify.verify(decoded_token));
+	std::error_code ec;
+	ASSERT_NO_THROW(verify.verify(decoded_token, ec));
+	ASSERT_FALSE(ec);
+	ASSERT_EQ(ec.value(), 0);
+}
+
+TEST(TokenTest, VerifyTokenIATFail) {
+	auto token = jwt::create().set_issued_at(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
+	auto decoded_token = jwt::decode(token);
+
+	auto verify = jwt::verify<test_clock, jwt::picojson_traits>({std::chrono::system_clock::from_time_t(90)})
+		.allow_algorithm(jwt::algorithm::none{});
+	ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+	std::error_code ec;
+	ASSERT_NO_THROW(verify.verify(decoded_token, ec));
+	ASSERT_TRUE(ec);
+	ASSERT_EQ(ec.category(), jwt::error::token_verification_error_category());
+	ASSERT_EQ(ec.value(), static_cast<int>(jwt::error::token_verification_error::token_expired));
+}
+
+TEST(TokenTest, VerifyTokenIAT) {
+	auto token = jwt::create().set_issued_at(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
+	auto decoded_token = jwt::decode(token);
+
+	auto verify = jwt::verify<test_clock, jwt::picojson_traits>({std::chrono::system_clock::from_time_t(110)})
+		.allow_algorithm(jwt::algorithm::none{});
+	ASSERT_NO_THROW(verify.verify(decoded_token));
+	std::error_code ec;
+	ASSERT_NO_THROW(verify.verify(decoded_token, ec));
+	ASSERT_FALSE(ec);
+	ASSERT_EQ(ec.value(), 0);
+}
+
+TEST(TokenTest, GetClaimThrows) {
+	auto token = "eyJhbGciOiJub25lIiwidHlwIjoiSldTIn0.eyJpc3MiOiJhdXRoMCJ9.";
+	auto decoded_token = jwt::decode(token);
+
+	ASSERT_THROW(decoded_token.get_header_claim("test"), std::runtime_error);
+	ASSERT_THROW(decoded_token.get_payload_claim("test"), std::runtime_error);
+}
+
+
 TEST(TokenTest, ThrowInvalidKeyLength) {
 	// We should throw if passed the wrong size
 	ASSERT_THROW(jwt::algorithm::es256(ecdsa384_pub_key, ""), jwt::ecdsa_exception);
