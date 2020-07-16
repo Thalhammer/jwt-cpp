@@ -187,6 +187,57 @@ namespace jwt {
 			return {static_cast<int>(e), signature_verification_error_category()};
 		}
 
+		/**
+		 * \brief Error enum for signature generation errors
+		 */
+		enum class signature_generation_error {
+			ok = 0,
+			hmac_failed = 10,
+			create_context_failed,
+			signinit_failed,
+			signupdate_failed,
+			signfinal_failed,
+			ecdsa_do_sign_failed,
+			digestinit_failed,
+			digestupdate_failed,
+			digestfinal_failed,
+			rsa_padding_failed,
+			rsa_private_encrypt_failed
+		};
+		/**
+		 * \brief Errorcategory for signature generation errors
+		 */
+		inline std::error_category& signature_generation_error_category() {
+			class signature_generation_error_cat : public std::error_category
+			{
+			public:
+				const char* name() const noexcept override { return "signature_generation_error"; };
+				std::string message(int ev) const override {
+					switch(static_cast<signature_generation_error>(ev)) {
+					case signature_generation_error::ok: return "no error";
+					case signature_generation_error::hmac_failed: return "hmac failed";
+					case signature_generation_error::create_context_failed: return "failed to create signature: could not create context";
+					case signature_generation_error::signinit_failed: return "failed to create signature: SignInit failed";
+					case signature_generation_error::signupdate_failed: return "failed to create signature: SignUpdate failed";
+					case signature_generation_error::signfinal_failed: return "failed to create signature: SignFinal failed";
+					case signature_generation_error::ecdsa_do_sign_failed: return "failed to generate ecdsa signature";
+					case signature_generation_error::digestinit_failed: return "failed to create signature: DigestInit failed";
+					case signature_generation_error::digestupdate_failed: return "failed to create signature: DigestUpdate failed";
+					case signature_generation_error::digestfinal_failed: return "failed to create signature: DigestFinal failed";
+					case signature_generation_error::rsa_padding_failed: return "failed to create signature: RSA_padding_add_PKCS1_PSS_mgf1 failed";
+					case signature_generation_error::rsa_private_encrypt_failed: return "failed to create signature: RSA_private_encrypt failed";
+					default: return "unknown error code";
+					}
+				}
+			};
+			static signature_generation_error_cat cat = {};
+			return cat;
+		}
+
+		inline std::error_code make_error_code(signature_generation_error e) {
+			return {static_cast<int>(e), signature_generation_error_category()};
+		}
+
 		inline void throw_if_error(std::error_code ec) {
 			if(ec) {
 				if(ec.category() == rsa_error_category())
@@ -203,6 +254,8 @@ namespace std
 	struct is_error_code_enum<jwt::error::rsa_error> : true_type {};
 	template <>
 	struct is_error_code_enum<jwt::error::signature_verification_error> : true_type {};
+	template <>
+	struct is_error_code_enum<jwt::error::signature_generation_error> : true_type {};
 }
 namespace jwt {
 	/**
@@ -423,6 +476,13 @@ namespace jwt {
 				return "";
 			}
 			/**
+			 * \brief Return an empty string
+			 */ 
+			std::string sign(const std::string& /*unused*/, std::error_code& ec) const {
+				ec.clear();
+				return "";
+			}
+			/**
 			 * \brief Check if the given signature is empty.
 			 * 
 			 * JWT's with "none" algorithm should not contain a signature.
@@ -470,11 +530,26 @@ namespace jwt {
 			 * \throw signature_generation_exception
 			 */
 			std::string sign(const std::string& data) const {
+				std::error_code ec;
+				auto res = sign(data, ec);
+				error::throw_if_error(ec);
+				return res;
+			}
+			/**
+			 * Sign jwt data
+			 * \param data The data to sign
+			 * \param ec error_code filled with details on error
+			 * \return HMAC signature for the given data
+			 */
+			std::string sign(const std::string& data, std::error_code& ec) const {
+				ec.clear();
 				std::string res;
 				res.resize(static_cast<size_t>(EVP_MAX_MD_SIZE));
 				auto len = static_cast<unsigned int>(res.size());
-				if (HMAC(md(), secret.data(), static_cast<int>(secret.size()), reinterpret_cast<const unsigned char*>(data.data()), static_cast<int>(data.size()), (unsigned char*)res.data(), &len) == nullptr)  // NOLINT(google-readability-casting) requires `const_cast`
-					throw signature_generation_exception();
+				if (HMAC(md(), secret.data(), static_cast<int>(secret.size()), reinterpret_cast<const unsigned char*>(data.data()), static_cast<int>(data.size()), (unsigned char*)res.data(), &len) == nullptr) { // NOLINT(google-readability-casting) requires `const_cast` 
+					ec = error::signature_generation_error::hmac_failed;
+					return "";
+				}
 				res.resize(len);
 				return res;
 			}
@@ -559,24 +634,45 @@ namespace jwt {
 			 * \throw signature_generation_exception
 			 */
 			std::string sign(const std::string& data) const {
+				std::error_code ec;
+				auto res = sign(data, ec);
+				error::throw_if_error(ec);
+				return res;
+			}
+			/**
+			 * Sign jwt data
+			 * \param data The data to sign
+			 * \param ec error_code filled with details on error
+			 * \return RSA signature for the given data
+			 */
+			std::string sign(const std::string& data, std::error_code& ec) const {
+				ec.clear();
 #ifdef OPENSSL10
 				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_destroy);
 #else
 				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_free);
 #endif
-				if (!ctx)
-					throw signature_generation_exception("failed to create signature: could not create context");
-				if (!EVP_SignInit(ctx.get(), md()))
-					throw signature_generation_exception("failed to create signature: SignInit failed");
+				if (!ctx) {
+					ec = error::signature_generation_error::create_context_failed;
+					return "";
+				}
+				if (!EVP_SignInit(ctx.get(), md())){
+					ec = error::signature_generation_error::signinit_failed;
+					return "";
+				}
 
 				std::string res;
 				res.resize(EVP_PKEY_size(pkey.get()));
 				unsigned int len = 0;
 
-				if (!EVP_SignUpdate(ctx.get(), data.data(), data.size()))
-					throw signature_generation_exception();
-				if (EVP_SignFinal(ctx.get(), (unsigned char*)res.data(), &len, pkey.get()) == 0)   // NOLINT(google-readability-casting) requires `const_cast`
-					throw signature_generation_exception();
+				if (!EVP_SignUpdate(ctx.get(), data.data(), data.size())){
+					ec = error::signature_generation_error::signupdate_failed;
+					return "";
+				}
+				if (EVP_SignFinal(ctx.get(), (unsigned char*)res.data(), &len, pkey.get()) == 0)  { // NOLINT(google-readability-casting) requires `const_cast`
+					ec = error::signature_generation_error::signfinal_failed;
+					return "";
+				}
 
 				res.resize(len);
 				return res;
@@ -700,12 +796,28 @@ namespace jwt {
 			 * \throw signature_generation_exception
 			 */
 			std::string sign(const std::string& data) const {
-				const std::string hash = generate_hash(data);
+				std::error_code ec;
+				auto res = sign(data, ec);
+				error::throw_if_error(ec);
+				return res;
+			}
+			/**
+			 * Sign jwt data
+			 * \param data The data to sign
+			 * \param ec error_code filled with details on error
+			 * \return ECDSA signature for the given data
+			 */
+			std::string sign(const std::string& data, std::error_code& ec) const {
+				ec.clear();
+				const std::string hash = generate_hash(data, ec);
+				if(ec) return "";
 
 				std::unique_ptr<ECDSA_SIG, decltype(&ECDSA_SIG_free)>
 					sig(ECDSA_do_sign(reinterpret_cast<const unsigned char*>(hash.data()), static_cast<int>(hash.size()), pkey.get()), ECDSA_SIG_free);
-				if(!sig)
-					throw signature_generation_exception();
+				if(!sig) {
+					ec = error::signature_generation_error::ecdsa_do_sign_failed;
+					return "";
+				}
 #ifdef OPENSSL10
 
 				auto rr = helper::bn2raw(sig->r);
@@ -743,7 +855,9 @@ namespace jwt {
 			 * \param ec Filled with details on error
 			 */
 			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
-				const std::string hash = generate_hash(data);
+				ec.clear();
+				const std::string hash = generate_hash(data, ec);
+				if(ec) return;
 				auto r = helper::raw2bn(signature.substr(0, signature.size() / 2));
 				auto s = helper::raw2bn(signature.substr(signature.size() / 2));
 
@@ -784,21 +898,27 @@ namespace jwt {
 			 * \param data Data to hash
 			 * \return Hash of data
 			 */
-			std::string generate_hash(const std::string& data) const {
+			std::string generate_hash(const std::string& data, std::error_code& ec) const {
 #ifdef OPENSSL10
 				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(), &EVP_MD_CTX_destroy);
 #else
 				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
 #endif
-				if(EVP_DigestInit(ctx.get(), md()) == 0)
-					throw signature_generation_exception("EVP_DigestInit failed");
-				if(EVP_DigestUpdate(ctx.get(), data.data(), data.size()) == 0)
-					throw signature_generation_exception("EVP_DigestUpdate failed");
+				if(EVP_DigestInit(ctx.get(), md()) == 0) {
+					ec = error::signature_generation_error::digestinit_failed;
+					return "";
+				}
+				if(EVP_DigestUpdate(ctx.get(), data.data(), data.size()) == 0) {
+					ec = error::signature_generation_error::digestupdate_failed;
+					return "";
+				}
 				unsigned int len = 0;
 				std::string res;
 				res.resize(EVP_MD_CTX_size(ctx.get()));
-				if(EVP_DigestFinal(ctx.get(), (unsigned char*)res.data(), &len) == 0) // NOLINT(google-readability-casting) requires `const_cast`
-					throw signature_generation_exception("EVP_DigestFinal failed");
+				if(EVP_DigestFinal(ctx.get(), (unsigned char*)res.data(), &len) == 0) { // NOLINT(google-readability-casting) requires `const_cast`
+					ec = error::signature_generation_error::digestfinal_failed;
+					return "";
+				}
 				res.resize(len);
 				return res;
 			}
@@ -843,18 +963,40 @@ namespace jwt {
 			 * \throw signature_generation_exception
 			 */
 			std::string sign(const std::string& data) const {
-				auto hash = this->generate_hash(data);
+				std::error_code ec;
+				auto res = sign(data, ec);
+				error::throw_if_error(ec);
+				return res;
+			}
+			/**
+			 * Sign jwt data
+			 * \param data The data to sign
+			 * \param ec error_code filled with details on error
+			 * \return ECDSA signature for the given data
+			 */
+			std::string sign(const std::string& data, std::error_code& ec) const {
+				ec.clear();
+				auto hash = this->generate_hash(data, ec);
+				if(ec) return "";
 
 				std::unique_ptr<RSA, decltype(&RSA_free)> key(EVP_PKEY_get1_RSA(pkey.get()), RSA_free);
+				if(!key) {
+					ec = error::signature_generation_error::create_context_failed;
+					return "";
+				}
 				const int size = RSA_size(key.get());
 
 				std::string padded(size, 0x00);
-				if (RSA_padding_add_PKCS1_PSS_mgf1(key.get(), (unsigned char*)padded.data(), reinterpret_cast<const unsigned char*>(hash.data()), md(), md(), -1) == 0) // NOLINT(google-readability-casting) requires `const_cast`
-					throw signature_generation_exception("failed to create signature: RSA_padding_add_PKCS1_PSS_mgf1 failed");
+				if (RSA_padding_add_PKCS1_PSS_mgf1(key.get(), (unsigned char*)padded.data(), reinterpret_cast<const unsigned char*>(hash.data()), md(), md(), -1) == 0) { // NOLINT(google-readability-casting) requires `const_cast`
+					ec = error::signature_generation_error::rsa_padding_failed;
+					return "";
+				}
 
 				std::string res(size, 0x00);
-				if (RSA_private_encrypt(size, reinterpret_cast<const unsigned char*>(padded.data()), (unsigned char*)res.data(), key.get(), RSA_NO_PADDING) < 0) // NOLINT(google-readability-casting) requires `const_cast`
-					throw signature_generation_exception("failed to create signature: RSA_private_encrypt failed");
+				if (RSA_private_encrypt(size, reinterpret_cast<const unsigned char*>(padded.data()), (unsigned char*)res.data(), key.get(), RSA_NO_PADDING) < 0) { // NOLINT(google-readability-casting) requires `const_cast`
+					ec = error::signature_generation_error::rsa_private_encrypt_failed;
+					return "";
+				}
 				return res;
 			}
 			/**
@@ -876,7 +1018,8 @@ namespace jwt {
 			 */
 			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
 				ec.clear();
-				auto hash = this->generate_hash(data);
+				auto hash = this->generate_hash(data, ec);
+				if(ec) return;
 
 				std::unique_ptr<RSA, decltype(&RSA_free)> key(EVP_PKEY_get1_RSA(pkey.get()), RSA_free);
 				if(!key) {
@@ -909,21 +1052,31 @@ namespace jwt {
 			 * \param data Data to hash
 			 * \return Hash of data
 			 */
-			std::string generate_hash(const std::string& data) const {
+			std::string generate_hash(const std::string& data, std::error_code& ec) const {
 #ifdef OPENSSL10
 				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(), &EVP_MD_CTX_destroy);
 #else
 				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
 #endif
-				if(EVP_DigestInit(ctx.get(), md()) == 0)
-					throw signature_generation_exception("EVP_DigestInit failed");
-				if(EVP_DigestUpdate(ctx.get(), data.data(), data.size()) == 0)
-					throw signature_generation_exception("EVP_DigestUpdate failed");
+				if(!ctx) {
+					ec = error::signature_generation_error::create_context_failed;
+					return "";
+				}
+				if(EVP_DigestInit(ctx.get(), md()) == 0) {
+					ec = error::signature_generation_error::digestinit_failed;
+					return "";
+				}
+				if(EVP_DigestUpdate(ctx.get(), data.data(), data.size()) == 0) {
+					ec = error::signature_generation_error::digestupdate_failed;
+					return "";
+				}
 				unsigned int len = 0;
 				std::string res;
 				res.resize(EVP_MD_CTX_size(ctx.get()));
-				if(EVP_DigestFinal(ctx.get(), (unsigned char*)res.data(), &len) == 0) // NOLINT(google-readability-casting) requires `const_cast`
-					throw signature_generation_exception("EVP_DigestFinal failed");
+				if(EVP_DigestFinal(ctx.get(), (unsigned char*)res.data(), &len) == 0) { // NOLINT(google-readability-casting) requires `const_cast`
+					ec = error::signature_generation_error::digestfinal_failed;
+					return "";
+				}
 				res.resize(len);
 				return res;
 			}
@@ -1992,6 +2145,51 @@ namespace jwt {
 			return sign(algo, [](const typename json_traits::string_type& data) {
 				return base::trim<alphabet::base64url>(base::encode<alphabet::base64url>(data));
 			});
+		}
+	#endif
+
+
+		/**
+		 * Sign token and return result
+		 * \tparam Algo Callable method which takes a string_type and return the signed input as a string_type
+		 * \tparam Encode Callable method which takes a string_type and base64url safe encodes it,
+		 * MUST return the result with no padding; trim the result.
+		 * \param algo Instance of an algorithm to sign the token with
+		 * \param encode Callable to transform the serialized json to base64 with no padding
+		 * \param ec error_code filled with details on error
+		 * \return Final token as a string
+		 * 
+		 * \note If the 'alg' header in not set in the token it will be set to `algo.name()`
+		 */
+		template<typename Algo, typename Encode>
+		typename json_traits::string_type sign(const Algo& algo, Encode encode, std::error_code& ec) const {
+			typename json_traits::object_type obj_header = header_claims;
+			if(header_claims.count("alg") == 0)
+				obj_header["alg"] = typename json_traits::value_type(algo.name());
+
+			typename json_traits::string_type header = encode(json_traits::serialize(typename json_traits::value_type(obj_header)));
+			typename json_traits::string_type payload = encode(json_traits::serialize(typename json_traits::value_type(payload_claims)));
+			typename json_traits::string_type token = header + "." + payload;
+
+			auto signature = algo.sign(token, ec);
+			if(ec) return "";
+			return token + "." + encode(signature);
+		}
+	#ifndef DISABLE_BASE64
+		/**
+		 * Sign token and return result
+		 * 
+		 * using the `jwt::base` functions provided
+		 * 
+		 * \param algo Instance of an algorithm to sign the token with
+		 * \param ec error_code filled with details on error
+		 * \return Final token as a string
+		 */
+		template<typename Algo>
+		typename json_traits::string_type sign(const Algo& algo, std::error_code& ec) const {
+			return sign(algo, [](const typename json_traits::string_type& data) {
+				return base::trim<alphabet::base64url>(base::encode<alphabet::base64url>(data));
+			}, ec);
 		}
 	#endif
 	};
