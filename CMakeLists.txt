@@ -5,6 +5,7 @@ if(CMAKE_TOOLCHAIN_FILE)
 endif()
 
 option(BUILD_TESTS "Configure CMake to build tests (or not)" ON)
+option(BUILD_EXAMPLES "Configure CMake to build examples (or not)" ON)
 option(COVERAGE "Enable code coverage testing" OFF)
 option(EXTERNAL_PICOJSON "Use find_package() to locate the picojson header" OFF)
 option(DISABLE_JWT_CPP_BASE64
@@ -92,4 +93,8 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config.cmake
 
 if(BUILD_TESTS)
   add_subdirectory(tests)
+endif()
+
+if(BUILD_EXAMPLES)
+  add_subdirectory(example)
 endif()

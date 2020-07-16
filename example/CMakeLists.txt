@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.8)
 
 project(jwt-cpp-examples)
-find_package(jwt-cpp CONFIG REQUIRED)
+if(NOT TARGET jwt-cpp)
+    find_package(jwt-cpp CONFIG REQUIRED)
+endif()
 
 add_executable(print-claims print-claims.cpp)
 target_link_libraries(print-claims jwt-cpp::jwt-cpp)
