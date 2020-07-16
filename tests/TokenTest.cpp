@@ -481,7 +481,7 @@ TEST(TokenTest, VerifyTokenExpireFail) {
 	ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
 	std::error_code ec;
 	ASSERT_NO_THROW(verify.verify(decoded_token, ec));
-	ASSERT_TRUE(ec);
+	ASSERT_TRUE(!(!ec));
 	ASSERT_EQ(ec.category(), jwt::error::token_verification_error_category());
 	ASSERT_EQ(ec.value(), static_cast<int>(jwt::error::token_verification_error::token_expired));
 }
@@ -495,7 +495,7 @@ TEST(TokenTest, VerifyTokenExpire) {
 	ASSERT_NO_THROW(verify.verify(decoded_token));
 	std::error_code ec;
 	ASSERT_NO_THROW(verify.verify(decoded_token, ec));
-	ASSERT_FALSE(ec);
+	ASSERT_FALSE(!(!ec));
 	ASSERT_EQ(ec.value(), 0);
 }
 
@@ -508,7 +508,7 @@ TEST(TokenTest, VerifyTokenNBFFail) {
 	ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
 	std::error_code ec;
 	ASSERT_NO_THROW(verify.verify(decoded_token, ec));
-	ASSERT_TRUE(ec);
+	ASSERT_TRUE(!(!ec));
 	ASSERT_EQ(ec.category(), jwt::error::token_verification_error_category());
 	ASSERT_EQ(ec.value(), static_cast<int>(jwt::error::token_verification_error::token_expired));
 }
@@ -522,7 +522,7 @@ TEST(TokenTest, VerifyTokenNBF) {
 	ASSERT_NO_THROW(verify.verify(decoded_token));
 	std::error_code ec;
 	ASSERT_NO_THROW(verify.verify(decoded_token, ec));
-	ASSERT_FALSE(ec);
+	ASSERT_FALSE(!(!ec));
 	ASSERT_EQ(ec.value(), 0);
 }
 
@@ -535,7 +535,7 @@ TEST(TokenTest, VerifyTokenIATFail) {
 	ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
 	std::error_code ec;
 	ASSERT_NO_THROW(verify.verify(decoded_token, ec));
-	ASSERT_TRUE(ec);
+	ASSERT_TRUE(!(!ec));
 	ASSERT_EQ(ec.category(), jwt::error::token_verification_error_category());
 	ASSERT_EQ(ec.value(), static_cast<int>(jwt::error::token_verification_error::token_expired));
 }
@@ -549,7 +549,7 @@ TEST(TokenTest, VerifyTokenIAT) {
 	ASSERT_NO_THROW(verify.verify(decoded_token));
 	std::error_code ec;
 	ASSERT_NO_THROW(verify.verify(decoded_token, ec));
-	ASSERT_FALSE(ec);
+	ASSERT_FALSE(!(!ec));
 	ASSERT_EQ(ec.value(), 0);
 }
 
