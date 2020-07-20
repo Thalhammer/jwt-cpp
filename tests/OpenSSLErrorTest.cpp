@@ -278,25 +278,30 @@ TEST(OpenSSLErrorTest, ExtractPubkeyFromCertReference) {
     ASSERT_EQ(ec.value(), 0);
 }
 
+struct multitest_entry {
+    uint64_t* fail_mask_ptr;
+    uint64_t fail_bitmask;
+    std::error_code expected_ec;
+};
+
 template<typename Func>
-void run_multitest(const std::vector<std::tuple<uint64_t*, uint64_t, std::error_code>>& mapping, Func fn) {
+void run_multitest(const std::vector<multitest_entry>& mapping, Func fn) {
     for(auto& e : mapping) {
         std::error_code ec;
-        *std::get<0>(e) = std::get<1>(e);
+        *e.fail_mask_ptr = e.fail_bitmask;
         try {
             fn(ec);
         } catch(...) {
-            *std::get<0>(e) = 0;
+            *e.fail_mask_ptr = 0;
             throw;
         }
-        *std::get<0>(e) = 0;
-        ASSERT_TRUE(!(!ec));
-        ASSERT_EQ(ec, std::get<2>(e));
+        *e.fail_mask_ptr = 0;
+        ASSERT_EQ(ec, e.expected_ec);
     }
 }
 
 TEST(OpenSSLErrorTest, ExtractPubkeyFromCert) {
-    std::vector<std::tuple<uint64_t*, uint64_t, std::error_code>> mapping = {
+    std::vector<multitest_entry> mapping = {
         { &fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed },
         { &fail_PEM_read_bio_X509, 1, jwt::error::rsa_error::cert_load_failed },
         { &fail_X509_get_pubkey, 1, jwt::error::rsa_error::get_key_failed },
@@ -315,7 +320,7 @@ TEST(OpenSSLErrorTest, ExtractPubkeyFromCert) {
 }
 
 TEST(OpenSSLErrorTest, ExtractPubkeyFromCertErrorCode) {
-    std::vector<std::tuple<uint64_t*, uint64_t, std::error_code>> mapping = {
+    std::vector<multitest_entry> mapping = {
         { &fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed },
         { &fail_PEM_read_bio_X509, 1, jwt::error::rsa_error::cert_load_failed },
         { &fail_X509_get_pubkey, 1, jwt::error::rsa_error::get_key_failed },
@@ -335,7 +340,7 @@ TEST(OpenSSLErrorTest, LoadPublicKeyFromStringReference) {
 }
 
 TEST(OpenSSLErrorTest, LoadPublicKeyFromString) {
-    std::vector<std::tuple<uint64_t*, uint64_t, std::error_code>> mapping = {
+    std::vector<multitest_entry> mapping = {
         { &fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed },
         { &fail_BIO_write, 1, jwt::error::rsa_error::load_key_bio_write },
         { &fail_PEM_read_bio_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_read }
@@ -352,7 +357,7 @@ TEST(OpenSSLErrorTest, LoadPublicKeyFromString) {
 }
 
 TEST(OpenSSLErrorTest, LoadPublicKeyFromStringErrorCode) {
-    std::vector<std::tuple<uint64_t*, uint64_t, std::error_code>> mapping = {
+    std::vector<multitest_entry> mapping = {
         { &fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed },
         { &fail_BIO_write, 1, jwt::error::rsa_error::load_key_bio_write },
         { &fail_PEM_read_bio_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_read }
@@ -370,7 +375,7 @@ TEST(OpenSSLErrorTest, LoadPublicKeyCertFromStringReference) {
 }
 
 TEST(OpenSSLErrorTest, LoadPublicKeyCertFromString) {
-    std::vector<std::tuple<uint64_t*, uint64_t, std::error_code>> mapping = {
+    std::vector<multitest_entry> mapping = {
         { &fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed },
         { &fail_BIO_write, 1, jwt::error::rsa_error::load_key_bio_write },
         { &fail_PEM_read_bio_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_read }
@@ -387,7 +392,7 @@ TEST(OpenSSLErrorTest, LoadPublicKeyCertFromString) {
 }
 
 TEST(OpenSSLErrorTest, LoadPublicKeyCertFromStringErrorCode) {
-    std::vector<std::tuple<uint64_t*, uint64_t, std::error_code>> mapping = {
+    std::vector<multitest_entry> mapping = {
         { &fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed },
         { &fail_BIO_write, 1, jwt::error::rsa_error::load_key_bio_write },
         { &fail_PEM_read_bio_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_read }
@@ -405,7 +410,7 @@ TEST(OpenSSLErrorTest, LoadPrivateKeyFromStringReference) {
 }
 
 TEST(OpenSSLErrorTest, LoadPrivateKeyFromString) {
-    std::vector<std::tuple<uint64_t*, uint64_t, std::error_code>> mapping = {
+    std::vector<multitest_entry> mapping = {
         { &fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed },
         { &fail_BIO_write, 1, jwt::error::rsa_error::load_key_bio_write },
         { &fail_PEM_read_bio_PrivateKey, 1, jwt::error::rsa_error::load_key_bio_read }
@@ -422,7 +427,7 @@ TEST(OpenSSLErrorTest, LoadPrivateKeyFromString) {
 }
 
 TEST(OpenSSLErrorTest, LoadPrivateKeyFromStringErrorCode) {
-    std::vector<std::tuple<uint64_t*, uint64_t, std::error_code>> mapping = {
+    std::vector<multitest_entry> mapping = {
         { &fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed },
         { &fail_BIO_write, 1, jwt::error::rsa_error::load_key_bio_write },
         { &fail_PEM_read_bio_PrivateKey, 1, jwt::error::rsa_error::load_key_bio_read }
@@ -442,7 +447,7 @@ TEST(OpenSSLErrorTest, HMACSign) {
 		.with_issuer("auth0");
 
 	auto decoded_token = jwt::decode(token);
-    std::vector<std::tuple<uint64_t*, uint64_t, std::error_code>> mapping = {
+    std::vector<multitest_entry> mapping = {
         { &fail_HMAC, 1, jwt::error::signature_generation_error::hmac_failed }
     };
 
@@ -468,7 +473,7 @@ TEST(OpenSSLErrorTest, RS256Reference) {
 
 TEST(OpenSSLErrorTest, RS256SignErrorCode) {
 	jwt::algorithm::rs256 alg{rsa_pub_key,rsa_priv_key};
-    std::vector<std::tuple<uint64_t*, uint64_t, std::error_code>> mapping = {
+    std::vector<multitest_entry> mapping = {
         { &fail_EVP_MD_CTX_new, 1, jwt::error::signature_generation_error::create_context_failed },
         { &fail_EVP_DigestInit, 1, jwt::error::signature_generation_error::signinit_failed },
         { &fail_EVP_DigestUpdate, 1, jwt::error::signature_generation_error::signupdate_failed },
@@ -488,7 +493,7 @@ TEST(OpenSSLErrorTest, RS256VerifyErrorCode) {
         "AhzGkI9HdADu5YAJsUaLknDUV5hmundXQY8lhwQnKFXW0rl0H8DoFiPQErFmcKI6PA9NVGK/LSiqHqesNeg0wqCTxMmeT6pqI7FH9fDO"
         "CaBpwUJ4t5aKoytQ75t13OfUM7tfLlVkFZtI3RndhivxLA5d4Elt/Gv3RhDu6Eiom5NZ/pwRvP26Sox+FWapz3DGCil70H1iGSYu8ENa"
         "afUBCGGhT4sk7kl7zS6XiEpMobLq3A==");
-    std::vector<std::tuple<uint64_t*, uint64_t, std::error_code>> mapping = {
+    std::vector<multitest_entry> mapping = {
         { &fail_EVP_MD_CTX_new, 1, jwt::error::signature_verification_error::create_context_failed },
         { &fail_EVP_DigestInit, 1, jwt::error::signature_verification_error::verifyinit_failed },
         { &fail_EVP_DigestUpdate, 1, jwt::error::signature_verification_error::verifyupdate_failed },
@@ -505,7 +510,7 @@ TEST(OpenSSLErrorTest, ECDSAKeyReference) {
 }
 
 TEST(OpenSSLErrorTest, ECDSAKey) {
-    std::vector<std::tuple<uint64_t*, uint64_t, std::error_code>> mapping = {
+    std::vector<multitest_entry> mapping = {
         { &fail_BIO_new, 1, jwt::error::ecdsa_error::create_mem_bio_failed },
         { &fail_BIO_write, 1, jwt::error::ecdsa_error::load_key_bio_write },
         { &fail_PEM_read_bio_EC_PUBKEY, 1, jwt::error::ecdsa_error::load_key_bio_read },
@@ -527,7 +532,7 @@ TEST(OpenSSLErrorTest, ECDSAKey) {
 }
 
 TEST(OpenSSLErrorTest, ECDSACertificate) {
-    std::vector<std::tuple<uint64_t*, uint64_t, std::error_code>> mapping = {
+    std::vector<multitest_entry> mapping = {
         { &fail_BIO_new, 1, jwt::error::ecdsa_error::create_mem_bio_failed },
         { &fail_BIO_write, 1, jwt::error::ecdsa_error::load_key_bio_write },
         { &fail_PEM_read_bio_EC_PUBKEY, 1, jwt::error::ecdsa_error::load_key_bio_read },
@@ -562,7 +567,7 @@ TEST(OpenSSLErrorTest, ES256Reference) {
 
 TEST(OpenSSLErrorTest, ES256SignErrorCode) {
 	jwt::algorithm::es256 alg{ecdsa256_pub_key,ecdsa256_priv_key};
-    std::vector<std::tuple<uint64_t*, uint64_t, std::error_code>> mapping = {
+    std::vector<multitest_entry> mapping = {
         { &fail_EVP_MD_CTX_new, 1, jwt::error::signature_generation_error::create_context_failed },
         { &fail_EVP_DigestInit, 1, jwt::error::signature_generation_error::digestinit_failed },
         { &fail_EVP_DigestUpdate, 1, jwt::error::signature_generation_error::digestupdate_failed },
@@ -580,7 +585,7 @@ TEST(OpenSSLErrorTest, ES256VerifyErrorCode) {
 	jwt::algorithm::es256 alg{ecdsa256_pub_key,ecdsa256_priv_key};
     auto signature = jwt::base::decode<jwt::alphabet::base64>(
         "aC/NqyHfPw5FDA0yRAnrbkrAlXjsr0obRkCg/HgP+77QYJrAg6YKkKoJwMXjUX8fQrxXKTN7em5L9dtmOep37Q==");
-    std::vector<std::tuple<uint64_t*, uint64_t, std::error_code>> mapping = {
+    std::vector<multitest_entry> mapping = {
         { &fail_EVP_MD_CTX_new, 1, jwt::error::signature_generation_error::create_context_failed },
         { &fail_EVP_DigestInit, 1, jwt::error::signature_generation_error::digestinit_failed },
         { &fail_EVP_DigestUpdate, 1, jwt::error::signature_generation_error::digestupdate_failed },
@@ -605,7 +610,7 @@ TEST(OpenSSLErrorTest, PS256Reference) {
 
 TEST(OpenSSLErrorTest, PS256SignErrorCode) {
 	jwt::algorithm::ps256 alg{rsa_pub_key,rsa_priv_key};
-    std::vector<std::tuple<uint64_t*, uint64_t, std::error_code>> mapping = {
+    std::vector<multitest_entry> mapping = {
         { &fail_EVP_MD_CTX_new, 1, jwt::error::signature_generation_error::create_context_failed },
         { &fail_EVP_DigestInit, 1, jwt::error::signature_generation_error::digestinit_failed },
         { &fail_EVP_DigestUpdate, 1, jwt::error::signature_generation_error::digestupdate_failed },
@@ -624,7 +629,7 @@ TEST(OpenSSLErrorTest, PS256VerifyErrorCode) {
 	jwt::algorithm::ps256 alg{rsa_pub_key,rsa_priv_key};
     std::string signature = "LMiWCiW0a/mbU6LK8EZaDQ6TGisqfD+LF46zUbzjhFt02J9yVuf3ZDNTdRgLKKP8nCJUx0SN+5CS2YD268Ioxau5bWs49RVCxtID5DcRpJlSo+Vk+dCmwxhQWHX8HNh3o7kBK5H8fLeTeupuSov+0hH3+GRrYJqZvCdbcadi6amNKCfeIl6a5mp2VCM55NsPoRxsmSzc1G7AHWb1ckOCsm3KY5BL6B074bHgoqO3yaLlKWLAcy4OYyRpJ/wnZQ9PPrhwdq/B59uW3x1QUCKYKgZeqZOoqIP1YgLwvEpPtXYutQCFr4eBKgV7vdtE0wgHR43ka16fi5L4SyaZv53NCg==";
     signature = jwt::base::decode<jwt::alphabet::base64>(signature);
-    std::vector<std::tuple<uint64_t*, uint64_t, std::error_code>> mapping = {
+    std::vector<multitest_entry> mapping = {
         { &fail_EVP_MD_CTX_new, 1, jwt::error::signature_generation_error::create_context_failed },
         { &fail_EVP_DigestInit, 1, jwt::error::signature_generation_error::digestinit_failed },
         { &fail_EVP_DigestUpdate, 1, jwt::error::signature_generation_error::digestupdate_failed },
