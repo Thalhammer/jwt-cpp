@@ -14,11 +14,13 @@ find_package(GTest REQUIRED)
 set(TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/BaseTest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ClaimTest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Keys.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/HelperTest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/TestMain.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/TokenFormatTest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/TokenTest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/NlohmannTest.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/NlohmannTest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/OpenSSLErrorTest.cpp)
 
 add_executable(jwt-cpp-test ${TEST_SOURCES})
 target_compile_options(
@@ -32,7 +34,7 @@ target_compile_options(
           -Wno-global-constructors
           -Wno-weak-vtables>)
 target_link_libraries(jwt-cpp-test PRIVATE jwt-cpp::jwt-cpp GTest::GTest
-                                           GTest::Main pthread)
+                                           GTest::Main pthread dl)
 
 gtest_add_tests(TARGET jwt-cpp-test)
 
