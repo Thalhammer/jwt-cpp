@@ -53,26 +53,25 @@
 namespace jwt {
 	using date = std::chrono::system_clock::time_point;
 
-	struct signature_verification_exception : public std::system_error {
-		using system_error::system_error;
-	};
-	struct signature_generation_exception : public std::system_error {
-		using system_error::system_error;
-	};
-	struct rsa_exception : public std::system_error {
-		using system_error::system_error;
-	};
-	struct ecdsa_exception : public std::system_error {
-		using system_error::system_error;
-	};
-	struct token_verification_exception : public std::system_error {
-		using system_error::system_error;
-	};
-
 	/**
 	 * \brief Everything related to error codes issued by the library
 	 */
 	namespace error {
+		struct signature_verification_exception : public std::system_error {
+			using system_error::system_error;
+		};
+		struct signature_generation_exception : public std::system_error {
+			using system_error::system_error;
+		};
+		struct rsa_exception : public std::system_error {
+			using system_error::system_error;
+		};
+		struct ecdsa_exception : public std::system_error {
+			using system_error::system_error;
+		};
+		struct token_verification_exception : public std::system_error {
+			using system_error::system_error;
+		};
 		/**
 		 * \brief Error related to processing of RSA signatures
 		 */
@@ -117,7 +116,7 @@ namespace jwt {
 		inline std::error_code make_error_code(rsa_error e) {
 			return {static_cast<int>(e), rsa_error_category()};
 		}
-/**
+		/**
 		 * \brief Error related to processing of RSA signatures
 		 */
 		enum class ecdsa_error {
@@ -304,6 +303,13 @@ namespace jwt {
 			}
 		}
 	}
+
+	// Keep backward compat at least for a couple of revisions
+	using error::signature_verification_exception;
+	using error::signature_generation_exception;
+	using error::rsa_exception;
+	using error::ecdsa_exception;
+	using error::token_verification_exception;
 }
 namespace std
 {
