@@ -8,6 +8,9 @@ endif()
 add_executable(print-claims print-claims.cpp)
 target_link_libraries(print-claims jwt-cpp::jwt-cpp)
 
+add_executable(private-claims private-claims.cpp)
+target_link_libraries(private-claims jwt-cpp::jwt-cpp)
+
 add_executable(rsa-create rsa-create.cpp)
 target_link_libraries(rsa-create jwt-cpp::jwt-cpp)
 
