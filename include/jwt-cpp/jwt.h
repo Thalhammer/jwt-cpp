@@ -121,11 +121,7 @@ namespace jwt {
 		 */
 		enum class ecdsa_error {
 			ok = 0,
-			cert_load_failed = 10,
-			get_key_failed,
-			write_key_failed,
-			convert_to_pem_failed,
-			load_key_bio_write,
+			load_key_bio_write = 10,
 			load_key_bio_read,
 			create_mem_bio_failed,
 			no_key_provided,
@@ -217,7 +213,8 @@ namespace jwt {
 			digestupdate_failed,
 			digestfinal_failed,
 			rsa_padding_failed,
-			rsa_private_encrypt_failed
+			rsa_private_encrypt_failed,
+			get_key_failed
 		};
 		/**
 		 * \brief Errorcategory for signature generation errors
@@ -241,6 +238,7 @@ namespace jwt {
 					case signature_generation_error::digestfinal_failed: return "failed to create signature: DigestFinal failed";
 					case signature_generation_error::rsa_padding_failed: return "failed to create signature: RSA_padding_add_PKCS1_PSS_mgf1 failed";
 					case signature_generation_error::rsa_private_encrypt_failed: return "failed to create signature: RSA_private_encrypt failed";
+					case signature_generation_error::get_key_failed: return "failed to generate signature: Could not get key";
 					default: return "unknown signature generation error";
 					}
 				}
@@ -255,7 +253,7 @@ namespace jwt {
 
 		enum class token_verification_error {
 			ok = 0,
-			wrong_algorithm,
+			wrong_algorithm = 10,
 			missing_claim,
 			claim_type_missmatch,
 			claim_value_missmatch,
@@ -776,7 +774,9 @@ namespace jwt {
 
 				if (!private_key.empty()) {
 					std::unique_ptr<BIO, decltype(&BIO_free_all)> privkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
-						const int len = static_cast<int>(private_key.size());
+					if(!privkey_bio)
+						throw ecdsa_exception(error::ecdsa_error::create_mem_bio_failed);
+					const int len = static_cast<int>(private_key.size());
 					if (BIO_write(privkey_bio.get(), private_key.data(), len) != len)
 						throw ecdsa_exception(error::ecdsa_error::load_key_bio_write);
 					pkey.reset(PEM_read_bio_ECPrivateKey(privkey_bio.get(), nullptr, nullptr, const_cast<char*>(private_key_password.c_str())), EC_KEY_free);
@@ -883,6 +883,10 @@ namespace jwt {
 #else
 				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
 #endif
+				if(!ctx) {
+					ec = error::signature_generation_error::create_context_failed;
+					return {};
+				}
 				if(EVP_DigestInit(ctx.get(), md()) == 0) {
 					ec = error::signature_generation_error::digestinit_failed;
 					return {};
@@ -949,7 +953,7 @@ namespace jwt {
 
 				std::unique_ptr<RSA, decltype(&RSA_free)> key(EVP_PKEY_get1_RSA(pkey.get()), RSA_free);
 				if(!key) {
-					ec = error::signature_generation_error::create_context_failed;
+					ec = error::signature_generation_error::get_key_failed;
 					return {};
 				}
 				const int size = RSA_size(key.get());
