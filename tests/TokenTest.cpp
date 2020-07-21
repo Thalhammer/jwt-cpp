@@ -180,6 +180,21 @@ TEST(TokenTest, CreateTokenES512NoPrivate) {
 	}(), jwt::signature_generation_exception);
 }
 
+TEST(TokenTest, VerifyTokenWrongAlgorithm) {
+	std::string token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
+		"HAZCTQxa1Q8NppnpYV-hlqxh-X3Bb0JOePTGzjynpNZoJh2aHZD-GKpZt7OO1Zp8AFWPZ3p8Cahq8536fD8RiBES9jRsvChZvOqA7gMcFc4"
+		"YD0iZhNIcI7a654u5yPYyTlf5kjR97prCf_OXWRn-bYY74zna4p_bP9oWCL4BkaoRcMxi-IR7kmVcCnvbYqyIrKloXP2qPO442RBGqU7Ov9"
+		"sGQxiVqtRHKXZR9RbfvjrErY1KGiCp9M5i2bsUHadZEY44FE2jiOmx-uc2z5c05CCXqVSpfCjWbh9gQ";
+
+	auto verify = jwt::verify()
+		.allow_algorithm(jwt::algorithm::none{})
+		.with_issuer("auth0");
+
+	auto decoded_token = jwt::decode(token);
+
+	ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+}
+
 TEST(TokenTest, VerifyTokenRS256) {
 	std::string token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
 		"HAZCTQxa1Q8NppnpYV-hlqxh-X3Bb0JOePTGzjynpNZoJh2aHZD-GKpZt7OO1Zp8AFWPZ3p8Cahq8536fD8RiBES9jRsvChZvOqA7gMcFc4"
@@ -311,6 +326,8 @@ TEST(TokenTest, VerifyFail) {
 	auto token = jwt::create()
 		.set_issuer("auth0")
 		.set_type("JWS")
+		.set_audience("random")
+		.set_payload_claim("typetest", picojson::value(10.0))
 		.sign(jwt::algorithm::none{});
 
 	auto decoded_token = jwt::decode(token);
@@ -350,6 +367,13 @@ TEST(TokenTest, VerifyFail) {
 		ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
 	}
 	{
+		auto verify = jwt::verify()
+			.allow_algorithm(jwt::algorithm::none{})
+			.with_issuer("auth0")
+			.with_claim("typetest", jwt::claim(picojson::value(true)));
+		ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+	}
+	{
 		jwt::claim object;
 		std::istringstream iss{R"({ "test": null })"};
 		iss >> object;
@@ -359,6 +383,20 @@ TEST(TokenTest, VerifyFail) {
 			.allow_algorithm(jwt::algorithm::none{})
 			.with_issuer("auth0")
 			.with_claim("myclaim", object);
+		ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+	}
+
+	{
+		auto token = jwt::create()
+		.set_issuer("auth0")
+		.set_type("JWS")
+		.sign(jwt::algorithm::none{});
+
+		auto decoded_token = jwt::decode(token);
+		auto verify = jwt::verify()
+			.allow_algorithm(jwt::algorithm::none{})
+			.with_issuer("auth0")
+			.with_audience("test");
 		ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
 	}
 }
@@ -464,6 +502,103 @@ TEST(TokenTest, VerifyTokenPS256Fail) {
 
 	ASSERT_THROW(verify.verify(decoded_token), jwt::signature_verification_exception);
 }
+
+struct test_clock {
+	jwt::date n;
+	jwt::date now() const {
+		return n;
+	}
+};
+
+TEST(TokenTest, VerifyTokenExpireFail) {
+	auto token = jwt::create().set_expires_at(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
+	auto decoded_token = jwt::decode(token);
+
+	auto verify = jwt::verify<test_clock, jwt::picojson_traits>({std::chrono::system_clock::from_time_t(110)})
+		.allow_algorithm(jwt::algorithm::none{});
+	ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+	std::error_code ec;
+	ASSERT_NO_THROW(verify.verify(decoded_token, ec));
+	ASSERT_TRUE(!(!ec));
+	ASSERT_EQ(ec.category(), jwt::error::token_verification_error_category());
+	ASSERT_EQ(ec.value(), static_cast<int>(jwt::error::token_verification_error::token_expired));
+}
+
+TEST(TokenTest, VerifyTokenExpire) {
+	auto token = jwt::create().set_expires_at(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
+	auto decoded_token = jwt::decode(token);
+
+	auto verify = jwt::verify<test_clock, jwt::picojson_traits>({std::chrono::system_clock::from_time_t(90)})
+		.allow_algorithm(jwt::algorithm::none{});
+	ASSERT_NO_THROW(verify.verify(decoded_token));
+	std::error_code ec;
+	ASSERT_NO_THROW(verify.verify(decoded_token, ec));
+	ASSERT_FALSE(!(!ec));
+	ASSERT_EQ(ec.value(), 0);
+}
+
+TEST(TokenTest, VerifyTokenNBFFail) {
+	auto token = jwt::create().set_not_before(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
+	auto decoded_token = jwt::decode(token);
+
+	auto verify = jwt::verify<test_clock, jwt::picojson_traits>({std::chrono::system_clock::from_time_t(90)})
+		.allow_algorithm(jwt::algorithm::none{});
+	ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+	std::error_code ec;
+	ASSERT_NO_THROW(verify.verify(decoded_token, ec));
+	ASSERT_TRUE(!(!ec));
+	ASSERT_EQ(ec.category(), jwt::error::token_verification_error_category());
+	ASSERT_EQ(ec.value(), static_cast<int>(jwt::error::token_verification_error::token_expired));
+}
+
+TEST(TokenTest, VerifyTokenNBF) {
+	auto token = jwt::create().set_not_before(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
+	auto decoded_token = jwt::decode(token);
+
+	auto verify = jwt::verify<test_clock, jwt::picojson_traits>({std::chrono::system_clock::from_time_t(110)})
+		.allow_algorithm(jwt::algorithm::none{});
+	ASSERT_NO_THROW(verify.verify(decoded_token));
+	std::error_code ec;
+	ASSERT_NO_THROW(verify.verify(decoded_token, ec));
+	ASSERT_FALSE(!(!ec));
+	ASSERT_EQ(ec.value(), 0);
+}
+
+TEST(TokenTest, VerifyTokenIATFail) {
+	auto token = jwt::create().set_issued_at(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
+	auto decoded_token = jwt::decode(token);
+
+	auto verify = jwt::verify<test_clock, jwt::picojson_traits>({std::chrono::system_clock::from_time_t(90)})
+		.allow_algorithm(jwt::algorithm::none{});
+	ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+	std::error_code ec;
+	ASSERT_NO_THROW(verify.verify(decoded_token, ec));
+	ASSERT_TRUE(!(!ec));
+	ASSERT_EQ(ec.category(), jwt::error::token_verification_error_category());
+	ASSERT_EQ(ec.value(), static_cast<int>(jwt::error::token_verification_error::token_expired));
+}
+
+TEST(TokenTest, VerifyTokenIAT) {
+	auto token = jwt::create().set_issued_at(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
+	auto decoded_token = jwt::decode(token);
+
+	auto verify = jwt::verify<test_clock, jwt::picojson_traits>({std::chrono::system_clock::from_time_t(110)})
+		.allow_algorithm(jwt::algorithm::none{});
+	ASSERT_NO_THROW(verify.verify(decoded_token));
+	std::error_code ec;
+	ASSERT_NO_THROW(verify.verify(decoded_token, ec));
+	ASSERT_FALSE(!(!ec));
+	ASSERT_EQ(ec.value(), 0);
+}
+
+TEST(TokenTest, GetClaimThrows) {
+	auto token = "eyJhbGciOiJub25lIiwidHlwIjoiSldTIn0.eyJpc3MiOiJhdXRoMCJ9.";
+	auto decoded_token = jwt::decode(token);
+
+	ASSERT_THROW(decoded_token.get_header_claim("test"), std::runtime_error);
+	ASSERT_THROW(decoded_token.get_payload_claim("test"), std::runtime_error);
+}
+
 
 TEST(TokenTest, ThrowInvalidKeyLength) {
 	// We should throw if passed the wrong size

@@ -24,6 +24,7 @@
 #include <unordered_map>
 #include <utility>
 #include <type_traits>
+#include <system_error>
 
 #if __cplusplus >= 201402L
 #ifdef __has_include
@@ -52,53 +53,278 @@
 namespace jwt {
 	using date = std::chrono::system_clock::time_point;
 
-	struct signature_verification_exception : public std::runtime_error {
-		signature_verification_exception()
-			: std::runtime_error("signature verification failed")
-		{}
-		explicit signature_verification_exception(const std::string& msg)
-			: std::runtime_error(msg)
-		{}
-		explicit signature_verification_exception(const char* msg)
-			: std::runtime_error(msg)
-		{}
-	};
-	struct signature_generation_exception : public std::runtime_error {
-		signature_generation_exception()
-			: std::runtime_error("signature generation failed")
-		{}
-		explicit signature_generation_exception(const std::string& msg)
-			: std::runtime_error(msg)
-		{}
-		explicit signature_generation_exception(const char* msg)
-			: std::runtime_error(msg)
-		{}
-	};
-	struct rsa_exception : public std::runtime_error {
-		explicit rsa_exception(const std::string& msg)
-			: std::runtime_error(msg)
-		{}
-		explicit rsa_exception(const char* msg)
-			: std::runtime_error(msg)
-		{}
-	};
-	struct ecdsa_exception : public std::runtime_error {
-		explicit ecdsa_exception(const std::string& msg)
-			: std::runtime_error(msg)
-		{}
-		explicit ecdsa_exception(const char* msg)
-			: std::runtime_error(msg)
-		{}
-	};
-	struct token_verification_exception : public std::runtime_error {
-		token_verification_exception()
-			: std::runtime_error("token verification failed")
-		{}
-		explicit token_verification_exception(const std::string& msg)
-			: std::runtime_error("token verification failed: " + msg)
-		{}
-	};
+	/**
+	 * \brief Everything related to error codes issued by the library
+	 */
+	namespace error {
+		struct signature_verification_exception : public std::system_error {
+			using system_error::system_error;
+		};
+		struct signature_generation_exception : public std::system_error {
+			using system_error::system_error;
+		};
+		struct rsa_exception : public std::system_error {
+			using system_error::system_error;
+		};
+		struct ecdsa_exception : public std::system_error {
+			using system_error::system_error;
+		};
+		struct token_verification_exception : public std::system_error {
+			using system_error::system_error;
+		};
+		/**
+		 * \brief Error related to processing of RSA signatures
+		 */
+		enum class rsa_error {
+			ok = 0,
+			cert_load_failed = 10,
+			get_key_failed,
+			write_key_failed,
+			convert_to_pem_failed,
+			load_key_bio_write,
+			load_key_bio_read,
+			create_mem_bio_failed,
+			no_key_provided
+		};
+		/**
+		 * \brief Errorcategory for RSA errors
+		 */
+		inline std::error_category& rsa_error_category() {
+			class rsa_error_cat : public std::error_category
+			{
+			public:
+				const char* name() const noexcept override { return "rsa_error"; };
+				std::string message(int ev) const override {
+					switch(static_cast<rsa_error>(ev)) {
+					case rsa_error::ok: return "no error";
+					case rsa_error::cert_load_failed: return "error loading cert into memory";
+					case rsa_error::get_key_failed: return "error getting key from certificate";
+					case rsa_error::write_key_failed: return "error writing key data in PEM format";
+					case rsa_error::convert_to_pem_failed: return "failed to convert key to pem";
+					case rsa_error::load_key_bio_write: return "failed to load key: bio write failed";
+					case rsa_error::load_key_bio_read: return "failed to load key: bio read failed";
+					case rsa_error::create_mem_bio_failed: return "failed to create memory bio";
+					case rsa_error::no_key_provided: return "at least one of public or private key need to be present";
+					default: return "unknown RSA error";
+					}
+				}
+			};
+			static rsa_error_cat cat;
+			return cat;
+		}
+		
+		inline std::error_code make_error_code(rsa_error e) {
+			return {static_cast<int>(e), rsa_error_category()};
+		}
+		/**
+		 * \brief Error related to processing of RSA signatures
+		 */
+		enum class ecdsa_error {
+			ok = 0,
+			cert_load_failed = 10,
+			get_key_failed,
+			write_key_failed,
+			convert_to_pem_failed,
+			load_key_bio_write,
+			load_key_bio_read,
+			create_mem_bio_failed,
+			no_key_provided,
+			invalid_key_size,
+			invalid_key
+		};
+		/**
+		 * \brief Errorcategory for RSA errors
+		 */
+		inline std::error_category& ecdsa_error_category() {
+			class ecdsa_error_cat : public std::error_category
+			{
+			public:
+				const char* name() const noexcept override { return "ecdsa_error"; };
+				std::string message(int ev) const override {
+					switch(static_cast<ecdsa_error>(ev)) {
+					case ecdsa_error::ok: return "no error";
+					case ecdsa_error::load_key_bio_write: return "failed to load key: bio write failed";
+					case ecdsa_error::load_key_bio_read: return "failed to load key: bio read failed";
+					case ecdsa_error::create_mem_bio_failed: return "failed to create memory bio";
+					case ecdsa_error::no_key_provided: return "at least one of public or private key need to be present";
+					case ecdsa_error::invalid_key_size: return "invalid key size";
+					case ecdsa_error::invalid_key: return "invalid key";
+					default: return "unknown ECDSA error";
+					}
+				}
+			};
+			static ecdsa_error_cat cat;
+			return cat;
+		}
+		
+		inline std::error_code make_error_code(ecdsa_error e) {
+			return {static_cast<int>(e), ecdsa_error_category()};
+		}
 
+		/**
+		 * \brief Errors related to verification of signatures
+		 */
+		enum class signature_verification_error {
+			ok = 0,
+			invalid_signature = 10,
+			create_context_failed,
+			verifyinit_failed,
+			verifyupdate_failed,
+			verifyfinal_failed,
+			get_key_failed
+		};
+		/**
+		 * \brief Errorcategory for verification errors
+		 */
+		inline std::error_category& signature_verification_error_category() {
+			class verification_error_cat : public std::error_category
+			{
+			public:
+				const char* name() const noexcept override { return "signature_verification_error"; };
+				std::string message(int ev) const override {
+					switch(static_cast<signature_verification_error>(ev)) {
+					case signature_verification_error::ok: return "no error";
+					case signature_verification_error::invalid_signature: return "invalid signature";
+					case signature_verification_error::create_context_failed: return "failed to verify signature: could not create context";
+					case signature_verification_error::verifyinit_failed: return "failed to verify signature: VerifyInit failed";
+					case signature_verification_error::verifyupdate_failed: return "failed to verify signature: VerifyUpdate failed";
+					case signature_verification_error::verifyfinal_failed: return "failed to verify signature: VerifyFinal failed";
+					case signature_verification_error::get_key_failed: return "failed to verify signature: Could not get key";
+					default: return "unknown signature verification error";
+					}
+				}
+			};
+			static verification_error_cat cat;
+			return cat;
+		}
+
+		inline std::error_code make_error_code(signature_verification_error e) {
+			return {static_cast<int>(e), signature_verification_error_category()};
+		}
+
+		/**
+		 * \brief Error enum for signature generation errors
+		 */
+		enum class signature_generation_error {
+			ok = 0,
+			hmac_failed = 10,
+			create_context_failed,
+			signinit_failed,
+			signupdate_failed,
+			signfinal_failed,
+			ecdsa_do_sign_failed,
+			digestinit_failed,
+			digestupdate_failed,
+			digestfinal_failed,
+			rsa_padding_failed,
+			rsa_private_encrypt_failed
+		};
+		/**
+		 * \brief Errorcategory for signature generation errors
+		 */
+		inline std::error_category& signature_generation_error_category() {
+			class signature_generation_error_cat : public std::error_category
+			{
+			public:
+				const char* name() const noexcept override { return "signature_generation_error"; };
+				std::string message(int ev) const override {
+					switch(static_cast<signature_generation_error>(ev)) {
+					case signature_generation_error::ok: return "no error";
+					case signature_generation_error::hmac_failed: return "hmac failed";
+					case signature_generation_error::create_context_failed: return "failed to create signature: could not create context";
+					case signature_generation_error::signinit_failed: return "failed to create signature: SignInit failed";
+					case signature_generation_error::signupdate_failed: return "failed to create signature: SignUpdate failed";
+					case signature_generation_error::signfinal_failed: return "failed to create signature: SignFinal failed";
+					case signature_generation_error::ecdsa_do_sign_failed: return "failed to generate ecdsa signature";
+					case signature_generation_error::digestinit_failed: return "failed to create signature: DigestInit failed";
+					case signature_generation_error::digestupdate_failed: return "failed to create signature: DigestUpdate failed";
+					case signature_generation_error::digestfinal_failed: return "failed to create signature: DigestFinal failed";
+					case signature_generation_error::rsa_padding_failed: return "failed to create signature: RSA_padding_add_PKCS1_PSS_mgf1 failed";
+					case signature_generation_error::rsa_private_encrypt_failed: return "failed to create signature: RSA_private_encrypt failed";
+					default: return "unknown signature generation error";
+					}
+				}
+			};
+			static signature_generation_error_cat cat = {};
+			return cat;
+		}
+
+		inline std::error_code make_error_code(signature_generation_error e) {
+			return {static_cast<int>(e), signature_generation_error_category()};
+		}
+
+		enum class token_verification_error {
+			ok = 0,
+			wrong_algorithm,
+			missing_claim,
+			claim_type_missmatch,
+			claim_value_missmatch,
+			token_expired,
+			audience_missmatch
+		};
+		inline std::error_category& token_verification_error_category() {
+			class token_verification_error_cat : public std::error_category
+			{
+			public:
+				const char* name() const noexcept override { return "token_verification_error"; };
+				std::string message(int ev) const override {
+					switch(static_cast<token_verification_error>(ev)) {
+					case token_verification_error::ok: return "no error";
+					case token_verification_error::wrong_algorithm: return "wrong algorithm";
+					case token_verification_error::missing_claim: return "decoded JWT is missing required claim(s)";
+					case token_verification_error::claim_type_missmatch: return "claim type does not match expected type";
+					case token_verification_error::claim_value_missmatch: return "claim value does not match expected value";
+					case token_verification_error::token_expired: return "token expired";
+					case token_verification_error::audience_missmatch: return "token doesn't contain the required audience";
+					default: return "unknown token verification error";
+					}
+				}
+			};
+			static token_verification_error_cat cat = {};
+			return cat;
+		}
+
+		inline std::error_code make_error_code(token_verification_error e) {
+			return {static_cast<int>(e), token_verification_error_category()};
+		}
+
+		inline void throw_if_error(std::error_code ec) {
+			if(ec) {
+				if(ec.category() == rsa_error_category())
+					throw rsa_exception(ec);
+				if(ec.category() == ecdsa_error_category())
+					throw ecdsa_exception(ec);
+				if(ec.category() == signature_verification_error_category())
+					throw signature_verification_exception(ec);
+				if(ec.category() == signature_generation_error_category())
+					throw signature_generation_exception(ec);
+				if(ec.category() == token_verification_error_category())
+					throw token_verification_exception(ec);
+			}
+		}
+	}
+
+	// Keep backward compat at least for a couple of revisions
+	using error::signature_verification_exception;
+	using error::signature_generation_exception;
+	using error::rsa_exception;
+	using error::ecdsa_exception;
+	using error::token_verification_exception;
+}
+namespace std
+{
+	template <>
+	struct is_error_code_enum<jwt::error::rsa_error> : true_type {};
+	template <>
+	struct is_error_code_enum<jwt::error::ecdsa_error> : true_type {};
+	template <>
+	struct is_error_code_enum<jwt::error::signature_verification_error> : true_type {};
+	template <>
+	struct is_error_code_enum<jwt::error::signature_generation_error> : true_type {};
+	template <>
+	struct is_error_code_enum<jwt::error::token_verification_error> : true_type {};
+}
+namespace jwt {
 	/**
 	 * \brief A collection for working with certificates
 	 * 
@@ -107,57 +333,164 @@ namespace jwt {
 	 * you maybe need to extract the modulus and exponent of an RSA Public Key.
 	 */ 
 	namespace helper {
+		/**
+		 * \brief Extract the public key of a pem certificate
+		 * 
+		 * \param certstr	String containing the certificate encoded as pem
+		 * \param pw		Password used to decrypt certificate (leave empty if not encrypted)
+		 * \param ec		error_code for error_detection (gets cleared if no error occures)
+		 */
 		inline
-		std::string extract_pubkey_from_cert(const std::string& certstr, const std::string& pw = "") {
+		std::string extract_pubkey_from_cert(const std::string& certstr, const std::string& pw, std::error_code& ec) {
+			ec.clear();
 #if OPENSSL_VERSION_NUMBER <= 0x10100003L
 			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(BIO_new_mem_buf(const_cast<char*>(certstr.data()), certstr.size()), BIO_free_all);
 #else
 			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(BIO_new_mem_buf(certstr.data(), static_cast<int>(certstr.size())), BIO_free_all);
 #endif
 			std::unique_ptr<BIO, decltype(&BIO_free_all)> keybio(BIO_new(BIO_s_mem()), BIO_free_all);
+			if(!certbio || !keybio) {
+				ec = error::rsa_error::create_mem_bio_failed;
+				return {};
+			}
 
 			std::unique_ptr<X509, decltype(&X509_free)> cert(PEM_read_bio_X509(certbio.get(), nullptr, nullptr, const_cast<char*>(pw.c_str())), X509_free);
-			if (!cert) throw rsa_exception("Error loading cert into memory");
+			if (!cert) {
+				ec = error::rsa_error::cert_load_failed;
+				return {};
+			}
 			std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)> key(X509_get_pubkey(cert.get()), EVP_PKEY_free);
-			if(!key) throw rsa_exception("Error getting public key from certificate");
-			if(PEM_write_bio_PUBKEY(keybio.get(), key.get()) == 0) throw rsa_exception("Error writing public key data in PEM format");
+			if(!key) {
+				ec = error::rsa_error::get_key_failed;
+				return {};
+			}
+			if(PEM_write_bio_PUBKEY(keybio.get(), key.get()) == 0) {
+				ec = error::rsa_error::write_key_failed;
+				return {};
+			}
 			char* ptr = nullptr;
 			auto len = BIO_get_mem_data(keybio.get(), &ptr);
-			if(len <= 0 || ptr == nullptr) throw rsa_exception("Failed to convert pubkey to pem");
+			if(len <= 0 || ptr == nullptr) {
+				ec = error::rsa_error::convert_to_pem_failed;
+				return {};
+			}
 			std::string res(ptr, len);
 			return res;
 		}
 
+		/**
+		 * \brief Extract the public key of a pem certificate
+		 * 
+		 * \param certstr	String containing the certificate encoded as pem
+		 * \param pw		Password used to decrypt certificate (leave empty if not encrypted)
+		 * \throws	rsa_exception if an error occurred
+		 */
 		inline
-		std::shared_ptr<EVP_PKEY> load_public_key_from_string(const std::string& key, const std::string& password = "") {
+		std::string extract_pubkey_from_cert(const std::string& certstr, const std::string& pw = "") {
+			std::error_code ec;
+			auto res = extract_pubkey_from_cert(certstr, pw, ec);
+			error::throw_if_error(ec);
+			return res;
+		}
+
+		/**
+		 * \brief Load a public key from a string.
+		 * 
+		 * The string should contain a pem encoded certificate or public key
+		 * 
+		 * \param certstr	String containing the certificate encoded as pem
+		 * \param pw		Password used to decrypt certificate (leave empty if not encrypted)
+		 * \param ec		error_code for error_detection (gets cleared if no error occures)
+		 */
+		inline
+		std::shared_ptr<EVP_PKEY> load_public_key_from_string(const std::string& key, const std::string& password, std::error_code& ec) {
+			ec.clear();
 			std::unique_ptr<BIO, decltype(&BIO_free_all)> pubkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
+			if(!pubkey_bio) {
+				ec = error::rsa_error::create_mem_bio_failed;
+				return nullptr;
+			}
 			if(key.substr(0, 27) == "-----BEGIN CERTIFICATE-----") {
-				auto epkey = helper::extract_pubkey_from_cert(key, password);
+				auto epkey = helper::extract_pubkey_from_cert(key, password, ec);
+				if(ec) return nullptr;
 				const int len = static_cast<int>(epkey.size());
-				if (BIO_write(pubkey_bio.get(), epkey.data(), len) != len)
-					throw rsa_exception("failed to load public key: bio_write failed");
+				if (BIO_write(pubkey_bio.get(), epkey.data(), len) != len) {
+					ec = error::rsa_error::load_key_bio_write;
+					return nullptr;
+				}
 			} else {
 				const int len = static_cast<int>(key.size());
-				if (BIO_write(pubkey_bio.get(), key.data(), len) != len)
-					throw rsa_exception("failed to load public key: bio_write failed");
+				if (BIO_write(pubkey_bio.get(), key.data(), len) != len) {
+					ec = error::rsa_error::load_key_bio_write;
+					return nullptr;
+				}
 			}
 			
 			std::shared_ptr<EVP_PKEY> pkey(PEM_read_bio_PUBKEY(pubkey_bio.get(), nullptr, nullptr, (void*)password.data()), EVP_PKEY_free);  // NOLINT(google-readability-casting) requires `const_cast`
-			if (!pkey)
-				throw rsa_exception("failed to load public key: PEM_read_bio_PUBKEY failed:" + std::string(ERR_error_string(ERR_get_error(), nullptr)));
+			if (!pkey) {
+				ec = error::rsa_error::load_key_bio_read;
+				return nullptr;
+			}
 			return pkey;
 		}
 
+		/**
+		 * \brief Load a public key from a string.
+		 * 
+		 * The string should contain a pem encoded certificate or public key
+		 * 
+		 * \param certstr	String containing the certificate or key encoded as pem
+		 * \param pw		Password used to decrypt certificate or key (leave empty if not encrypted)
+		 * \throws	rsa_exception if an error occurred
+		 */
+		inline
+		std::shared_ptr<EVP_PKEY> load_public_key_from_string(const std::string& key, const std::string& password = "") {
+			std::error_code ec;
+			auto res = load_public_key_from_string(key, password, ec);
+			error::throw_if_error(ec);
+			return res;
+		}
+
+		/**
+		 * \brief Load a private key from a string.
+		 * 
+		 * \param key		String containing a private key as pem
+		 * \param pw		Password used to decrypt key (leave empty if not encrypted)
+		 * \param ec		error_code for error_detection (gets cleared if no error occures)
+		 */
+		inline
+		std::shared_ptr<EVP_PKEY> load_private_key_from_string(const std::string& key, const std::string& password, std::error_code& ec) {
+			std::unique_ptr<BIO, decltype(&BIO_free_all)> privkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
+			if(!privkey_bio) {
+				ec = error::rsa_error::create_mem_bio_failed;
+				return nullptr;
+			}
+			const int len = static_cast<int>(key.size());
+			if (BIO_write(privkey_bio.get(), key.data(), len) != len) {
+				ec = error::rsa_error::load_key_bio_write;
+				return nullptr;
+			}
+			std::shared_ptr<EVP_PKEY> pkey(PEM_read_bio_PrivateKey(privkey_bio.get(), nullptr, nullptr, const_cast<char*>(password.c_str())), EVP_PKEY_free);
+			if (!pkey) {
+				ec = error::rsa_error::load_key_bio_read;
+				return nullptr;
+			}
+			return pkey;
+		}
+
+		/**
+		 * \brief Load a private key from a string.
+		 * 
+		 * \param key		String containing a private key as pem
+		 * \param pw		Password used to decrypt key (leave empty if not encrypted)
+		 * \throws	rsa_exception if an error occurred
+		 */
 		inline
 		std::shared_ptr<EVP_PKEY> load_private_key_from_string(const std::string& key, const std::string& password = "") {
-			std::unique_ptr<BIO, decltype(&BIO_free_all)> privkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
-			const int len = static_cast<int>(key.size());
-			if (BIO_write(privkey_bio.get(), key.data(), len) != len)
-				throw rsa_exception("failed to load private key: bio_write failed");
-			std::shared_ptr<EVP_PKEY> pkey(PEM_read_bio_PrivateKey(privkey_bio.get(), nullptr, nullptr, const_cast<char*>(password.c_str())), EVP_PKEY_free);
-			if (!pkey)
-				throw rsa_exception("failed to load private key: PEM_read_bio_PrivateKey failed");
-			return pkey;
+			std::error_code ec;
+			auto res = load_private_key_from_string(key, password, ec);
+			error::throw_if_error(ec);
+			return res;
 		}
 		
 		/**
@@ -206,18 +539,22 @@ namespace jwt {
 			/**
 			 * \brief Return an empty string
 			 */ 
-			std::string sign(const std::string& /*unused*/) const {
-				return "";
+			std::string sign(const std::string& /*unused*/, std::error_code& ec) const {
+				ec.clear();
+				return {};
 			}
 			/**
 			 * \brief Check if the given signature is empty.
 			 * 
 			 * JWT's with "none" algorithm should not contain a signature.
-			 * \throw signature_verification_exception
-			 */ 
-			void verify(const std::string& /*unused*/, const std::string& signature) const {
-				if (!signature.empty())
-					throw signature_verification_exception();
+			 * \param signature Signature data to verify
+			 * \param ec		error_code filled with details about the error
+			 */
+			void verify(const std::string& /*unused*/, const std::string& signature, std::error_code& ec) const {
+				ec.clear();
+				if (!signature.empty()) {
+					ec = error::signature_verification_error::invalid_signature;
+				}
 			}
 			/// Get algorithm name
 			std::string name() const {
@@ -240,15 +577,18 @@ namespace jwt {
 			/**
 			 * Sign jwt data
 			 * \param data The data to sign
+			 * \param ec error_code filled with details on error
 			 * \return HMAC signature for the given data
-			 * \throw signature_generation_exception
 			 */
-			std::string sign(const std::string& data) const {
+			std::string sign(const std::string& data, std::error_code& ec) const {
+				ec.clear();
 				std::string res;
 				res.resize(static_cast<size_t>(EVP_MAX_MD_SIZE));
 				auto len = static_cast<unsigned int>(res.size());
-				if (HMAC(md(), secret.data(), static_cast<int>(secret.size()), reinterpret_cast<const unsigned char*>(data.data()), static_cast<int>(data.size()), (unsigned char*)res.data(), &len) == nullptr)  // NOLINT(google-readability-casting) requires `const_cast`
-					throw signature_generation_exception();
+				if (HMAC(md(), secret.data(), static_cast<int>(secret.size()), reinterpret_cast<const unsigned char*>(data.data()), static_cast<int>(data.size()), (unsigned char*)res.data(), &len) == nullptr) { // NOLINT(google-readability-casting) requires `const_cast` 
+					ec = error::signature_generation_error::hmac_failed;
+					return {};
+				}
 				res.resize(len);
 				return res;
 			}
@@ -256,22 +596,21 @@ namespace jwt {
 			 * Check if signature is valid
 			 * \param data The data to check signature against
 			 * \param signature Signature provided by the jwt
-			 * \throw signature_verification_exception If the provided signature does not match
+			 * \param ec Filled with details about failure.
 			 */
-			void verify(const std::string& data, const std::string& signature) const {
-				try {
-					auto res = sign(data);
-					bool matched = true;
-					for (size_t i = 0; i < std::min<size_t>(res.size(), signature.size()); i++)
-						if (res[i] != signature[i])
-							matched = false;
-					if (res.size() != signature.size())
+			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
+				ec.clear();
+				auto res = sign(data, ec);
+				if(ec) return;
+				bool matched = true;
+				for (size_t i = 0; i < std::min<size_t>(res.size(), signature.size()); i++)
+					if (res[i] != signature[i])
 						matched = false;
-					if (!matched)
-						throw signature_verification_exception();
-				}
-				catch (const signature_generation_exception&) {
-					throw signature_verification_exception();
+				if (res.size() != signature.size())
+					matched = false;
+				if (!matched) {
+					ec = error::signature_verification_error::invalid_signature;
+					return;
 				}
 			}
 			/**
@@ -310,33 +649,42 @@ namespace jwt {
 				} else if(!public_key.empty()) {
 					pkey = helper::load_public_key_from_string(public_key, public_key_password);
 				} else
-					throw rsa_exception("at least one of public or private key need to be present");
+					throw rsa_exception(error::rsa_error::no_key_provided);
 			}
 			/**
 			 * Sign jwt data
 			 * \param data The data to sign
+			 * \param ec error_code filled with details on error
 			 * \return RSA signature for the given data
-			 * \throw signature_generation_exception
 			 */
-			std::string sign(const std::string& data) const {
+			std::string sign(const std::string& data, std::error_code& ec) const {
+				ec.clear();
 #ifdef OPENSSL10
 				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_destroy);
 #else
 				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_free);
 #endif
-				if (!ctx)
-					throw signature_generation_exception("failed to create signature: could not create context");
-				if (!EVP_SignInit(ctx.get(), md()))
-					throw signature_generation_exception("failed to create signature: SignInit failed");
+				if (!ctx) {
+					ec = error::signature_generation_error::create_context_failed;
+					return {};
+				}
+				if (!EVP_SignInit(ctx.get(), md())){
+					ec = error::signature_generation_error::signinit_failed;
+					return {};
+				}
 
 				std::string res;
 				res.resize(EVP_PKEY_size(pkey.get()));
 				unsigned int len = 0;
 
-				if (!EVP_SignUpdate(ctx.get(), data.data(), data.size()))
-					throw signature_generation_exception();
-				if (EVP_SignFinal(ctx.get(), (unsigned char*)res.data(), &len, pkey.get()) == 0)   // NOLINT(google-readability-casting) requires `const_cast`
-					throw signature_generation_exception();
+				if (!EVP_SignUpdate(ctx.get(), data.data(), data.size())){
+					ec = error::signature_generation_error::signupdate_failed;
+					return {};
+				}
+				if (EVP_SignFinal(ctx.get(), (unsigned char*)res.data(), &len, pkey.get()) == 0)  { // NOLINT(google-readability-casting) requires `const_cast`
+					ec = error::signature_generation_error::signfinal_failed;
+					return {};
+				}
 
 				res.resize(len);
 				return res;
@@ -345,23 +693,32 @@ namespace jwt {
 			 * Check if signature is valid
 			 * \param data The data to check signature against
 			 * \param signature Signature provided by the jwt
-			 * \throw signature_verification_exception If the provided signature does not match
+			 * \param ec Filled with details on failure
 			 */
-			void verify(const std::string& data, const std::string& signature) const {
+			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
+				ec.clear();
 #ifdef OPENSSL10
 				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_destroy);
 #else
 				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_free);
 #endif
-				if (!ctx)
-					throw signature_verification_exception("failed to verify signature: could not create context");
-				if (!EVP_VerifyInit(ctx.get(), md()))
-					throw signature_verification_exception("failed to verify signature: VerifyInit failed");
-				if (!EVP_VerifyUpdate(ctx.get(), data.data(), data.size()))
-					throw signature_verification_exception("failed to verify signature: VerifyUpdate failed");
+				if (!ctx) {
+					ec = error::signature_verification_error::create_context_failed;
+					return;
+				}
+				if (!EVP_VerifyInit(ctx.get(), md())) {
+					ec = error::signature_verification_error::verifyinit_failed;
+					return;
+				}
+				if (!EVP_VerifyUpdate(ctx.get(), data.data(), data.size())) {
+					ec = error::signature_verification_error::verifyupdate_failed;
+					return;
+				}
 				auto res = EVP_VerifyFinal(ctx.get(), reinterpret_cast<const unsigned char*>(signature.data()), static_cast<unsigned int>(signature.size()), pkey.get());
-				if (res != 1)
-					throw signature_verification_exception("evp verify final failed: " + std::to_string(res) + " " + ERR_error_string(ERR_get_error(), nullptr));
+				if (res != 1) {
+					ec = error::signature_verification_error::verifyfinal_failed;
+					return;
+				}
 			}
 			/**
 			 * Returns the algorithm name provided to the constructor
@@ -396,56 +753,62 @@ namespace jwt {
 			{
 				if (!public_key.empty()) {
 					std::unique_ptr<BIO, decltype(&BIO_free_all)> pubkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
+					if(!pubkey_bio)
+						throw ecdsa_exception(error::ecdsa_error::create_mem_bio_failed);
 					if(public_key.substr(0, 27) == "-----BEGIN CERTIFICATE-----") {
 						auto epkey = helper::extract_pubkey_from_cert(public_key, public_key_password);
 						const int len = static_cast<int>(epkey.size());
 						if (BIO_write(pubkey_bio.get(), epkey.data(), len) != len)
-							throw ecdsa_exception("failed to load public key: bio_write failed");
+							throw ecdsa_exception(error::ecdsa_error::load_key_bio_write);
 					} else  {
 						const int len = static_cast<int>(public_key.size());
 						if (BIO_write(pubkey_bio.get(), public_key.data(), len) != len)
-							throw ecdsa_exception("failed to load public key: bio_write failed");
+							throw ecdsa_exception(error::ecdsa_error::load_key_bio_write);
 					}
 
 					pkey.reset(PEM_read_bio_EC_PUBKEY(pubkey_bio.get(), nullptr, nullptr, (void*)public_key_password.c_str()), EC_KEY_free);  // NOLINT(google-readability-casting) requires `const_cast`
 					if (!pkey)
-						throw ecdsa_exception("failed to load public key: PEM_read_bio_EC_PUBKEY failed:" + std::string(ERR_error_string(ERR_get_error(), nullptr)));
+						throw ecdsa_exception(error::ecdsa_error::load_key_bio_read);
 					size_t keysize = EC_GROUP_get_degree(EC_KEY_get0_group(pkey.get()));
 					if(keysize != signature_length*4 && (signature_length != 132 || keysize != 521))
-						throw ecdsa_exception("invalid key size");
+						throw ecdsa_exception(error::ecdsa_error::invalid_key_size);
 				}
 
 				if (!private_key.empty()) {
 					std::unique_ptr<BIO, decltype(&BIO_free_all)> privkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
 						const int len = static_cast<int>(private_key.size());
 					if (BIO_write(privkey_bio.get(), private_key.data(), len) != len)
-						throw ecdsa_exception("failed to load private key: bio_write failed");
+						throw ecdsa_exception(error::ecdsa_error::load_key_bio_write);
 					pkey.reset(PEM_read_bio_ECPrivateKey(privkey_bio.get(), nullptr, nullptr, const_cast<char*>(private_key_password.c_str())), EC_KEY_free);
 					if (!pkey)
-						throw ecdsa_exception("failed to load private key: PEM_read_bio_ECPrivateKey failed");
+						throw ecdsa_exception(error::ecdsa_error::load_key_bio_read);
 					size_t keysize = EC_GROUP_get_degree(EC_KEY_get0_group(pkey.get()));
 					if(keysize != signature_length*4 && (signature_length != 132 || keysize != 521))
-						throw ecdsa_exception("invalid key size");
+						throw ecdsa_exception(error::ecdsa_error::invalid_key_size);
 				}
 				if(!pkey)
-					throw ecdsa_exception("at least one of public or private key need to be present");
+					throw ecdsa_exception(error::ecdsa_error::no_key_provided);
 
 				if(EC_KEY_check_key(pkey.get()) == 0)
-					throw ecdsa_exception("failed to load key: key is invalid");
+					throw ecdsa_exception(error::ecdsa_error::invalid_key);
 			}
 			/**
 			 * Sign jwt data
 			 * \param data The data to sign
+			 * \param ec error_code filled with details on error
 			 * \return ECDSA signature for the given data
-			 * \throw signature_generation_exception
 			 */
-			std::string sign(const std::string& data) const {
-				const std::string hash = generate_hash(data);
+			std::string sign(const std::string& data, std::error_code& ec) const {
+				ec.clear();
+				const std::string hash = generate_hash(data, ec);
+				if(ec) return {};
 
 				std::unique_ptr<ECDSA_SIG, decltype(&ECDSA_SIG_free)>
 					sig(ECDSA_do_sign(reinterpret_cast<const unsigned char*>(hash.data()), static_cast<int>(hash.size()), pkey.get()), ECDSA_SIG_free);
-				if(!sig)
-					throw signature_generation_exception();
+				if(!sig) {
+					ec = error::signature_generation_error::ecdsa_do_sign_failed;
+					return {};
+				}
 #ifdef OPENSSL10
 
 				auto rr = helper::bn2raw(sig->r);
@@ -468,10 +831,12 @@ namespace jwt {
 			 * Check if signature is valid
 			 * \param data The data to check signature against
 			 * \param signature Signature provided by the jwt
-			 * \throw signature_verification_exception If the provided signature does not match
+			 * \param ec Filled with details on error
 			 */
-			void verify(const std::string& data, const std::string& signature) const {
-				const std::string hash = generate_hash(data);
+			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
+				ec.clear();
+				const std::string hash = generate_hash(data, ec);
+				if(ec) return;
 				auto r = helper::raw2bn(signature.substr(0, signature.size() / 2));
 				auto s = helper::raw2bn(signature.substr(signature.size() / 2));
 
@@ -480,15 +845,23 @@ namespace jwt {
 				sig.r = r.get();
 				sig.s = s.get();
 
-				if(ECDSA_do_verify((const unsigned char*)hash.data(), hash.size(), &sig, pkey.get()) != 1)
-					throw signature_verification_exception("Invalid signature");
+				if(ECDSA_do_verify((const unsigned char*)hash.data(), hash.size(), &sig, pkey.get()) != 1) {
+					ec = error::signature_verification_error::invalid_signature;
+					return;
+				}
 #else
 				std::unique_ptr<ECDSA_SIG, decltype(&ECDSA_SIG_free)> sig(ECDSA_SIG_new(), ECDSA_SIG_free);
+				if(!sig) {
+					ec = error::signature_verification_error::create_context_failed;
+					return;
+				}
 
 				ECDSA_SIG_set0(sig.get(), r.release(), s.release());
 
-				if(ECDSA_do_verify(reinterpret_cast<const unsigned char*>(hash.data()), static_cast<int>(hash.size()), sig.get(), pkey.get()) != 1)
-					throw signature_verification_exception("Invalid signature");
+				if(ECDSA_do_verify(reinterpret_cast<const unsigned char*>(hash.data()), static_cast<int>(hash.size()), sig.get(), pkey.get()) != 1) {
+					ec = error::signature_verification_error::invalid_signature;
+					return;
+				}
 #endif
 			}
 			/**
@@ -504,21 +877,27 @@ namespace jwt {
 			 * \param data Data to hash
 			 * \return Hash of data
 			 */
-			std::string generate_hash(const std::string& data) const {
+			std::string generate_hash(const std::string& data, std::error_code& ec) const {
 #ifdef OPENSSL10
 				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(), &EVP_MD_CTX_destroy);
 #else
 				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
 #endif
-				if(EVP_DigestInit(ctx.get(), md()) == 0)
-					throw signature_generation_exception("EVP_DigestInit failed");
-				if(EVP_DigestUpdate(ctx.get(), data.data(), data.size()) == 0)
-					throw signature_generation_exception("EVP_DigestUpdate failed");
+				if(EVP_DigestInit(ctx.get(), md()) == 0) {
+					ec = error::signature_generation_error::digestinit_failed;
+					return {};
+				}
+				if(EVP_DigestUpdate(ctx.get(), data.data(), data.size()) == 0) {
+					ec = error::signature_generation_error::digestupdate_failed;
+					return {};
+				}
 				unsigned int len = 0;
 				std::string res;
 				res.resize(EVP_MD_CTX_size(ctx.get()));
-				if(EVP_DigestFinal(ctx.get(), (unsigned char*)res.data(), &len) == 0) // NOLINT(google-readability-casting) requires `const_cast`
-					throw signature_generation_exception("EVP_DigestFinal failed");
+				if(EVP_DigestFinal(ctx.get(), (unsigned char*)res.data(), &len) == 0) { // NOLINT(google-readability-casting) requires `const_cast`
+					ec = error::signature_generation_error::digestfinal_failed;
+					return {};
+				}
 				res.resize(len);
 				return res;
 			}
@@ -554,47 +933,69 @@ namespace jwt {
 				} else if(!public_key.empty()) {
 					pkey = helper::load_public_key_from_string(public_key, public_key_password);
 				} else
-					throw rsa_exception("at least one of public or private key need to be present");
+					throw rsa_exception(error::rsa_error::no_key_provided);
 			}
+
 			/**
 			 * Sign jwt data
 			 * \param data The data to sign
+			 * \param ec error_code filled with details on error
 			 * \return ECDSA signature for the given data
-			 * \throw signature_generation_exception
 			 */
-			std::string sign(const std::string& data) const {
-				auto hash = this->generate_hash(data);
+			std::string sign(const std::string& data, std::error_code& ec) const {
+				ec.clear();
+				auto hash = this->generate_hash(data, ec);
+				if(ec) return {};
 
 				std::unique_ptr<RSA, decltype(&RSA_free)> key(EVP_PKEY_get1_RSA(pkey.get()), RSA_free);
+				if(!key) {
+					ec = error::signature_generation_error::create_context_failed;
+					return {};
+				}
 				const int size = RSA_size(key.get());
 
 				std::string padded(size, 0x00);
-				if (RSA_padding_add_PKCS1_PSS_mgf1(key.get(), (unsigned char*)padded.data(), reinterpret_cast<const unsigned char*>(hash.data()), md(), md(), -1) == 0) // NOLINT(google-readability-casting) requires `const_cast`
-					throw signature_generation_exception("failed to create signature: RSA_padding_add_PKCS1_PSS_mgf1 failed");
+				if (RSA_padding_add_PKCS1_PSS_mgf1(key.get(), (unsigned char*)padded.data(), reinterpret_cast<const unsigned char*>(hash.data()), md(), md(), -1) == 0) { // NOLINT(google-readability-casting) requires `const_cast`
+					ec = error::signature_generation_error::rsa_padding_failed;
+					return {};
+				}
 
 				std::string res(size, 0x00);
-				if (RSA_private_encrypt(size, reinterpret_cast<const unsigned char*>(padded.data()), (unsigned char*)res.data(), key.get(), RSA_NO_PADDING) < 0) // NOLINT(google-readability-casting) requires `const_cast`
-					throw signature_generation_exception("failed to create signature: RSA_private_encrypt failed");
+				if (RSA_private_encrypt(size, reinterpret_cast<const unsigned char*>(padded.data()), (unsigned char*)res.data(), key.get(), RSA_NO_PADDING) < 0) { // NOLINT(google-readability-casting) requires `const_cast`
+					ec = error::signature_generation_error::rsa_private_encrypt_failed;
+					return {};
+				}
 				return res;
 			}
+
 			/**
 			 * Check if signature is valid
 			 * \param data The data to check signature against
 			 * \param signature Signature provided by the jwt
-			 * \throw signature_verification_exception If the provided signature does not match
+			 * \param ec Filled with error details
 			 */
-			void verify(const std::string& data, const std::string& signature) const {
-				auto hash = this->generate_hash(data);
+			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
+				ec.clear();
+				auto hash = this->generate_hash(data, ec);
+				if(ec) return;
 
 				std::unique_ptr<RSA, decltype(&RSA_free)> key(EVP_PKEY_get1_RSA(pkey.get()), RSA_free);
+				if(!key) {
+					ec = error::signature_verification_error::get_key_failed;
+					return;
+				}
 				const int size = RSA_size(key.get());
 				
 				std::string sig(size, 0x00);
-				if(RSA_public_decrypt(static_cast<int>(signature.size()), reinterpret_cast<const unsigned char*>(signature.data()), (unsigned char*)sig.data(), key.get(), RSA_NO_PADDING) == 0) // NOLINT(google-readability-casting) requires `const_cast`
-					throw signature_verification_exception("Invalid signature");
+				if(RSA_public_decrypt(static_cast<int>(signature.size()), reinterpret_cast<const unsigned char*>(signature.data()), (unsigned char*)sig.data(), key.get(), RSA_NO_PADDING) == 0) {// NOLINT(google-readability-casting) requires `const_cast`
+					ec = error::signature_verification_error::invalid_signature;
+					return;
+				}
 				
-				if(RSA_verify_PKCS1_PSS_mgf1(key.get(), reinterpret_cast<const unsigned char*>(hash.data()), md(), md(), reinterpret_cast<const unsigned char*>(sig.data()), -1) == 0)
-					throw signature_verification_exception("Invalid signature");
+				if(RSA_verify_PKCS1_PSS_mgf1(key.get(), reinterpret_cast<const unsigned char*>(hash.data()), md(), md(), reinterpret_cast<const unsigned char*>(sig.data()), -1) == 0) {
+					ec = error::signature_verification_error::invalid_signature;
+					return;
+				}
 			}
 			/**
 			 * Returns the algorithm name provided to the constructor
@@ -609,21 +1010,31 @@ namespace jwt {
 			 * \param data Data to hash
 			 * \return Hash of data
 			 */
-			std::string generate_hash(const std::string& data) const {
+			std::string generate_hash(const std::string& data, std::error_code& ec) const {
 #ifdef OPENSSL10
 				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(), &EVP_MD_CTX_destroy);
 #else
 				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
 #endif
-				if(EVP_DigestInit(ctx.get(), md()) == 0)
-					throw signature_generation_exception("EVP_DigestInit failed");
-				if(EVP_DigestUpdate(ctx.get(), data.data(), data.size()) == 0)
-					throw signature_generation_exception("EVP_DigestUpdate failed");
+				if(!ctx) {
+					ec = error::signature_generation_error::create_context_failed;
+					return {};
+				}
+				if(EVP_DigestInit(ctx.get(), md()) == 0) {
+					ec = error::signature_generation_error::digestinit_failed;
+					return {};
+				}
+				if(EVP_DigestUpdate(ctx.get(), data.data(), data.size()) == 0) {
+					ec = error::signature_generation_error::digestupdate_failed;
+					return {};
+				}
 				unsigned int len = 0;
 				std::string res;
 				res.resize(EVP_MD_CTX_size(ctx.get()));
-				if(EVP_DigestFinal(ctx.get(), (unsigned char*)res.data(), &len) == 0) // NOLINT(google-readability-casting) requires `const_cast`
-					throw signature_generation_exception("EVP_DigestFinal failed");
+				if(EVP_DigestFinal(ctx.get(), (unsigned char*)res.data(), &len) == 0) { // NOLINT(google-readability-casting) requires `const_cast`
+					ec = error::signature_generation_error::digestfinal_failed;
+					return {};
+				}
 				res.resize(len);
 				return res;
 			}
@@ -1668,15 +2079,10 @@ namespace jwt {
 		 */
 		template<typename Algo, typename Encode>
 		typename json_traits::string_type sign(const Algo& algo, Encode encode) const {
-			typename json_traits::object_type obj_header = header_claims;
-			if(header_claims.count("alg") == 0)
-				obj_header["alg"] = typename json_traits::value_type(algo.name());
-
-			typename json_traits::string_type header = encode(json_traits::serialize(typename json_traits::value_type(obj_header)));
-			typename json_traits::string_type payload = encode(json_traits::serialize(typename json_traits::value_type(payload_claims)));
-			typename json_traits::string_type token = header + "." + payload;
-
-			return token + "." + encode(algo.sign(token));
+			std::error_code ec;
+			auto res = sign(algo, encode, ec);
+			error::throw_if_error(ec);
+			return res;
 		}
 	#ifndef DISABLE_BASE64
 		/**
@@ -1689,9 +2095,55 @@ namespace jwt {
 		 */
 		template<typename Algo>
 		typename json_traits::string_type sign(const Algo& algo) const {
+			std::error_code ec;
+			auto res = sign(algo, ec);
+			error::throw_if_error(ec);
+			return res;
+		}
+	#endif
+
+
+		/**
+		 * Sign token and return result
+		 * \tparam Algo Callable method which takes a string_type and return the signed input as a string_type
+		 * \tparam Encode Callable method which takes a string_type and base64url safe encodes it,
+		 * MUST return the result with no padding; trim the result.
+		 * \param algo Instance of an algorithm to sign the token with
+		 * \param encode Callable to transform the serialized json to base64 with no padding
+		 * \param ec error_code filled with details on error
+		 * \return Final token as a string
+		 * 
+		 * \note If the 'alg' header in not set in the token it will be set to `algo.name()`
+		 */
+		template<typename Algo, typename Encode>
+		typename json_traits::string_type sign(const Algo& algo, Encode encode, std::error_code& ec) const {
+			typename json_traits::object_type obj_header = header_claims;
+			if(header_claims.count("alg") == 0)
+				obj_header["alg"] = typename json_traits::value_type(algo.name());
+
+			typename json_traits::string_type header = encode(json_traits::serialize(typename json_traits::value_type(obj_header)));
+			typename json_traits::string_type payload = encode(json_traits::serialize(typename json_traits::value_type(payload_claims)));
+			typename json_traits::string_type token = header + "." + payload;
+
+			auto signature = algo.sign(token, ec);
+			if(ec) return {};
+			return token + "." + encode(signature);
+		}
+	#ifndef DISABLE_BASE64
+		/**
+		 * Sign token and return result
+		 * 
+		 * using the `jwt::base` functions provided
+		 * 
+		 * \param algo Instance of an algorithm to sign the token with
+		 * \param ec error_code filled with details on error
+		 * \return Final token as a string
+		 */
+		template<typename Algo>
+		typename json_traits::string_type sign(const Algo& algo, std::error_code& ec) const {
 			return sign(algo, [](const typename json_traits::string_type& data) {
 				return base::trim<alphabet::base64url>(base::encode<alphabet::base64url>(data));
-			});
+			}, ec);
 		}
 	#endif
 	};
@@ -1703,14 +2155,14 @@ namespace jwt {
 	class verifier {
 		struct algo_base {
 			virtual ~algo_base() = default;
-			virtual void verify(const std::string& data, const std::string& sig) = 0;
+			virtual void verify(const std::string& data, const std::string& sig, std::error_code& ec) = 0;
 		};
 		template<typename T>
 		struct algo : public algo_base {
 			T alg;
 			explicit algo(T a) : alg(a) {}
-			void verify(const std::string& data, const std::string& sig) override {
-				alg.verify(data, sig);
+			void verify(const std::string& data, const std::string& sig, std::error_code& ec) override {
+				alg.verify(data, sig, ec);
 			}
 		};
 
@@ -1817,44 +2269,72 @@ namespace jwt {
 		 * \throw token_verification_exception Verification failed
 		 */
 		void verify(const decoded_jwt<json_traits>& jwt) const {
+			std::error_code ec;
+			verify(jwt, ec);
+			error::throw_if_error(ec);
+		}
+		/**
+		 * Verify the given token.
+		 * \param jwt Token to check
+		 * \param ec error_code filled with details on error
+		 */
+		void verify(const decoded_jwt<json_traits>& jwt, std::error_code& ec) const {
+			ec.clear();
 			const typename json_traits::string_type data = jwt.get_header_base64() + "." + jwt.get_payload_base64();
 			const typename json_traits::string_type sig = jwt.get_signature();
 			const std::string algo = jwt.get_algorithm();
-			if (algs.count(algo) == 0)
-				throw token_verification_exception("wrong algorithm");
-			algs.at(algo)->verify(data, sig);
+			if (algs.count(algo) == 0) {
+				ec = error::token_verification_error::wrong_algorithm;
+				return;
+			}
+			algs.at(algo)->verify(data, sig, ec);
+			if(ec) return;
 
-			auto assert_claim_eq = [](const decoded_jwt<json_traits>& jwt, const typename json_traits::string_type& key, const basic_claim_t& c) {
-				if (!jwt.has_payload_claim(key))
-					throw token_verification_exception("decoded_jwt is missing " + key + " claim");
+			auto assert_claim_eq = [](const decoded_jwt<json_traits>& jwt, const typename json_traits::string_type& key, const basic_claim_t& c, std::error_code& ec) {
+				if (!jwt.has_payload_claim(key)) {
+					ec = error::token_verification_error::missing_claim;
+					return;
+				}
 				auto jc = jwt.get_payload_claim(key);
-				if (jc.get_type() != c.get_type())
-					throw token_verification_exception("claim " + key + " type mismatch");
+				if (jc.get_type() != c.get_type()) {
+					ec = error::token_verification_error::claim_type_missmatch;
+					return;
+				}
 				if (c.get_type() == json::type::integer) {
-					if (c.as_date() != jc.as_date())
-						throw token_verification_exception("claim " + key + " does not match expected");
+					if (c.as_date() != jc.as_date()) {
+						ec = error::token_verification_error::claim_value_missmatch;
+						return;
+					}
 				}
 				else if (c.get_type() == json::type::array) {
 					auto s1 = c.as_set();
 					auto s2 = jc.as_set();
-					if (s1.size() != s2.size())
-						throw token_verification_exception("claim " + key + " does not match expected");
+					if (s1.size() != s2.size()) {
+						ec = error::token_verification_error::claim_value_missmatch;
+						return;
+					}
 					auto it1 = s1.cbegin();
 					auto it2 = s2.cbegin();
 					while (it1 != s1.cend() && it2 != s2.cend()) {
-						if (*it1++ != *it2++)
-							throw token_verification_exception("claim " + key + " does not match expected");
+						if (*it1++ != *it2++) {
+							ec = error::token_verification_error::claim_value_missmatch;
+							return;
+						}
 					}
 				}
 				else if (c.get_type() == json::type::object) {
-					if (json_traits::serialize(c.to_json()) != json_traits::serialize(jc.to_json()))
-						throw token_verification_exception("claim " + key + " does not match expected");
+					if (json_traits::serialize(c.to_json()) != json_traits::serialize(jc.to_json())) {
+						ec = error::token_verification_error::claim_value_missmatch;
+						return;
+					}
 				}
 				else if (c.get_type() == json::type::string) {
-					if (c.as_string() != jc.as_string())
-						throw token_verification_exception("claim " + key + " does not match expected");
+					if (c.as_string() != jc.as_string()) {
+						ec = error::token_verification_error::claim_value_missmatch;
+						return;
+					}
 				}
-				else throw token_verification_exception("internal error");
+				else throw std::logic_error("internal error, should be unreachable");
 			};
 
 			auto time = clock.now();
@@ -1862,20 +2342,26 @@ namespace jwt {
 			if (jwt.has_expires_at()) {
 				auto leeway = claims.count("exp") == 1 ? std::chrono::system_clock::to_time_t(claims.at("exp").as_date()) : default_leeway;
 				auto exp = jwt.get_expires_at();
-				if (time > exp + std::chrono::seconds(leeway))
-					throw token_verification_exception("token expired");
+				if (time > exp + std::chrono::seconds(leeway)) {
+					ec = error::token_verification_error::token_expired;
+					return;
+				}
 			}
 			if (jwt.has_issued_at()) {
 				auto leeway = claims.count("iat") == 1 ? std::chrono::system_clock::to_time_t(claims.at("iat").as_date()) : default_leeway;
 				auto iat = jwt.get_issued_at();
-				if (time < iat - std::chrono::seconds(leeway))
-					throw token_verification_exception("token expired");
+				if (time < iat - std::chrono::seconds(leeway)) {
+					ec = error::token_verification_error::token_expired;
+					return;
+				}
 			}
 			if (jwt.has_not_before()) {
 				auto leeway = claims.count("nbf") == 1 ? std::chrono::system_clock::to_time_t(claims.at("nbf").as_date()) : default_leeway;
 				auto nbf = jwt.get_not_before();
-				if (time < nbf - std::chrono::seconds(leeway))
-					throw token_verification_exception("token expired");
+				if (time < nbf - std::chrono::seconds(leeway)) {
+					ec = error::token_verification_error::token_expired;
+					return;
+				}
 			}
 			for (auto& c : claims)
 			{
@@ -1883,16 +2369,24 @@ namespace jwt {
 					// Nothing to do here, already checked
 				}
 				else if (c.first == "aud") {
-					if (!jwt.has_audience())
-						throw token_verification_exception("token doesn't contain the required audience");
+					if (!jwt.has_audience()) {
+						ec = error::token_verification_error::audience_missmatch;
+						return;
+					}
 					auto aud = jwt.get_audience();
-					auto expected = c.second.as_set();
-					for (auto& e : expected)
-						if (aud.count(e) == 0)
-							throw token_verification_exception("token doesn't contain the required audience");
+					typename basic_claim_t::set_t expected = {};
+					if(c.second.get_type() == json::type::string) expected = { c.second.as_string() };
+					else expected = c.second.as_set();
+					for (auto& e : expected) {
+						if (aud.count(e) == 0) {
+							ec = error::token_verification_error::audience_missmatch;
+							return;
+						}
+					}
 				}
 				else {
-					assert_claim_eq(jwt, c.first, c.second);
+					assert_claim_eq(jwt, c.first, c.second, ec);
+					if(ec) return;
 				}
 			}
 		}
