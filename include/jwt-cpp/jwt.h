@@ -1384,7 +1384,7 @@ namespace jwt {
 		struct supports_as_integer {
 			static constexpr auto value =
 				std::is_signed<integer_type>::value &&
-				not std::is_floating_point<integer_type>::value &&
+				!std::is_floating_point<integer_type>::value &&
 			    std::is_constructible<value_type, integer_type>::value &&
 				is_detected<as_integer_function, traits_type>::value &&
 				std::is_function<as_integer_function<traits_type>>::value &&
