@@ -8,7 +8,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -37,3 +36,26 @@ jobs:
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         path-to-lcov: build/coverage.info
+
+  fuzz:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      
+    - name: install cmake
+      uses: lukka/get-cmake@v3.17.2
+      
+    - name: configure
+      run: |
+        sudo apt update
+        sudo apt install clang++ lcov
+        mkdir build
+        cd build
+        cmake .. -DFUZZ=ON
+        
+    - name: make
+      run: |
+        cd build
+        make jwt-cpp-fuzz
+        ./tests/fuzz/jwt-cpp
