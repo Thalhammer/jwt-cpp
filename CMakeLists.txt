@@ -7,6 +7,7 @@ endif()
 option(BUILD_TESTS "Configure CMake to build tests (or not)" ON)
 option(BUILD_EXAMPLES "Configure CMake to build examples (or not)" ON)
 option(COVERAGE "Enable code coverage testing" OFF)
+option(JWT_CPP_FUZZING "Enable fuzz testing" ON)
 option(EXTERNAL_PICOJSON "Use find_package() to locate the picojson header" OFF)
 option(DISABLE_JWT_CPP_BASE64
        "Do not include the base64 implementation from this library" OFF)
@@ -97,4 +98,9 @@ endif()
 
 if(BUILD_EXAMPLES)
   add_subdirectory(example)
+endif()
+
+
+if(JWT_CPP_FUZZING)
+  add_subdirectory(tests/fuzz)
 endif()

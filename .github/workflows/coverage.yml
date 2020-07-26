@@ -52,10 +52,10 @@ jobs:
         sudo apt install clang++ lcov
         mkdir build
         cd build
-        cmake .. -DFUZZ=ON
+        cmake .. -DCMAKE_CXX_COMPILER=clang++ -DJWT_CPP_FUZZING=ON
         
     - name: make
       run: |
         cd build
         make jwt-cpp-fuzz
-        ./tests/fuzz/jwt-cpp
+        ./tests/fuzz/jwt-cpp-fuzz -runs=1000000
