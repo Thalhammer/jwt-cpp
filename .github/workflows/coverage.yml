@@ -7,7 +7,7 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+  coverage:
     runs-on: ubuntu-latest
 
     steps:
@@ -58,4 +58,4 @@ jobs:
       run: |
         cd build
         make jwt-cpp-fuzz
-        ./tests/fuzz/jwt-cpp-fuzz -runs=1000000
+        ./tests/fuzz/jwt-cpp-fuzz-BaseEncodeFuzz -runs=1000000
