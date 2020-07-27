@@ -20,6 +20,6 @@ function(ADD_FUZZING_EXECUTABLE TARGET)
 endfunction()
 
 add_fuzzing_executable(BaseEncodeFuzz)
-# add_fuzzing_executable(BaseDecodeFuzz)
+add_fuzzing_executable(BaseDecodeFuzz)
 # add_fuzzing_executable(TokenDecodeFuzz)
 add_fuzzing_executable(TokenSignFuzz)
