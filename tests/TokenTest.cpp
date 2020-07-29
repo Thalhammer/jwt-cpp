@@ -18,6 +18,12 @@ inline namespace test_keys {
 	extern std::string ecdsa521_priv_key;
 	extern std::string ecdsa521_pub_key;
 	extern std::string ecdsa521_pub_key_invalid;
+	extern std::string ed25519_priv_key;
+	extern std::string ed25519_pub_key;
+	extern std::string ed25519_pub_key_invalid;
+	extern std::string ed448_priv_key;
+	extern std::string ed448_pub_key;
+	extern std::string ed448_pub_key_invalid;
 }
 
 TEST(TokenTest, DecodeToken) {
@@ -180,6 +186,34 @@ TEST(TokenTest, CreateTokenES512NoPrivate) {
 			.sign(jwt::algorithm::es512(ecdsa521_pub_key, "", "", ""));
 	}(), jwt::signature_generation_exception);
 }
+
+#ifndef OPENSSL110
+TEST(TokenTest, CreateTokenEd25519) {
+
+	auto token = jwt::create()
+		.set_issuer("auth0")
+		.set_type("JWS")
+		.sign(jwt::algorithm::ed25519("", ed25519_priv_key, "", ""));
+
+	auto decoded = jwt::decode(token);
+
+	ASSERT_THROW(jwt::verify().allow_algorithm(jwt::algorithm::ed25519(ed25519_pub_key_invalid, "", "", "")).verify(decoded), jwt::signature_verification_exception);
+	ASSERT_NO_THROW(jwt::verify().allow_algorithm(jwt::algorithm::ed25519(ed25519_pub_key, "", "", "")).verify(decoded));
+}
+
+TEST(TokenTest, CreateTokenEd448) {
+
+	auto token = jwt::create()
+		.set_issuer("auth0")
+		.set_type("JWS")
+		.sign(jwt::algorithm::ed448("", ed448_priv_key, "", ""));
+
+	auto decoded = jwt::decode(token);
+
+	ASSERT_THROW(jwt::verify().allow_algorithm(jwt::algorithm::ed448(ed448_pub_key_invalid, "", "", "")).verify(decoded), jwt::signature_verification_exception);
+	ASSERT_NO_THROW(jwt::verify().allow_algorithm(jwt::algorithm::ed448(ed448_pub_key, "", "", "")).verify(decoded));
+}
+#endif
 
 TEST(TokenTest, VerifyTokenWrongAlgorithm) {
 	std::string token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
@@ -561,6 +595,52 @@ TEST(TokenTest, VerifyTokenPS256FailNoKey) {
 			.with_issuer("auth0");
 	}(), jwt::rsa_exception);
 }
+
+#ifndef OPENSSL110
+TEST(TokenTest, VerifyTokenEd25519) {
+	const std::string token = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.OujgVcO8xQx5xLcAYWENCRU1SCGH5HcX4MX4o6wU3M4"
+		"DOnKiNmc0O2AnvQlzr-9cgI4QGQzeC6gz_fgLoesADg";
+
+	auto verify = jwt::verify().allow_algorithm(jwt::algorithm::ed25519(ed25519_pub_key, "", "", ""));
+	auto decoded_token = jwt::decode(token);
+
+	verify.verify(decoded_token);
+}
+
+TEST(TokenTest, VerifyTokenEd25519Fail) {
+	const std::string token = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.OujgVcO8xQx5xLcAYWENCRU1SCGH5HcX4MX4o6wU3M4"
+		"DOnKiNmc0O2AnvQlzr-9cgI4QGQzeC6gz_fgLoesADg";
+
+	auto verify = jwt::verify()
+		.allow_algorithm(jwt::algorithm::ed25519(ed25519_pub_key_invalid, "", "", ""));
+	auto decoded_token = jwt::decode(token);
+
+	ASSERT_THROW(verify.verify(decoded_token), jwt::signature_verification_exception);
+}
+
+TEST(TokenTest, VerifyTokenEd448) {
+	const std::string token = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.Aldes9jrXZXxfNjuovqmIZ3r2WF4yVXVr2Q8B8SkAmv"
+		"Bsw_3MHs8HtgKeXbqKFYWpHOCtmZJcH-AWMvoY6FCNdQqbESGTkv58O6tFbXDD_nLejWNAOuvcO2LPMySmkVNQUopmQf_HO62Mug1ngepUDE"
+		"A";
+
+	auto verify = jwt::verify().allow_algorithm(jwt::algorithm::ed448(ed448_pub_key, "", "", ""));
+	auto decoded_token = jwt::decode(token);
+
+	verify.verify(decoded_token);
+}
+
+TEST(TokenTest, VerifyTokenEd448Fail) {
+	const std::string token = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.Aldes9jrXZXxfNjuovqmIZ3r2WF4yVXVr2Q8B8SkAmv"
+		"Bsw_3MHs8HtgKeXbqKFYWpHOCtmZJcH-AWMvoY6FCNdQqbESGTkv58O6tFbXDD_nLejWNAOuvcO2LPMySmkVNQUopmQf_HO62Mug1ngepUDE"
+		"A";
+
+	auto verify = jwt::verify()
+		.allow_algorithm(jwt::algorithm::ed448(ed448_pub_key_invalid, "", "", ""));
+	auto decoded_token = jwt::decode(token);
+
+	ASSERT_THROW(verify.verify(decoded_token), jwt::signature_verification_exception);
+}
+#endif
 
 struct test_clock {
 	jwt::date n;

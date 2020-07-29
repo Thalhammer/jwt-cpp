@@ -11,7 +11,7 @@ A header only library for creating and validating [JSON Web Tokens](https://tool
 
 ## Signature algorithms
 
-As of version 0.2.0 jwt-cpp supports all algorithms defined by the spec. The modular design of jwt-cpp allows one to add additional algorithms without any problems. If you need any feel free to open a pull request.
+jwt-cpp supports all algorithms defined by the spec. The modular design of jwt-cpp allows one to add additional algorithms without any problems. If you need any feel free to open a pull request.
 For the sake of completeness, here is a list of all supported algorithms:
 
 * HS256
@@ -26,6 +26,7 @@ For the sake of completeness, here is a list of all supported algorithms:
 * PS256
 * PS384
 * PS512
+* EdDSA (Ed25519, Ed448), since 0.5.0
 
 ## Overview
 

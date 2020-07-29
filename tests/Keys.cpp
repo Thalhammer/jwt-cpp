@@ -138,6 +138,27 @@ VR0TAQH/BAUwAwEB/zAKBggqhkjOPQQDAgNIADBFAiEAv2rcDBD4p/UeJIEFOK9j
 o4XKKbXs6oqMpkEDUinf6DACIGPcShH4m5haelZleORWM068C3BSVToRMSAivE79
 8ZhX
 -----END CERTIFICATE-----)";
+	std::string ed25519_priv_key = R"(-----BEGIN PRIVATE KEY-----
+MC4CAQAwBQYDK2VwBCIEIP7pYCi8Xipwjttw6ehj0PNrsg3K1Vc5RBqAG5JePqsm
+-----END PRIVATE KEY-----)";
+	std::string ed25519_pub_key = R"(-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEAJHsGwkQLdwqaqp2Ar39YtLCVHiWgUPcGwQfes2cUOEc=
+-----END PUBLIC KEY-----)";
+	std::string ed25519_pub_key_invalid = R"(-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEAJHsGwkQLdwqaqp2Ar39YtLCVHIwGupcGwQfes2cUOEc=
+-----END PUBLIC KEY-----)";
+	std::string ed448_priv_key = R"(-----BEGIN PRIVATE KEY-----
+MEcCAQAwBQYDK2VxBDsEOZNyV4kIWehIWSsPCnDEZbBF+g2WoUgUwox8eQJTq8Hz
+y4okU+JZAV8RqQ270fJL/Safvvc1SbbF1A==
+-----END PRIVATE KEY-----)";
+	std::string ed448_pub_key = R"(-----BEGIN PUBLIC KEY-----
+MEMwBQYDK2VxAzoAQomzAH8FXc0rhznaLR9DYwe5+DNhP0UwpZzS5y6iJ/iirrzI
+9/Fjbc/UvFxwFKFw8IJ9QUwFsE8A
+-----END PUBLIC KEY-----)";
+	std::string ed448_pub_key_invalid = R"(-----BEGIN PUBLIC KEY-----
+MEMwBQYDK2VxAzoAQomzAH8FXc0rhznaLR9DYwe5+DNhP0UwpZzS5y6iJ/iirrzI
+9/Fjbc/UvFxwFKFW7ij8QUwFsE8A
+-----END PUBLIC KEY-----)";
     std::string sample_cert = R"(-----BEGIN CERTIFICATE-----
 MIIDHDCCAgSgAwIBAgIIGlbUz5cvweUwDQYJKoZIhvcNAQEFBQAwMTEvMC0GA1UE
 AxMmc2VjdXJldG9rZW4uc3lzdGVtLmdzZXJ2aWNlYWNjb3VudC5jb20wHhcNMTkw
