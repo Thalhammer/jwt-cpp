@@ -347,7 +347,7 @@ namespace jwt {
 		std::string extract_pubkey_from_cert(const std::string& certstr, const std::string& pw, std::error_code& ec) {
 			ec.clear();
 #if OPENSSL_VERSION_NUMBER <= 0x10100003L
-			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(BIO_new_mem_buf(const_cast<char*>(certstr.data()), certstr.size()), BIO_free_all);
+			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(BIO_new_mem_buf(const_cast<char*>(certstr.data()), static_cast<int>(certstr.size())), BIO_free_all);
 #else
 			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(BIO_new_mem_buf(certstr.data(), static_cast<int>(certstr.size())), BIO_free_all);
 #endif
@@ -850,7 +850,7 @@ namespace jwt {
 				sig.r = r.get();
 				sig.s = s.get();
 
-				if(ECDSA_do_verify((const unsigned char*)hash.data(), hash.size(), &sig, pkey.get()) != 1) {
+				if(ECDSA_do_verify((const unsigned char*)hash.data(), static_cast<int>(hash.size()), &sig, pkey.get()) != 1) {
 					ec = error::signature_verification_error::invalid_signature;
 					return;
 				}
