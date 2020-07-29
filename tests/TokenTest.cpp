@@ -400,69 +400,70 @@ TEST(TokenTest, VerifyTokenHS256FailSignatureLength) {
 }
 
 TEST(TokenTest, VerifyFail) {
-	auto token = jwt::create()
-		.set_issuer("auth0")
-		.set_type("JWS")
-		.set_audience("random")
-		.set_payload_claim("typetest", picojson::value(10.0))
-		.sign(jwt::algorithm::none{});
+	{
+		auto token = jwt::create()
+			.set_issuer("auth0")
+			.set_type("JWS")
+			.set_audience("random")
+			.set_payload_claim("typetest", picojson::value(10.0))
+			.sign(jwt::algorithm::none{});
 
-	auto decoded_token = jwt::decode(token);
+		auto decoded_token = jwt::decode(token);
 
-	{
-		auto verify = jwt::verify()
-			.allow_algorithm(jwt::algorithm::none{})
-			.with_issuer("auth");
-		ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
-	}
-	{
-		auto verify = jwt::verify()
-			.allow_algorithm(jwt::algorithm::none{})
-			.with_issuer("auth0")
-			.with_audience(std::set<std::string>{ "test" });
-		ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
-	}
-	{
-		auto verify = jwt::verify()
-			.allow_algorithm(jwt::algorithm::none{})
-			.with_issuer("auth0")
-			.with_audience("test");
-		ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
-	}
-	{
-		auto verify = jwt::verify()
-			.allow_algorithm(jwt::algorithm::none{})
-			.with_issuer("auth0")
-			.with_subject("test");
-		ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
-	}
-	{
-		auto verify = jwt::verify()
-			.allow_algorithm(jwt::algorithm::none{})
-			.with_issuer("auth0")
-			.with_claim("myclaim", jwt::claim(std::string("test")));
-		ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
-	}
-	{
-		auto verify = jwt::verify()
-			.allow_algorithm(jwt::algorithm::none{})
-			.with_issuer("auth0")
-			.with_claim("typetest", jwt::claim(picojson::value(true)));
-		ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
-	}
-	{
-		jwt::claim object;
-		std::istringstream iss{R"({ "test": null })"};
-		iss >> object;
-		ASSERT_EQ(object.get_type() , jwt::json::type::object);
+		{
+			auto verify = jwt::verify()
+				.allow_algorithm(jwt::algorithm::none{})
+				.with_issuer("auth");
+			ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+		}
+		{
+			auto verify = jwt::verify()
+				.allow_algorithm(jwt::algorithm::none{})
+				.with_issuer("auth0")
+				.with_audience(std::set<std::string>{ "test" });
+			ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+		}
+		{
+			auto verify = jwt::verify()
+				.allow_algorithm(jwt::algorithm::none{})
+				.with_issuer("auth0")
+				.with_audience("test");
+			ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+		}
+		{
+			auto verify = jwt::verify()
+				.allow_algorithm(jwt::algorithm::none{})
+				.with_issuer("auth0")
+				.with_subject("test");
+			ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+		}
+		{
+			auto verify = jwt::verify()
+				.allow_algorithm(jwt::algorithm::none{})
+				.with_issuer("auth0")
+				.with_claim("myclaim", jwt::claim(std::string("test")));
+			ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+		}
+		{
+			auto verify = jwt::verify()
+				.allow_algorithm(jwt::algorithm::none{})
+				.with_issuer("auth0")
+				.with_claim("typetest", jwt::claim(picojson::value(true)));
+			ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+		}
+		{
+			jwt::claim object;
+			std::istringstream iss{ R"({ "test": null })" };
+			iss >> object;
+			ASSERT_EQ(object.get_type(), jwt::json::type::object);
 
-		auto verify = jwt::verify()
-			.allow_algorithm(jwt::algorithm::none{})
-			.with_issuer("auth0")
-			.with_claim("myclaim", object);
-		ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+			auto verify = jwt::verify()
+				.allow_algorithm(jwt::algorithm::none{})
+				.with_issuer("auth0")
+				.with_claim("myclaim", object);
+			ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+		}
 	}
-
 	{
 		auto token = jwt::create()
 		.set_issuer("auth0")
@@ -470,11 +471,14 @@ TEST(TokenTest, VerifyFail) {
 		.sign(jwt::algorithm::none{});
 
 		auto decoded_token = jwt::decode(token);
-		auto verify = jwt::verify()
-			.allow_algorithm(jwt::algorithm::none{})
-			.with_issuer("auth0")
-			.with_audience("test");
-		ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+
+		{
+			auto verify = jwt::verify()
+				.allow_algorithm(jwt::algorithm::none{})
+				.with_issuer("auth0")
+				.with_audience("test");
+			ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+		}
 	}
 }
 
