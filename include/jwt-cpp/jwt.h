@@ -508,8 +508,7 @@ namespace jwt {
 		static std::string bn2raw(const BIGNUM* bn)
 #endif
 		{
-			std::string res;
-			res.resize(BN_num_bytes(bn));
+			std::string res(BN_num_bytes(bn), '\0');
 			BN_bn2bin(bn, (unsigned char*)res.data());  // NOLINT(google-readability-casting) requires `const_cast`
 			return res;
 		}
@@ -585,8 +584,7 @@ namespace jwt {
 			 */
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
-				std::string res;
-				res.resize(static_cast<size_t>(EVP_MAX_MD_SIZE));
+				std::string res(static_cast<size_t>(EVP_MAX_MD_SIZE), '\0');
 				auto len = static_cast<unsigned int>(res.size());
 				if (HMAC(md(), secret.data(), static_cast<int>(secret.size()), reinterpret_cast<const unsigned char*>(data.data()), static_cast<int>(data.size()), (unsigned char*)res.data(), &len) == nullptr) { // NOLINT(google-readability-casting) requires `const_cast` 
 					ec = error::signature_generation_error::hmac_failed;
@@ -676,8 +674,7 @@ namespace jwt {
 					return {};
 				}
 
-				std::string res;
-				res.resize(EVP_PKEY_size(pkey.get()));
+				std::string res(EVP_PKEY_size(pkey.get()), '\0');
 				unsigned int len = 0;
 
 				if (!EVP_SignUpdate(ctx.get(), data.data(), data.size())){
@@ -901,8 +898,7 @@ namespace jwt {
 					return {};
 				}
 				unsigned int len = 0;
-				std::string res;
-				res.resize(EVP_MD_CTX_size(ctx.get()));
+				std::string res(EVP_MD_CTX_size(ctx.get()), '\0');
 				if(EVP_DigestFinal(ctx.get(), (unsigned char*)res.data(), &len) == 0) { // NOLINT(google-readability-casting) requires `const_cast`
 					ec = error::signature_generation_error::digestfinal_failed;
 					return {};
@@ -968,9 +964,8 @@ namespace jwt {
 					return {};
 				}
 
-				std::string res;
 				size_t len = EVP_PKEY_size(pkey.get());
-				res.resize(len);
+				std::string res(len, '\0');
 
 				if (EVP_DigestSign(ctx.get(),
 						reinterpret_cast<unsigned char*>(&res[0]), &len,
@@ -1141,8 +1136,7 @@ namespace jwt {
 					return {};
 				}
 				unsigned int len = 0;
-				std::string res;
-				res.resize(EVP_MD_CTX_size(ctx.get()));
+				std::string res(EVP_MD_CTX_size(ctx.get()), '\0');
 				if(EVP_DigestFinal(ctx.get(), (unsigned char*)res.data(), &len) == 0) { // NOLINT(google-readability-casting) requires `const_cast`
 					ec = error::signature_generation_error::digestfinal_failed;
 					return {};
