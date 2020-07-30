@@ -33,6 +33,7 @@ static uint64_t fail_EC_KEY_check_key = 0;
 static uint64_t fail_ECDSA_SIG_new = 0;
 static uint64_t fail_ECDSA_do_sign = 0;
 static uint64_t fail_EVP_PKEY_get1_RSA = 0;
+static uint64_t fail_EVP_DigestSignInit = 0;
 
 BIO* BIO_new(const BIO_METHOD *type) {
     static BIO*(*origMethod)(const BIO_METHOD*) = nullptr;
@@ -247,6 +248,21 @@ struct rsa_st *EVP_PKEY_get1_RSA(EVP_PKEY *pkey) {
     if(fail) return nullptr;
     else return origMethod(pkey);
 }
+
+int EVP_DigestSignInit(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,
+                                  const EVP_MD *type, ENGINE *e,
+                                  EVP_PKEY *pkey) {
+    static int(*origMethod)(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,
+                                  const EVP_MD *type, ENGINE *e,
+                                  EVP_PKEY *pkey) = nullptr;
+    if (origMethod == nullptr)
+        origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_DigestSignInit");
+    bool fail = fail_EVP_DigestSignInit & 1;
+    fail_EVP_DigestSignInit = fail_EVP_DigestSignInit >> 1;
+    if(fail) return 0;
+    else return origMethod(ctx,pctx, type, e,pkey);
+}
+
 /**
  * =========== End of black magic ============
  */
@@ -708,7 +724,7 @@ TEST(OpenSSLErrorTest, Ed25519SignErrorCode) {
             jwt::algorithm::ed25519 alg{ed25519_pub_key, ed25519_priv_key};
     std::vector<multitest_entry> mapping = {
         { &fail_EVP_MD_CTX_new, 1, jwt::error::signature_generation_error::create_context_failed },
-        // { &fail_EVP_DigestSignInit, 1, jwt::error::signature_generation_error::signinit_failed },
+        { &fail_EVP_DigestSignInit, 1, jwt::error::signature_generation_error::signinit_failed },
         // { &fail_EVP_DigestSign, 1, jwt::error::signature_generation_error::signupdate_failed }
     };
 
