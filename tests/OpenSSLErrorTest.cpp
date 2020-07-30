@@ -270,6 +270,13 @@ inline namespace test_keys {
 	extern std::string ecdsa521_pub_key_invalid;
     extern std::string sample_cert;
     extern std::string sample_cert_pubkey;
+	extern std::string ed25519_priv_key;
+	extern std::string ed25519_pub_key;
+	extern std::string ed25519_pub_key_invalid;
+	extern std::string ed25519_certificate;
+	extern std::string ed448_priv_key;
+	extern std::string ed448_pub_key;
+	extern std::string ed448_pub_key_invalid;
 }
 
 TEST(OpenSSLErrorTest, ExtractPubkeyFromCertReference) {
@@ -507,10 +514,6 @@ TEST(OpenSSLErrorTest, RS256VerifyErrorCode) {
     });
 }
 
-TEST(OpenSSLErrorTest, ECDSAKeyReference) {
-    jwt::algorithm::es256 alg{ecdsa256_pub_key, ecdsa256_priv_key};
-}
-
 TEST(OpenSSLErrorTest, ECDSAKey) {
     std::vector<multitest_entry> mapping = {
         { &fail_BIO_new, 1, jwt::error::ecdsa_error::create_mem_bio_failed },
@@ -560,7 +563,6 @@ TEST(OpenSSLErrorTest, ES256Reference) {
 	jwt::algorithm::es256 alg{ecdsa256_pub_key,ecdsa256_priv_key};
     std::error_code ec;
     auto res = alg.sign("testdata", ec);
-    //ASSERT_EQ(jwt::base::encode<jwt::alphabet::base64>(res), "aC/NqyHfPw5FDA0yRAnrbkrAlXjsr0obRkCg/HgP+77QYJrAg6YKkKoJwMXjUX8fQrxXKTN7em5L9dtmOep37Q==");
     ASSERT_FALSE(!(!ec));
 
     alg.verify("testdata", res, ec);
@@ -638,6 +640,92 @@ TEST(OpenSSLErrorTest, PS256VerifyErrorCode) {
         { &fail_EVP_DigestFinal, 1, jwt::error::signature_generation_error::digestfinal_failed },
         { &fail_EVP_PKEY_get1_RSA, 1, jwt::error::signature_verification_error::get_key_failed }
         //TODO: RSA_public_decrypt
+    };
+
+    run_multitest(mapping, [&alg, &signature](std::error_code& ec){
+        alg.verify("testdata", signature, ec);
+    });
+}
+
+
+
+TEST(OpenSSLErrorTest, EdDSAKey) {
+    std::vector<multitest_entry> mapping = {
+        { &fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed },
+        { &fail_BIO_write, 1, jwt::error::rsa_error::load_key_bio_write },
+        // { &fail_PEM_read_bio_EC_PUBKEY, 1, jwt::error::ecdsa_error::load_key_bio_read },
+        // Privkey section
+        // { &fail_BIO_new, 2, jwt::error::rsa_error::create_mem_bio_failed },
+        // { &fail_BIO_write, 2, jwt::error::rsa_error::load_key_bio_write },
+        // { &fail_PEM_read_bio_ECPrivateKey, 1, jwt::error::rsa_error::load_key_bio_read },
+        // { &fail_EC_KEY_check_key, 1, jwt::error::ecdsa_error::invalid_key }
+    };
+
+    run_multitest(mapping, [](std::error_code& ec) {
+        try {
+            jwt::algorithm::ed25519 alg{ed25519_pub_key, ed25519_priv_key};
+            FAIL(); // Should never reach this
+        } catch(const std::system_error& e) {
+            ec = e.code();
+        }
+    });
+}
+
+TEST(OpenSSLErrorTest, EdDSACertificate) {
+    std::vector<multitest_entry> mapping = {
+        { &fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed },
+        { &fail_BIO_write, 1, jwt::error::rsa_error::load_key_bio_write },
+        // { &fail_PEM_read_bio_EC_PUBKEY, 1, jwt::error::ecdsa_error::load_key_bio_read },
+        // extract_pubkey_from_cert
+        { &fail_BIO_new, 2, jwt::error::rsa_error::create_mem_bio_failed },
+        { &fail_PEM_read_bio_X509, 1, jwt::error::rsa_error::cert_load_failed },
+        { &fail_X509_get_pubkey, 1, jwt::error::rsa_error::get_key_failed },
+        { &fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::write_key_failed },
+        { &fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed }
+    };
+
+    run_multitest(mapping, [](std::error_code& ec) {
+        try {
+            jwt::algorithm::ed25519 alg{ed25519_certificate};
+            FAIL(); // Should never reach this
+        } catch(const std::system_error& e) {
+            ec = e.code();
+        }
+    });
+}
+
+TEST(OpenSSLErrorTest, Ed25519Reference) {
+            jwt::algorithm::ed25519 alg{ed25519_pub_key, ed25519_priv_key};
+    std::error_code ec;
+    auto res = alg.sign("testdata", ec);
+    ASSERT_FALSE(!(!ec));
+
+    alg.verify("testdata", res, ec);
+    ASSERT_FALSE(!(!ec));
+}
+
+TEST(OpenSSLErrorTest, Ed25519SignErrorCode) {
+            jwt::algorithm::ed25519 alg{ed25519_pub_key, ed25519_priv_key};
+    std::vector<multitest_entry> mapping = {
+        { &fail_EVP_MD_CTX_new, 1, jwt::error::signature_generation_error::create_context_failed },
+        // { &fail_EVP_DigestSignInit, 1, jwt::error::signature_generation_error::signinit_failed },
+        // { &fail_EVP_DigestSign, 1, jwt::error::signature_generation_error::signupdate_failed }
+    };
+
+    run_multitest(mapping, [&alg](std::error_code& ec){
+        auto res = alg.sign("testdata", ec);
+        ASSERT_EQ(res, "");
+    });
+}
+
+TEST(OpenSSLErrorTest, Ed25519VerifyErrorCode) {
+            jwt::algorithm::ed25519 alg{ed25519_pub_key, ed25519_priv_key};
+    auto signature = jwt::base::decode<jwt::alphabet::base64>(
+        "aC/NqyHfPw5FDA0yRAnrbkrAlXjsr0obRkCg/HgP+77QYJrAg6YKkKoJwMXjUX8fQrxXKTN7em5L9dtmOep37Q==");
+    std::vector<multitest_entry> mapping = {
+        { &fail_EVP_MD_CTX_new, 1, jwt::error::signature_verification_error::create_context_failed },
+        // { &fail_EVP_DigestVerifyInit, 1, jwt::error::signature_verification_error::digestinit_failed },
+        // { &fail_EVP_DigestVerify, 1, jwt::error::signature_verification_error::digestupdate_failed }
     };
 
     run_multitest(mapping, [&alg, &signature](std::error_code& ec){
