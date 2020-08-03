@@ -33,8 +33,13 @@ target_compile_options(
           -Wno-c++98-compat
           -Wno-global-constructors
           -Wno-weak-vtables>)
-target_link_libraries(jwt-cpp-test PRIVATE jwt-cpp::jwt-cpp GTest::GTest
-                                           GTest::Main pthread dl)
+
+# NOTE: Don't use space inside a generator expression here, because the function
+#       prematurely breaks the expression into multiple lines.
+target_link_libraries(jwt-cpp-test PRIVATE jwt-cpp::jwt-cpp
+  GTest::GTest GTest::Main
+  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:pthread>
+  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:${CMAKE_DL_LIBS}> )
 
 gtest_add_tests(TARGET jwt-cpp-test)
 
