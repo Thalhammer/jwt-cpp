@@ -7,19 +7,18 @@ if(NOT ${CXX_COMPILER_ID} STREQUAL Clang)
 endif()
 
 function(ADD_FUZZING_EXECUTABLE TARGET)
-    add_executable(jwt-cpp-fuzz-${TARGET} "${TARGET}.cpp")
-    target_compile_options(
+  add_executable(jwt-cpp-fuzz-${TARGET} "${TARGET}.cpp")
+  target_compile_options(
     jwt-cpp-fuzz-${TARGET}
     PRIVATE -g -O1 -fsanitize=fuzzer,address,signed-integer-overflow,undefined
             -fno-omit-frame-pointer)
-    target_link_options(
+  target_link_options(
     jwt-cpp-fuzz-${TARGET} PRIVATE
     -fsanitize=fuzzer,address,signed-integer-overflow,undefined
     -fno-omit-frame-pointer)
-    target_link_libraries(jwt-cpp-fuzz-${TARGET} PRIVATE jwt-cpp::jwt-cpp)
+  target_link_libraries(jwt-cpp-fuzz-${TARGET} PRIVATE jwt-cpp::jwt-cpp)
 endfunction()
 
 add_fuzzing_executable(BaseEncodeFuzz)
 add_fuzzing_executable(BaseDecodeFuzz)
-# add_fuzzing_executable(TokenDecodeFuzz)
-add_fuzzing_executable(TokenSignFuzz)
+add_fuzzing_executable(TokenDecodeFuzz)
