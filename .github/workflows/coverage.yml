@@ -56,7 +56,7 @@ jobs:
         sudo ln -s /usr/src/gtest/libgtest_main.a /usr/lib/libgtest_main.a
         mkdir build
         cd build
-        cmake .. -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DJWT_CPP_FUZZING=ON
+        cmake .. -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DFUZZING=ON
         
     - name: make
       run: |

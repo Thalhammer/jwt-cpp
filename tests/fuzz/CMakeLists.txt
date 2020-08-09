@@ -1,8 +1,4 @@
-if(NOT JWT_CPP_FUZZING)
-  return()
-endif()
-
-if(NOT ${CXX_COMPILER_ID} STREQUAL Clang)
+if(NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
   message(FATAL_ERROR "Fuzzing is only available on Clang")
 endif()
 

@@ -7,7 +7,7 @@ endif()
 option(BUILD_TESTS "Configure CMake to build tests (or not)" ON)
 option(BUILD_EXAMPLES "Configure CMake to build examples (or not)" ON)
 option(COVERAGE "Enable code coverage testing" OFF)
-option(JWT_CPP_FUZZING "Enable fuzz testing" OFF)
+option(FUZZING "Enable fuzz testing" OFF)
 option(EXTERNAL_PICOJSON "Use find_package() to locate the picojson header" OFF)
 option(DISABLE_JWT_CPP_BASE64
        "Do not include the base64 implementation from this library" OFF)
@@ -60,12 +60,10 @@ write_basic_package_version_file(
   COMPATIBILITY ExactVersion)
 
 install(FILES "${JWT_INCLUDE_PATH}/jwt-cpp/jwt.h" DESTINATION include/jwt-cpp)
-
 if(NOT DISABLE_JWT_CPP_BASE64)
   install(FILES "${JWT_INCLUDE_PATH}/jwt-cpp/base.h"
           DESTINATION include/jwt-cpp)
 endif()
-
 if(NOT EXTERNAL_PICOJSON AND NOT DISABLE_JWT_CPP_PICOJSON)
   install(FILES "${JWT_INCLUDE_PATH}/picojson/picojson.h"
           DESTINATION include/picojson)
@@ -91,6 +89,6 @@ if(BUILD_EXAMPLES)
   add_subdirectory(example)
 endif()
 
-if(JWT_CPP_FUZZING)
+if(FUZZING)
   add_subdirectory(tests/fuzz)
 endif()
