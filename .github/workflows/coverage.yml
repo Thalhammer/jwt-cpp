@@ -48,8 +48,6 @@ jobs:
       
     - name: configure
       run: |
-        sudo apt update
-        sudo apt install clang++ lcov
         mkdir build
         cd build
         cmake .. -DCMAKE_CXX_COMPILER=clang++ -DJWT_CPP_FUZZING=ON
