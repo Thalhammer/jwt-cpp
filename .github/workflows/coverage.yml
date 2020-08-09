@@ -57,5 +57,7 @@ jobs:
     - name: make
       run: |
         cd build
-        make jwt-cpp-fuzz
+        make jwt-cpp-fuzz-BaseEncodeFuzz jwt-cpp-fuzz-BaseDecodeFuzz jwt-cpp-fuzz-TokenDecodeFuzz
         ./tests/fuzz/jwt-cpp-fuzz-BaseEncodeFuzz -runs=1000000
+        ./tests/fuzz/jwt-cpp-fuzz-BaseDecodeFuzz -runs=1000000 ../tests/fuzz/decode-corpus
+        ./tests/fuzz/jwt-cpp-fuzz-TokenDecodeFuzz -runs=1000000 ../tests/fuzz/token-corpus
