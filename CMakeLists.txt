@@ -1,9 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
 
-if(CMAKE_TOOLCHAIN_FILE)
-  include(${CMAKE_TOOLCHAIN_FILE})
-endif()
-
 option(BUILD_TESTS "Configure CMake to build tests (or not)" ON)
 option(BUILD_EXAMPLES "Configure CMake to build examples (or not)" ON)
 option(COVERAGE "Enable code coverage testing" OFF)
