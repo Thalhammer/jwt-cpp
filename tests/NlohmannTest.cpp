@@ -183,4 +183,9 @@ TEST(NlohmannTest, VerifyTokenExpired) {
 
 	auto decoded_token = jwt::decode<nlohmann_traits>(token);
 	ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+	std::error_code ec;
+	ASSERT_NO_THROW(verify.verify(decoded_token, ec));
+	ASSERT_TRUE(!(!ec));
+	ASSERT_EQ(ec.category(), jwt::error::token_verification_error_category());
+	ASSERT_EQ(ec.value(), static_cast<int>(jwt::error::token_verification_error::token_expired));
 }
