@@ -21,6 +21,8 @@ struct nlohmann_traits {
 			return type::boolean;
 		else if (val.type() == json::value_t::number_integer)
 			return type::integer;
+		else if (val.type() == json::value_t::number_unsigned) // nlohmann internally tracks two types of integers
+			return type::integer;
 		else if (val.type() == json::value_t::number_float)
 			return type::number;
 		else if (val.type() == json::value_t::string)
@@ -52,12 +54,14 @@ struct nlohmann_traits {
 	}
 
 	static int64_t as_int(const json &val) {
-		if (val.type() == json::value_t::number_integer)
+		switch(val.type())
+		{
+		case json::value_t::number_integer:
+		case json::value_t::number_unsigned:
 			return val.get<int64_t>();
-		else if (val.type() == json::value_t::number_unsigned)
-			return val.get<int64_t>(); // WIP let's see if nlohmann will handle narrow conversion
-		else	
+		default:	
 			throw std::bad_cast();
+		}
 	}
 
 	static bool as_bool(const json &val) {
