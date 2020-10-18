@@ -174,7 +174,7 @@ TEST(NlohmannTest, VerifyTokenExpired) {
     	const auto token = jwt::create<nlohmann_traits>()
             .set_issuer("auth0")
             .set_issued_at(std::chrono::system_clock::now() - std::chrono::seconds{3601})
-            .set_expires_at(std::chrono::system_clock::now() + std::chrono::seconds{1})
+            .set_expires_at(std::chrono::system_clock::now() - std::chrono::seconds{1})
             .sign(jwt::algorithm::hs256{"secret"});
 	
 	auto verify = jwt::verify<jwt::default_clock, nlohmann_traits>({})
