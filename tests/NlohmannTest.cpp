@@ -9,11 +9,11 @@ struct nlohmann_traits {
 	using value_type = json;
 	using object_type = json::object_t;
 	using array_type = json::array_t;
-	using string_type = std::string;
-	using number_type = double;
-	using integer_type = int64_t;
-	using boolean_type = bool;
-
+	using string_type = std::string; // current limitation of traits implementation
+    	using number_type = json::number_float_t;
+    	using integer_type = json::number_integer_t;
+    	using boolean_type = json::boolean_t;
+	
 	static jwt::json::type get_type(const json &val) {
 		using jwt::json::type;
 
@@ -52,9 +52,12 @@ struct nlohmann_traits {
 	}
 
 	static int64_t as_int(const json &val) {
-		if (val.type() != json::value_t::number_integer)
+		if (val.type() == json::value_t::number_integer)
+			return val.get<int64_t>();
+		else if (val.type() == json::value_t::number_unsigned)
+			return val.get<int64_t>(); // WIP let's see if nlohmann will handle narrow conversion
+		else	
 			throw std::bad_cast();
-		return val.get<int64_t>();
 	}
 
 	static bool as_bool(const json &val) {
