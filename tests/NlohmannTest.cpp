@@ -147,3 +147,18 @@ TEST(NlohmannTest, VerifyTokenHS256) {
 	auto decoded_token = jwt::decode<nlohmann_traits>(token);
 	verify.verify(decoded_token);
 }
+
+TEST(NlohmannTest, Bug103Expiration) {
+    const auto token = jwt::create<nlohmann_traits>()
+            .set_issuer("auth0")
+            .set_issued_at(std::chrono::system_clock::now())
+            .set_expires_at(std::chrono::system_clock::now() + std::chrono::seconds{3600})
+            .sign(jwt::algorithm::hs256{"secret"});
+	
+		auto verify = jwt::verify<jwt::default_clock, nlohmann_traits>({})
+		.allow_algorithm(jwt::algorithm::hs256{ "secret" })
+		.with_issuer("auth0");
+
+	auto decoded_token = jwt::decode<nlohmann_traits>(token);
+	verify.verify(decoded_token);
+}
