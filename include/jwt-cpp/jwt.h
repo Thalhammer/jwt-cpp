@@ -39,6 +39,11 @@
 #define OPENSSL10
 #endif
 
+//If openssl version less than 1.1.1
+#if OPENSSL_VERSION_NUMBER < 0x10101000L
+#define OPENSSL110
+#endif
+
 #ifndef JWT_CLAIM_EXPLICIT
 #define JWT_CLAIM_EXPLICIT explicit
 #endif
@@ -342,7 +347,7 @@ namespace jwt {
 		std::string extract_pubkey_from_cert(const std::string& certstr, const std::string& pw, std::error_code& ec) {
 			ec.clear();
 #if OPENSSL_VERSION_NUMBER <= 0x10100003L
-			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(BIO_new_mem_buf(const_cast<char*>(certstr.data()), certstr.size()), BIO_free_all);
+			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(BIO_new_mem_buf(const_cast<char*>(certstr.data()), static_cast<int>(certstr.size())), BIO_free_all);
 #else
 			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(BIO_new_mem_buf(certstr.data(), static_cast<int>(certstr.size())), BIO_free_all);
 #endif
@@ -503,8 +508,7 @@ namespace jwt {
 		static std::string bn2raw(const BIGNUM* bn)
 #endif
 		{
-			std::string res;
-			res.resize(BN_num_bytes(bn));
+			std::string res(BN_num_bytes(bn), '\0');
 			BN_bn2bin(bn, (unsigned char*)res.data());  // NOLINT(google-readability-casting) requires `const_cast`
 			return res;
 		}
@@ -580,8 +584,7 @@ namespace jwt {
 			 */
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
-				std::string res;
-				res.resize(static_cast<size_t>(EVP_MAX_MD_SIZE));
+				std::string res(static_cast<size_t>(EVP_MAX_MD_SIZE), '\0');
 				auto len = static_cast<unsigned int>(res.size());
 				if (HMAC(md(), secret.data(), static_cast<int>(secret.size()), reinterpret_cast<const unsigned char*>(data.data()), static_cast<int>(data.size()), (unsigned char*)res.data(), &len) == nullptr) { // NOLINT(google-readability-casting) requires `const_cast` 
 					ec = error::signature_generation_error::hmac_failed;
@@ -671,8 +674,7 @@ namespace jwt {
 					return {};
 				}
 
-				std::string res;
-				res.resize(EVP_PKEY_size(pkey.get()));
+				std::string res(EVP_PKEY_size(pkey.get()), '\0');
 				unsigned int len = 0;
 
 				if (!EVP_SignUpdate(ctx.get(), data.data(), data.size())){
@@ -845,7 +847,7 @@ namespace jwt {
 				sig.r = r.get();
 				sig.s = s.get();
 
-				if(ECDSA_do_verify((const unsigned char*)hash.data(), hash.size(), &sig, pkey.get()) != 1) {
+				if(ECDSA_do_verify((const unsigned char*)hash.data(), static_cast<int>(hash.size()), &sig, pkey.get()) != 1) {
 					ec = error::signature_verification_error::invalid_signature;
 					return;
 				}
@@ -896,8 +898,7 @@ namespace jwt {
 					return {};
 				}
 				unsigned int len = 0;
-				std::string res;
-				res.resize(EVP_MD_CTX_size(ctx.get()));
+				std::string res(EVP_MD_CTX_size(ctx.get()), '\0');
 				if(EVP_DigestFinal(ctx.get(), (unsigned char*)res.data(), &len) == 0) { // NOLINT(google-readability-casting) requires `const_cast`
 					ec = error::signature_generation_error::digestfinal_failed;
 					return {};
@@ -916,6 +917,108 @@ namespace jwt {
 			const size_t signature_length;
 		};
 
+#ifndef OPENSSL110
+		/**
+		 * \brief Base class for EdDSA family of algorithms
+		 *
+		 * The EdDSA algorithms were introduced in [OpenSSL v1.1.1](https://www.openssl.org/news/openssl-1.1.1-notes.html),
+		 * so these algorithms are only available when building against this version or higher.
+		 */
+		struct eddsa {
+			/**
+			 * Construct new eddsa algorithm
+			 * \param public_key EdDSA public key in PEM format
+			 * \param private_key EdDSA private key or empty string if not available. If empty, signing will always fail.
+			 * \param public_key_password Password to decrypt public key pem.
+			 * \param private_key_password Password to decrypt private key pem.
+			 * \param md Pointer to hash function
+			 * \param name Name of the algorithm
+			 */
+			eddsa(const std::string& public_key, const std::string& private_key, const std::string& public_key_password, const std::string& private_key_password, const EVP_MD* (*md)(), std::string  name)
+				: md(md), alg_name(std::move(name))
+			{
+				if (!private_key.empty()) {
+					pkey = helper::load_private_key_from_string(private_key, private_key_password);
+				}
+				else if (!public_key.empty()) {
+					pkey = helper::load_public_key_from_string(public_key, public_key_password);
+				}
+				else
+					throw ecdsa_exception(error::ecdsa_error::load_key_bio_read);
+			}
+			/**
+			 * Sign jwt data
+			 * \param data The data to sign
+			 * \param ec error_code filled with details on error
+			 * \return EdDSA signature for the given data
+			 */
+			std::string sign(const std::string& data, std::error_code& ec) const {
+				ec.clear();
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_free);
+				if (!ctx) {
+					ec = error::signature_generation_error::create_context_failed;
+					return {};
+				}
+				if (!EVP_DigestSignInit(ctx.get(), nullptr, nullptr, nullptr, pkey.get())) {
+					ec = error::signature_generation_error::signinit_failed;
+					return {};
+				}
+
+				size_t len = EVP_PKEY_size(pkey.get());
+				std::string res(len, '\0');
+
+				if (EVP_DigestSign(ctx.get(),
+						reinterpret_cast<unsigned char*>(&res[0]), &len,
+						reinterpret_cast<const unsigned char*>(data.data()), data.size()) != 1) {
+					ec = error::signature_generation_error::signfinal_failed;
+					return {};
+				}
+
+				res.resize(len);
+				return res;
+			}
+
+			/**
+			 * Check if signature is valid
+			 * \param data The data to check signature against
+			 * \param signature Signature provided by the jwt
+			 * \param ec Filled with details on error
+			 */
+			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
+				ec.clear();
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_free);
+				if (!ctx) {
+					ec = error::signature_verification_error::create_context_failed;
+					return;
+				}
+				if (!EVP_DigestVerifyInit(ctx.get(), nullptr, nullptr, nullptr, pkey.get())) {
+					ec = error::signature_verification_error::verifyinit_failed;
+					return;
+				}
+				auto res = EVP_DigestVerify(ctx.get(),
+					reinterpret_cast<const unsigned char*>(signature.data()), signature.size(),
+					reinterpret_cast<const unsigned char*>(data.data()), data.size());
+				if (res != 1) {
+					ec = error::signature_verification_error::verifyfinal_failed;
+					return;
+				}
+			}
+			/**
+			 * Returns the algorithm name provided to the constructor
+			 * \return algorithm's name
+			 */
+			std::string name() const {
+				return alg_name;
+			}
+		private:
+			/// OpenSSL struct containing keys
+			std::shared_ptr<EVP_PKEY> pkey;
+			/// Hash generator
+			const EVP_MD* (*md)();
+			/// algorithm's name
+			const std::string alg_name;
+		};
+#endif
 		/**
 		 * \brief Base class for PSS-RSA family of algorithms
 		 */
@@ -1033,8 +1136,7 @@ namespace jwt {
 					return {};
 				}
 				unsigned int len = 0;
-				std::string res;
-				res.resize(EVP_MD_CTX_size(ctx.get()));
+				std::string res(EVP_MD_CTX_size(ctx.get()), '\0');
 				if(EVP_DigestFinal(ctx.get(), (unsigned char*)res.data(), &len) == 0) { // NOLINT(google-readability-casting) requires `const_cast`
 					ec = error::signature_generation_error::digestfinal_failed;
 					return {};
@@ -1177,6 +1279,44 @@ namespace jwt {
 				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "ES512", 132)
 			{}
 		};
+
+#ifndef OPENSSL110
+		/**
+		 * Ed25519 algorithm
+		 *
+		 * Requires at least OpenSSL 1.1.1.
+		 */
+		struct ed25519 : public eddsa {
+			/**
+			 * Construct new instance of algorithm
+			 * \param public_key Ed25519 public key in PEM format
+			 * \param private_key Ed25519 private key or empty string if not available. If empty, signing will always fail.
+			 * \param public_key_password Password to decrypt public key pem.
+			 * \param private_key_password Password to decrypt private key pem.
+			 */
+			explicit ed25519(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
+				: eddsa(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "EdDSA")
+			{}
+		};
+
+		/**
+		 * Ed448 algorithm
+		 *
+		 * Requires at least OpenSSL 1.1.1.
+		 */
+		struct ed448 : public eddsa {
+			/**
+			 * Construct new instance of algorithm
+			 * \param public_key Ed448 public key in PEM format
+			 * \param private_key Ed448 private key or empty string if not available. If empty, signing will always fail.
+			 * \param public_key_password Password to decrypt public key pem.
+			 * \param private_key_password Password to decrypt private key pem.
+			 */
+			explicit ed448(const std::string& public_key, const std::string& private_key = "", const std::string& public_key_password = "", const std::string& private_key_password = "")
+				: eddsa(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "EdDSA")
+			{}
+		};
+#endif
 
 		/**
 		 * PS256 algorithm

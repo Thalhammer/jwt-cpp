@@ -11,7 +11,7 @@ A header only library for creating and validating [JSON Web Tokens](https://tool
 
 ## Signature algorithms
 
-As of version 0.2.0 jwt-cpp supports all algorithms defined by the spec. The modular design of jwt-cpp allows one to add additional algorithms without any problems. If you need any feel free to open a pull request.
+jwt-cpp supports all algorithms defined by the spec. The modular design of jwt-cpp allows one to add additional algorithms without any problems. If you need any feel free to open a pull request.
 For the sake of completeness, here is a list of all supported algorithms:
 
 * HS256
@@ -26,10 +26,11 @@ For the sake of completeness, here is a list of all supported algorithms:
 * PS256
 * PS384
 * PS512
+* EdDSA (Ed25519, Ed448), since 0.5.0
 
 ## Overview
 
-Since 0.5.0-dev, there is no hard dependency on a JSON library; instead there's a generic `jwt::basic_claim` which is templated around the types required.It requires a traits type, which defines types for a value, object, array, string, number, integer and boolean, as well as methods to translate between them.
+Since 0.5.0-rc.0, there is no hard dependency on a JSON library; instead there's a generic `jwt::basic_claim` which is templated around the types required.It requires a traits type, which defines types for a value, object, array, string, number, integer and boolean, as well as methods to translate between them.
 
 ```cpp
 jwt::basic_claim<my_favorite_json_library_traits> claim(json::object({{"json", true},{"example", 0}}));
