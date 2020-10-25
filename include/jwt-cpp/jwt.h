@@ -967,12 +967,28 @@ namespace jwt {
 				size_t len = EVP_PKEY_size(pkey.get());
 				std::string res(len, '\0');
 
+				// LibreSSL is the special kid in the block, as it does not support EVP_DigestSign.
+				// OpenSSL on the otherhand does not support using EVP_DigestSignUpdate for eddsa, which is why we end up with this mess.
+				#ifdef LIBRESSL_VERSION_NUMBER
+				ERR_clear_error();
+				auto e = EVP_DigestSignUpdate(ctx.get(), reinterpret_cast<const unsigned char*>(data.data()), data.size());
+				if(e != 1) {
+					std::cout << ERR_error_string(ERR_get_error(), NULL) << std::endl;
+					ec = error::signature_generation_error::signupdate_failed;
+					return {};
+				}
+				if(EVP_DigestSignFinal(ctx.get(), reinterpret_cast<unsigned char*>(&res[0]), &len) != 1) {
+					ec = error::signature_generation_error::signfinal_failed;
+					return {};
+				}
+				#else
 				if (EVP_DigestSign(ctx.get(),
 						reinterpret_cast<unsigned char*>(&res[0]), &len,
 						reinterpret_cast<const unsigned char*>(data.data()), data.size()) != 1) {
 					ec = error::signature_generation_error::signfinal_failed;
 					return {};
 				}
+				#endif
 
 				res.resize(len);
 				return res;
@@ -995,6 +1011,18 @@ namespace jwt {
 					ec = error::signature_verification_error::verifyinit_failed;
 					return;
 				}
+				// LibreSSL is the special kid in the block, as it does not support EVP_DigestVerify.
+				// OpenSSL on the otherhand does not support using EVP_DigestVerifyUpdate for eddsa, which is why we end up with this mess.
+				#ifdef LIBRESSL_VERSION_NUMBER
+				if (EVP_DigestVerifyUpdate(ctx.get(), reinterpret_cast<const unsigned char*>(data.data()), data.size()) != 1) {
+					ec = error::signature_verification_error::verifyupdate_failed;
+					return;
+				}
+				if (EVP_DigestVerifyFinal(ctx.get(), reinterpret_cast<const unsigned char*>(signature.data()), signature.size()) != 1) {
+					ec = error::signature_verification_error::verifyfinal_failed;
+					return;
+				}
+				#else
 				auto res = EVP_DigestVerify(ctx.get(),
 					reinterpret_cast<const unsigned char*>(signature.data()), signature.size(),
 					reinterpret_cast<const unsigned char*>(data.data()), data.size());
@@ -1002,6 +1030,7 @@ namespace jwt {
 					ec = error::signature_verification_error::verifyfinal_failed;
 					return;
 				}
+				#endif
 			}
 			/**
 			 * Returns the algorithm name provided to the constructor
