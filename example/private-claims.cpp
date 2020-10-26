@@ -54,6 +54,8 @@ std::string make_nlohmann_token() {
         return type::boolean;
       else if (val.type() == json::value_t::number_integer)
         return type::integer;
+      else if (val.type() == json::value_t::number_unsigned) // nlohmann internally tracks two types of integers
+        return type::integer;
       else if (val.type() == json::value_t::number_float)
         return type::number;
       else if (val.type() == json::value_t::string)
@@ -85,9 +87,14 @@ std::string make_nlohmann_token() {
     }
 
     static int64_t as_int(const json &val) {
-      if (val.type() != json::value_t::number_integer)
+      switch(val.type())
+      {
+      case json::value_t::number_integer:
+      case json::value_t::number_unsigned:
+        return val.get<int64_t>();
+      default:	
         throw std::bad_cast();
-      return val.get<int64_t>();
+      }
     }
 
     static bool as_bool(const json &val) {

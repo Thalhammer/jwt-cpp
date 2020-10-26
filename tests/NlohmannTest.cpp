@@ -9,17 +9,19 @@ struct nlohmann_traits {
 	using value_type = json;
 	using object_type = json::object_t;
 	using array_type = json::array_t;
-	using string_type = std::string;
-	using number_type = double;
-	using integer_type = int64_t;
-	using boolean_type = bool;
-
+	using string_type = std::string; // current limitation of traits implementation
+    	using number_type = json::number_float_t;
+    	using integer_type = json::number_integer_t;
+    	using boolean_type = json::boolean_t;
+	
 	static jwt::json::type get_type(const json &val) {
 		using jwt::json::type;
 
 		if (val.type() == json::value_t::boolean)
 			return type::boolean;
 		else if (val.type() == json::value_t::number_integer)
+			return type::integer;
+		else if (val.type() == json::value_t::number_unsigned) // nlohmann internally tracks two types of integers
 			return type::integer;
 		else if (val.type() == json::value_t::number_float)
 			return type::number;
@@ -52,9 +54,14 @@ struct nlohmann_traits {
 	}
 
 	static int64_t as_int(const json &val) {
-		if (val.type() != json::value_t::number_integer)
+		switch(val.type())
+		{
+		case json::value_t::number_integer:
+		case json::value_t::number_unsigned:
+			return val.get<int64_t>();
+		default:	
 			throw std::bad_cast();
-		return val.get<int64_t>();
+		}
 	}
 
 	static bool as_bool(const json &val) {
@@ -146,4 +153,39 @@ TEST(NlohmannTest, VerifyTokenHS256) {
 
 	auto decoded_token = jwt::decode<nlohmann_traits>(token);
 	verify.verify(decoded_token);
+}
+
+TEST(NlohmannTest, VerifyTokenExpirationValid) {
+    const auto token = jwt::create<nlohmann_traits>()
+            .set_issuer("auth0")
+            .set_issued_at(std::chrono::system_clock::now())
+            .set_expires_at(std::chrono::system_clock::now() + std::chrono::seconds{3600})
+            .sign(jwt::algorithm::hs256{"secret"});
+	
+	auto verify = jwt::verify<jwt::default_clock, nlohmann_traits>({})
+	    .allow_algorithm(jwt::algorithm::hs256{ "secret" })
+	    .with_issuer("auth0");
+
+	auto decoded_token = jwt::decode<nlohmann_traits>(token);
+	verify.verify(decoded_token);
+}
+
+TEST(NlohmannTest, VerifyTokenExpired) {
+    	const auto token = jwt::create<nlohmann_traits>()
+            .set_issuer("auth0")
+            .set_issued_at(std::chrono::system_clock::now() - std::chrono::seconds{3601})
+            .set_expires_at(std::chrono::system_clock::now() - std::chrono::seconds{1})
+            .sign(jwt::algorithm::hs256{"secret"});
+	
+	auto verify = jwt::verify<jwt::default_clock, nlohmann_traits>({})
+	    .allow_algorithm(jwt::algorithm::hs256{ "secret" })
+	    .with_issuer("auth0");
+
+	auto decoded_token = jwt::decode<nlohmann_traits>(token);
+	ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+	std::error_code ec;
+	ASSERT_NO_THROW(verify.verify(decoded_token, ec));
+	ASSERT_TRUE(!(!ec));
+	ASSERT_EQ(ec.category(), jwt::error::token_verification_error_category());
+	ASSERT_EQ(ec.value(), static_cast<int>(jwt::error::token_verification_error::token_expired));
 }
