@@ -971,8 +971,7 @@ namespace jwt {
 				// OpenSSL on the otherhand does not support using EVP_DigestSignUpdate for eddsa, which is why we end up with this mess.
 				#ifdef LIBRESSL_VERSION_NUMBER
 				ERR_clear_error();
-				auto e = EVP_DigestSignUpdate(ctx.get(), reinterpret_cast<const unsigned char*>(data.data()), data.size());
-				if(e != 1) {
+				if(EVP_DigestSignUpdate(ctx.get(), reinterpret_cast<const unsigned char*>(data.data()), data.size()) != 1) {
 					std::cout << ERR_error_string(ERR_get_error(), NULL) << std::endl;
 					ec = error::signature_generation_error::signupdate_failed;
 					return {};
