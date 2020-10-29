@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.8)
 option(BUILD_TESTS "Configure CMake to build tests (or not)" ON)
 option(BUILD_EXAMPLES "Configure CMake to build examples (or not)" ON)
 option(COVERAGE "Enable code coverage testing" OFF)
+option(FUZZING "Enable fuzz testing" OFF)
 option(EXTERNAL_PICOJSON "Use find_package() to locate the picojson header" OFF)
 option(DISABLE_JWT_CPP_BASE64
        "Do not include the base64 implementation from this library" OFF)
@@ -42,22 +43,12 @@ target_include_directories(
 
 target_link_libraries(jwt-cpp INTERFACE OpenSSL::SSL OpenSSL::Crypto)
 
-set(JWT_HEADERS ${JWT_INCLUDE_PATH}/jwt-cpp/base.h)
-if(NOT EXTERNAL_PICOJSON AND NOT DISABLE_JWT_CPP_PICOJSON)
-  set(PICO_HEADER ${JWT_INCLUDE_PATH}/picojson/picojson.h)
-endif()
-
 include(CMakePackageConfigHelpers)
-set(INCLUDE_INSTALL_DIR include)
-
 configure_package_config_file(
   ${CMAKE_CURRENT_LIST_DIR}/cmake/jwt-cpp-config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config.cmake
-  INSTALL_DESTINATION
-  ${CMAKE_INSTALL_PREFIX}/jwt-cpp/cmake
-  PATH_VARS
-  INCLUDE_INSTALL_DIR
-  EXTERNAL_PICOJSON)
+  INSTALL_DESTINATION ${CMAKE_INSTALL_PREFIX}/jwt-cpp/cmake
+  PATH_VARS EXTERNAL_PICOJSON)
 
 write_basic_package_version_file(
   ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-version.cmake
@@ -65,14 +56,13 @@ write_basic_package_version_file(
   COMPATIBILITY ExactVersion)
 
 install(FILES "${JWT_INCLUDE_PATH}/jwt-cpp/jwt.h" DESTINATION include/jwt-cpp)
-
 if(NOT DISABLE_JWT_CPP_BASE64)
   install(FILES "${JWT_INCLUDE_PATH}/jwt-cpp/base.h"
           DESTINATION include/jwt-cpp)
 endif()
-
 if(NOT EXTERNAL_PICOJSON AND NOT DISABLE_JWT_CPP_PICOJSON)
-  install(FILES ${PICO_HEADER} DESTINATION include/picojson)
+  install(FILES "${JWT_INCLUDE_PATH}/picojson/picojson.h"
+          DESTINATION include/picojson)
 endif()
 
 install(
@@ -93,4 +83,8 @@ endif()
 
 if(BUILD_EXAMPLES)
   add_subdirectory(example)
+endif()
+
+if(FUZZING)
+  add_subdirectory(tests/fuzz)
 endif()
