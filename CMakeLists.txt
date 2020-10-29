@@ -6,8 +6,7 @@ option(JWT_BUILD_EXAMPLES "Configure CMake to build examples (or not)" ON)
 option(JWT_BUILD_TESTS "Configure CMake to build tests (or not)" OFF)
 option(JWT_ENABLE_COVERAGE "Enable code coverage testing" OFF)
 
-option(JWT_EXTERNAL_PICOJSON
-       "Use find_package() to locate the picojson header, provided to integrate with package managers" OFF)
+option(JWT_EXTERNAL_PICOJSON "Use find_package() to locate picojson, provided to integrate with package managers" OFF)
 option(JWT_DISABLE_BASE64 "Do not include the base64 implementation from this library" OFF)
 option(JWT_DISABLE_PICOJSON "Do not provide the picojson template specialiaze" OFF)
 
@@ -28,29 +27,33 @@ if(NOT JWT_EXTERNAL_PICOJSON AND NOT JWT_DISABLE_PICOJSON)
   list(APPEND JWT_HEADER_FILES ${JWT_INCLUDE_PATH}/picojson/picojson.h)
 endif()
 
-add_library(jwt-cpp ${JWT_HEADER_FILES})
+# add_library(jwt-cpp INTERFACE ${JWT_HEADER_FILES}) # This is not supported until CMake 3.19
+add_library(jwt-cpp INTERFACE)
 add_library(jwt-cpp::jwt-cpp ALIAS jwt-cpp) # To match export
-set_target_properties(jwt-cpp PROPERTIES LINKER_LANGUAGE CXX)
-target_compile_features(jwt-cpp PUBLIC cxx_std_11)
-target_compile_options(jwt-cpp PUBLIC $<$<BOOL:JWT_DISABLE_BASE64>:DISABLE_BASE64>
-                                      $<$<BOOL:JWT_DISABLE_PICOJSON>:DISABLE_PICOJSON>)
-target_include_directories(jwt-cpp PUBLIC $<BUILD_INTERFACE:${JWT_INCLUDE_PATH}>
-                                          $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/jwt-cpp>)
-target_link_libraries(jwt-cpp PUBLIC OpenSSL::SSL OpenSSL::Crypto)
+target_compile_features(jwt-cpp INTERFACE cxx_std_11)
+target_compile_options(jwt-cpp INTERFACE $<$<BOOL:JWT_DISABLE_BASE64>:DISABLE_BASE64>
+                                         $<$<BOOL:JWT_DISABLE_PICOJSON>:DISABLE_PICOJSON>)
+target_include_directories(jwt-cpp INTERFACE $<BUILD_INTERFACE:${JWT_INCLUDE_PATH}>
+                                             $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+target_link_libraries(jwt-cpp INTERFACE OpenSSL::SSL OpenSSL::Crypto)
 
 if(JWT_EXTERNAL_PICOJSON)
-  target_link_libraries(jwt-cpp PUBLIC picojson::picojson>)
+  target_link_libraries(jwt-cpp INTERFACE picojson::picojson>)
 endif()
 
 include(CMakePackageConfigHelpers)
+set(JWT_CMAKE_FILES_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/cmake/jwt-cpp)
 configure_package_config_file(
   ${CMAKE_CURRENT_LIST_DIR}/cmake/jwt-cpp-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config.cmake
-  INSTALL_DESTINATION ${CMAKE_INSTALL_PREFIX}/cmake/jwt-cpp PATH_VARS JWT_EXTERNAL_PICOJSON)
+  INSTALL_DESTINATION ${JWT_CMAKE_FILES_INSTALL_DIR} PATH_VARS JWT_EXTERNAL_PICOJSON)
 write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-version.cmake VERSION 0.5.0-rc.0
                                  COMPATIBILITY ExactVersion)
-install(TARGETS jwt-cpp EXPORT jwt-cpp ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/jwt-cpp)
+
+install(TARGETS jwt-cpp EXPORT jwt-cpp PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(EXPORT jwt-cpp NAMESPACE jwt-cpp:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/jwt-cpp)
+install(FILES JWT_HEADER_FILES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/jwt-cpp)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config.cmake ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-version.cmake
+        DESTINATION ${JWT_CMAKE_FILES_INSTALL_DIR})
 
 if(BUILD_TESTS)
   add_subdirectory(tests)
