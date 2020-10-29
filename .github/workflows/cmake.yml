@@ -1,0 +1,28 @@
+name: CMake CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: install cmake
+      uses: lukka/get-cmake@v3.17.2
+      
+    - name: setup
+      run: |
+        mkdir build
+        cd build
+        cmake .. -DJWT_DISABLE_PICOJSON=ON
+        make install
+
+    - name: test
+      run: |
+        cd tests/cmake
+        cmake .
+        cmake --build .
