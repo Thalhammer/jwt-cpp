@@ -52,7 +52,7 @@ write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-vers
 
 install(TARGETS jwt-cpp EXPORT jwt-cpp PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(EXPORT jwt-cpp NAMESPACE jwt-cpp:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/jwt-cpp)
-install(FILES JWT_HEADER_FILES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/jwt-cpp)
+install(FILES ${JWT_HEADER_FILES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/jwt-cpp)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config.cmake ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-version.cmake
         DESTINATION ${JWT_CMAKE_FILES_INSTALL_DIR})
 
