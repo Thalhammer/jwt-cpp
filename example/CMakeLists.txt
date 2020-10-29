@@ -5,6 +5,10 @@ if(NOT TARGET jwt-cpp)
     find_package(jwt-cpp CONFIG REQUIRED)
 endif()
 
+if(JWT_DISABLE_PICOJSON)
+    message(FATAL_ERROR "examples require picojson to be available!")
+endif()
+
 add_executable(print-claims print-claims.cpp)
 target_link_libraries(print-claims jwt-cpp::jwt-cpp)
 

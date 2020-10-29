@@ -18,8 +18,8 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake .. -DJWT_DISABLE_PICOJSON=ON
-        make install
+        cmake .. -DJWT_DISABLE_PICOJSON=ON -DJWT_BUILD_EXAMPLES=OFF
+        VERBOSE=1 make install
 
     - name: test
       run: |
