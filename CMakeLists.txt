@@ -41,6 +41,7 @@ if(JWT_EXTERNAL_PICOJSON)
   target_link_libraries(jwt-cpp INTERFACE picojson::picojson>)
 endif()
 
+include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 set(JWT_CMAKE_FILES_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/cmake/jwt-cpp)
 configure_package_config_file(
