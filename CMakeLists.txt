@@ -56,10 +56,10 @@ install(FILES JWT_HEADER_FILES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/jwt-cpp)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config.cmake ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-version.cmake
         DESTINATION ${JWT_CMAKE_FILES_INSTALL_DIR})
 
-if(BUILD_TESTS)
-  add_subdirectory(tests)
+if(JWT_BUILD_EXAMPLES)
+  add_subdirectory(example)
 endif()
 
-if(BUILD_EXAMPLES)
-  add_subdirectory(example)
+if(JWT_BUILD_TESTS)
+  add_subdirectory(tests)
 endif()
