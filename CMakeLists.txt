@@ -31,7 +31,7 @@ endif()
 add_library(jwt-cpp INTERFACE)
 add_library(jwt-cpp::jwt-cpp ALIAS jwt-cpp) # To match export
 target_compile_features(jwt-cpp INTERFACE cxx_std_11)
-target_compile_options(jwt-cpp INTERFACE $<$<BOOL:JWT_DISABLE_BASE64>:DISABLE_BASE64>
+target_compile_definitions(jwt-cpp INTERFACE $<$<BOOL:JWT_DISABLE_BASE64>:DISABLE_BASE64>
                                          $<$<BOOL:JWT_DISABLE_PICOJSON>:DISABLE_PICOJSON>)
 target_include_directories(jwt-cpp INTERFACE $<BUILD_INTERFACE:${JWT_INCLUDE_PATH}>
                                              $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
