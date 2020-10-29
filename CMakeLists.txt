@@ -6,7 +6,8 @@ option(JWT_BUILD_EXAMPLES "Configure CMake to build examples (or not)" ON)
 option(JWT_BUILD_TESTS "Configure CMake to build tests (or not)" OFF)
 option(JWT_ENABLE_COVERAGE "Enable code coverage testing" OFF)
 
-option(JWT_EXTERNAL_PICOJSON "Use find_package() to locate the picojson header, provided to integrate with package managers" OFF)
+option(JWT_EXTERNAL_PICOJSON
+       "Use find_package() to locate the picojson header, provided to integrate with package managers" OFF)
 option(JWT_DISABLE_BASE64 "Do not include the base64 implementation from this library" OFF)
 option(JWT_DISABLE_PICOJSON "Do not provide the picojson template specialiaze" OFF)
 
@@ -47,7 +48,8 @@ configure_package_config_file(
   INSTALL_DESTINATION ${CMAKE_INSTALL_PREFIX}/cmake/jwt-cpp PATH_VARS JWT_EXTERNAL_PICOJSON)
 write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-version.cmake VERSION 0.5.0-rc.0
                                  COMPATIBILITY ExactVersion)
-install(TARGETS jwt-cpp EXPORT jwt-cpp PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/jwt-cpp)
+install(TARGETS jwt-cpp EXPORT jwt-cpp ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/jwt-cpp)
 install(EXPORT jwt-cpp NAMESPACE jwt-cpp:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/jwt-cpp)
 
 if(BUILD_TESTS)
