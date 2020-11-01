@@ -8,5 +8,3 @@ find_dependency(OpenSSL REQUIRED)
 if(JWT_EXTERNAL_PICOJSON)
   find_dependency(picojson REQUIRED)
 endif()
-
-include(${CMAKE_INSTALL_PREFIX}/cmake/jwt-cpp/jwt-cpp-config.cmake)
