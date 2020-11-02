@@ -27,9 +27,8 @@ set(JWT_TESTER_CLANG_FLAGS -Weverything -Wno-c++98-compat -Wno-global-constructo
 target_compile_options(
   jwt-cpp-test PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/W4> $<$<CXX_COMPILER_ID:GNU>:${JWT_TESTER_GCC_FLAGS}>
                        $<$<CXX_COMPILER_ID:Clang>:${JWT_TESTER_CLANG_FLAGS}>)
-set(JWT_TESTET_UNIX_LINK_LIBS pthread ${CMAKE_DL_LIBS})
-target_link_libraries(jwt-cpp-test PRIVATE jwt-cpp::jwt-cpp GTest::GTest GTest::Main
-                                           $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:${JWT_TESTET_UNIX_LINK_LIBS}>)
+target_link_libraries(jwt-cpp-test PRIVATE jwt-cpp GTest::GTest GTest::Main
+                                           $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:${CMAKE_DL_LIBS}>)
 
 gtest_add_tests(TARGET jwt-cpp-test)
 
