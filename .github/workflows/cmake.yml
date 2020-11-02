@@ -24,5 +24,5 @@ jobs:
     - name: test
       run: |
         cd tests/cmake
-        cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake
+        cmake .
         cmake --build .
