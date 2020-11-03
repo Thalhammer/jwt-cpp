@@ -397,6 +397,41 @@ namespace jwt {
 		}
 
 		/**
+		 * \brief Convert the cert provided as base64 DER to PEM. This useful when
+		 * using with JWKs as x5c claim is encoded as base64 DER. More info 
+		 * (here)[https://tools.ietf.org/html/rfc7517#section-4.7]
+		 * 
+		 * \param cert_base64_der_str String containing the certificate encoded as base64 DER
+		 * \throws rsa_exception if an error occurred
+		 */
+		inline
+		std::string convert_base64_der_to_pem(const std::string& cert_base64_der_str) {
+
+			auto decodedStr = base::decode<alphabet::base64>(base::pad<alphabet::base64>(cert_base64_der_str));
+			auto c_str = reinterpret_cast<const unsigned char *> (decodedStr.c_str());
+				
+			//
+			// d2i -> DER to internal x509 struct
+			//
+			std::unique_ptr<X509, decltype(&X509_free)> cert(d2i_X509(NULL, & c_str, decodedStr.size()), X509_free);
+			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(BIO_new(BIO_s_mem()), BIO_free_all);
+			if(!cert || !certbio) {
+				throw rsa_exception(error::rsa_error::create_mem_bio_failed);
+			}
+
+			PEM_write_bio_X509(certbio.get(), cert.get());
+
+			char* ptr = nullptr;
+			auto len = BIO_get_mem_data(certbio.get(), &ptr);
+			if(len <= 0 || ptr == nullptr) {
+				throw rsa_exception(error::rsa_error::convert_to_pem_failed);
+			}
+
+			std::string cert_pem(ptr, len);
+			return cert_pem;
+		}
+
+		/**
 		 * \brief Load a public key from a string.
 		 * 
 		 * The string should contain a pem encoded certificate or public key

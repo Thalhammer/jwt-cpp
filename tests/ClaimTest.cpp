@@ -59,7 +59,7 @@ TEST(ClaimTest, AudienceAsSet) {
 TEST(ClaimTest, SetAudienceAsSet) {
 	auto token = jwt::create()
 		.set_type("JWT")
-		.set_audience({picojson::value("test"), picojson::value("test2")})
+		.set_audience({{picojson::value("test"), picojson::value("test2")}})
 		.sign(jwt::algorithm::none{});
 	ASSERT_EQ("eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJhdWQiOlsidGVzdCIsInRlc3QyIl19.", token);
 }
