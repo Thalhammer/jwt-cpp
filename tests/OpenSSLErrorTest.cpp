@@ -330,6 +330,7 @@ inline namespace test_keys {
 	extern std::string ecdsa521_pub_key;
 	extern std::string ecdsa521_pub_key_invalid;
     extern std::string sample_cert;
+    extern std::string sample_cert_base64_der;
     extern std::string sample_cert_pubkey;
 	extern std::string ed25519_priv_key;
 	extern std::string ed25519_pub_key;
@@ -344,6 +345,14 @@ TEST(OpenSSLErrorTest, ExtractPubkeyFromCertReference) {
     std::error_code ec;
     auto res = jwt::helper::extract_pubkey_from_cert(sample_cert,"", ec);
     ASSERT_EQ(res, sample_cert_pubkey);
+    ASSERT_FALSE(!(!ec));
+    ASSERT_EQ(ec.value(), 0);
+}
+
+TEST(OpenSSLErrorTest, ConvertCertBase64DerToPemReference) {
+    std::error_code ec;
+    auto res = jwt::helper::convert_base64_der_to_pem(sample_cert_base64_der, ec);
+    ASSERT_EQ(res, sample_cert);
     ASSERT_FALSE(!(!ec));
     ASSERT_EQ(ec.value(), 0);
 }
@@ -400,6 +409,34 @@ TEST(OpenSSLErrorTest, ExtractPubkeyFromCertErrorCode) {
 
     run_multitest(mapping, [](std::error_code& ec){
         auto res = jwt::helper::extract_pubkey_from_cert(sample_cert,"", ec);
+        ASSERT_EQ(res, "");
+    });
+}
+
+TEST(OpenSSLErrorTest, ConvertCertBase64DerToPem) {
+    std::vector<multitest_entry> mapping = {
+        { &fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed },
+        { &fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed }
+    };
+
+    run_multitest(mapping, [](std::error_code& ec){
+        try {
+            jwt::helper::convert_base64_der_to_pem(sample_cert_base64_der);
+            FAIL(); // Should never reach this
+        } catch(const jwt::rsa_exception& e) {
+            ec = e.code();
+        }
+    });
+}
+
+TEST(OpenSSLErrorTest, ConvertCertBase64DerToPemErrorCode) {
+    std::vector<multitest_entry> mapping = {
+        { &fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed },
+        { &fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed }
+    };
+
+    run_multitest(mapping, [](std::error_code& ec){
+        auto res = jwt::helper::convert_base64_der_to_pem(sample_cert_base64_der, ec);
         ASSERT_EQ(res, "");
     });
 }
