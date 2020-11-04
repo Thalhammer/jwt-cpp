@@ -16,6 +16,7 @@ static uint64_t fail_BIO_new = 0;
 static uint64_t fail_PEM_read_bio_X509 = 0;
 static uint64_t fail_X509_get_pubkey = 0;
 static uint64_t fail_PEM_write_bio_PUBKEY = 0;
+static uint64_t fail_PEM_write_bio_cert = 0;
 static uint64_t fail_BIO_ctrl = 0;
 static uint64_t fail_BIO_write = 0;
 static uint64_t fail_PEM_read_bio_PUBKEY = 0;
@@ -74,6 +75,16 @@ int PEM_write_bio_PUBKEY(BIO *bp, EVP_PKEY *x) {
         origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "PEM_write_bio_PUBKEY");
     bool fail = fail_PEM_write_bio_PUBKEY & 1;
     fail_PEM_write_bio_PUBKEY = fail_PEM_write_bio_PUBKEY >> 1;
+    if(fail) return 0;
+    else return origMethod(bp, x);
+}
+
+int PEM_write_bio_X509(BIO *bp, X509 *x) {
+    static int(*origMethod)(BIO *bp, X509 *x) = nullptr;
+    if (origMethod == nullptr)
+        origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "PEM_write_bio_X509");
+    bool fail = fail_PEM_write_bio_cert & 1;
+    fail_PEM_write_bio_cert = fail_PEM_write_bio_cert >> 1;
     if(fail) return 0;
     else return origMethod(bp, x);
 }
@@ -416,6 +427,7 @@ TEST(OpenSSLErrorTest, ExtractPubkeyFromCertErrorCode) {
 TEST(OpenSSLErrorTest, ConvertCertBase64DerToPem) {
     std::vector<multitest_entry> mapping = {
         { &fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed },
+        { &fail_PEM_write_bio_cert, 1, jwt::error::rsa_error::write_cert_failed },
         { &fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed }
     };
 
@@ -432,6 +444,7 @@ TEST(OpenSSLErrorTest, ConvertCertBase64DerToPem) {
 TEST(OpenSSLErrorTest, ConvertCertBase64DerToPemErrorCode) {
     std::vector<multitest_entry> mapping = {
         { &fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed },
+        { &fail_PEM_write_bio_cert, 1, jwt::error::rsa_error::write_cert_failed },
         { &fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed }
     };
 

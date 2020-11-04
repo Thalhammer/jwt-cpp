@@ -85,6 +85,7 @@ namespace jwt {
 			cert_load_failed = 10,
 			get_key_failed,
 			write_key_failed,
+			write_cert_failed,
 			convert_to_pem_failed,
 			load_key_bio_write,
 			load_key_bio_read,
@@ -105,6 +106,7 @@ namespace jwt {
 					case rsa_error::cert_load_failed: return "error loading cert into memory";
 					case rsa_error::get_key_failed: return "error getting key from certificate";
 					case rsa_error::write_key_failed: return "error writing key data in PEM format";
+					case rsa_error::write_cert_failed: return "error writing cert data in PEM format";
 					case rsa_error::convert_to_pem_failed: return "failed to convert key to pem";
 					case rsa_error::load_key_bio_write: return "failed to load key: bio write failed";
 					case rsa_error::load_key_bio_read: return "failed to load key: bio read failed";
@@ -408,11 +410,9 @@ namespace jwt {
 		inline
 		std::string convert_base64_der_to_pem(const std::string& cert_base64_der_str, std::error_code& ec) {
 			ec.clear();
-			auto decodedStr = base::decode<alphabet::base64>(base::pad<alphabet::base64>(cert_base64_der_str));
+			const auto decodedStr = base::decode<alphabet::base64>(base::pad<alphabet::base64>(cert_base64_der_str));
 			auto c_str = reinterpret_cast<const unsigned char *> (decodedStr.c_str());
-			//
-			// d2i -> DER to internal x509 struct
-			//
+
 			std::unique_ptr<X509, decltype(&X509_free)> cert(d2i_X509(NULL, & c_str, decodedStr.size()), X509_free);
 			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(BIO_new(BIO_s_mem()), BIO_free_all);
 			if(!cert || !certbio) {
@@ -420,17 +420,20 @@ namespace jwt {
 				return {};
 			}
 
-			PEM_write_bio_X509(certbio.get(), cert.get());
+			if(!PEM_write_bio_X509(certbio.get(), cert.get()))
+			{
+				ec = error::rsa_error::write_cert_failed;
+				return {};
+			}
 
 			char* ptr = nullptr;
-			auto len = BIO_get_mem_data(certbio.get(), &ptr);
+			const uint64_t len = BIO_get_mem_data(certbio.get(), &ptr);
 			if(len <= 0 || ptr == nullptr) {
 				ec = error::rsa_error::convert_to_pem_failed;
 				return {};
 			}
 
-			std::string cert_pem(ptr, len);
-			return cert_pem;
+			return std::string {ptr, len};
 		}
 
 		/**

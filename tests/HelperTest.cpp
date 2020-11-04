@@ -39,7 +39,7 @@ TEST(HelperTest, ErrorCodeMessages) {
     ASSERT_EQ(std::error_code(jwt::error::token_verification_error::ok).category().name(), std::string("token_verification_error"));
 
     int i = 10;
-    for(i = 10; i < 18; i++) {
+    for(i = 10; i < 19; i++) {
         ASSERT_NE(std::error_code(static_cast<jwt::error::rsa_error>(i)).message(),
             std::error_code(static_cast<jwt::error::rsa_error>(-1)).message());
     }
