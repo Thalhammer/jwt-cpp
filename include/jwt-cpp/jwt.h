@@ -427,13 +427,13 @@ namespace jwt {
 			}
 
 			char* ptr = nullptr;
-			const uint64_t len = BIO_get_mem_data(certbio.get(), &ptr);
+			const auto len = BIO_get_mem_data(certbio.get(), &ptr);
 			if(len <= 0 || ptr == nullptr) {
 				ec = error::rsa_error::convert_to_pem_failed;
 				return {};
 			}
 
-			return std::string {ptr, len};
+			return std::string {ptr, static_cast<size_t>(len)};
 		}
 
 		/**
