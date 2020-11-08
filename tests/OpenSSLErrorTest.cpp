@@ -16,6 +16,7 @@ static uint64_t fail_BIO_new = 0;
 static uint64_t fail_PEM_read_bio_X509 = 0;
 static uint64_t fail_X509_get_pubkey = 0;
 static uint64_t fail_PEM_write_bio_PUBKEY = 0;
+static uint64_t fail_PEM_write_bio_cert = 0;
 static uint64_t fail_BIO_ctrl = 0;
 static uint64_t fail_BIO_write = 0;
 static uint64_t fail_PEM_read_bio_PUBKEY = 0;
@@ -74,6 +75,16 @@ int PEM_write_bio_PUBKEY(BIO *bp, EVP_PKEY *x) {
         origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "PEM_write_bio_PUBKEY");
     bool fail = fail_PEM_write_bio_PUBKEY & 1;
     fail_PEM_write_bio_PUBKEY = fail_PEM_write_bio_PUBKEY >> 1;
+    if(fail) return 0;
+    else return origMethod(bp, x);
+}
+
+int PEM_write_bio_X509(BIO *bp, X509 *x) {
+    static int(*origMethod)(BIO *bp, X509 *x) = nullptr;
+    if (origMethod == nullptr)
+        origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "PEM_write_bio_X509");
+    bool fail = fail_PEM_write_bio_cert & 1;
+    fail_PEM_write_bio_cert = fail_PEM_write_bio_cert >> 1;
     if(fail) return 0;
     else return origMethod(bp, x);
 }
@@ -330,6 +341,7 @@ inline namespace test_keys {
 	extern std::string ecdsa521_pub_key;
 	extern std::string ecdsa521_pub_key_invalid;
     extern std::string sample_cert;
+    extern std::string sample_cert_base64_der;
     extern std::string sample_cert_pubkey;
 	extern std::string ed25519_priv_key;
 	extern std::string ed25519_pub_key;
@@ -344,6 +356,14 @@ TEST(OpenSSLErrorTest, ExtractPubkeyFromCertReference) {
     std::error_code ec;
     auto res = jwt::helper::extract_pubkey_from_cert(sample_cert,"", ec);
     ASSERT_EQ(res, sample_cert_pubkey);
+    ASSERT_FALSE(!(!ec));
+    ASSERT_EQ(ec.value(), 0);
+}
+
+TEST(OpenSSLErrorTest, ConvertCertBase64DerToPemReference) {
+    std::error_code ec;
+    auto res = jwt::helper::convert_base64_der_to_pem(sample_cert_base64_der, ec);
+    ASSERT_EQ(res, sample_cert);
     ASSERT_FALSE(!(!ec));
     ASSERT_EQ(ec.value(), 0);
 }
@@ -400,6 +420,36 @@ TEST(OpenSSLErrorTest, ExtractPubkeyFromCertErrorCode) {
 
     run_multitest(mapping, [](std::error_code& ec){
         auto res = jwt::helper::extract_pubkey_from_cert(sample_cert,"", ec);
+        ASSERT_EQ(res, "");
+    });
+}
+
+TEST(OpenSSLErrorTest, ConvertCertBase64DerToPem) {
+    std::vector<multitest_entry> mapping = {
+        { &fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed },
+        { &fail_PEM_write_bio_cert, 1, jwt::error::rsa_error::write_cert_failed },
+        { &fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed }
+    };
+
+    run_multitest(mapping, [](std::error_code& ec){
+        try {
+            jwt::helper::convert_base64_der_to_pem(sample_cert_base64_der);
+            FAIL(); // Should never reach this
+        } catch(const jwt::rsa_exception& e) {
+            ec = e.code();
+        }
+    });
+}
+
+TEST(OpenSSLErrorTest, ConvertCertBase64DerToPemErrorCode) {
+    std::vector<multitest_entry> mapping = {
+        { &fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed },
+        { &fail_PEM_write_bio_cert, 1, jwt::error::rsa_error::write_cert_failed },
+        { &fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed }
+    };
+
+    run_multitest(mapping, [](std::error_code& ec){
+        auto res = jwt::helper::convert_base64_der_to_pem(sample_cert_base64_der, ec);
         ASSERT_EQ(res, "");
     });
 }

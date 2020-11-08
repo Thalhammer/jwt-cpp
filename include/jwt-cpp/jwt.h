@@ -85,6 +85,7 @@ namespace jwt {
 			cert_load_failed = 10,
 			get_key_failed,
 			write_key_failed,
+			write_cert_failed,
 			convert_to_pem_failed,
 			load_key_bio_write,
 			load_key_bio_read,
@@ -105,6 +106,7 @@ namespace jwt {
 					case rsa_error::cert_load_failed: return "error loading cert into memory";
 					case rsa_error::get_key_failed: return "error getting key from certificate";
 					case rsa_error::write_key_failed: return "error writing key data in PEM format";
+					case rsa_error::write_cert_failed: return "error writing cert data in PEM format";
 					case rsa_error::convert_to_pem_failed: return "failed to convert key to pem";
 					case rsa_error::load_key_bio_write: return "failed to load key: bio write failed";
 					case rsa_error::load_key_bio_read: return "failed to load key: bio read failed";
@@ -392,6 +394,61 @@ namespace jwt {
 		std::string extract_pubkey_from_cert(const std::string& certstr, const std::string& pw = "") {
 			std::error_code ec;
 			auto res = extract_pubkey_from_cert(certstr, pw, ec);
+			error::throw_if_error(ec);
+			return res;
+		}
+
+		/**
+		 * \brief Convert the certificate provided as base64 DER to PEM.
+		 *
+		 * This is useful when using with JWKs as x5c claim is encoded as base64 DER. More info
+		 * (here)[https://tools.ietf.org/html/rfc7517#section-4.7]
+		 *
+		 * \param cert_base64_der_str String containing the certificate encoded as base64 DER
+		 * \param ec		error_code for error_detection (gets cleared if no error occures)
+		 */
+		inline
+		std::string convert_base64_der_to_pem(const std::string& cert_base64_der_str, std::error_code& ec) {
+			ec.clear();
+			const auto decodedStr = base::decode<alphabet::base64>(base::pad<alphabet::base64>(cert_base64_der_str));
+			auto c_str = reinterpret_cast<const unsigned char *> (decodedStr.c_str());
+
+			std::unique_ptr<X509, decltype(&X509_free)> cert(d2i_X509(NULL, & c_str, decodedStr.size()), X509_free);
+			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(BIO_new(BIO_s_mem()), BIO_free_all);
+			if(!cert || !certbio) {
+				ec = error::rsa_error::create_mem_bio_failed;
+				return {};
+			}
+
+			if(!PEM_write_bio_X509(certbio.get(), cert.get()))
+			{
+				ec = error::rsa_error::write_cert_failed;
+				return {};
+			}
+
+			char* ptr = nullptr;
+			const auto len = BIO_get_mem_data(certbio.get(), &ptr);
+			if(len <= 0 || ptr == nullptr) {
+				ec = error::rsa_error::convert_to_pem_failed;
+				return {};
+			}
+
+			return std::string {ptr, static_cast<size_t>(len)};
+		}
+
+		/**
+		 * \brief Convert the certificate provided as base64 DER to PEM.
+		 *
+		 * This is useful when using with JWKs as x5c claim is encoded as base64 DER. More info
+		 * (here)[https://tools.ietf.org/html/rfc7517#section-4.7]
+		 *
+		 * \param cert_base64_der_str String containing the certificate encoded as base64 DER
+		 * \throws rsa_exception if an error occurred
+		 */
+		inline
+		std::string convert_base64_der_to_pem(const std::string& cert_base64_der_str) {
+			std::error_code ec;
+			auto res = convert_base64_der_to_pem(cert_base64_der_str, ec);
 			error::throw_if_error(ec);
 			return res;
 		}
