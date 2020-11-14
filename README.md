@@ -98,7 +98,7 @@ auto token = jwt::create()
 There are several key items that need to be provided to a `jwt::basic_claim` in order for it to be interoptable with you JSON library of choice.
 
 * type specifications
-* conversion from genric "value type" to specific
+* conversion from generic "value type" to specific
 * serialization and parsing
 
 If ever you are not sure, the traits are heavily checked against static asserts to make sure you provide everything that's required.
