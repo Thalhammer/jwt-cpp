@@ -23,11 +23,7 @@ set(JWT_HEADER_FILES ${JWT_INCLUDE_PATH}/jwt-cpp/jwt.h)
 if(NOT JWT_DISABLE_BASE64)
   list(APPEND JWT_HEADER_FILES ${JWT_INCLUDE_PATH}/jwt-cpp/base.h)
 endif()
-if(NOT JWT_EXTERNAL_PICOJSON AND NOT JWT_DISABLE_PICOJSON)
-  list(APPEND JWT_HEADER_FILES ${JWT_INCLUDE_PATH}/picojson/picojson.h)
-endif()
 
-# add_library(jwt-cpp INTERFACE ${JWT_HEADER_FILES}) # This is not supported until CMake 3.19
 add_library(jwt-cpp INTERFACE)
 add_library(jwt-cpp::jwt-cpp ALIAS jwt-cpp) # To match export
 target_compile_features(jwt-cpp INTERFACE cxx_std_11)
@@ -57,6 +53,9 @@ write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-vers
 install(TARGETS jwt-cpp EXPORT jwt-cpp-targets PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(EXPORT jwt-cpp-targets NAMESPACE jwt-cpp:: FILE jwt-cpp-targets.cmake DESTINATION ${JWT_CMAKE_FILES_INSTALL_DIR})
 install(FILES ${JWT_HEADER_FILES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/jwt-cpp)
+if(NOT JWT_EXTERNAL_PICOJSON AND NOT JWT_DISABLE_PICOJSON)
+  install(FILES ${JWT_INCLUDE_PATH}/picojson/picojson.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/picojson)
+endif()
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config.cmake ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-version.cmake
         DESTINATION ${JWT_CMAKE_FILES_INSTALL_DIR})
 
