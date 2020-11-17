@@ -15,7 +15,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 find_package(OpenSSL 1.0.2 REQUIRED)
 
 if(JWT_EXTERNAL_PICOJSON)
-  find_package(picojson REQUIRED)
+  find_package(picojson 1.3.0 REQUIRED)
 endif()
 
 set(JWT_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include)

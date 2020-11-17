@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.8)
-
 project(jwt-cpp-installation-tests)
+
+set(TEST CACHE STRING "The test source file to be used")
 
 find_package(jwt-cpp CONFIG REQUIRED)
 
-add_executable(pico-disabled-test picojson-is-disabled.cpp)
-target_link_libraries(pico-disabled-test jwt-cpp::jwt-cpp)
+add_executable(test-project ${TEST}.cpp)
+target_link_libraries(test-project jwt-cpp::jwt-cpp)

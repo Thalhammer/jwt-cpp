@@ -1,5 +1,10 @@
-#ifndef DISABLE_PICOJSON
-   #error "This test expects 'DISABLE_PICOJSON' to be defined!"
+#ifndef JWT_DISABLE_PICOJSON
+   #error "This test expects 'JWT_DISABLE_PICOJSON' to be defined!"
 #endif
 
-int main() { return 0; }
+#include "jwt-cpp/jwt.h"
+
+int main() { 
+   jwt::date date;
+   return 0;
+}

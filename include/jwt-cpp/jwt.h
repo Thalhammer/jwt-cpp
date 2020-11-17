@@ -1,14 +1,14 @@
 #ifndef JWT_CPP_JWT_H
 #define JWT_CPP_JWT_H
 
-#ifndef DISABLE_PICOJSON
+#ifndef JWT_DISABLE_PICOJSON
 #ifndef PICOJSON_USE_INT64
 #define PICOJSON_USE_INT64
 #endif
 #include "picojson/picojson.h"
 #endif
 
-#ifndef DISABLE_BASE64
+#ifndef JWT_DISABLE_BASE64
 #include "base.h"
 #endif
 
@@ -2065,7 +2065,7 @@ namespace jwt {
 		/// Unmodified signature part in base64
 		typename json_traits::string_type signature_base64;
 	public:
-	#ifndef DISABLE_BASE64
+	#ifndef JWT_DISABLE_BASE64
 		/**
 		 * Constructor 
 		 * Parses a given token
@@ -2313,7 +2313,7 @@ namespace jwt {
 			error::throw_if_error(ec);
 			return res;
 		}
-	#ifndef DISABLE_BASE64
+	#ifndef JWT_DISABLE_BASE64
 		/**
 		 * Sign token and return result
 		 * 
@@ -2358,7 +2358,7 @@ namespace jwt {
 			if(ec) return {};
 			return token + "." + encode(signature);
 		}
-	#ifndef DISABLE_BASE64
+	#ifndef JWT_DISABLE_BASE64
 		/**
 		 * Sign token and return result
 		 * 
@@ -2673,7 +2673,7 @@ namespace jwt {
 		return decoded_jwt<json_traits>(token);
 	}
 
-#ifndef DISABLE_PICOJSON
+#ifndef JWT_DISABLE_PICOJSON
 	struct picojson_traits {
 		using value_type = picojson::value;
 		using object_type = picojson::object;

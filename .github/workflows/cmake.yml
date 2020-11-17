@@ -1,4 +1,4 @@
-name: CMake CI
+name: CMake Integration CI
 
 on:
   push:
@@ -6,8 +6,29 @@ on:
   pull_request:
     branches: [ master ]
 
+
 jobs:
-  build:
+  stock:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: install cmake
+      uses: lukka/get-cmake@v3.17.2
+      
+    - name: setup
+      run: |
+        mkdir build
+        cd build
+        cmake .. -DJWT_BUILD_EXAMPLES=OFF
+        sudo make install
+
+    - name: test
+      run: |
+        cd tests/cmake
+        cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake -DTEST:STRING="defaults-enabled"
+        cmake --build .
+
+  no pico:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -24,5 +45,25 @@ jobs:
     - name: test
       run: |
         cd tests/cmake
-        cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake
+        cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake -DTEST:STRING="picojson-is-disabled"
+        cmake --build .
+
+  no base64:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: install cmake
+      uses: lukka/get-cmake@v3.17.2
+      
+    - name: setup
+      run: |
+        mkdir build
+        cd build
+        cmake .. -DJWT_DISABLE_BASE64=ON -DJWT_BUILD_EXAMPLES=OFF
+        sudo make install
+
+    - name: test
+      run: |
+        cd tests/cmake
+        cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake -DTEST:STRING="base64-is-disabled"
         cmake --build .
