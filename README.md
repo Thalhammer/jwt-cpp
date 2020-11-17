@@ -26,7 +26,7 @@ For the sake of completeness, here is a list of all supported algorithms:
 * PS256
 * PS384
 * PS512
-* EdDSA (Ed25519, Ed448), since 0.5.0
+* EdDSA (Ed25519, Ed448) _since 0.5.0_
 
 ## Overview
 
@@ -44,7 +44,7 @@ As for the base64 requirements of JWTs, this libary provides `base.h` with all t
 
 ### Getting Started
 
-Simple example of decoding a token and printing all claims:
+Simple example of decoding a token and printing all claims ([try it out](https://github.com/Thalhammer/jwt-cpp/tree/master/example/print-claims.cpp)):
 
 ```cpp
 #include <jwt-cpp/jwt.h>
@@ -71,7 +71,7 @@ verifier.verify(decoded_token);
 
 The created verifier is stateless so you can reuse it for different tokens.
 
-Creating a token (and signing) is equally easy.
+Creating a token (and signing) is equally as easy.
 
 ```cpp
 auto token = jwt::create()
@@ -98,7 +98,7 @@ auto token = jwt::create()
 There are several key items that need to be provided to a `jwt::basic_claim` in order for it to be interoptable with you JSON library of choice.
 
 * type specifications
-* conversion from generic "value type" to specific
+* conversion from generic "value type" to a specific type
 * serialization and parsing
 
 If ever you are not sure, the traits are heavily checked against static asserts to make sure you provide everything that's required.
