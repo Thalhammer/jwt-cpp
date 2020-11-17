@@ -5,7 +5,10 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-
+    paths:
+      - 'CMakeLists.txt'
+      - 'tests/cmake/**'
+      - '.github/workflows/cmake.yml'
 
 jobs:
   stock:
