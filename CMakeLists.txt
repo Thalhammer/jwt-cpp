@@ -51,7 +51,8 @@ write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-vers
                                  COMPATIBILITY ExactVersion)
 
 install(TARGETS jwt-cpp EXPORT jwt-cpp-targets PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(EXPORT jwt-cpp-targets NAMESPACE jwt-cpp:: FILE jwt-cpp-targets.cmake DESTINATION ${JWT_CMAKE_FILES_INSTALL_DIR})
+install(EXPORT jwt-cpp-targets NAMESPACE jwt-cpp:: FILE jwt-cpp-targets.cmake
+        DESTINATION ${JWT_CMAKE_FILES_INSTALL_DIR})
 install(FILES ${JWT_HEADER_FILES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/jwt-cpp)
 if(NOT JWT_EXTERNAL_PICOJSON AND NOT JWT_DISABLE_PICOJSON)
   install(FILES ${JWT_INCLUDE_PATH}/picojson/picojson.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/picojson)
