@@ -53,7 +53,7 @@
  * 
  * A namespace to contain everything related to handling JSON Web Tokens, JWT for short,
  * as a part of [RFC7519](https://tools.ietf.org/html/rfc7519), or alternatively for
- * JWS (JSON Web Signature)from [RFC7515](https://tools.ietf.org/html/rfc7515)
+ * JWS (JSON Web Signature) from [RFC7515](https://tools.ietf.org/html/rfc7515)
  */ 
 namespace jwt {
 	using date = std::chrono::system_clock::time_point;
@@ -78,7 +78,7 @@ namespace jwt {
 			using system_error::system_error;
 		};
 		/**
-		 * \brief Error related to processing of RSA signatures
+		 * \brief Errors related to processing of RSA signatures
 		 */
 		enum class rsa_error {
 			ok = 0,
@@ -93,7 +93,7 @@ namespace jwt {
 			no_key_provided
 		};
 		/**
-		 * \brief Errorcategory for RSA errors
+		 * \brief Error category for RSA errors
 		 */
 		inline std::error_category& rsa_error_category() {
 			class rsa_error_cat : public std::error_category
@@ -124,7 +124,7 @@ namespace jwt {
 			return {static_cast<int>(e), rsa_error_category()};
 		}
 		/**
-		 * \brief Error related to processing of RSA signatures
+		 * \brief Errors related to processing of RSA signatures
 		 */
 		enum class ecdsa_error {
 			ok = 0,
@@ -136,7 +136,7 @@ namespace jwt {
 			invalid_key
 		};
 		/**
-		 * \brief Errorcategory for RSA errors
+		 * \brief Error category for ECDSA errors
 		 */
 		inline std::error_category& ecdsa_error_category() {
 			class ecdsa_error_cat : public std::error_category
@@ -177,7 +177,7 @@ namespace jwt {
 			get_key_failed
 		};
 		/**
-		 * \brief Errorcategory for verification errors
+		 * \brief Error category for verification errors
 		 */
 		inline std::error_category& signature_verification_error_category() {
 			class verification_error_cat : public std::error_category
@@ -206,7 +206,7 @@ namespace jwt {
 		}
 
 		/**
-		 * \brief Error enum for signature generation errors
+		 * \brief Errors related to signature generation errors
 		 */
 		enum class signature_generation_error {
 			ok = 0,
@@ -224,7 +224,7 @@ namespace jwt {
 			get_key_failed
 		};
 		/**
-		 * \brief Errorcategory for signature generation errors
+		 * \brief Error category for signature generation errors
 		 */
 		inline std::error_category& signature_generation_error_category() {
 			class signature_generation_error_cat : public std::error_category
@@ -258,6 +258,9 @@ namespace jwt {
 			return {static_cast<int>(e), signature_generation_error_category()};
 		}
 
+		/**
+		 * \brief Errors related to token verification errors
+		 */
 		enum class token_verification_error {
 			ok = 0,
 			wrong_algorithm = 10,
@@ -267,6 +270,9 @@ namespace jwt {
 			token_expired,
 			audience_missmatch
 		};
+		/**
+		 * \brief Error category for token verification errors
+		 */
 		inline std::error_category& token_verification_error_category() {
 			class token_verification_error_cat : public std::error_category
 			{
@@ -388,7 +394,7 @@ namespace jwt {
 		 * 
 		 * \param certstr	String containing the certificate encoded as pem
 		 * \param pw		Password used to decrypt certificate (leave empty if not encrypted)
-		 * \throws	rsa_exception if an error occurred
+		 * \throw			rsa_exception if an error occurred
 		 */
 		inline
 		std::string extract_pubkey_from_cert(const std::string& certstr, const std::string& pw = "") {
@@ -501,7 +507,7 @@ namespace jwt {
 		 * 
 		 * \param certstr	String containing the certificate or key encoded as pem
 		 * \param pw		Password used to decrypt certificate or key (leave empty if not encrypted)
-		 * \throws	rsa_exception if an error occurred
+		 * \throw			rsa_exception if an error occurred
 		 */
 		inline
 		std::shared_ptr<EVP_PKEY> load_public_key_from_string(const std::string& key, const std::string& password = "") {
@@ -543,7 +549,7 @@ namespace jwt {
 		 * 
 		 * \param key		String containing a private key as pem
 		 * \param pw		Password used to decrypt key (leave empty if not encrypted)
-		 * \throws	rsa_exception if an error occurred
+		 * \throw			rsa_exception if an error occurred
 		 */
 		inline
 		std::shared_ptr<EVP_PKEY> load_private_key_from_string(const std::string& key, const std::string& password = "") {
