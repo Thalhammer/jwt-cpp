@@ -32,10 +32,10 @@ add_library(jwt-cpp INTERFACE)
 add_library(jwt-cpp::jwt-cpp ALIAS jwt-cpp) # To match export
 target_compile_features(jwt-cpp INTERFACE cxx_std_11)
 if(JWT_DISABLE_BASE64)
-  target_compile_definitions(jwt-cpp INTERFACE DISABLE_BASE64)
+  target_compile_definitions(jwt-cpp INTERFACE JWT_DISABLE_BASE64)
 endif()
 if(JWT_DISABLE_PICOJSON)
-  target_compile_definitions(jwt-cpp INTERFACE DISABLE_PICOJSON)
+  target_compile_definitions(jwt-cpp INTERFACE JWT_DISABLE_PICOJSON)
 endif()
 target_include_directories(jwt-cpp INTERFACE $<BUILD_INTERFACE:${JWT_INCLUDE_PATH}>
                                              $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
