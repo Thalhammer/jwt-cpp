@@ -13,7 +13,7 @@ TEST(HelperTest, Cert2Pubkey) {
 }
 
 TEST(HelperTest, Base64DER2PemCert) {
-    auto cert_pem = jwt::helper::convert_base64_der_to_pem (google_cert_base64_der);
+    auto cert_pem = jwt::helper::convert_base64_der_to_pem(google_cert_base64_der);
     ASSERT_EQ(google_cert, cert_pem);
 }
 
