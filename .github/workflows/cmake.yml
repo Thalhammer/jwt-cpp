@@ -32,7 +32,7 @@ jobs:
         cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake -DTEST:STRING="defaults-enabled"
         cmake --build .
 
-  no pico:
+  no-pico:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -52,7 +52,7 @@ jobs:
         cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake -DTEST:STRING="picojson-is-disabled"
         cmake --build .
 
-  no base64:
+  no-base64:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
