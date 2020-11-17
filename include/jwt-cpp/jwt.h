@@ -410,11 +410,11 @@ namespace jwt {
 		 * (here)[https://tools.ietf.org/html/rfc7517#section-4.7]
 		 *
 		 * \tparam Decode is callabled, taking a string_type and returns a string_type.
-		 * It should ensure the padding of the input and then base64url decode and 
-		 * return the results.
+		 * It should ensure the padding of the input and then base64 decode and return
+		 * the results.
 		 * 
 		 * \param cert_base64_der_str 	String containing the certificate encoded as base64 DER
-		 * \param decode 				The function to decode the token
+		 * \param decode 				The function to decode the cert
 		 * \param ec					error_code for error_detection (gets cleared if no error occures)
 		 */
 		template<typename Decode>
@@ -453,10 +453,11 @@ namespace jwt {
 		 * (here)[https://tools.ietf.org/html/rfc7517#section-4.7]
 		 *
 		 * \tparam Decode is callabled, taking a string_type and returns a string_type.
-		 * It should ensure the padding of the input and then base64url decode and 
-		 * return the results.
+		 * It should ensure the padding of the input and then base64 decode and return
+		 * the results.
 		 *
 		 * \param cert_base64_der_str 	String containing the certificate encoded as base64 DER
+		 * \param decode 				The function to decode the cert
 		 * \throw						rsa_exception if an error occurred
 		 */
 		template<typename Decode>
