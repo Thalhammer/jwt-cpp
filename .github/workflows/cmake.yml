@@ -7,11 +7,12 @@ on:
     branches: [ master ]
     paths:
       - 'CMakeLists.txt'
+      - 'include/jwt-cpp'
       - 'tests/cmake/**'
       - '.github/workflows/cmake.yml'
 
 jobs:
-  stock:
+  min-req:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
