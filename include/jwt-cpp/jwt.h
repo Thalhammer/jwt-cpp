@@ -1,14 +1,14 @@
 #ifndef JWT_CPP_JWT_H
 #define JWT_CPP_JWT_H
 
-#ifndef DISABLE_PICOJSON
+#ifndef JWT_DISABLE_PICOJSON
 #ifndef PICOJSON_USE_INT64
 #define PICOJSON_USE_INT64
 #endif
 #include "picojson/picojson.h"
 #endif
 
-#ifndef DISABLE_BASE64
+#ifndef JWT_DISABLE_BASE64
 #include "base.h"
 #endif
 
@@ -53,7 +53,7 @@
  * 
  * A namespace to contain everything related to handling JSON Web Tokens, JWT for short,
  * as a part of [RFC7519](https://tools.ietf.org/html/rfc7519), or alternatively for
- * JWS (JSON Web Signature)from [RFC7515](https://tools.ietf.org/html/rfc7515)
+ * JWS (JSON Web Signature) from [RFC7515](https://tools.ietf.org/html/rfc7515)
  */ 
 namespace jwt {
 	using date = std::chrono::system_clock::time_point;
@@ -78,7 +78,7 @@ namespace jwt {
 			using system_error::system_error;
 		};
 		/**
-		 * \brief Error related to processing of RSA signatures
+		 * \brief Errors related to processing of RSA signatures
 		 */
 		enum class rsa_error {
 			ok = 0,
@@ -93,7 +93,7 @@ namespace jwt {
 			no_key_provided
 		};
 		/**
-		 * \brief Errorcategory for RSA errors
+		 * \brief Error category for RSA errors
 		 */
 		inline std::error_category& rsa_error_category() {
 			class rsa_error_cat : public std::error_category
@@ -124,7 +124,7 @@ namespace jwt {
 			return {static_cast<int>(e), rsa_error_category()};
 		}
 		/**
-		 * \brief Error related to processing of RSA signatures
+		 * \brief Errors related to processing of RSA signatures
 		 */
 		enum class ecdsa_error {
 			ok = 0,
@@ -136,7 +136,7 @@ namespace jwt {
 			invalid_key
 		};
 		/**
-		 * \brief Errorcategory for RSA errors
+		 * \brief Error category for ECDSA errors
 		 */
 		inline std::error_category& ecdsa_error_category() {
 			class ecdsa_error_cat : public std::error_category
@@ -177,7 +177,7 @@ namespace jwt {
 			get_key_failed
 		};
 		/**
-		 * \brief Errorcategory for verification errors
+		 * \brief Error category for verification errors
 		 */
 		inline std::error_category& signature_verification_error_category() {
 			class verification_error_cat : public std::error_category
@@ -206,7 +206,7 @@ namespace jwt {
 		}
 
 		/**
-		 * \brief Error enum for signature generation errors
+		 * \brief Errors related to signature generation errors
 		 */
 		enum class signature_generation_error {
 			ok = 0,
@@ -224,7 +224,7 @@ namespace jwt {
 			get_key_failed
 		};
 		/**
-		 * \brief Errorcategory for signature generation errors
+		 * \brief Error category for signature generation errors
 		 */
 		inline std::error_category& signature_generation_error_category() {
 			class signature_generation_error_cat : public std::error_category
@@ -258,6 +258,9 @@ namespace jwt {
 			return {static_cast<int>(e), signature_generation_error_category()};
 		}
 
+		/**
+		 * \brief Errors related to token verification errors
+		 */
 		enum class token_verification_error {
 			ok = 0,
 			wrong_algorithm = 10,
@@ -267,6 +270,9 @@ namespace jwt {
 			token_expired,
 			audience_missmatch
 		};
+		/**
+		 * \brief Error category for token verification errors
+		 */
 		inline std::error_category& token_verification_error_category() {
 			class token_verification_error_cat : public std::error_category
 			{
@@ -379,8 +385,7 @@ namespace jwt {
 				ec = error::rsa_error::convert_to_pem_failed;
 				return {};
 			}
-			std::string res(ptr, len);
-			return res;
+			return {ptr, static_cast<size_t>(len)};
 		}
 
 		/**
@@ -388,7 +393,7 @@ namespace jwt {
 		 * 
 		 * \param certstr	String containing the certificate encoded as pem
 		 * \param pw		Password used to decrypt certificate (leave empty if not encrypted)
-		 * \throws	rsa_exception if an error occurred
+		 * \throw			rsa_exception if an error occurred
 		 */
 		inline
 		std::string extract_pubkey_from_cert(const std::string& certstr, const std::string& pw = "") {
@@ -404,16 +409,21 @@ namespace jwt {
 		 * This is useful when using with JWKs as x5c claim is encoded as base64 DER. More info
 		 * (here)[https://tools.ietf.org/html/rfc7517#section-4.7]
 		 *
-		 * \param cert_base64_der_str String containing the certificate encoded as base64 DER
-		 * \param ec		error_code for error_detection (gets cleared if no error occures)
+		 * \tparam Decode is callabled, taking a string_type and returns a string_type.
+		 * It should ensure the padding of the input and then base64 decode and return
+		 * the results.
+		 * 
+		 * \param cert_base64_der_str 	String containing the certificate encoded as base64 DER
+		 * \param decode 				The function to decode the cert
+		 * \param ec					error_code for error_detection (gets cleared if no error occures)
 		 */
-		inline
-		std::string convert_base64_der_to_pem(const std::string& cert_base64_der_str, std::error_code& ec) {
+		template<typename Decode>
+		std::string convert_base64_der_to_pem(const std::string& cert_base64_der_str, Decode decode, std::error_code& ec) {
 			ec.clear();
-			const auto decodedStr = base::decode<alphabet::base64>(base::pad<alphabet::base64>(cert_base64_der_str));
+			const auto decodedStr = decode(cert_base64_der_str);
 			auto c_str = reinterpret_cast<const unsigned char *> (decodedStr.c_str());
 
-			std::unique_ptr<X509, decltype(&X509_free)> cert(d2i_X509(NULL, & c_str, decodedStr.size()), X509_free);
+			std::unique_ptr<X509, decltype(&X509_free)> cert(d2i_X509(NULL, &c_str, decodedStr.size()), X509_free);
 			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(BIO_new(BIO_s_mem()), BIO_free_all);
 			if(!cert || !certbio) {
 				ec = error::rsa_error::create_mem_bio_failed;
@@ -433,7 +443,7 @@ namespace jwt {
 				return {};
 			}
 
-			return std::string {ptr, static_cast<size_t>(len)};
+			return {ptr, static_cast<size_t>(len)};
 		}
 
 		/**
@@ -442,8 +452,45 @@ namespace jwt {
 		 * This is useful when using with JWKs as x5c claim is encoded as base64 DER. More info
 		 * (here)[https://tools.ietf.org/html/rfc7517#section-4.7]
 		 *
-		 * \param cert_base64_der_str String containing the certificate encoded as base64 DER
-		 * \throws rsa_exception if an error occurred
+		 * \tparam Decode is callabled, taking a string_type and returns a string_type.
+		 * It should ensure the padding of the input and then base64 decode and return
+		 * the results.
+		 *
+		 * \param cert_base64_der_str 	String containing the certificate encoded as base64 DER
+		 * \param decode 				The function to decode the cert
+		 * \throw						rsa_exception if an error occurred
+		 */
+		template<typename Decode>
+		std::string convert_base64_der_to_pem(const std::string& cert_base64_der_str, Decode decode) {
+			std::error_code ec;
+			auto res = convert_base64_der_to_pem(cert_base64_der_str, std::move(decode), ec);
+			error::throw_if_error(ec);
+			return res;
+		}
+#ifndef JWT_DISABLE_BASE64
+		/**
+		 * \brief Convert the certificate provided as base64 DER to PEM.
+		 *
+		 * This is useful when using with JWKs as x5c claim is encoded as base64 DER. More info
+		 * (here)[https://tools.ietf.org/html/rfc7517#section-4.7]
+		 *
+		 * \param cert_base64_der_str 	String containing the certificate encoded as base64 DER
+		 * \param ec					error_code for error_detection (gets cleared if no error occures)
+		 */
+		inline
+		std::string convert_base64_der_to_pem(const std::string& cert_base64_der_str, std::error_code& ec) {
+			auto decode = [](const std::string& token){return base::decode<alphabet::base64>(base::pad<alphabet::base64>(token));};
+			return convert_base64_der_to_pem(cert_base64_der_str, std::move(decode), ec);
+		}
+
+		/**
+		 * \brief Convert the certificate provided as base64 DER to PEM.
+		 *
+		 * This is useful when using with JWKs as x5c claim is encoded as base64 DER. More info
+		 * (here)[https://tools.ietf.org/html/rfc7517#section-4.7]
+		 *
+		 * \param cert_base64_der_str 	String containing the certificate encoded as base64 DER
+		 * \throw						rsa_exception if an error occurred
 		 */
 		inline
 		std::string convert_base64_der_to_pem(const std::string& cert_base64_der_str) {
@@ -452,7 +499,7 @@ namespace jwt {
 			error::throw_if_error(ec);
 			return res;
 		}
-
+#endif
 		/**
 		 * \brief Load a public key from a string.
 		 * 
@@ -501,7 +548,7 @@ namespace jwt {
 		 * 
 		 * \param certstr	String containing the certificate or key encoded as pem
 		 * \param pw		Password used to decrypt certificate or key (leave empty if not encrypted)
-		 * \throws	rsa_exception if an error occurred
+		 * \throw			rsa_exception if an error occurred
 		 */
 		inline
 		std::shared_ptr<EVP_PKEY> load_public_key_from_string(const std::string& key, const std::string& password = "") {
@@ -543,7 +590,7 @@ namespace jwt {
 		 * 
 		 * \param key		String containing a private key as pem
 		 * \param pw		Password used to decrypt key (leave empty if not encrypted)
-		 * \throws	rsa_exception if an error occurred
+		 * \throw			rsa_exception if an error occurred
 		 */
 		inline
 		std::shared_ptr<EVP_PKEY> load_private_key_from_string(const std::string& key, const std::string& password = "") {
@@ -2065,11 +2112,12 @@ namespace jwt {
 		/// Unmodified signature part in base64
 		typename json_traits::string_type signature_base64;
 	public:
-	#ifndef DISABLE_BASE64
+	#ifndef JWT_DISABLE_BASE64
 		/**
-		 * Constructor 
-		 * Parses a given token
-		 * Decodes using the jwt::base64url which supports an std::string
+		 * \brief Parses a given token
+		 * 
+		 * \note Decodes using the jwt::base64url which supports an std::string
+		 * 
 		 * \param token The token to parse
 		 * \throw std::invalid_argument Token is not in correct format
 		 * \throw std::runtime_error Base64 decoding failed or invalid json
@@ -2081,13 +2129,13 @@ namespace jwt {
 		{}
 	#endif
 		/**
-		 * Constructor 
-		 * Parses a given token
+		 * \brief Parses a given token
+		 * 
 		 * \tparam Decode is callabled, taking a string_type and returns a string_type.
 		 * It should ensure the padding of the input and then base64url decode and 
 		 * return the results.
 		 * \param token The token to parse
-		 * \param decode The token to parse
+		 * \param decode The function to decode the token
 		 * \throw std::invalid_argument Token is not in correct format
 		 * \throw std::runtime_error Base64 decoding failed or invalid json
 		 */
@@ -2313,7 +2361,7 @@ namespace jwt {
 			error::throw_if_error(ec);
 			return res;
 		}
-	#ifndef DISABLE_BASE64
+	#ifndef JWT_DISABLE_BASE64
 		/**
 		 * Sign token and return result
 		 * 
@@ -2358,7 +2406,7 @@ namespace jwt {
 			if(ec) return {};
 			return token + "." + encode(signature);
 		}
-	#ifndef DISABLE_BASE64
+	#ifndef JWT_DISABLE_BASE64
 		/**
 		 * Sign token and return result
 		 * 
@@ -2673,7 +2721,7 @@ namespace jwt {
 		return decoded_jwt<json_traits>(token);
 	}
 
-#ifndef DISABLE_PICOJSON
+#ifndef JWT_DISABLE_PICOJSON
 	struct picojson_traits {
 		using value_type = picojson::value;
 		using object_type = picojson::object;
@@ -2763,7 +2811,7 @@ namespace jwt {
 	builder<picojson_traits> create() {
 		return builder<picojson_traits>();
 	}
-
+#ifndef JWT_DISABLE_BASE64
 	/**
 	 * Decode a token
 	 * \param token Token to decode
@@ -2774,6 +2822,22 @@ namespace jwt {
 	inline
 	decoded_jwt<picojson_traits> decode(const std::string& token) {
 		return decoded_jwt<picojson_traits>(token);
+	}
+#endif
+	/**
+	 * Decode a token
+	 * \tparam Decode is callabled, taking a string_type and returns a string_type.
+	 * It should ensure the padding of the input and then base64url decode and 
+	 * return the results.
+	 * \param token Token to decode
+	 * \param decode The token to parse
+	 * \return Decoded token
+	 * \throw std::invalid_argument Token is not in correct format
+	 * \throw std::runtime_error Base64 decoding failed or invalid json
+	 */
+	template<typename Decode>
+	decoded_jwt<picojson_traits> decode(const std::string& token, Decode decode) {
+		return decoded_jwt<picojson_traits>(token, decode);
 	}
 #endif
 }  // namespace jwt
