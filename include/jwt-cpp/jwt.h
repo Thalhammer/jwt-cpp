@@ -2668,6 +2668,93 @@ namespace jwt {
 			}
 		}
 	};
+	
+	//assume that jwks has only one key inside (can be more than one)
+	template<typename json_traits>
+	class jwks {
+		using basic_claim_t = basic_claim<json_traits>;
+
+	public:
+		JWT_CLAIM_EXPLICIT jwks(const typename json_traits::string_type& jwks_token) {
+			auto parse_claims = [](const typename json_traits::string_type& str) {
+				using basic_claim_t = basic_claim<json_traits>;
+				std::unordered_map<typename json_traits::string_type, basic_claim_t> res;
+				typename json_traits::value_type val;
+				if (!json_traits::parse(val, str))
+					throw std::runtime_error("Invalid json");
+
+				for (const auto& e : json_traits::as_object(val)) {
+					res.emplace(e.first, basic_claim_t(e.second));
+				}
+
+				return res;
+			};
+
+			jwks_claims = parse_claims(jwks_token);
+		}
+
+		/**
+		 * Get algorithm claim
+		 * \return algorithm as string
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
+		 */
+		typename json_traits::string_type get_algorithm() const { return get_jwks_claim("alg").as_string(); }
+		
+		/**
+		 * Get key id claim
+		 * \return key id as string
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
+		 */
+		typename json_traits::string_type get_key_id() const { return get_jwks_claim("kid").as_string(); }
+
+		/**
+		 * Get x5c claim
+		 * \return x5c as string
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
+		 */
+		typename json_traits::string_type get_x5c() const { return json_traits::as_string(get_jwks_claim("x5c").as_array().front()); } //do not use picojson's serialize() instead
+
+		/**
+		 * Check if algortihm is present ("alg")
+		 * \return true if present, false otherwise
+		 */
+		bool has_algorithm() const noexcept { return has_jwks_claim("alg"); }
+
+		/**
+		 * Check if key id is present ("kid")
+		 * \return true if present, false otherwise
+		 */
+		bool has_key_id() const noexcept { return has_jwks_claim("kid"); }
+
+		/**
+		 * Check if x5c is present ("x5c")
+		 * \return true if present, false otherwise
+		 */
+		bool has_x5c_id() const noexcept { return has_jwks_claim("x5c"); }
+
+		/**
+		 * Check if a jwks claim is present
+		 * \return true if claim was present, false otherwise
+		 */
+		bool has_jwks_claim(const typename json_traits::string_type& name) const noexcept { return jwks_claims.count(name) != 0; }
+
+		/**
+		 * Get jwks claim
+		 * \return Requested claim
+		 * \throw std::runtime_error If claim was not present
+		 */
+		basic_claim_t get_jwks_claim(const typename json_traits::string_type& name) const {
+			if (!has_jwks_claim(name))
+				throw std::runtime_error("claim not found");
+			return jwks_claims.at(name);
+		}
+
+	private:
+		std::unordered_map<typename json_traits::string_type, basic_claim_t> jwks_claims;
+	};
 
 	/**
 	 * Create a verifier using the given clock
@@ -2719,6 +2806,11 @@ namespace jwt {
 	template<typename json_traits>
 	decoded_jwt<json_traits> decode(const typename json_traits::string_type& token) {
 		return decoded_jwt<json_traits>(token);
+	}
+	
+	template<typename json_traits>
+	jwks<json_traits> parse_jwks(const typename json_traits::string_type& token) {
+		return jwks<json_traits>(token);
 	}
 
 #ifndef JWT_DISABLE_PICOJSON
@@ -2838,6 +2930,11 @@ namespace jwt {
 	template<typename Decode>
 	decoded_jwt<picojson_traits> decode(const std::string& token, Decode decode) {
 		return decoded_jwt<picojson_traits>(token, decode);
+	}
+	
+	inline
+	jwks<picojson_traits> parse_jwks(const std::string& token) {
+		return jwks<picojson_traits>(token);
 	}
 #endif
 }  // namespace jwt
