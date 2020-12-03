@@ -1,9 +1,10 @@
 @PACKAGE_INIT@
 
 set(JWT_EXTERNAL_PICOJSON @JWT_EXTERNAL_PICOJSON@)
+set(JWT_SSL_LIBRARY @JWT_SSL_LIBRARY@)
 
 include(CMakeFindDependencyMacro) 
-find_dependency(OpenSSL REQUIRED)
+find_dependency(${JWT_SSL_LIBRARY} REQUIRED)
 
 if(JWT_EXTERNAL_PICOJSON)
   find_dependency(picojson REQUIRED)

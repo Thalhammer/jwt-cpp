@@ -4,7 +4,8 @@
 
 #include <dlfcn.h>
 // TODO: Figure out why the tests fail on older openssl versions
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L  // It fails on < 1.1 but no idea why.
+#ifndef OPENSSL110  // It fails on < 1.1 but no idea why.
+// LibreSSL has different return codes but was already outside of the effective scope
 
 /**
  * ============ Beginning of black magic ===============
@@ -758,6 +759,7 @@ TEST(OpenSSLErrorTest, PS256VerifyErrorCode) {
     });
 }
 
+#ifndef OPENSSL110
 TEST(OpenSSLErrorTest, EdDSAKey) {
     std::vector<multitest_entry> mapping = {
         // load_private_key_from_string
@@ -842,6 +844,6 @@ TEST(OpenSSLErrorTest, Ed25519VerifyErrorCode) {
         alg.verify("testdata", signature, ec);
     });
 }
-
+#endif
 #endif
 #endif
