@@ -19,7 +19,7 @@ TEST(JwksTest, OneKeyParse) {
 ]})";
 	auto jwks = jwt::parse_jwks(publicKey);
 
-	ASSERT_TRUE(jwks.has_algorithm());
+	//ASSERT_TRUE(jwks.has_algorithm());
 	ASSERT_TRUE(jwks.has_key_id());
 	ASSERT_TRUE(jwks.has_x5c_id());
   ASSERT_FALSE(jwks.has_jwks_claim("foo"));
