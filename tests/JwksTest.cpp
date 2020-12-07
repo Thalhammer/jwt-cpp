@@ -3,7 +3,7 @@
 #include "jwt-cpp/jwt.h"
 
 TEST(JwksTest, OneKeyParse) {
-	AnsiString publicKey = R"({ "keys": [
+	std::string publicKey = R"({ "keys": [
   {
     "alg": "RS256",
     "kty": "RSA",
