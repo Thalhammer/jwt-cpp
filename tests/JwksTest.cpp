@@ -25,7 +25,7 @@ TEST(JwksTest, OneKeyParse) {
   ASSERT_FALSE(jwks.has_jwks_claim("foo"));
 
 	ASSERT_EQ("RS256", jwks.get_algorithm());
-	ASSERT_EQ("123456789", jwks.has_key_id());
+	ASSERT_EQ("123456789", jwks.get_key_id());
 }
 
 TEST(JwksTest, MultiKeysParse) {
