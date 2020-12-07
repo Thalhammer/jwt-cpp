@@ -2883,7 +2883,7 @@ namespace jwt {
 	}
 
 	template<typename json_traits>
-	jwks<json_traits> parse_jwks_keys(const typename json_traits::string_type& token) {
+	jwks_keys<json_traits> parse_jwks_keys(const typename json_traits::string_type& token) {
 		return jwks_keys<json_traits>(token);
 
 #ifndef JWT_DISABLE_PICOJSON
