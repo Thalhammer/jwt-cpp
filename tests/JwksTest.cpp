@@ -3,8 +3,7 @@
 #include "jwt-cpp/jwt.h"
 
 TEST(JwksTest, OneKeyParse) {
-	std::string publicKey = R"({ "keys": [
-  {
+	std::string publicKey = R"({
     "alg": "RS256",
     "kty": "RSA",
     "use": "sig",
@@ -15,11 +14,10 @@ TEST(JwksTest, OneKeyParse) {
     "e": "AQAB",
     "kid": "123456789",
     "x5t": "NjVBRjY5MDlCMUIwNzU4RTA2QzZFMDQ4QzQ2MDAyQjVDNjk1RTM2Qg"
-  }
-]})";
+  })";
 	auto jwks = jwt::parse_jwks(publicKey);
 
-	//ASSERT_TRUE(jwks.has_algorithm());
+	ASSERT_TRUE(jwks.has_algorithm());
 	ASSERT_TRUE(jwks.has_key_id());
 	ASSERT_TRUE(jwks.has_x5c_id());
   ASSERT_FALSE(jwks.has_jwks_claim("foo"));
