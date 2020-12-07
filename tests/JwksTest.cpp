@@ -59,7 +59,7 @@ TEST(JwksTest, MultiKeysParse) {
   ASSERT_FALSE(jwks.has_jwks_claim("foo"));
 
 	ASSERT_EQ("RS256", jwks.get_algorithm());
-	ASSERT_EQ("internal-gateway-jwt", jwks.has_key_id());
+	ASSERT_EQ("internal-gateway-jwt", jwks.get_key_id());
   
   
   ASSERT_THROW(jwkskeys.get_jwks("123456"), std::runtime_error);  
