@@ -64,6 +64,6 @@ TEST(JwksTest, MultiKeysParse) {
   
   auto jwks_1 = jwkskeys.get_jwks("123456");
   
-  ASSERT_TRUE(jwks.empty());
+  ASSERT_TRUE(jwks_1.empty());
   
 }
