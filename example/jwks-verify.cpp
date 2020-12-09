@@ -31,17 +31,17 @@ int main()
 	std::string token = "eyJraWQiOiJpbnRlcm5hbC1nYXRld2F5LWp3dC5hcGkuc2MubmV0IiwiYWxnIjoiUlMyNTYiLCJ0eXAiOiJKV1QifQ.eyJuYmYiOjE1Mzk3NjcwMTUsImlhdCI6MTUzOTc2Njk5MiwiaXNzIjoia29uZyIsImh0dHA6XC9cL3dzbzIub3JnXC9nYXRld2F5XC9zdWJzY3JpYmVyIjoidXZ0dXNlcjJAY2FyYm9uLnN1cGVyIiwib3JpZ2luYWxfaXNzIjoiaHR0cDpcL1wvd3NvMi5vcmdcL2dhdGV3YXkiLCJzdWIiOiJ1dnR1c2VyMkBjYXJib24uc3VwZXIiLCJodHRwOlwvXC93c28yLm9yZ1wvZ2F0ZXdheVwvZW5kdXNlciI6InV2dHVzZXIyQGNhcmJvbi5zdXBlciIsImp0aSI6IjI0NmJkZTlhLWQ4OGQtNGRlZC1hODhmLTRhMTNhOWJmODQ4ZiIsImh0dHA6XC9cL3dzbzIub3JnXC9nYXRld2F5XC9hcHBsaWNhdGlvbm5hbWUiOiJ1dnR1c2VyMl9hcHBfMSIsImV4cCI6MTUzOTc2NzkxNX0.foxbo6C30yr_wkF-5EkgtYUMG-4SXNfRsmewdT6MbE-RXVkIPkVk8kDP41yRXmnk4OxburCqawiGlzzEhfHoFf0qv0qZEmwEXSdcyRw-czZTs6ACjWYe8kejOCVmpvUrq01NgOhTwgVg6pv93BlcmNY--zytjx_9hlVm5SS1lZ0I21n45BIWu5JvBD51TZXEURb_XhL7RcF9I8mfzrRpB2fSHW38gj-nogsdOPA_y3S-hJKylmmaqmaQgTF-jP-gYr6eqKyGPVwc6fLZ5zqAup59SefdPEY23-WWmHzj968jlsDSEiCp_YiYTnF3tHVLFWDsrprYKwNb0_p95tBmPA";
 	
 	auto decoded_jwt = jwt::decode(token);
-	auto jwkskeys = jwt::parse_jwks_keys(publicKey);
-	auto jwks = jwkskeys.get_jwks(decoded_jwt.get_key_id());
+	auto jwks = jwt::parse_jwks(publicKey);
+	auto jwk = jwks.get_jwk(decoded_jwt.get_key_id());
 
   auto issuer = decoded_jwt.get_issuer();
-  auto x5c = jwks.get_x5c();
+  auto x5c = jwk.get_x5c();
 
   if (!x5c.empty() && !issuer.empty()) {
     auto verifier = jwt::verify()
       .allow_algorithm(jwt::algorithm::rs256(jwt::helper::convert_base64_der_to_pem(x5c), "", "", ""))
       .with_issuer(issuer)
-      .leeway(10000000000UL); // value in seconds, add some to compensate timeout
+      .leeway(60UL); // value in seconds, add some to compensate timeout
 
     verifier.verify(decoded_jwt);
   }
