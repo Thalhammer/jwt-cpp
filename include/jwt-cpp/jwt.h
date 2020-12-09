@@ -2748,10 +2748,7 @@ namespace jwt {
 		 */
 		basic_claim_t get_jwks_claim(const typename json_traits::string_type& name) const {
 			if (!has_jwks_claim(name)) {
-				typename json_traits::string_type error_msg = "claim \"";
-				error_msg += name;
-				error_msg += "\" not found";
-				throw std::runtime_error(error_msg.c_str());
+				throw std::runtime_error("claim not found");
 			}
 			return jwks_claims.at(name);
 		}
