@@ -2796,7 +2796,7 @@ namespace jwt {
 		 * \return Requested jwk by key_id
 		 * \throw std::runtime_error If jwk was not present
 		 */
-		jwks_t get_jwk(const typename json_traits::string_type& key_id) const {
+		jwk_t get_jwk(const typename json_traits::string_type& key_id) const {
 			if (!has_jwk(key_id)) {
 				typename json_traits::string_type error_msg = "jwk with key id \"";
 				error_msg += key_id;
