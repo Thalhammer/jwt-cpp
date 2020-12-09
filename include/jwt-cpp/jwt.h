@@ -25,6 +25,9 @@
 #include <utility>
 #include <type_traits>
 #include <system_error>
+#include <algorithm>
+#include <vector>
+#include <iterator>
 
 #if __cplusplus >= 201402L
 #ifdef __has_include
@@ -2779,9 +2782,14 @@ namespace jwt {
 					throw std::runtime_error("Invalid json");
 
 				for (const auto& k : json_traits::as_object(val)) {
+					size_t id = 0;
 					for (const typename json_traits::value_type& item : json_traits::as_array(k.second)) {
 						jwk_t jwk_entry(item);
-						res.emplace(jwk_entry.get_key_id(), std::move(jwk_entry));
+						if (jwk_entry.has_key_id())
+							res.emplace(jwk_entry.get_key_id(), std::move(jwk_entry));
+						else
+							res.emplace(std::string(id), std::move(jwk_entry));
+						++id;
 					}
 				}
 
@@ -2814,6 +2822,14 @@ namespace jwt {
 		bool has_jwk(const typename json_traits::string_type& key_id) const noexcept { return jwks_claims.count(key_id) != 0; }
 
 		bool empty() const noexcept { return jwks_claims.empty(); }
+		
+		std::vector<jwk_t> to_vector() {
+			std::vector<jwk_t> v_jwks_claims;
+			v_jwks_claims.reserve(jwks_claims.size());
+			for (const auto& element : jwks_claims)
+   				v_jwks_claims.push_back(element.second);
+			return v_jwks_claims;
+		}
 
 	private:
 
