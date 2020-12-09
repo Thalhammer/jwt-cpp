@@ -15,15 +15,15 @@ TEST(JwksTest, OneKeyParse) {
     "kid": "123456789",
     "x5t": "NjVBRjY5MDlCMUIwNzU4RTA2QzZFMDQ4QzQ2MDAyQjVDNjk1RTM2Qg"
   })";
-	auto jwks = jwt::parse_jwks(publicKey);
+	auto jwk = jwt::parse_jwk(publicKey);
 
-	ASSERT_TRUE(jwks.has_algorithm());
-	ASSERT_TRUE(jwks.has_key_id());
-	ASSERT_TRUE(jwks.has_x5c_id());
-  ASSERT_FALSE(jwks.has_jwks_claim("foo"));
+	ASSERT_TRUE(jwk.has_algorithm());
+	ASSERT_TRUE(jwk.has_key_id());
+	ASSERT_TRUE(jwk.has_x5c());
+  ASSERT_FALSE(jwks.has_jwk_claim("foo"));
 
-	ASSERT_EQ("RS256", jwks.get_algorithm());
-	ASSERT_EQ("123456789", jwks.get_key_id());
+	ASSERT_EQ("RS256", jwk.get_algorithm());
+	ASSERT_EQ("123456789", jwk.get_key_id());
 }
 
 TEST(JwksTest, MultiKeysParse) {
@@ -48,17 +48,17 @@ TEST(JwksTest, MultiKeysParse) {
 		"kty":"RSA" 
 	}
 ]})";
-	auto jwkskeys = jwt::parse_jwks_keys(publicKey);
-  auto jwks = jwkskeys.get_jwks("internal-gateway-jwt");
+	auto jwks = jwt::parse_jwks(publicKey);
+  auto jwk = jwks.get_jwk("internal-gateway-jwt");
 
-	ASSERT_TRUE(jwks.has_algorithm());
-	ASSERT_TRUE(jwks.has_key_id());
-	ASSERT_TRUE(jwks.has_x5c_id());
-  ASSERT_FALSE(jwks.has_jwks_claim("foo"));
+	ASSERT_TRUE(jwk.has_algorithm());
+	ASSERT_TRUE(jwk.has_key_id());
+	ASSERT_TRUE(jwk.has_x5c());
+  ASSERT_FALSE(jwk.has_jwk_claim("foo"));
 
-	ASSERT_EQ("RS256", jwks.get_algorithm());
-	ASSERT_EQ("internal-gateway-jwt", jwks.get_key_id());
+	ASSERT_EQ("RS256", jwk.get_algorithm());
+	ASSERT_EQ("internal-gateway-jwt", jwk.get_key_id());
   
   
-  ASSERT_THROW(jwkskeys.get_jwks("123456"), std::runtime_error);  
+  ASSERT_THROW(jwks.get_jwk("123456"), std::runtime_error);  
 }
