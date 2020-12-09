@@ -20,7 +20,7 @@ TEST(JwksTest, OneKeyParse) {
 	ASSERT_TRUE(jwk.has_algorithm());
 	ASSERT_TRUE(jwk.has_key_id());
 	ASSERT_TRUE(jwk.has_x5c());
-  ASSERT_FALSE(jwks.has_jwk_claim("foo"));
+  ASSERT_FALSE(jwk.has_jwk_claim("foo"));
 
 	ASSERT_EQ("RS256", jwk.get_algorithm());
 	ASSERT_EQ("123456789", jwk.get_key_id());
