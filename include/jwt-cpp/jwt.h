@@ -2788,7 +2788,7 @@ namespace jwt {
 						if (jwk_entry.has_key_id())
 							res.emplace(jwk_entry.get_key_id(), std::move(jwk_entry));
 						else
-							res.emplace(std::string(id), std::move(jwk_entry));
+							res.emplace(std::to_string(id), std::move(jwk_entry));
 						++id;
 					}
 				}
