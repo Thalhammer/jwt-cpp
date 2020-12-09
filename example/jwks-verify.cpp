@@ -43,10 +43,7 @@ int main()
       .with_issuer(issuer)
       .leeway(10000000000UL); // value in seconds, add some to compensate timeout
 
-    std::error_code err;
-    verifier.verify(decoded_jwt, err);
-
-    jwt::error::throw_if_error(err);
+    verifier.verify(decoded_jwt);
   }
 
 }
