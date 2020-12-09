@@ -33,6 +33,8 @@ endif()
 if(JWT_DISABLE_PICOJSON)
   target_compile_definitions(jwt-cpp INTERFACE JWT_DISABLE_PICOJSON)
 endif()
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
 target_include_directories(jwt-cpp INTERFACE $<BUILD_INTERFACE:${JWT_INCLUDE_PATH}>
                                              $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(jwt-cpp INTERFACE OpenSSL::SSL OpenSSL::Crypto)
@@ -41,8 +43,6 @@ if(JWT_EXTERNAL_PICOJSON)
   target_link_libraries(jwt-cpp INTERFACE picojson::picojson>)
 endif()
 
-include(GNUInstallDirs)
-include(CMakePackageConfigHelpers)
 set(JWT_CMAKE_FILES_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/cmake/jwt-cpp)
 configure_package_config_file(
   ${CMAKE_CURRENT_LIST_DIR}/cmake/jwt-cpp-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config.cmake
