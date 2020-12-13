@@ -44,17 +44,22 @@
 #define OPENSSL110
 #endif
 
+#if defined(LIBRESSL_VERSION_NUMBER)
+#define OPENSSL10
+#define OPENSSL110
+#endif
+
 #ifndef JWT_CLAIM_EXPLICIT
 #define JWT_CLAIM_EXPLICIT explicit
 #endif
 
 /**
  * \brief JSON Web Token
- * 
+ *
  * A namespace to contain everything related to handling JSON Web Tokens, JWT for short,
  * as a part of [RFC7519](https://tools.ietf.org/html/rfc7519), or alternatively for
  * JWS (JSON Web Signature) from [RFC7515](https://tools.ietf.org/html/rfc7515)
- */ 
+ */
 namespace jwt {
 	using date = std::chrono::system_clock::time_point;
 
@@ -119,7 +124,7 @@ namespace jwt {
 			static rsa_error_cat cat;
 			return cat;
 		}
-		
+
 		inline std::error_code make_error_code(rsa_error e) {
 			return {static_cast<int>(e), rsa_error_category()};
 		}
@@ -159,7 +164,7 @@ namespace jwt {
 			static ecdsa_error_cat cat;
 			return cat;
 		}
-		
+
 		inline std::error_code make_error_code(ecdsa_error e) {
 			return {static_cast<int>(e), ecdsa_error_category()};
 		}
@@ -338,15 +343,15 @@ namespace std
 namespace jwt {
 	/**
 	 * \brief A collection for working with certificates
-	 * 
+	 *
 	 * These _helpers_ are usefully when working with certificates OpenSSL APIs.
 	 * For example, when dealing with JWKS (JSON Web Key Set)[https://tools.ietf.org/html/rfc7517]
 	 * you maybe need to extract the modulus and exponent of an RSA Public Key.
-	 */ 
+	 */
 	namespace helper {
 		/**
 		 * \brief Extract the public key of a pem certificate
-		 * 
+		 *
 		 * \param certstr	String containing the certificate encoded as pem
 		 * \param pw		Password used to decrypt certificate (leave empty if not encrypted)
 		 * \param ec		error_code for error_detection (gets cleared if no error occures)
@@ -390,7 +395,7 @@ namespace jwt {
 
 		/**
 		 * \brief Extract the public key of a pem certificate
-		 * 
+		 *
 		 * \param certstr	String containing the certificate encoded as pem
 		 * \param pw		Password used to decrypt certificate (leave empty if not encrypted)
 		 * \throw			rsa_exception if an error occurred
@@ -412,7 +417,7 @@ namespace jwt {
 		 * \tparam Decode is callabled, taking a string_type and returns a string_type.
 		 * It should ensure the padding of the input and then base64 decode and return
 		 * the results.
-		 * 
+		 *
 		 * \param cert_base64_der_str 	String containing the certificate encoded as base64 DER
 		 * \param decode 				The function to decode the cert
 		 * \param ec					error_code for error_detection (gets cleared if no error occures)
@@ -502,9 +507,9 @@ namespace jwt {
 #endif
 		/**
 		 * \brief Load a public key from a string.
-		 * 
+		 *
 		 * The string should contain a pem encoded certificate or public key
-		 * 
+		 *
 		 * \param certstr	String containing the certificate encoded as pem
 		 * \param pw		Password used to decrypt certificate (leave empty if not encrypted)
 		 * \param ec		error_code for error_detection (gets cleared if no error occures)
@@ -532,7 +537,7 @@ namespace jwt {
 					return nullptr;
 				}
 			}
-			
+
 			std::shared_ptr<EVP_PKEY> pkey(PEM_read_bio_PUBKEY(pubkey_bio.get(), nullptr, nullptr, (void*)password.data()), EVP_PKEY_free);  // NOLINT(google-readability-casting) requires `const_cast`
 			if (!pkey) {
 				ec = error::rsa_error::load_key_bio_read;
@@ -543,9 +548,9 @@ namespace jwt {
 
 		/**
 		 * \brief Load a public key from a string.
-		 * 
+		 *
 		 * The string should contain a pem encoded certificate or public key
-		 * 
+		 *
 		 * \param certstr	String containing the certificate or key encoded as pem
 		 * \param pw		Password used to decrypt certificate or key (leave empty if not encrypted)
 		 * \throw			rsa_exception if an error occurred
@@ -560,7 +565,7 @@ namespace jwt {
 
 		/**
 		 * \brief Load a private key from a string.
-		 * 
+		 *
 		 * \param key		String containing a private key as pem
 		 * \param pw		Password used to decrypt key (leave empty if not encrypted)
 		 * \param ec		error_code for error_detection (gets cleared if no error occures)
@@ -587,7 +592,7 @@ namespace jwt {
 
 		/**
 		 * \brief Load a private key from a string.
-		 * 
+		 *
 		 * \param key		String containing a private key as pem
 		 * \param pw		Password used to decrypt key (leave empty if not encrypted)
 		 * \throw			rsa_exception if an error occurred
@@ -599,7 +604,7 @@ namespace jwt {
 			error::throw_if_error(ec);
 			return res;
 		}
-		
+
 		/**
 		 * Convert a OpenSSL BIGNUM to a std::string
 		 * \param bn BIGNUM to convert
@@ -629,29 +634,29 @@ namespace jwt {
 
 	/**
 	 * \brief Various cryptographic algorithms when working with JWT
-	 * 
+	 *
 	 * JWT (JSON Web Tokens) signatures are typically used as the payload for a JWS (JSON Web Signature) or
 	 * JWE (JSON Web Encryption). Both of these use various cryptographic as specified by [RFC7518](https://tools.ietf.org/html/rfc7518)
-	 * and are exposed through the a [JOSE Header](https://tools.ietf.org/html/rfc7515#section-4) which 
+	 * and are exposed through the a [JOSE Header](https://tools.ietf.org/html/rfc7515#section-4) which
 	 * points to one of the JWA (JSON Web Algorithms)(https://tools.ietf.org/html/rfc7518#section-3.1)
 	 */
 	namespace algorithm {
 		/**
 		 * \brief "none" algorithm.
-		 * 
+		 *
 		 * Returns and empty signature and checks if the given signature is empty.
 		 */
 		struct none {
 			/**
 			 * \brief Return an empty string
-			 */ 
+			 */
 			std::string sign(const std::string& /*unused*/, std::error_code& ec) const {
 				ec.clear();
 				return {};
 			}
 			/**
 			 * \brief Check if the given signature is empty.
-			 * 
+			 *
 			 * JWT's with "none" algorithm should not contain a signature.
 			 * \param signature Signature data to verify
 			 * \param ec		error_code filled with details about the error
@@ -690,7 +695,7 @@ namespace jwt {
 				ec.clear();
 				std::string res(static_cast<size_t>(EVP_MAX_MD_SIZE), '\0');
 				auto len = static_cast<unsigned int>(res.size());
-				if (HMAC(md(), secret.data(), static_cast<int>(secret.size()), reinterpret_cast<const unsigned char*>(data.data()), static_cast<int>(data.size()), (unsigned char*)res.data(), &len) == nullptr) { // NOLINT(google-readability-casting) requires `const_cast` 
+				if (HMAC(md(), secret.data(), static_cast<int>(secret.size()), reinterpret_cast<const unsigned char*>(data.data()), static_cast<int>(data.size()), (unsigned char*)res.data(), &len) == nullptr) { // NOLINT(google-readability-casting) requires `const_cast`
 					ec = error::signature_generation_error::hmac_failed;
 					return {};
 				}
@@ -1224,13 +1229,13 @@ namespace jwt {
 					return;
 				}
 				const int size = RSA_size(key.get());
-				
+
 				std::string sig(size, 0x00);
 				if(RSA_public_decrypt(static_cast<int>(signature.size()), reinterpret_cast<const unsigned char*>(signature.data()), (unsigned char*)sig.data(), key.get(), RSA_NO_PADDING) == 0) {// NOLINT(google-readability-casting) requires `const_cast`
 					ec = error::signature_verification_error::invalid_signature;
 					return;
 				}
-				
+
 				if(RSA_verify_PKCS1_PSS_mgf1(key.get(), reinterpret_cast<const unsigned char*>(hash.data()), md(), md(), reinterpret_cast<const unsigned char*>(sig.data()), -1) == 0) {
 					ec = error::signature_verification_error::invalid_signature;
 					return;
@@ -1276,7 +1281,7 @@ namespace jwt {
 				res.resize(len);
 				return res;
 			}
-			
+
 			/// OpenSSL structure containing keys
 			std::shared_ptr<EVP_PKEY> pkey;
 			/// Hash generator function
@@ -1499,11 +1504,11 @@ namespace jwt {
 
 	/**
 	 * \brief JSON Abstractions for working with any library
-	 */ 
+	 */
 	namespace json {
 		/**
 		 * \brief Generic JSON types used in JWTs
-		 * 
+		 *
 		 * This enum is to abstract the third party underlying types
 		 */
 		enum class type {
@@ -1580,7 +1585,7 @@ namespace jwt {
 		template <typename traits_type, typename value_type>
 		struct supports_get_type {
 			static constexpr auto value =
-				is_detected<get_type_function, traits_type>::value && 
+				is_detected<get_type_function, traits_type>::value &&
 				std::is_function<get_type_function<traits_type>>::value &&
 				is_get_type_signature<traits_type, value_type>::value;
 		};
@@ -1731,7 +1736,7 @@ namespace jwt {
 			static_assert(is_valid_json_value<value_type>::value, "value type must meet basic requirements, default constructor, copyable, moveable");
 			static_assert(is_valid_json_object<value_type, string_type, object_type>::value, "object_type must be a string_type to value_type container");
 			static_assert(is_valid_json_array<value_type, array_type>::value, "array_type must be a container of value_type");
-		
+
 			static constexpr auto value =
 				is_valid_json_object<value_type, string_type, object_type>::value &&
 				is_valid_json_value<value_type>::value &&
@@ -1741,11 +1746,11 @@ namespace jwt {
 
 	/**
 	 * \brief a class to store a generic JSON value as claim
-	 * 
+	 *
 	 * The default template parameters use [picojson](https://github.com/kazuho/picojson)
-	 * 
+	 *
 	 * \tparam json_traits : JSON implementation traits
-	 * 
+	 *
 	 * \see [RFC 7519: JSON Web Token (JWT)](https://tools.ietf.org/html/rfc7519)
 	 */
 	template<typename json_traits>
@@ -1964,11 +1969,11 @@ namespace jwt {
 		 * \throw std::runtime_error If claim was not present
 		 * \throw std::bad_cast Claim was present but not a set (Should not happen in a valid token)
 		 */
-		typename basic_claim_t::set_t get_audience() const { 
+		typename basic_claim_t::set_t get_audience() const {
 			auto aud = get_payload_claim("aud");
 			if(aud.get_type() == json::type::string)
 				return { aud.as_string() };
-			
+
 			return aud.as_set();
 		}
 		/**
@@ -2115,9 +2120,9 @@ namespace jwt {
 	#ifndef JWT_DISABLE_BASE64
 		/**
 		 * \brief Parses a given token
-		 * 
+		 *
 		 * \note Decodes using the jwt::base64url which supports an std::string
-		 * 
+		 *
 		 * \param token The token to parse
 		 * \throw std::invalid_argument Token is not in correct format
 		 * \throw std::runtime_error Base64 decoding failed or invalid json
@@ -2130,9 +2135,9 @@ namespace jwt {
 	#endif
 		/**
 		 * \brief Parses a given token
-		 * 
+		 *
 		 * \tparam Decode is callabled, taking a string_type and returns a string_type.
-		 * It should ensure the padding of the input and then base64url decode and 
+		 * It should ensure the padding of the input and then base64url decode and
 		 * return the results.
 		 * \param token The token to parse
 		 * \param decode The function to decode the token
@@ -2244,7 +2249,7 @@ namespace jwt {
 		 */
 		builder& set_header_claim(const typename json_traits::string_type& id, typename json_traits::value_type c)
 		{ header_claims[id] = std::move(c); return *this; }
-		
+
 		/**
 		 * Set a header claim.
 		 * \param id Name of the claim
@@ -2351,7 +2356,7 @@ namespace jwt {
 		 * \param algo Instance of an algorithm to sign the token with
 		 * \param encode Callable to transform the serialized json to base64 with no padding
 		 * \return Final token as a string
-		 * 
+		 *
 		 * \note If the 'alg' header in not set in the token it will be set to `algo.name()`
 		 */
 		template<typename Algo, typename Encode>
@@ -2364,9 +2369,9 @@ namespace jwt {
 	#ifndef JWT_DISABLE_BASE64
 		/**
 		 * Sign token and return result
-		 * 
+		 *
 		 * using the `jwt::base` functions provided
-		 * 
+		 *
 		 * \param algo Instance of an algorithm to sign the token with
 		 * \return Final token as a string
 		 */
@@ -2389,7 +2394,7 @@ namespace jwt {
 		 * \param encode Callable to transform the serialized json to base64 with no padding
 		 * \param ec error_code filled with details on error
 		 * \return Final token as a string
-		 * 
+		 *
 		 * \note If the 'alg' header in not set in the token it will be set to `algo.name()`
 		 */
 		template<typename Algo, typename Encode>
@@ -2409,9 +2414,9 @@ namespace jwt {
 	#ifndef JWT_DISABLE_BASE64
 		/**
 		 * Sign token and return result
-		 * 
+		 *
 		 * using the `jwt::base` functions provided
-		 * 
+		 *
 		 * \param algo Instance of an algorithm to sign the token with
 		 * \param ec error_code filled with details on error
 		 * \return Final token as a string
@@ -2790,7 +2795,7 @@ namespace jwt {
 
 	/**
 	 * Default JSON claim
-	 * 
+	 *
 	 * This type is the default specialization of the \ref basic_claim class which
 	 * uses the standard template types.
 	 */
@@ -2827,7 +2832,7 @@ namespace jwt {
 	/**
 	 * Decode a token
 	 * \tparam Decode is callabled, taking a string_type and returns a string_type.
-	 * It should ensure the padding of the input and then base64url decode and 
+	 * It should ensure the padding of the input and then base64url decode and
 	 * return the results.
 	 * \param token Token to decode
 	 * \param decode The token to parse

@@ -10,9 +10,23 @@ option(JWT_EXTERNAL_PICOJSON "Use find_package() to locate picojson, provided to
 option(JWT_DISABLE_BASE64 "Do not include the base64 implementation from this library" OFF)
 option(JWT_DISABLE_PICOJSON "Do not provide the picojson template specialiaze" OFF)
 
+set(JWT_SSL_LIBRARY_OPTIONS OpenSSL LibreSSL)
+set(JWT_SSL_LIBRARY OpenSSL CACHE STRING "Determines which SSL library to build with")
+set_property(CACHE JWT_SSL_LIBRARY PROPERTY STRINGS ${JWT_SSL_LIBRARY_OPTIONS})
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
-find_package(OpenSSL 1.0.2 REQUIRED)
+if(NOT JWT_SSL_LIBRARY IN_LIST JWT_SSL_LIBRARY_OPTIONS)
+    message(FATAL_ERROR "JWT_SSL_LIBRARY must be one of ${JWT_SSL_LIBRARY_OPTIONS}")
+endif()
+
+if(${JWT_SSL_LIBRARY} MATCHES "OpenSSL")
+  find_package(OpenSSL 1.0.2 REQUIRED)
+endif()
+
+if(${JWT_SSL_LIBRARY} MATCHES "LibreSSL")
+  find_package(LibreSSL 3.0.0 REQUIRED)
+endif()
 
 if(JWT_EXTERNAL_PICOJSON)
   find_package(picojson 1.3.0 REQUIRED)
@@ -37,7 +51,14 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 target_include_directories(jwt-cpp INTERFACE $<BUILD_INTERFACE:${JWT_INCLUDE_PATH}>
                                              $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-target_link_libraries(jwt-cpp INTERFACE OpenSSL::SSL OpenSSL::Crypto)
+
+if(${JWT_SSL_LIBRARY} MATCHES "OpenSSL")
+  target_link_libraries(jwt-cpp INTERFACE OpenSSL::SSL OpenSSL::Crypto)
+endif()
+
+if(${JWT_SSL_LIBRARY} MATCHES "LibreSSL")
+  target_link_libraries(jwt-cpp INTERFACE LibreSSL::TLS)
+endif()
 
 if(JWT_EXTERNAL_PICOJSON)
   target_link_libraries(jwt-cpp INTERFACE picojson::picojson>)
@@ -46,7 +67,7 @@ endif()
 set(JWT_CMAKE_FILES_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/cmake/jwt-cpp)
 configure_package_config_file(
   ${CMAKE_CURRENT_LIST_DIR}/cmake/jwt-cpp-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config.cmake
-  INSTALL_DESTINATION ${JWT_CMAKE_FILES_INSTALL_DIR} PATH_VARS JWT_EXTERNAL_PICOJSON)
+  INSTALL_DESTINATION ${JWT_CMAKE_FILES_INSTALL_DIR} PATH_VARS JWT_EXTERNAL_PICOJSON JWT_SSL_LIBRARY)
 write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-version.cmake VERSION 0.5.0
                                  COMPATIBILITY ExactVersion)
 

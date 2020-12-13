@@ -14,19 +14,27 @@ A header only library for creating and validating [JSON Web Tokens](https://tool
 jwt-cpp supports all algorithms defined by the spec. The modular design of jwt-cpp allows one to add additional algorithms without any problems. If you need any feel free to open a pull request.
 For the sake of completeness, here is a list of all supported algorithms:
 
-* HS256
-* HS384
-* HS512
-* RS256
-* RS384
-* RS512
-* ES256
-* ES384
-* ES512
-* PS256
-* PS384
-* PS512
-* EdDSA (Ed25519, Ed448) _since 0.5.0_
+| HMSC  | RSA   | ECDSA | PSS   | EdDSA   |
+| ----- | ----- | ----- | ----- | ------- |
+| HS256 | RS256 | ES256 | PS256 | Ed25519 |
+| HS384 | RS384 | ES384 | PS384 | Ed448   |
+| HS512 | RS512 | ES512 | PS512 |         |
+
+## SSL Compatability
+
+In the name of flexibility and extensibility, jwt-cpp supports both [OpenSSL](https://github.com/openssl/openssl) and [LibreSSL](https://github.com/libressl-portable/portable).
+These are the version which are tested:
+
+| OpenSSL        | LibreSSL        |
+| -------------- | --------------- |
+| [1.0.2][1.0.2] | ![3.2.2][3.2.2] |
+| 1.1.0          | ![3.3.0][3.3.0] |
+| [1.1.1][1.1.1] |                 |
+
+[1.0.2]: https://travis-ci.com/github/Thalhammer/jwt-cpp
+[3.2.2]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/libressl/3.2.2/shields.json
+[3.3.0]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/libressl/3.3.0/shields.json
+[1.1.1]: https://github.com/Thalhammer/jwt-cpp/actions?query=workflow%3A%22Coverage+CI%22
 
 ## Overview
 

@@ -1,0 +1,56 @@
+name: LibreSSL CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        libressl: ["3.3.0", "3.2.2"]
+    steps:
+    - uses: actions/checkout@v2
+    - name: install cmake
+      uses: lukka/get-cmake@latest
+    - name: install gtest
+      uses: ./.github/actions/install-gtest
+    - name: install libressl
+      uses: ./.github/actions/install-libressl
+      with:
+        version: ${{ matrix.libressl }}
+
+    - name: configure
+      run: cmake . -DJWT_BUILD_TESTS=ON -DJWT_SSL_LIBRARY:STRING=LibreSSL
+
+    - name: make
+      run: make
+
+    - name: test
+      run: ./tests/jwt-cpp-test
+
+    - name: badge success
+      if: github.event_name == 'push' && success()
+      run: |
+        mkdir -p badges/libressl/${{ matrix.libressl }}
+        echo '{ "schemaVersion": 1, "label": "${{ matrix.libressl }}", "message": "Passing", "color": "brightgreen" }' > badges/libressl/${{ matrix.libressl }}/shields.json
+
+    - name: badge failure
+      if: github.event_name == 'push' && !success()
+      run: |
+        mkdir -p badges/libressl/${{ matrix.libressl }}
+        echo '{ "schemaVersion": 1, "label": "${{ matrix.libressl }}", "message": "Failing", "color": "red" }' > badges/libressl/${{ matrix.libressl }}/shields.json
+
+    - name: badge publish
+      if: github.event_name == 'push'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_branch: badges
+        publish_dir: ./badges
+        keep_files: true
+        user_name: 'github-actions[bot]'
+        user_email: 'github-actions[bot]@users.noreply.github.com'
