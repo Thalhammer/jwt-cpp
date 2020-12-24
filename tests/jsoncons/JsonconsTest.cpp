@@ -48,7 +48,7 @@ struct jsoncons_traits
 	{
 		if (val.type() != jsoncons::json_type::object_value)
 			throw std::bad_cast();
-		return object_type{ val };
+		return object_type{ val.object_value() };
 	}
 
 	static array_type as_array(const json &val)
@@ -76,7 +76,7 @@ struct jsoncons_traits
 	{
 		if (get_type(val) != jwt::json::type::integer)
 			throw std::bad_cast();
-		return val.as_int();
+		return val.as<integer_type>();
 	}
 
 	static boolean_type as_bool(const json &val)
