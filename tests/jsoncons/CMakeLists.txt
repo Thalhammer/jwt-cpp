@@ -8,5 +8,5 @@ endif()
 find_package(GTest REQUIRED)
 find_package(jsoncons CONFIG REQUIRED)
 
-add_executable(jsoncons-traits-narrow traits-narrow.cpp)
-target_link_libraries(test-project jwt-cpp::jwt-cpp GTest::GTest GTest::Main jsoncons)
+add_executable(jsoncons-traits-narrow JsonconsTest.cpp)
+target_link_libraries(jsoncons-traits-narrow jwt-cpp::jwt-cpp GTest::GTest GTest::Main jsoncons)
