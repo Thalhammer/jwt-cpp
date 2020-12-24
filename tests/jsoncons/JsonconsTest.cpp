@@ -33,7 +33,7 @@ struct jsoncons_traits
 
 		size_t count( const key_type& key ) const {
 			size_t ret = 0;
-			for (iterator first = begin(); first != end(); ++first) {
+			for (const_iterator first = cbegin(); first != cend(); ++first) {
 				if (first->key() == key) {
 					++ret;
 				}
