@@ -1,0 +1,23 @@
+name: Traits CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  jsoncons:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: lukka/get-cmake@latest
+    - uses: ./.github/actions/install/gtest
+    - uses: ./.github/actions/install/jsoncons
+
+    - name: configure
+      run: |
+        cd tests/jsoncons
+        cmake .
+        cmake --build .
+        ./jsoncons-traits-narrow

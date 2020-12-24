@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
-
 project(jwt-cpp-examples)
+
 if(NOT TARGET jwt-cpp)
     find_package(jwt-cpp CONFIG REQUIRED)
 endif()

@@ -1,5 +1,5 @@
 name: Install LibreSSL
-description: Install and setup GTest for linking and building test application
+description: Install and setup LibreSSL for linking and building test application
 inputs:
   version:
     description: The desired LibreSSL version to install
