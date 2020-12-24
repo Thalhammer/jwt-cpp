@@ -48,7 +48,7 @@ struct jsoncons_traits
 	{
 		if (val.type() != jsoncons::json_type::object_value)
 			throw std::bad_cast();
-		return object_type{ val.object_value() };
+		return object_type(val.object_value(), val.get_allocator());
 	}
 
 	static array_type as_array(const json &val)
