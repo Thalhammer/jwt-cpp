@@ -36,6 +36,26 @@ jobs:
         cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake -DTEST:STRING="defaults-enabled"
         cmake --build .
 
+  costume-install:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: install cmake
+      uses: lukka/get-cmake@latest
+
+    - name: setup
+      run: |
+        mkdir build
+        cd build
+        cmake .. -CMAKE_INSTALL_PREFIX:STRING="/opt/jwt-cpp" -DJWT_BUILD_EXAMPLES=OFF
+        make install
+
+    - name: test
+      run: |
+        cd tests/cmake
+        cmake . -DCMAKE_PREFIX_PATH=/opt/jwt-cpp -DTEST:STRING="defaults-enabled"
+        cmake --build .
+
   no-pico:
     runs-on: ubuntu-latest
     steps:
