@@ -1722,6 +1722,30 @@ namespace jwt {
 
 		template <typename traits_type>
 		using has_key_type = typename traits_type::key_type;
+		
+		namespace impl
+		{
+			template <typename object_type>
+			using has_iterator = typename object_type::iterator;
+
+			template <typename object_type>
+			using has_const_iterator = typename object_type::const_iterator;
+
+			template <typename object_type>
+			using cbegin_function = decltype(&object_type::cbegin);
+
+			// template <typename object_type, typename const_iter>
+			// using is_begin_signature = typename std::is_same<begin_function<object_type>, const_iter(object_type::*)()>;
+
+			template <typename object_type>
+			struct supports_begin {
+				static constexpr auto value =
+					is_detected<has_iterator, object_type>::value &&
+					is_detected<cbegin_function, object_type>::value &&
+					std::is_member_function_pointer<cbegin_function<object_type>>::value /*&&
+					is_begin_signature<object_type, typename object_type::const_iterator>::value*/;
+			};
+		} // namespace impl
 
 		template<typename value_type, typename string_type, typename object_type>
 		struct is_valid_json_object {
@@ -1729,7 +1753,9 @@ namespace jwt {
 				is_detected<has_mapped_type, object_type>::value &&
 				std::is_same<typename object_type::mapped_type, value_type>::value &&
 				is_detected<has_key_type, object_type>::value &&
-				std::is_same<typename object_type::key_type, string_type>::value;
+				std::is_same<typename object_type::key_type, string_type>::value &&
+				impl::supports_begin<object_type>::value &&
+				is_detected<impl::has_const_iterator, object_type>::value;
 		};
 
 		template<typename value_type, typename array_type>
