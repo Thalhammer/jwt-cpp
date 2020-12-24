@@ -12,7 +12,15 @@ struct jsoncons_traits
 {
 	using json = jsoncons::json;
 	using value_type = json;
-	using object_type = json::object;
+	struct object_type : json::object
+	{
+		using json::object::object;
+
+		using mapped_type = key_value_type::value_type; // https://github.com/danielaparker/jsoncons/commit/1b1ceeb572f9a2db6d37cff47ac78a4f14e072e2#commitcomment-45391411
+
+		const_iterator cbegin() const noexcept { return begin(); }
+		const_iterator cend() const noexcept { return end(); }
+	};
 	using array_type = json::array;
 	using string_type = std::string; // current limitation of traits implementation
 	using number_type = double;
