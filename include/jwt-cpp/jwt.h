@@ -1717,10 +1717,18 @@ namespace jwt {
 				// TODO(cmcarthur): Stream operators
 		};
 
+		template <typename traits_type>
+		using has_mapped_type = typename traits_type::mapped_type;
+
+		template <typename traits_type>
+		using has_key_type = typename traits_type::key_type;
+
 		template<typename value_type, typename string_type, typename object_type>
 		struct is_valid_json_object {
 			static constexpr auto value =
+				is_detected<has_mapped_type, object_type>::value &&
 				std::is_same<typename object_type::mapped_type, value_type>::value &&
+				is_detected<has_key_type, object_type>::value &&
 				std::is_same<typename object_type::key_type, string_type>::value;
 		};
 
@@ -2399,7 +2407,7 @@ namespace jwt {
 		 */
 		template<typename Algo, typename Encode>
 		typename json_traits::string_type sign(const Algo& algo, Encode encode, std::error_code& ec) const {
-			typename json_traits::object_type obj_header = header_claims;
+			typename json_traits::object_type obj_header = header_claims; // make a copy such that a builder can be re-used
 			if(header_claims.count("alg") == 0)
 				obj_header["alg"] = typename json_traits::value_type(algo.name());
 
