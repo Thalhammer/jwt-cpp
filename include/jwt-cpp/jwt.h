@@ -1738,17 +1738,21 @@ namespace jwt {
 			using is_begin_signature = typename std::is_same<decltype(std::declval<object_type>().begin()), has_iterator<object_type>>;
 
 			template <typename object_type>
+			using is_begin_const_signature = typename std::is_same<decltype(std::declval<const object_type>().begin()), has_const_iterator<object_type>>;
+
+			template <typename object_type>
 			struct supports_begin {
 				static constexpr auto value =
 					is_detected<has_iterator, object_type>::value &&
-					is_begin_signature<object_type>::value;
+					is_begin_signature<object_type>::value &&
+					is_begin_const_signature<object_type>::value;
 			};
 
 			template <typename object_type>
 			using cbegin_function = decltype(&object_type::cbegin);
 
 			template <typename object_type>
-			using is_cbegin_signature = typename std::is_same<decltype(std::declval<object_type>().cbegin()), has_const_iterator<object_type>>;
+			using is_cbegin_signature = typename std::is_same<decltype(std::declval<const object_type>().cbegin()), has_const_iterator<object_type>>;
 
 			template <typename object_type>
 			struct supports_cbegin {
