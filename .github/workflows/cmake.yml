@@ -47,7 +47,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake .. -CMAKE_INSTALL_PREFIX:STRING="/opt/jwt-cpp" -DJWT_BUILD_EXAMPLES=OFF
+        cmake .. -DCMAKE_INSTALL_PREFIX:STRING="/opt/jwt-cpp" -DJWT_BUILD_EXAMPLES=OFF
         make install
 
     - name: test
