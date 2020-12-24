@@ -22,15 +22,24 @@ struct jsoncons_traits
 		const_iterator cbegin() const noexcept { return begin(); }
 		const_iterator cend() const noexcept { return end(); }
 
-		mapped_type& operator[]( const key_type& key ) {
-			auto ret =  try_emplace(key);
-			return *ret.first->second;
+		mapped_type& operator[](const key_type& key) {
+			auto ret =  try_emplace(key); // https://github.com/microsoft/STL/blob/2914b4301c59dc7ffc09d16ac6f7979fde2b7f2c/stl/inc/map#L325
+			return ret.first->value();
 		}
-		mapped_type& operator[]( key_type&& key ) {
+		mapped_type& operator[](key_type&& key) {
 			auto ret =  try_emplace(key);
-			return *ret.first->second;
+			return ret.first->value();
 		}
 
+		size_t count( const key_type& key ) const {
+			size_t ret = 0;
+			for (iterator first = begin(); first != end(); ++first) {
+				if (first->key() == key) {
+					++ret;
+				}
+			}
+			return ret;
+		}
 	};
 	using array_type = json::array;
 	using string_type = std::string; // current limitation of traits implementation
