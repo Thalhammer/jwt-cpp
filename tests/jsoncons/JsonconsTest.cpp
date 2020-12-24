@@ -16,6 +16,7 @@ struct jsoncons_traits
 	{
 		using json::object::object;
 
+		using value_type = key_value_type;
 		using mapped_type = key_value_type::value_type; // https://github.com/danielaparker/jsoncons/commit/1b1ceeb572f9a2db6d37cff47ac78a4f14e072e2#commitcomment-45391411
 
 		const_iterator cbegin() const noexcept { return begin(); }
@@ -47,42 +48,42 @@ struct jsoncons_traits
 	{
 		if (val.type() != jsoncons::json_type::object_value)
 			throw std::bad_cast();
-		return val.as<object_type>();
+		return object_type{ val };
 	}
 
 	static array_type as_array(const json &val)
 	{
 		if (val.type() != jsoncons::json_type::array_value)
 			throw std::bad_cast();
-		return val.as<array_type>();
+		return val.array_value();
 	}
 
 	static string_type as_string(const json &val)
 	{
 		if (val.type() != jsoncons::json_type::string_value)
 			throw std::bad_cast();
-		return val.as<string_type>();
+		return val.as_string();
 	}
 
 	static number_type as_number(const json &val)
 	{
 		if (get_type(val) != jwt::json::type::number)
 			throw std::bad_cast();
-		return val.as<number_type>();
+		return val.as_double();
 	}
 
 	static integer_type as_int(const json &val)
 	{
 		if (get_type(val) != jwt::json::type::integer)
 			throw std::bad_cast();
-		return val.as<integer_type>();
+		return val.as_int();
 	}
 
 	static boolean_type as_bool(const json &val)
 	{
 		if (val.type() != jsoncons::json_type::bool_value)
 			throw std::bad_cast();
-		return val.as<boolean_type>();
+		return val.as_bool();
 	}
 
 	static bool parse(json &val, std::string str)
