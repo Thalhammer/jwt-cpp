@@ -24,11 +24,11 @@ struct jsoncons_traits
 
 		mapped_type& operator[]( const key_type& key ) {
 			auto ret =  try_emplace(key);
-			return *ret.first;
+			return *ret.first->second;
 		}
 		mapped_type& operator[]( key_type&& key ) {
 			auto ret =  try_emplace(key);
-			return *ret.first;
+			return *ret.first->second;
 		}
 
 	};
