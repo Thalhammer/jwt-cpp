@@ -6,6 +6,8 @@
 #include <gtest/gtest.h>
 #include <jsoncons/json.hpp>
 
+#include <sstream>
+
 struct jsoncons_traits
 {
 	using json = jsoncons::json;
@@ -23,9 +25,9 @@ struct jsoncons_traits
 
 		if (val.type() == jsoncons::json_type::bool_value) return type::boolean;
 		if (val.type() == jsoncons::json_type::int64_value) return type::integer;
-		if (val.type() == jsoncons::son_type::uint64_value) return type::integer;
-		if (val.type() == json_type::half_value) return type::number;
-		if (val.type() == json_type::double_value) return type::number;
+		if (val.type() == jsoncons::json_type::uint64_value) return type::integer;
+		if (val.type() == jsoncons::json_type::half_value) return type::number;
+		if (val.type() == jsoncons::json_type::double_value) return type::number;
 		if (val.type() == jsoncons::json_type::string_value) return type::string;
 		if (val.type() == jsoncons::json_type::array_value) return type::array;
 		if (val.type() == jsoncons::json_type::object_value) return type::object;
@@ -83,7 +85,9 @@ struct jsoncons_traits
 
 	static std::string serialize(const json &val)
 	{
-		return jsoncons::pretty_print(val);
+		std::ostringstream os;
+        	os << jsoncons::pretty_print(val);
+		return os.str();
 	}
 };
 
