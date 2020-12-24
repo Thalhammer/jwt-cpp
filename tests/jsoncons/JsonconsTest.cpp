@@ -21,6 +21,16 @@ struct jsoncons_traits
 
 		const_iterator cbegin() const noexcept { return begin(); }
 		const_iterator cend() const noexcept { return end(); }
+
+		mapped_type& operator[]( const key_type& key ) {
+			auto ret =  try_emplace(key);
+			return *ret.first;
+		}
+		mapped_type& operator[]( key_type&& key ) {
+			auto ret =  try_emplace(key);
+			return *ret.first;
+		}
+
 	};
 	using array_type = json::array;
 	using string_type = std::string; // current limitation of traits implementation
