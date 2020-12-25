@@ -31,6 +31,24 @@ struct jsoncons_traits
 			return ret.first->value();
 		}
 
+		mapped_type& at(const key_type& key) {
+			auto target = find(key);
+			if(target != end()) {
+				return target.value();
+			}
+
+			std::out_of_range();
+		}
+		
+		const mapped_type& at(const key_type& key) const {
+			auto target = find(key);
+			if(target != end()) {
+				return target.value();
+			}
+
+			std::out_of_range();
+		}
+
 		size_t count( const key_type& key ) const {
 			size_t ret = 0;
 			for (const_iterator first = cbegin(); first != cend(); ++first) {
