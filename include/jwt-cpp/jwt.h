@@ -25,6 +25,7 @@
 #include <utility>
 #include <type_traits>
 #include <system_error>
+#include <algorithm>
 
 #if __cplusplus >= 201402L
 #ifdef __has_include
