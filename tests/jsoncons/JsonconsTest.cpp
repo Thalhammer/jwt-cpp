@@ -14,7 +14,23 @@ struct jsoncons_traits
 	using value_type = json;
 	struct object_type : json::object
 	{
-		using json::object::object;
+		object_type() = default;
+		object_type(const object_type &) = default;
+		object_type(const json::object &o) : json::object(o) {}
+		object_type(object_type &&) = default;
+		object_type(json::object &&o) : json::object(o) {}
+		object_type &operator=(const object_type &o)
+		{
+			// avoid private deleted copy operator= https://github.com/danielaparker/jsoncons/pull/298
+			object_type t(static_cast<const json::object &>(o));
+			(*this) = std::move(t);
+			return *this;
+		}
+		object_type &operator=(object_type &&o) noexcept
+		{
+			swap(o);
+			return *this;
+		}
 
 		using value_type = key_value_type;
 		using mapped_type = key_value_type::value_type; // https://github.com/danielaparker/jsoncons/commit/1b1ceeb572f9a2db6d37cff47ac78a4f14e072e2#commitcomment-45391411
@@ -22,37 +38,46 @@ struct jsoncons_traits
 		const_iterator cbegin() const noexcept { return begin(); }
 		const_iterator cend() const noexcept { return end(); }
 
-		mapped_type& operator[](const key_type& key) {
-			auto ret =  try_emplace(key); // https://github.com/microsoft/STL/blob/2914b4301c59dc7ffc09d16ac6f7979fde2b7f2c/stl/inc/map#L325
+		mapped_type &operator[](const key_type &key)
+		{
+			auto ret = try_emplace(key); // https://github.com/microsoft/STL/blob/2914b4301c59dc7ffc09d16ac6f7979fde2b7f2c/stl/inc/map#L325
 			return ret.first->value();
 		}
-		mapped_type& operator[](key_type&& key) {
-			auto ret =  try_emplace(key);
+		mapped_type &operator[](key_type &&key)
+		{
+			auto ret = try_emplace(key);
 			return ret.first->value();
 		}
 
-		mapped_type& at(const key_type& key) {
+		mapped_type &at(const key_type &key)
+		{
 			auto target = find(key);
-			if(target != end()) {
-				return target.value();
+			if (target != end())
+			{
+				return target->value();
 			}
 
-			std::out_of_range();
+			std::out_of_range("invalid key");
 		}
-		
-		const mapped_type& at(const key_type& key) const {
+
+		const mapped_type &at(const key_type &key) const
+		{
 			auto target = find(key);
-			if(target != end()) {
-				return target.value();
+			if (target != end())
+			{
+				return target->value();
 			}
 
-			std::out_of_range();
+			std::out_of_range("invalid key");
 		}
 
-		size_t count( const key_type& key ) const {
+		size_t count(const key_type &key) const
+		{
 			size_t ret = 0;
-			for (const_iterator first = cbegin(); first != cend(); ++first) {
-				if (first->key() == key) {
+			for (const_iterator first = cbegin(); first != cend(); ++first)
+			{
+				if (first->key() == key)
+				{
 					++ret;
 				}
 			}
@@ -69,15 +94,23 @@ struct jsoncons_traits
 	{
 		using jwt::json::type;
 
-		if (val.type() == jsoncons::json_type::bool_value) return type::boolean;
-		if (val.type() == jsoncons::json_type::int64_value) return type::integer;
-		if (val.type() == jsoncons::json_type::uint64_value) return type::integer;
-		if (val.type() == jsoncons::json_type::half_value) return type::number;
-		if (val.type() == jsoncons::json_type::double_value) return type::number;
-		if (val.type() == jsoncons::json_type::string_value) return type::string;
-		if (val.type() == jsoncons::json_type::array_value) return type::array;
-		if (val.type() == jsoncons::json_type::object_value) return type::object;
-		
+		if (val.type() == jsoncons::json_type::bool_value)
+			return type::boolean;
+		if (val.type() == jsoncons::json_type::int64_value)
+			return type::integer;
+		if (val.type() == jsoncons::json_type::uint64_value)
+			return type::integer;
+		if (val.type() == jsoncons::json_type::half_value)
+			return type::number;
+		if (val.type() == jsoncons::json_type::double_value)
+			return type::number;
+		if (val.type() == jsoncons::json_type::string_value)
+			return type::string;
+		if (val.type() == jsoncons::json_type::array_value)
+			return type::array;
+		if (val.type() == jsoncons::json_type::object_value)
+			return type::object;
+
 		throw std::logic_error("invalid type");
 	}
 
@@ -85,7 +118,7 @@ struct jsoncons_traits
 	{
 		if (val.type() != jsoncons::json_type::object_value)
 			throw std::bad_cast();
-		return object_type(val.object_value(), val.get_allocator());
+		return object_type(val.object_value());
 	}
 
 	static array_type as_array(const json &val)
@@ -132,7 +165,7 @@ struct jsoncons_traits
 	static std::string serialize(const json &val)
 	{
 		std::ostringstream os;
-        	os << jsoncons::pretty_print(val);
+		os << jsoncons::pretty_print(val);
 		return os.str();
 	}
 };
