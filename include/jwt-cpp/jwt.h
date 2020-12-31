@@ -1723,6 +1723,9 @@ namespace jwt {
 
 		template <typename traits_type>
 		using has_key_type = typename traits_type::key_type;
+
+		template <typename traits_type>
+		using has_value_type = typename traits_type::value_type;
 		
 		namespace impl
 		{
@@ -1774,6 +1777,10 @@ namespace jwt {
 				std::is_same<typename object_type::key_type, string_type>::value &&
 				impl::supports_begin<object_type>::value &&
 				impl::supports_cbegin<object_type>::value;
+
+			static constexpr auto supports_claims_transform = value &&
+				is_detected<has_value_type, object_type>::value &&
+				std::is_same<typename object_type::value_type, std::pair<const string_type, value_type>>::value;
 		};
 
 		template<typename value_type, typename array_type>
@@ -2007,15 +2014,17 @@ namespace jwt {
 			};
 
 			/**
-			 * Check if a payload claim is present
+			 * Check if a claim is present in the map
 			 * \return true if claim was present, false otherwise
 			 */
 			bool has_claim(const typename json_traits::string_type& name) const noexcept { return claims.count(name) != 0; }
 
 			/**
-			 * Get payload claim
+			 * Get a claim by name
+			 * 
+			 * \param name the name of the desired claim
 			 * \return Requested claim
-			 * \throw jwt::error::claim_not_present_exception If claim was not present
+			 * \throw jwt::error::claim_not_present_exception if the claim was not present
 			 */
 			basic_claim_t get_claim(const typename json_traits::string_type& name) const {
 				if (!has_claim(name))
@@ -2024,6 +2033,10 @@ namespace jwt {
 			}
 
 			std::unordered_map<typename json_traits::string_type, basic_claim_t> get_claims() const {
+				static_assert(
+					details::is_valid_json_object<typename json_traits::value_type, typename json_traits::string_type, typename json_traits::object_type>::supports_claims_transform,
+					"currently there is a limitation on the internal implemantation of the `object_type` to have an `std::pair` like `value_type`");
+
 				std::unordered_map<typename json_traits::string_type, basic_claim_t> res;			
 				std::transform(claims.begin(), claims.end(), std::inserter(res, res.end()),
 					[](const typename json_traits::object_type::value_type& val){ return std::make_pair(val.first, basic_claim_t{val.second}); });
