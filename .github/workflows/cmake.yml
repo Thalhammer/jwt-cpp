@@ -36,7 +36,7 @@ jobs:
         cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake -DTEST:STRING="defaults-enabled"
         cmake --build .
 
-  costume-install:
+  custom-install:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
