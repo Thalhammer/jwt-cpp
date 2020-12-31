@@ -1736,9 +1736,6 @@ namespace jwt {
 			using has_const_iterator = typename object_type::const_iterator;
 
 			template <typename object_type>
-			using begin_return = decltype(std::declval<object_type>().begin());
-
-			template <typename object_type>
 			using is_begin_signature = typename std::is_same<decltype(std::declval<object_type>().begin()), has_iterator<object_type>>;
 
 			template <typename object_type>
@@ -1748,23 +1745,24 @@ namespace jwt {
 			struct supports_begin {
 				static constexpr auto value =
 					is_detected<has_iterator, object_type>::value &&
+					is_detected<has_const_iterator, object_type>::value &&
 					is_begin_signature<object_type>::value &&
 					is_begin_const_signature<object_type>::value;
 			};
 
 			template <typename object_type>
-			using cbegin_function = decltype(&object_type::cbegin);
+			using is_end_signature = typename std::is_same<decltype(std::declval<object_type>().end()), has_iterator<object_type>>;
 
 			template <typename object_type>
-			using is_cbegin_signature = typename std::is_same<decltype(std::declval<const object_type>().cbegin()), has_const_iterator<object_type>>;
+			using is_end_const_signature = typename std::is_same<decltype(std::declval<const object_type>().end()), has_const_iterator<object_type>>;
 
 			template <typename object_type>
-			struct supports_cbegin {
+			struct supports_end {
 				static constexpr auto value =
+					is_detected<has_iterator, object_type>::value &&
 					is_detected<has_const_iterator, object_type>::value &&
-					is_detected<cbegin_function, object_type>::value &&
-					std::is_member_function_pointer<cbegin_function<object_type>>::value &&
-					is_cbegin_signature<object_type>::value;
+					is_end_signature<object_type>::value &&
+					is_end_const_signature<object_type>::value;
 			};
 		} // namespace impl
 
@@ -1776,7 +1774,7 @@ namespace jwt {
 				is_detected<has_key_type, object_type>::value &&
 				std::is_same<typename object_type::key_type, string_type>::value &&
 				impl::supports_begin<object_type>::value &&
-				impl::supports_cbegin<object_type>::value;
+				impl::supports_end<object_type>::value;
 
 			static constexpr auto supports_claims_transform = value &&
 				is_detected<has_value_type, object_type>::value &&
