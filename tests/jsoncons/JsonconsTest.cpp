@@ -165,7 +165,7 @@ struct jsoncons_traits
 	static std::string serialize(const json &val)
 	{
 		std::ostringstream os;
-		os << jsoncons::pretty_print(val);
+		os << jsoncons::print(val);
 		return os.str();
 	}
 };
