@@ -738,8 +738,8 @@ TEST(TokenTest, GetClaimThrows) {
 	auto token = "eyJhbGciOiJub25lIiwidHlwIjoiSldTIn0.eyJpc3MiOiJhdXRoMCJ9.";
 	auto decoded_token = jwt::decode(token);
 
-	ASSERT_THROW(decoded_token.get_header_claim("test"), std::runtime_error);
-	ASSERT_THROW(decoded_token.get_payload_claim("test"), std::runtime_error);
+	ASSERT_THROW(decoded_token.get_header_claim("test"), jwt::error::claim_not_present_exception);
+	ASSERT_THROW(decoded_token.get_payload_claim("test"), jwt::error::claim_not_present_exception);
 }
 
 TEST(TokenTest, ThrowInvalidKeyLength) {

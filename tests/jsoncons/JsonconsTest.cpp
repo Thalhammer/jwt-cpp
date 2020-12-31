@@ -14,6 +14,9 @@ struct jsoncons_traits
 	using value_type = json;
 	struct object_type : json::object
 	{
+		using value_type = key_value_type;
+		using mapped_type = key_value_type::value_type; // https://github.com/danielaparker/jsoncons/commit/1b1ceeb572f9a2db6d37cff47ac78a4f14e072e2#commitcomment-45391411
+
 		object_type() = default;
 		object_type(const object_type &) = default;
 		object_type(const json::object &o) : json::object(o) {}
@@ -32,12 +35,6 @@ struct jsoncons_traits
 			return *this;
 		}
 
-		using value_type = key_value_type;
-		using mapped_type = key_value_type::value_type; // https://github.com/danielaparker/jsoncons/commit/1b1ceeb572f9a2db6d37cff47ac78a4f14e072e2#commitcomment-45391411
-
-		const_iterator cbegin() const noexcept { return begin(); }
-		const_iterator cend() const noexcept { return end(); }
-
 		mapped_type &operator[](const key_type &key)
 		{
 			auto ret = try_emplace(key); // https://github.com/microsoft/STL/blob/2914b4301c59dc7ffc09d16ac6f7979fde2b7f2c/stl/inc/map#L325
@@ -47,17 +44,6 @@ struct jsoncons_traits
 		{
 			auto ret = try_emplace(key);
 			return ret.first->value();
-		}
-
-		mapped_type &at(const key_type &key)
-		{
-			auto target = find(key);
-			if (target != end())
-			{
-				return target->value();
-			}
-
-			std::out_of_range("invalid key");
 		}
 
 		const mapped_type &at(const key_type &key) const
@@ -74,7 +60,7 @@ struct jsoncons_traits
 		size_t count(const key_type &key) const
 		{
 			size_t ret = 0;
-			for (const_iterator first = cbegin(); first != cend(); ++first)
+			for (const_iterator first = begin(); first != end(); ++first)
 			{
 				if (first->key() == key)
 				{
