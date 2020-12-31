@@ -1727,56 +1727,50 @@ namespace jwt {
 		template <typename traits_type>
 		using has_value_type = typename traits_type::value_type;
 		
-		namespace impl
-		{
-			template <typename object_type>
-			using has_iterator = typename object_type::iterator;
+		template <typename object_type>
+		using has_iterator = typename object_type::iterator;
 
-			template <typename object_type>
-			using has_const_iterator = typename object_type::const_iterator;
+		template <typename object_type>
+		using has_const_iterator = typename object_type::const_iterator;
 
-			template <typename object_type>
-			using is_begin_signature = typename std::is_same<decltype(std::declval<object_type>().begin()), has_iterator<object_type>>;
+		template <typename object_type>
+		using is_begin_signature = typename std::is_same<decltype(std::declval<object_type>().begin()), has_iterator<object_type>>;
 
-			template <typename object_type>
-			using is_begin_const_signature = typename std::is_same<decltype(std::declval<const object_type>().begin()), has_const_iterator<object_type>>;
+		template <typename object_type>
+		using is_begin_const_signature = typename std::is_same<decltype(std::declval<const object_type>().begin()), has_const_iterator<object_type>>;
 
-			template <typename object_type>
-			struct supports_begin {
-				static constexpr auto value =
-					is_detected<has_iterator, object_type>::value &&
-					is_detected<has_const_iterator, object_type>::value &&
-					is_begin_signature<object_type>::value &&
-					is_begin_const_signature<object_type>::value;
-			};
+		template <typename object_type>
+		struct supports_begin {
+			static constexpr auto value =
+				is_detected<has_iterator, object_type>::value &&
+				is_detected<has_const_iterator, object_type>::value &&
+				is_begin_signature<object_type>::value &&
+				is_begin_const_signature<object_type>::value;
+		};
 
-			template <typename object_type>
-			using is_end_signature = typename std::is_same<decltype(std::declval<object_type>().end()), has_iterator<object_type>>;
+		template <typename object_type>
+		using is_end_signature = typename std::is_same<decltype(std::declval<object_type>().end()), has_iterator<object_type>>;
 
-			template <typename object_type>
-			using is_end_const_signature = typename std::is_same<decltype(std::declval<const object_type>().end()), has_const_iterator<object_type>>;
+		template <typename object_type>
+		using is_end_const_signature = typename std::is_same<decltype(std::declval<const object_type>().end()), has_const_iterator<object_type>>;
 
-			template <typename object_type>
-			struct supports_end {
-				static constexpr auto value =
-					is_detected<has_iterator, object_type>::value &&
-					is_detected<has_const_iterator, object_type>::value &&
-					is_end_signature<object_type>::value &&
-					is_end_const_signature<object_type>::value;
-			};
+		template <typename object_type>
+		struct supports_end {
+			static constexpr auto value =
+				is_detected<has_iterator, object_type>::value &&
+				is_detected<has_const_iterator, object_type>::value &&
+				is_end_signature<object_type>::value &&
+				is_end_const_signature<object_type>::value;
+		};
 
-			template <typename object_type, typename string_type>
-			using is_count_signature = typename std::is_integral<decltype(std::declval<const object_type>().count(std::declval<const string_type>()))>;
+		template <typename object_type, typename string_type>
+		using is_count_signature = typename std::is_integral<decltype(std::declval<const object_type>().count(std::declval<const string_type>()))>;
 
-			template <typename object_type, typename value_type, typename string_type>
-			using is_subcription_operator_signature = typename std::is_same<decltype(std::declval<object_type>().operator[](std::declval<const string_type>())), value_type&>;
-
-			// template <typename object_type, typename value_type, typename string_type>
-			// using is_at_signature = typename std::is_same<decltype(std::declval<object_type>().at(std::declval<const string_type>())), value_type&>;
-			
-			template <typename object_type, typename value_type, typename string_type>
-			using is_at_const_signature = typename std::is_same<decltype(std::declval<const object_type>().at(std::declval<const string_type>())), const value_type&>;
-		} // namespace impl
+		template <typename object_type, typename value_type, typename string_type>
+		using is_subcription_operator_signature = typename std::is_same<decltype(std::declval<object_type>().operator[](std::declval<const string_type>())), value_type&>;
+		
+		template <typename object_type, typename value_type, typename string_type>
+		using is_at_const_signature = typename std::is_same<decltype(std::declval<const object_type>().at(std::declval<const string_type>())), const value_type&>;
 
 		template<typename value_type, typename string_type, typename object_type>
 		struct is_valid_json_object {
@@ -1785,11 +1779,11 @@ namespace jwt {
 				std::is_same<typename object_type::mapped_type, value_type>::value &&
 				is_detected<has_key_type, object_type>::value &&
 				std::is_same<typename object_type::key_type, string_type>::value &&
-				impl::supports_begin<object_type>::value &&
-				impl::supports_end<object_type>::value &&
-				impl::is_count_signature<object_type, string_type>::value &&
-				impl::is_subcription_operator_signature<object_type, value_type, string_type>::value &&
-				impl::is_at_const_signature<object_type, value_type, string_type>::value;
+				supports_begin<object_type>::value &&
+				supports_end<object_type>::value &&
+				is_count_signature<object_type, string_type>::value &&
+				is_subcription_operator_signature<object_type, value_type, string_type>::value &&
+				is_at_const_signature<object_type, value_type, string_type>::value;
 
 			static constexpr auto supports_claims_transform = value &&
 				is_detected<has_value_type, object_type>::value &&
