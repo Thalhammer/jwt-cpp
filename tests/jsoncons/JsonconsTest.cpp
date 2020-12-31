@@ -198,6 +198,8 @@ TEST(JsonconsTest, AudienceAsString)
 	ASSERT_FALSE(decoded.has_not_before());
 	ASSERT_FALSE(decoded.has_issued_at());
 	ASSERT_FALSE(decoded.has_id());
+	ASSERT_FALSE(decoded.get_payload_claims().empty())
+	ASSERT_FALSE(decoded.get_header_claims().empty())
 
 	ASSERT_EQ("HS256", decoded.get_algorithm());
 	ASSERT_EQ("JWT", decoded.get_type());
