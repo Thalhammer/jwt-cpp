@@ -1,10 +1,11 @@
-Conan example based on CMake
+Conan example
 
 
 In the current directory on Linux environment
 ```
 mkdir build && cd build
-cmake .. && make
+conan install .. && cmake .. 
+cmake --build .
 ```
 run executable
 ```
