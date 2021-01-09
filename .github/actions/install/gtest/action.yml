@@ -3,9 +3,7 @@ description: Install and setup GTest for linking and building test application
 runs:
   using: composite
   steps:
-  - run: sudo apt update
-    shell: bash
-  - run: sudo apt install libgtest-dev lcov
+  - run: sudo apt-get install libgtest-dev lcov
     shell: bash
   - run: (cd /usr/src/gtest && sudo `which cmake` .)
     shell: bash

@@ -25,6 +25,7 @@
 #include <utility>
 #include <type_traits>
 #include <system_error>
+#include <algorithm>
 
 #if __cplusplus >= 201402L
 #ifdef __has_include
@@ -1717,11 +1718,76 @@ namespace jwt {
 				// TODO(cmcarthur): Stream operators
 		};
 
+		template <typename traits_type>
+		using has_mapped_type = typename traits_type::mapped_type;
+
+		template <typename traits_type>
+		using has_key_type = typename traits_type::key_type;
+
+		template <typename traits_type>
+		using has_value_type = typename traits_type::value_type;
+		
+		template <typename object_type>
+		using has_iterator = typename object_type::iterator;
+
+		template <typename object_type>
+		using has_const_iterator = typename object_type::const_iterator;
+
+		template <typename object_type>
+		using is_begin_signature = typename std::is_same<decltype(std::declval<object_type>().begin()), has_iterator<object_type>>;
+
+		template <typename object_type>
+		using is_begin_const_signature = typename std::is_same<decltype(std::declval<const object_type>().begin()), has_const_iterator<object_type>>;
+
+		template <typename object_type>
+		struct supports_begin {
+			static constexpr auto value =
+				is_detected<has_iterator, object_type>::value &&
+				is_detected<has_const_iterator, object_type>::value &&
+				is_begin_signature<object_type>::value &&
+				is_begin_const_signature<object_type>::value;
+		};
+
+		template <typename object_type>
+		using is_end_signature = typename std::is_same<decltype(std::declval<object_type>().end()), has_iterator<object_type>>;
+
+		template <typename object_type>
+		using is_end_const_signature = typename std::is_same<decltype(std::declval<const object_type>().end()), has_const_iterator<object_type>>;
+
+		template <typename object_type>
+		struct supports_end {
+			static constexpr auto value =
+				is_detected<has_iterator, object_type>::value &&
+				is_detected<has_const_iterator, object_type>::value &&
+				is_end_signature<object_type>::value &&
+				is_end_const_signature<object_type>::value;
+		};
+
+		template <typename object_type, typename string_type>
+		using is_count_signature = typename std::is_integral<decltype(std::declval<const object_type>().count(std::declval<const string_type>()))>;
+
+		template <typename object_type, typename value_type, typename string_type>
+		using is_subcription_operator_signature = typename std::is_same<decltype(std::declval<object_type>().operator[](std::declval<const string_type>())), value_type&>;
+		
+		template <typename object_type, typename value_type, typename string_type>
+		using is_at_const_signature = typename std::is_same<decltype(std::declval<const object_type>().at(std::declval<const string_type>())), const value_type&>;
+
 		template<typename value_type, typename string_type, typename object_type>
 		struct is_valid_json_object {
 			static constexpr auto value =
+				is_detected<has_mapped_type, object_type>::value &&
 				std::is_same<typename object_type::mapped_type, value_type>::value &&
-				std::is_same<typename object_type::key_type, string_type>::value;
+				is_detected<has_key_type, object_type>::value &&
+				std::is_same<typename object_type::key_type, string_type>::value &&
+				supports_begin<object_type>::value &&
+				supports_end<object_type>::value &&
+				is_count_signature<object_type, string_type>::value &&
+				is_subcription_operator_signature<object_type, value_type, string_type>::value &&
+				is_at_const_signature<object_type, value_type, string_type>::value;
+
+			static constexpr auto supports_claims_transform = value &&
+				is_detected<has_value_type, object_type>::value &&
+				std::is_same<typename object_type::value_type, std::pair<const string_type, value_type>>::value;
 		};
 
 		template<typename value_type, typename array_type>
@@ -1904,16 +1970,100 @@ namespace jwt {
 			}
 	};
 
+	namespace error {
+		struct invalid_json_exception : public std::runtime_error {
+			invalid_json_exception() : runtime_error("invalid json"){}
+		};
+		struct claim_not_present_exception : public std::out_of_range {
+			claim_not_present_exception() : out_of_range("claim not found"){}
+		};
+	}
+
+	namespace details {
+		template<typename json_traits>
+		class map_of_claims{
+			typename json_traits::object_type claims;
+
+		public:
+			using basic_claim_t = basic_claim<json_traits>;
+			using iterator = typename json_traits::object_type::iterator;
+			using const_iterator = typename json_traits::object_type::const_iterator;
+
+			map_of_claims() = default;
+			map_of_claims(const map_of_claims&) = default;
+			map_of_claims(map_of_claims&&) = default;
+			map_of_claims& operator=(const map_of_claims&) = default;
+			map_of_claims& operator=(map_of_claims&&) = default;
+
+			map_of_claims(typename json_traits::object_type json) : claims(std::move(json)) {}
+
+			iterator begin() { return claims.begin(); }
+			iterator end() { return claims.end(); }
+			const_iterator cbegin() const { return claims.begin(); }
+			const_iterator cend() const { return claims.end(); }
+			const_iterator begin() const { return claims.begin(); }
+			const_iterator end() const { return claims.end(); }
+
+			/**
+			 * \brief Parse a JSON string into a map of claims 
+			 * 
+			 * The implication is that a "map of claims" is identic to a JSON object
+			 * 
+			 * \param str JSON data to be parse as an object
+			 * \return content as JSON object
+			 */
+			static typename json_traits::object_type parse_claims(const typename json_traits::string_type& str) {
+				typename json_traits::value_type val;
+				if (!json_traits::parse(val, str))
+					throw error::invalid_json_exception();
+					
+				return json_traits::as_object(val);
+			};
+
+			/**
+			 * Check if a claim is present in the map
+			 * \return true if claim was present, false otherwise
+			 */
+			bool has_claim(const typename json_traits::string_type& name) const noexcept { return claims.count(name) != 0; }
+
+			/**
+			 * Get a claim by name
+			 * 
+			 * \param name the name of the desired claim
+			 * \return Requested claim
+			 * \throw jwt::error::claim_not_present_exception if the claim was not present
+			 */
+			basic_claim_t get_claim(const typename json_traits::string_type& name) const {
+				if (!has_claim(name))
+					throw error::claim_not_present_exception();
+				return basic_claim_t{ claims.at(name) };
+			}
+
+			std::unordered_map<typename json_traits::string_type, basic_claim_t> get_claims() const {
+				static_assert(
+					details::is_valid_json_object<typename json_traits::value_type, typename json_traits::string_type, typename json_traits::object_type>::supports_claims_transform,
+					"currently there is a limitation on the internal implemantation of the `object_type` to have an `std::pair` like `value_type`");
+
+				std::unordered_map<typename json_traits::string_type, basic_claim_t> res;			
+				std::transform(claims.begin(), claims.end(), std::inserter(res, res.end()),
+					[](const typename json_traits::object_type::value_type& val){ return std::make_pair(val.first, basic_claim_t{val.second}); });
+				return res;
+			}
+		};
+	}
+
 	/**
 	 * Base class that represents a token payload.
 	 * Contains Convenience accessors for common claims.
 	 */
 	template<typename json_traits>
 	class payload {
-		using basic_claim_t = basic_claim<json_traits>;
 	protected:
-		std::unordered_map<typename json_traits::string_type, basic_claim_t> payload_claims;
+		details::map_of_claims<json_traits> payload_claims;
+	
 	public:
+		using basic_claim_t = basic_claim<json_traits>;
+
 		/**
 		 * Check if issuer is present ("iss")
 		 * \return true if present, false otherwise
@@ -2008,17 +2158,13 @@ namespace jwt {
 		 * Check if a payload claim is present
 		 * \return true if claim was present, false otherwise
 		 */
-		bool has_payload_claim(const typename json_traits::string_type& name) const noexcept { return payload_claims.count(name) != 0; }
+		bool has_payload_claim(const typename json_traits::string_type& name) const noexcept { return payload_claims.has_claim(name); }
 		/**
 		 * Get payload claim
 		 * \return Requested claim
 		 * \throw std::runtime_error If claim was not present
 		 */
-		basic_claim_t get_payload_claim(const typename json_traits::string_type& name) const {
-			if (!has_payload_claim(name))
-				throw std::runtime_error("claim not found");
-			return payload_claims.at(name);
-		}
+		basic_claim_t get_payload_claim(const typename json_traits::string_type& name) const { return payload_claims.get_claim(name); }
 	};
 
 	/**
@@ -2027,10 +2173,10 @@ namespace jwt {
 	 */
 	template<typename json_traits>
 	class header {
-		using basic_claim_t = basic_claim<json_traits>;
 	protected:
-		std::unordered_map<typename json_traits::string_type, basic_claim_t> header_claims;
+		details::map_of_claims<json_traits> header_claims;
 	public:
+		using basic_claim_t = basic_claim<json_traits>;
 		/**
 		 * Check if algortihm is present ("alg")
 		 * \return true if present, false otherwise
@@ -2083,17 +2229,13 @@ namespace jwt {
 		 * Check if a header claim is present
 		 * \return true if claim was present, false otherwise
 		 */
-		bool has_header_claim(const typename json_traits::string_type& name) const noexcept { return header_claims.count(name) != 0; }
+		bool has_header_claim(const typename json_traits::string_type& name) const noexcept { return header_claims.has_claim(name); }
 		/**
 		 * Get header claim
 		 * \return Requested claim
 		 * \throw std::runtime_error If claim was not present
 		 */
-		basic_claim_t get_header_claim(const typename json_traits::string_type& name) const {
-			if (!has_header_claim(name))
-				throw std::runtime_error("claim not found");
-			return header_claims.at(name);
-		}
+		basic_claim_t get_header_claim(const typename json_traits::string_type& name) const { return header_claims.get_claim(name); }
 	};
 
 	/**
@@ -2117,6 +2259,7 @@ namespace jwt {
 		/// Unmodified signature part in base64
 		typename json_traits::string_type signature_base64;
 	public:
+		using basic_claim_t = basic_claim<json_traits>;
 	#ifndef JWT_DISABLE_BASE64
 		/**
 		 * \brief Parses a given token
@@ -2162,22 +2305,8 @@ namespace jwt {
 			payload = decode(payload_base64);
 			signature = decode(signature_base64);
 
-			auto parse_claims = [](const typename json_traits::string_type& str) {
-				using basic_claim_t = basic_claim<json_traits>;
-				std::unordered_map<typename json_traits::string_type, basic_claim_t> res;
-				typename json_traits::value_type val;
-				if (!json_traits::parse(val, str))
-					throw std::runtime_error("Invalid json");
-
-				for (const auto& e : json_traits::as_object(val)) {
-					res.emplace(e.first, basic_claim_t(e.second));
-				}
-
-				return res;
-			};
-
-			this->header_claims = parse_claims(header);
-			this->payload_claims = parse_claims(payload);
+			this->header_claims = details::map_of_claims<json_traits>::parse_claims(header);
+			this->payload_claims = details::map_of_claims<json_traits>::parse_claims(payload);
 		}
 
 		/**
@@ -2219,15 +2348,15 @@ namespace jwt {
 		 * Get all payload claims
 		 * \return map of claims
 		 */
-		std::unordered_map<typename json_traits::string_type, basic_claim<json_traits>> get_payload_claims() const {
-			return this->payload_claims;
+		std::unordered_map<typename json_traits::string_type, basic_claim_t> get_payload_claims() const {
+			return this->payload_claims.get_claims();
 		}
 		/**
 		 * Get all header claims
 		 * \return map of claims
 		 */
-		std::unordered_map<typename json_traits::string_type, basic_claim<json_traits>> get_header_claims() const {
-			return this->header_claims;
+		std::unordered_map<typename json_traits::string_type, basic_claim_t> get_header_claims() const {
+			return this->header_claims.get_claims();
 		}
 	};
 
@@ -2399,7 +2528,7 @@ namespace jwt {
 		 */
 		template<typename Algo, typename Encode>
 		typename json_traits::string_type sign(const Algo& algo, Encode encode, std::error_code& ec) const {
-			typename json_traits::object_type obj_header = header_claims;
+			typename json_traits::object_type obj_header = header_claims; // make a copy such that a builder can be re-used
 			if(header_claims.count("alg") == 0)
 				obj_header["alg"] = typename json_traits::value_type(algo.name());
 

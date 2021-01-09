@@ -22,9 +22,9 @@ jobs:
     - name: install cmake
       uses: lukka/get-cmake@latest
     - name: install gtest
-      uses: ./.github/actions/install-gtest
+      uses: ./.github/actions/install/gtest
     - name: install libressl
-      uses: ./.github/actions/install-libressl
+      uses: ./.github/actions/install/libressl
       with:
         version: ${{ matrix.libressl }}
 
