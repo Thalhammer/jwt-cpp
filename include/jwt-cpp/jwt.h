@@ -1842,9 +1842,9 @@ namespace jwt {
 
 			basic_claim() = default;
 			basic_claim(const basic_claim&) = default;
-			basic_claim(basic_claim&&) noexcept = default;
+			basic_claim(basic_claim&&) = default;
 			basic_claim& operator=(const basic_claim&) = default;
-			basic_claim& operator=(basic_claim&&) noexcept = default;
+			basic_claim& operator=(basic_claim&&) = default;
 			~basic_claim() = default;
 
 			JWT_CLAIM_EXPLICIT basic_claim(typename json_traits::string_type s)
