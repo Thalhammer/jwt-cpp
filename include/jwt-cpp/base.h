@@ -18,18 +18,18 @@
 namespace jwt {
 	/**
 	 * \brief character maps when encoding and decoding
-	 */ 
+	 */
 	namespace alphabet {
 		/**
 		 * \brief valid list of characted when working with [Base64](https://tools.ietf.org/html/rfc3548)
-		 */ 
+		 */
 		struct base64 {
 			static const std::array<char, 64>& data() {
 				static constexpr std::array<char, 64> data {
-						{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
-						'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
-						'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-						'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'}
+					{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+					'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+					'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+					'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'}
 				};
 				return data;
 			}
@@ -40,14 +40,14 @@ namespace jwt {
 		};
 		/**
 		 * \brief valid list of characted when working with [Base64URL](https://tools.ietf.org/html/rfc4648)
-		 */ 
+		 */
 		struct base64url {
 			static const std::array<char, 64>& data() {
 				static constexpr std::array<char, 64> data {
-						{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
-						'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
-						'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-						'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'}
+					{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+					'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+					'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+					'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'}
 				};
 				return data;
 			}
@@ -60,7 +60,7 @@ namespace jwt {
 
 	/**
 	 * \brief Alphabet generic methods for working with encoding/decoding the base64 family
-	 */ 
+	 */
 	class base {
 	public:
 		template<typename T>
@@ -198,7 +198,7 @@ namespace jwt {
 
 			return res;
 		}
-		
+
 		static std::string pad(const std::string& base, const std::string& fill) {
 			std::string padding;
 			switch (base.size() % 4) {
