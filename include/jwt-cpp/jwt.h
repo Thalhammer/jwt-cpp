@@ -1726,7 +1726,7 @@ namespace jwt {
 
 		template <typename traits_type>
 		using has_value_type = typename traits_type::value_type;
-		
+
 		template <typename object_type>
 		using has_iterator = typename object_type::iterator;
 
@@ -1768,7 +1768,7 @@ namespace jwt {
 
 		template <typename object_type, typename value_type, typename string_type>
 		using is_subcription_operator_signature = typename std::is_same<decltype(std::declval<object_type>().operator[](std::declval<const string_type>())), value_type&>;
-		
+
 		template <typename object_type, typename value_type, typename string_type>
 		using is_at_const_signature = typename std::is_same<decltype(std::declval<const object_type>().at(std::declval<const string_type>())), const value_type&>;
 
@@ -2005,10 +2005,10 @@ namespace jwt {
 			const_iterator end() const { return claims.end(); }
 
 			/**
-			 * \brief Parse a JSON string into a map of claims 
-			 * 
+			 * \brief Parse a JSON string into a map of claims
+			 *
 			 * The implication is that a "map of claims" is identic to a JSON object
-			 * 
+			 *
 			 * \param str JSON data to be parse as an object
 			 * \return content as JSON object
 			 */
@@ -2016,7 +2016,7 @@ namespace jwt {
 				typename json_traits::value_type val;
 				if (!json_traits::parse(val, str))
 					throw error::invalid_json_exception();
-					
+
 				return json_traits::as_object(val);
 			};
 
@@ -2028,7 +2028,7 @@ namespace jwt {
 
 			/**
 			 * Get a claim by name
-			 * 
+			 *
 			 * \param name the name of the desired claim
 			 * \return Requested claim
 			 * \throw jwt::error::claim_not_present_exception if the claim was not present
@@ -2044,7 +2044,7 @@ namespace jwt {
 					details::is_valid_json_object<typename json_traits::value_type, typename json_traits::string_type, typename json_traits::object_type>::supports_claims_transform,
 					"currently there is a limitation on the internal implemantation of the `object_type` to have an `std::pair` like `value_type`");
 
-				std::unordered_map<typename json_traits::string_type, basic_claim_t> res;			
+				std::unordered_map<typename json_traits::string_type, basic_claim_t> res;
 				std::transform(claims.begin(), claims.end(), std::inserter(res, res.end()),
 					[](const typename json_traits::object_type::value_type& val){ return std::make_pair(val.first, basic_claim_t{val.second}); });
 				return res;
@@ -2060,7 +2060,7 @@ namespace jwt {
 	class payload {
 	protected:
 		details::map_of_claims<json_traits> payload_claims;
-	
+
 	public:
 		using basic_claim_t = basic_claim<json_traits>;
 
