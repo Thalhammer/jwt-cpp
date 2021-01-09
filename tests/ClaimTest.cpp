@@ -130,3 +130,20 @@ TEST(ClaimTest, PicoJSONTraitsAsDouble) {
 	ASSERT_EQ(jwt::picojson_traits::get_type(val), jwt::json::type::number);
 }
 
+TEST(ClaimTest, MapOfClaim) {
+	using map = jwt::details::map_of_claims<jwt::picojson_traits>;
+	ASSERT_THROW(map::parse_claims(R"##(__ not json __)##"), jwt::error::invalid_json_exception);
+	const map claims{ map::parse_claims(R"##({ "array": [1], "string" : "hello world", "number": 9.9, "bool": true})##") };
+
+	ASSERT_TRUE(claims.has_claim("array"));
+	ASSERT_TRUE(claims.has_claim("string"));
+	ASSERT_TRUE(claims.has_claim("number"));
+	ASSERT_TRUE(claims.has_claim("bool"));
+	ASSERT_FALSE(claims.has_claim("__missing__"));
+
+	ASSERT_EQ(map::basic_claim_t{claims.get_claim("array").as_array().at(0)}.as_int(), (int)1);
+	ASSERT_EQ(claims.get_claim("string").as_string(), "hello world");
+	ASSERT_EQ(claims.get_claim("number").as_number(), 9.9);
+	ASSERT_EQ(claims.get_claim("bool").as_bool(), true);
+	ASSERT_THROW(claims.get_claim("__missing__"), jwt::error::claim_not_present_exception);
+}

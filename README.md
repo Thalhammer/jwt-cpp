@@ -152,7 +152,7 @@ struct my_favorite_json_library_traits {
 
     // serilization and parsing
     static bool parse(value_type &val, string_type str);
-    static string_type serialize(const value_type &val);
+    static string_type serialize(const value_type &val); // with no extra whitespace, padding or indentation
 };
 ```
 

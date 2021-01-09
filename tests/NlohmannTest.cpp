@@ -10,29 +10,29 @@ struct nlohmann_traits {
 	using object_type = json::object_t;
 	using array_type = json::array_t;
 	using string_type = std::string; // current limitation of traits implementation
-    	using number_type = json::number_float_t;
-    	using integer_type = json::number_integer_t;
-    	using boolean_type = json::boolean_t;
+	using number_type = json::number_float_t;
+	using integer_type = json::number_integer_t;
+	using boolean_type = json::boolean_t;
 	
 	static jwt::json::type get_type(const json &val) {
 		using jwt::json::type;
 
 		if (val.type() == json::value_t::boolean)
 			return type::boolean;
-		else if (val.type() == json::value_t::number_integer)
+		if (val.type() == json::value_t::number_integer)
 			return type::integer;
-		else if (val.type() == json::value_t::number_unsigned) // nlohmann internally tracks two types of integers
+		if (val.type() == json::value_t::number_unsigned) // nlohmann internally tracks two types of integers
 			return type::integer;
-		else if (val.type() == json::value_t::number_float)
+		if (val.type() == json::value_t::number_float)
 			return type::number;
-		else if (val.type() == json::value_t::string)
+		if (val.type() == json::value_t::string)
 			return type::string;
-		else if (val.type() == json::value_t::array)
+		if (val.type() == json::value_t::array)
 			return type::array;
-		else if (val.type() == json::value_t::object)
+		if (val.type() == json::value_t::object)
 			return type::object;
-		else
-			throw std::logic_error("invalid type");
+		
+		throw std::logic_error("invalid type");
 	}
 
 	static json::object_t as_object(const json &val) {
@@ -95,7 +95,6 @@ TEST(NlohmannTest, BasicClaims) {
 }
 
 TEST(NlohmannTest, AudienceAsString) {
-
 	std::string token =
 			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0."
 			"WZnM3SIiSRHsbO3O7Z2bmIzTJ4EC32HRBKfLznHhrh4";
@@ -112,6 +111,8 @@ TEST(NlohmannTest, AudienceAsString) {
 	ASSERT_FALSE(decoded.has_not_before());
 	ASSERT_FALSE(decoded.has_issued_at());
 	ASSERT_FALSE(decoded.has_id());
+	ASSERT_FALSE(decoded.get_payload_claims().empty());
+	ASSERT_FALSE(decoded.get_header_claims().empty());
 
 	ASSERT_EQ("HS256", decoded.get_algorithm());
 	ASSERT_EQ("JWT", decoded.get_type());
