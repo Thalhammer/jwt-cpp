@@ -9,6 +9,7 @@ on:
       - "CMakeLists.txt"
       - "include/jwt-cpp/**"
       - "tests/*"
+      - ".github/actions/**"
       - ".github/workflows/libressl.yml"
 
 jobs:
@@ -19,20 +20,16 @@ jobs:
         libressl: ["3.3.0", "3.2.2"]
     steps:
       - uses: actions/checkout@v2
-      - name: install cmake
-        uses: lukka/get-cmake@latest
-      - name: install gtest
-        uses: ./.github/actions/install/gtest
-      - name: install libressl
-        uses: ./.github/actions/install/libressl
+      - uses: lukka/get-cmake@latest
+      - uses: ./.github/actions/install/gtest
+      - uses: ./.github/actions/install/libressl
         with:
           version: ${{ matrix.libressl }}
 
       - name: configure
         run: cmake . -DJWT_BUILD_TESTS=ON -DJWT_SSL_LIBRARY:STRING=LibreSSL
 
-      - name: make
-        run: make
+      - run: make
 
       - name: test
         run: ./tests/jwt-cpp-test

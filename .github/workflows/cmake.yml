@@ -1,4 +1,4 @@
-name: CMake Integration CI
+name: CMake CI
 
 on:
   push:
@@ -9,6 +9,7 @@ on:
       - "CMakeLists.txt"
       - "include/jwt-cpp/**"
       - "tests/cmake/**"
+      - ".github/actions/**"
       - ".github/workflows/cmake.yml"
 
 jobs:

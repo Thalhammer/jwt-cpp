@@ -5,6 +5,12 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
+    paths:
+      - "CMakeLists.txt"
+      - "include/jwt-cpp/**"
+      - "tests/jsoncons/**"
+      - ".github/actions/**"
+      - ".github/workflows/traits.yml"
 
 jobs:
   jsoncons:
@@ -22,7 +28,7 @@ jobs:
           cmake .. -DJWT_BUILD_EXAMPLES=OFF
           sudo make install
 
-      - name: configure
+      - name: test
         run: |
           cd tests/jsoncons
           cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake
