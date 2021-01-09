@@ -321,6 +321,7 @@ namespace jwt {
 		}
 	}
 
+	// FIXME: Remove
 	// Keep backward compat at least for a couple of revisions
 	using error::signature_verification_exception;
 	using error::signature_generation_exception;
