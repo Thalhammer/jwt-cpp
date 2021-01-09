@@ -1,5 +1,5 @@
-#include <gtest/gtest.h>
 #include "jwt-cpp/jwt.h"
+#include <gtest/gtest.h>
 
 TEST(TokenFormatTest, MissingDot) {
 	ASSERT_THROW(jwt::decode("eyJhbGciOiJub25lIiwidHlwIjoiSldTIn0.eyJpc3MiOiJhdXRoMCJ9"), std::invalid_argument);

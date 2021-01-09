@@ -2,11 +2,11 @@ cmake_minimum_required(VERSION 3.8)
 project(jwt-cpp-examples)
 
 if(NOT TARGET jwt-cpp)
-    find_package(jwt-cpp CONFIG REQUIRED)
+  find_package(jwt-cpp CONFIG REQUIRED)
 endif()
 
 if(JWT_DISABLE_PICOJSON)
-    message(FATAL_ERROR "examples require picojson to be available!")
+  message(FATAL_ERROR "examples require picojson to be available!")
 endif()
 
 add_executable(print-claims print-claims.cpp)

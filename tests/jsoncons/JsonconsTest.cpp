@@ -8,64 +8,51 @@
 
 #include <sstream>
 
-struct jsoncons_traits
-{
+struct jsoncons_traits {
 	using json = jsoncons::json;
 	using value_type = json;
-	struct object_type : json::object
-	{
+	struct object_type : json::object {
 		using value_type = key_value_type;
-		using mapped_type = key_value_type::value_type; // https://github.com/danielaparker/jsoncons/commit/1b1ceeb572f9a2db6d37cff47ac78a4f14e072e2#commitcomment-45391411
+		using mapped_type = key_value_type::
+			value_type; // https://github.com/danielaparker/jsoncons/commit/1b1ceeb572f9a2db6d37cff47ac78a4f14e072e2#commitcomment-45391411
 
 		object_type() = default;
-		object_type(const object_type &) = default;
-		object_type(const json::object &o) : json::object(o) {}
-		object_type(object_type &&) = default;
-		object_type(json::object &&o) : json::object(o) {}
-		object_type &operator=(const object_type &o)
-		{
+		object_type(const object_type&) = default;
+		object_type(const json::object& o) : json::object(o) {}
+		object_type(object_type&&) = default;
+		object_type(json::object&& o) : json::object(o) {}
+		object_type& operator=(const object_type& o) {
 			// avoid private deleted copy operator= https://github.com/danielaparker/jsoncons/pull/298
-			object_type t(static_cast<const json::object &>(o));
+			object_type t(static_cast<const json::object&>(o));
 			(*this) = std::move(t);
 			return *this;
 		}
-		object_type &operator=(object_type &&o) noexcept
-		{
+		object_type& operator=(object_type&& o) noexcept {
 			swap(o);
 			return *this;
 		}
 
-		mapped_type &operator[](const key_type &key)
-		{
-			auto ret = try_emplace(key); // https://github.com/microsoft/STL/blob/2914b4301c59dc7ffc09d16ac6f7979fde2b7f2c/stl/inc/map#L325
+		mapped_type& operator[](const key_type& key) {
+			auto ret = try_emplace(
+				key); // https://github.com/microsoft/STL/blob/2914b4301c59dc7ffc09d16ac6f7979fde2b7f2c/stl/inc/map#L325
 			return ret.first->value();
 		}
-		mapped_type &operator[](key_type &&key)
-		{
+		mapped_type& operator[](key_type&& key) {
 			auto ret = try_emplace(key);
 			return ret.first->value();
 		}
 
-		const mapped_type &at(const key_type &key) const
-		{
+		const mapped_type& at(const key_type& key) const {
 			auto target = find(key);
-			if (target != end())
-			{
-				return target->value();
-			}
+			if (target != end()) { return target->value(); }
 
 			std::out_of_range("invalid key");
 		}
 
-		size_t count(const key_type &key) const
-		{
+		size_t count(const key_type& key) const {
 			size_t ret = 0;
-			for (const_iterator first = begin(); first != end(); ++first)
-			{
-				if (first->key() == key)
-				{
-					++ret;
-				}
+			for (const_iterator first = begin(); first != end(); ++first) {
+				if (first->key() == key) { ++ret; }
 			}
 			return ret;
 		}
@@ -76,88 +63,64 @@ struct jsoncons_traits
 	using integer_type = int64_t;
 	using boolean_type = bool;
 
-	static jwt::json::type get_type(const json &val)
-	{
+	static jwt::json::type get_type(const json& val) {
 		using jwt::json::type;
 
-		if (val.type() == jsoncons::json_type::bool_value)
-			return type::boolean;
-		if (val.type() == jsoncons::json_type::int64_value)
-			return type::integer;
-		if (val.type() == jsoncons::json_type::uint64_value)
-			return type::integer;
-		if (val.type() == jsoncons::json_type::half_value)
-			return type::number;
-		if (val.type() == jsoncons::json_type::double_value)
-			return type::number;
-		if (val.type() == jsoncons::json_type::string_value)
-			return type::string;
-		if (val.type() == jsoncons::json_type::array_value)
-			return type::array;
-		if (val.type() == jsoncons::json_type::object_value)
-			return type::object;
+		if (val.type() == jsoncons::json_type::bool_value) return type::boolean;
+		if (val.type() == jsoncons::json_type::int64_value) return type::integer;
+		if (val.type() == jsoncons::json_type::uint64_value) return type::integer;
+		if (val.type() == jsoncons::json_type::half_value) return type::number;
+		if (val.type() == jsoncons::json_type::double_value) return type::number;
+		if (val.type() == jsoncons::json_type::string_value) return type::string;
+		if (val.type() == jsoncons::json_type::array_value) return type::array;
+		if (val.type() == jsoncons::json_type::object_value) return type::object;
 
 		throw std::logic_error("invalid type");
 	}
 
-	static object_type as_object(const json &val)
-	{
-		if (val.type() != jsoncons::json_type::object_value)
-			throw std::bad_cast();
+	static object_type as_object(const json& val) {
+		if (val.type() != jsoncons::json_type::object_value) throw std::bad_cast();
 		return object_type(val.object_value());
 	}
 
-	static array_type as_array(const json &val)
-	{
-		if (val.type() != jsoncons::json_type::array_value)
-			throw std::bad_cast();
+	static array_type as_array(const json& val) {
+		if (val.type() != jsoncons::json_type::array_value) throw std::bad_cast();
 		return val.array_value();
 	}
 
-	static string_type as_string(const json &val)
-	{
-		if (val.type() != jsoncons::json_type::string_value)
-			throw std::bad_cast();
+	static string_type as_string(const json& val) {
+		if (val.type() != jsoncons::json_type::string_value) throw std::bad_cast();
 		return val.as_string();
 	}
 
-	static number_type as_number(const json &val)
-	{
-		if (get_type(val) != jwt::json::type::number)
-			throw std::bad_cast();
+	static number_type as_number(const json& val) {
+		if (get_type(val) != jwt::json::type::number) throw std::bad_cast();
 		return val.as_double();
 	}
 
-	static integer_type as_int(const json &val)
-	{
-		if (get_type(val) != jwt::json::type::integer)
-			throw std::bad_cast();
+	static integer_type as_int(const json& val) {
+		if (get_type(val) != jwt::json::type::integer) throw std::bad_cast();
 		return val.as<integer_type>();
 	}
 
-	static boolean_type as_bool(const json &val)
-	{
-		if (val.type() != jsoncons::json_type::bool_value)
-			throw std::bad_cast();
+	static boolean_type as_bool(const json& val) {
+		if (val.type() != jsoncons::json_type::bool_value) throw std::bad_cast();
 		return val.as_bool();
 	}
 
-	static bool parse(json &val, std::string str)
-	{
+	static bool parse(json& val, std::string str) {
 		val = json::parse(str);
 		return true;
 	}
 
-	static std::string serialize(const json &val)
-	{
+	static std::string serialize(const json& val) {
 		std::ostringstream os;
 		os << jsoncons::print(val);
 		return os.str();
 	}
 };
 
-TEST(JsonconsTest, BasicClaims)
-{
+TEST(JsonconsTest, BasicClaims) {
 	using jsoncons_claim = jwt::basic_claim<jsoncons_traits>;
 
 	const auto string = jsoncons_claim(std::string("string"));
@@ -165,12 +128,10 @@ TEST(JsonconsTest, BasicClaims)
 	const auto integer = jsoncons_claim(159816816);
 }
 
-TEST(JsonconsTest, AudienceAsString)
-{
+TEST(JsonconsTest, AudienceAsString) {
 
-	std::string token =
-		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0."
-		"WZnM3SIiSRHsbO3O7Z2bmIzTJ4EC32HRBKfLznHhrh4";
+	std::string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0."
+						"WZnM3SIiSRHsbO3O7Z2bmIzTJ4EC32HRBKfLznHhrh4";
 	auto decoded = jwt::decode<jsoncons_traits>(token);
 
 	ASSERT_TRUE(decoded.has_algorithm());
@@ -192,34 +153,29 @@ TEST(JsonconsTest, AudienceAsString)
 	ASSERT_EQ("test", *aud.begin());
 }
 
-TEST(JsonconsTest, SetArray)
-{
-	std::vector<int64_t> vect = {
-		100,
-		20,
-		10};
+TEST(JsonconsTest, SetArray) {
+	std::vector<int64_t> vect = {100, 20, 10};
 	auto token = jwt::create<jsoncons_traits>()
 					 .set_payload_claim("test", jwt::basic_claim<jsoncons_traits>(vect.begin(), vect.end()))
 					 .sign(jwt::algorithm::none{});
 	ASSERT_EQ(token, "eyJhbGciOiJub25lIn0.eyJ0ZXN0IjpbMTAwLDIwLDEwXX0.");
 }
 
-TEST(JsonconsTest, SetObject)
-{
+TEST(JsonconsTest, SetObject) {
 	std::istringstream iss{"{\"api-x\": [1]}"};
 	jwt::basic_claim<jsoncons_traits> object;
 	iss >> object;
 	ASSERT_EQ(object.get_type(), jwt::json::type::object);
 
-	auto token = jwt::create<jsoncons_traits>()
-					 .set_payload_claim("namespace", object)
-					 .sign(jwt::algorithm::hs256("test"));
-	ASSERT_EQ(token, "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lc3BhY2UiOnsiYXBpLXgiOlsxXX19.F8I6I2RcSF98bKa0IpIz09fRZtHr1CWnWKx2za-tFQA");
+	auto token =
+		jwt::create<jsoncons_traits>().set_payload_claim("namespace", object).sign(jwt::algorithm::hs256("test"));
+	ASSERT_EQ(token,
+			  "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lc3BhY2UiOnsiYXBpLXgiOlsxXX19.F8I6I2RcSF98bKa0IpIz09fRZtHr1CWnWKx2za-tFQA");
 }
 
-TEST(JsonconsTest, VerifyTokenHS256)
-{
-	std::string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
+TEST(JsonconsTest, VerifyTokenHS256) {
+	std::string token =
+		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
 
 	auto verify = jwt::verify<jwt::default_clock, jsoncons_traits>({})
 					  .allow_algorithm(jwt::algorithm::hs256{"secret"})
@@ -229,8 +185,7 @@ TEST(JsonconsTest, VerifyTokenHS256)
 	verify.verify(decoded_token);
 }
 
-TEST(JsonconsTest, VerifyTokenExpirationValid)
-{
+TEST(JsonconsTest, VerifyTokenExpirationValid) {
 	const auto token = jwt::create<jsoncons_traits>()
 						   .set_issuer("auth0")
 						   .set_issued_at(std::chrono::system_clock::now())
@@ -245,8 +200,7 @@ TEST(JsonconsTest, VerifyTokenExpirationValid)
 	verify.verify(decoded_token);
 }
 
-TEST(JsonconsTest, VerifyTokenExpired)
-{
+TEST(JsonconsTest, VerifyTokenExpired) {
 	const auto token = jwt::create<jsoncons_traits>()
 						   .set_issuer("auth0")
 						   .set_issued_at(std::chrono::system_clock::now() - std::chrono::seconds{3601})

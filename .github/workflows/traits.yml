@@ -2,29 +2,29 @@ name: Traits CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   jsoncons:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: lukka/get-cmake@latest
-    - uses: ./.github/actions/install/gtest
-    - uses: ./.github/actions/install/jsoncons
+      - uses: actions/checkout@v2
+      - uses: lukka/get-cmake@latest
+      - uses: ./.github/actions/install/gtest
+      - uses: ./.github/actions/install/jsoncons
 
-    - name: setup
-      run: |
-        mkdir build
-        cd build
-        cmake .. -DJWT_BUILD_EXAMPLES=OFF
-        sudo make install
+      - name: setup
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DJWT_BUILD_EXAMPLES=OFF
+          sudo make install
 
-    - name: configure
-      run: |
-        cd tests/jsoncons
-        cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake
-        cmake --build .
-        ./jsoncons-traits-narrow
+      - name: configure
+        run: |
+          cd tests/jsoncons
+          cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake
+          cmake --build .
+          ./jsoncons-traits-narrow

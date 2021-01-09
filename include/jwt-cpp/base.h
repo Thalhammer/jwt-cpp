@@ -26,15 +26,14 @@ namespace jwt {
 		struct base64 {
 			static const std::array<char, 64>& data() {
 				static constexpr std::array<char, 64> data{
-					{ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
-					  'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
-					  'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-					  'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/' }
-				};
+					{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+					 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+					 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+					 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'}};
 				return data;
 			}
 			static const std::string& fill() {
-				static std::string fill{ "=" };
+				static std::string fill{"="};
 				return fill;
 			}
 		};
@@ -44,15 +43,14 @@ namespace jwt {
 		struct base64url {
 			static const std::array<char, 64>& data() {
 				static constexpr std::array<char, 64> data{
-					{ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
-					  'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
-					  'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-					  'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_' }
-				};
+					{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+					 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+					 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+					 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'}};
 				return data;
 			}
 			static const std::string& fill() {
-				static std::string fill{ "%3d" };
+				static std::string fill{"%3d"};
 				return fill;
 			}
 		};
@@ -101,8 +99,7 @@ namespace jwt {
 				res += alphabet[(triple >> 0 * 6) & 0x3F];
 			}
 
-			if (fast_size == size)
-				return res;
+			if (fast_size == size) return res;
 
 			size_t mod = size % 3;
 
@@ -125,8 +122,7 @@ namespace jwt {
 				res += alphabet[(triple >> 1 * 6) & 0x3F];
 				res += fill;
 				break;
-			default:
-				break;
+			default: break;
 			}
 
 			return res;
@@ -141,14 +137,12 @@ namespace jwt {
 				if (base.substr(size - fill.size(), fill.size()) == fill) {
 					fill_cnt++;
 					size -= fill.size();
-					if (fill_cnt > 2)
-						throw std::runtime_error("Invalid input");
+					if (fill_cnt > 2) throw std::runtime_error("Invalid input");
 				} else
 					break;
 			}
 
-			if ((size + fill_cnt) % 4 != 0)
-				throw std::runtime_error("Invalid input");
+			if ((size + fill_cnt) % 4 != 0) throw std::runtime_error("Invalid input");
 
 			size_t out_size = size / 4 * 3;
 			std::string res;
@@ -156,8 +150,7 @@ namespace jwt {
 
 			auto get_sextet = [&](size_t offset) {
 				for (size_t i = 0; i < alphabet.size(); i++) {
-					if (alphabet[i] == base[offset])
-						return static_cast<uint32_t>(i);
+					if (alphabet[i] == base[offset]) return static_cast<uint32_t>(i);
 				}
 				throw std::runtime_error("Invalid input");
 			};
@@ -176,8 +169,7 @@ namespace jwt {
 				res += static_cast<char>((triple >> 0 * 8) & 0xFFU);
 			}
 
-			if (fill_cnt == 0)
-				return res;
+			if (fill_cnt == 0) return res;
 
 			uint32_t triple = (get_sextet(fast_size) << 3 * 6) + (get_sextet(fast_size + 1) << 2 * 6);
 
@@ -187,11 +179,8 @@ namespace jwt {
 				res += static_cast<char>((triple >> 2 * 8) & 0xFFU);
 				res += static_cast<char>((triple >> 1 * 8) & 0xFFU);
 				break;
-			case 2:
-				res += static_cast<char>((triple >> 2 * 8) & 0xFFU);
-				break;
-			default:
-				break;
+			case 2: res += static_cast<char>((triple >> 2 * 8) & 0xFFU); break;
+			default: break;
 			}
 
 			return res;
@@ -200,17 +189,10 @@ namespace jwt {
 		static std::string pad(const std::string& base, const std::string& fill) {
 			std::string padding;
 			switch (base.size() % 4) {
-			case 1:
-				padding += fill;
-				JWT_FALLTHROUGH;
-			case 2:
-				padding += fill;
-				JWT_FALLTHROUGH;
-			case 3:
-				padding += fill;
-				JWT_FALLTHROUGH;
-			default:
-				break;
+			case 1: padding += fill; JWT_FALLTHROUGH;
+			case 2: padding += fill; JWT_FALLTHROUGH;
+			case 3: padding += fill; JWT_FALLTHROUGH;
+			default: break;
 			}
 
 			return base + padding;

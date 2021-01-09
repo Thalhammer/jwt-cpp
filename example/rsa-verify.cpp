@@ -1,8 +1,8 @@
 #include <iostream>
 #include <jwt-cpp/jwt.h>
 
-int main(int argc, const char **argv) {
-  std::string rsa_priv_key = R"(-----BEGIN PRIVATE KEY-----
+int main(int argc, const char** argv) {
+	std::string rsa_priv_key = R"(-----BEGIN PRIVATE KEY-----
 MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQC4ZtdaIrd1BPIJ
 tfnF0TjIK5inQAXZ3XlCrUlJdP+XHwIRxdv1FsN12XyMYO/6ymLmo9ryoQeIrsXB
 XYqlET3zfAY+diwCb0HEsVvhisthwMU4gZQu6TYW2s9LnXZB5rVtcBK69hcSlA2k
@@ -30,7 +30,7 @@ RultUEe2C0jYMDQx+JYxbPmtcopvZQrFEur3WKVuLy5UAy7EBvwMnZwIG7OOohJb
 vkSpADK6VPn9lbqq7O8cTedEHttm6otmLt8ZyEl3hZMaL3hbuRj6ysjmoFKx6CrX
 rK0/Ikt5ybqUzKCMJZg2VKGTxg==
 -----END PRIVATE KEY-----)";
-  std::string rsa_pub_key = R"(-----BEGIN PUBLIC KEY-----
+	std::string rsa_pub_key = R"(-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuGbXWiK3dQTyCbX5xdE4
 yCuYp0AF2d15Qq1JSXT/lx8CEcXb9RbDddl8jGDv+spi5qPa8qEHiK7FwV2KpRE9
 83wGPnYsAm9BxLFb4YrLYcDFOIGULuk2FtrPS512Qea1bXASuvYXEpQNpGbnTGVs
@@ -40,27 +40,24 @@ AziMCxS+VrRPDM+zfvpIJg3JljAh3PJHDiLu902v9w+Iplu1WyoB2aPfitxEhRN0
 YwIDAQAB
 -----END PUBLIC KEY-----)";
 
-  std::string token =
-      "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9."
-      "VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
-      "HAZCTQxa1Q8NppnpYV-hlqxh-X3Bb0JOePTGzjynpNZoJh2aHZD-"
-      "GKpZt7OO1Zp8AFWPZ3p8Cahq8536fD8RiBES9jRsvChZvOqA7gMcFc4"
-      "YD0iZhNIcI7a654u5yPYyTlf5kjR97prCf_OXWRn-bYY74zna4p_bP9oWCL4BkaoRcMxi-"
-      "IR7kmVcCnvbYqyIrKloXP2qPO442RBGqU7Ov9"
-      "sGQxiVqtRHKXZR9RbfvjrErY1KGiCp9M5i2bsUHadZEY44FE2jiOmx-"
-      "uc2z5c05CCXqVSpfCjWbh9gQ";
+	std::string token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9."
+						"VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
+						"HAZCTQxa1Q8NppnpYV-hlqxh-X3Bb0JOePTGzjynpNZoJh2aHZD-"
+						"GKpZt7OO1Zp8AFWPZ3p8Cahq8536fD8RiBES9jRsvChZvOqA7gMcFc4"
+						"YD0iZhNIcI7a654u5yPYyTlf5kjR97prCf_OXWRn-bYY74zna4p_bP9oWCL4BkaoRcMxi-"
+						"IR7kmVcCnvbYqyIrKloXP2qPO442RBGqU7Ov9"
+						"sGQxiVqtRHKXZR9RbfvjrErY1KGiCp9M5i2bsUHadZEY44FE2jiOmx-"
+						"uc2z5c05CCXqVSpfCjWbh9gQ";
 
-  auto verify = jwt::verify()
-                    .allow_algorithm(jwt::algorithm::rs256(
-                        rsa_pub_key, rsa_priv_key, "", ""))
-                    .with_issuer("auth0");
+	auto verify =
+		jwt::verify().allow_algorithm(jwt::algorithm::rs256(rsa_pub_key, rsa_priv_key, "", "")).with_issuer("auth0");
 
-  auto decoded = jwt::decode(token);
+	auto decoded = jwt::decode(token);
 
-  verify.verify(decoded);
+	verify.verify(decoded);
 
-  for (auto &e : decoded.get_header_claims())
-    std::cout << e.first << " = " << e.second.to_json() << std::endl;
-  for (auto &e : decoded.get_payload_claims())
-    std::cout << e.first << " = " << e.second.to_json() << std::endl;
+	for (auto& e : decoded.get_header_claims())
+		std::cout << e.first << " = " << e.second.to_json() << std::endl;
+	for (auto& e : decoded.get_payload_claims())
+		std::cout << e.first << " = " << e.second.to_json() << std::endl;
 }
