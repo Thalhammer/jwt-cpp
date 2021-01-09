@@ -25,11 +25,11 @@ namespace jwt {
 		 */
 		struct base64 {
 			static const std::array<char, 64>& data() {
-				static constexpr std::array<char, 64> data {
-					{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
-					'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
-					'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-					'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'}
+				static constexpr std::array<char, 64> data{
+					{ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+					  'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+					  'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+					  'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/' }
 				};
 				return data;
 			}
@@ -43,11 +43,11 @@ namespace jwt {
 		 */
 		struct base64url {
 			static const std::array<char, 64>& data() {
-				static constexpr std::array<char, 64> data {
-					{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
-					'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
-					'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-					'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'}
+				static constexpr std::array<char, 64> data{
+					{ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+					  'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+					  'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+					  'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_' }
 				};
 				return data;
 			}
@@ -56,7 +56,7 @@ namespace jwt {
 				return fill;
 			}
 		};
-	}  // namespace alphabet
+	} // namespace alphabet
 
 	/**
 	 * \brief Alphabet generic methods for working with encoding/decoding the base64 family
@@ -81,7 +81,8 @@ namespace jwt {
 		}
 
 	private:
-		static std::string encode(const std::string& bin, const std::array<char, 64>& alphabet, const std::string& fill) {
+		static std::string encode(const std::string& bin, const std::array<char, 64>& alphabet,
+								  const std::string& fill) {
 			size_t size = bin.size();
 			std::string res;
 
@@ -131,7 +132,8 @@ namespace jwt {
 			return res;
 		}
 
-		static std::string decode(const std::string& base, const std::array<char, 64>& alphabet, const std::string& fill) {
+		static std::string decode(const std::string& base, const std::array<char, 64>& alphabet,
+								  const std::string& fill) {
 			size_t size = base.size();
 
 			size_t fill_cnt = 0;
@@ -139,10 +141,10 @@ namespace jwt {
 				if (base.substr(size - fill.size(), fill.size()) == fill) {
 					fill_cnt++;
 					size -= fill.size();
-					if(fill_cnt > 2)
+					if (fill_cnt > 2)
 						throw std::runtime_error("Invalid input");
-				}
-				else break;
+				} else
+					break;
 			}
 
 			if ((size + fill_cnt) % 4 != 0)
@@ -167,10 +169,7 @@ namespace jwt {
 				uint32_t sextet_c = get_sextet(i++);
 				uint32_t sextet_d = get_sextet(i++);
 
-				uint32_t triple = (sextet_a << 3 * 6)
-					+ (sextet_b << 2 * 6)
-					+ (sextet_c << 1 * 6)
-					+ (sextet_d << 0 * 6);
+				uint32_t triple = (sextet_a << 3 * 6) + (sextet_b << 2 * 6) + (sextet_c << 1 * 6) + (sextet_d << 0 * 6);
 
 				res += static_cast<char>((triple >> 2 * 8) & 0xFFU);
 				res += static_cast<char>((triple >> 1 * 8) & 0xFFU);
@@ -180,8 +179,7 @@ namespace jwt {
 			if (fill_cnt == 0)
 				return res;
 
-			uint32_t triple = (get_sextet(fast_size) << 3 * 6)
-				+ (get_sextet(fast_size + 1) << 2 * 6);
+			uint32_t triple = (get_sextet(fast_size) << 3 * 6) + (get_sextet(fast_size + 1) << 2 * 6);
 
 			switch (fill_cnt) {
 			case 1:
@@ -202,17 +200,17 @@ namespace jwt {
 		static std::string pad(const std::string& base, const std::string& fill) {
 			std::string padding;
 			switch (base.size() % 4) {
-				case 1:
-					padding += fill;
-					JWT_FALLTHROUGH;
-				case 2:
-					padding += fill;
-					JWT_FALLTHROUGH;
-				case 3:
-					padding += fill;
-					JWT_FALLTHROUGH;
-				default:
-					break;
+			case 1:
+				padding += fill;
+				JWT_FALLTHROUGH;
+			case 2:
+				padding += fill;
+				JWT_FALLTHROUGH;
+			case 3:
+				padding += fill;
+				JWT_FALLTHROUGH;
+			default:
+				break;
 			}
 
 			return base + padding;
@@ -223,6 +221,6 @@ namespace jwt {
 			return base.substr(0, pos);
 		}
 	};
-}  // namespace jwt
+} // namespace jwt
 
 #endif
