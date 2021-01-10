@@ -1873,6 +1873,7 @@ namespace jwt {
 		static_assert(details::is_valid_traits<json_traits>::value, "traits must satisfy requirements");
 
 		typename json_traits::value_type val;
+
 	public:
 		using set_t = std::set<typename json_traits::string_type>;
 
