@@ -6,15 +6,18 @@ on:
   pull_request:
     branches: [ master ]
     paths:
-      - 'include/jwt-cpp/**'
+      - 'include/jwt-cpp/**.h'
       - 'tests/**.cpp'
       - '.github/workflows/lint.yml'
 
 jobs:
-  lint:
+  cpp:
     runs-on: ubuntu-latest
-    container:
-      image: unibeautify/clang-format:latest
+    container: unibeautify/clang-format:latest
+    strategy:
+      matrix:
+        files: ["include/jwt-cpp/*.h", "tests/**.cpp"]
     steps:
       - uses: actions/checkout@v2
       - run: clang-format --version
+      - run: diff -u <(cat ${{ mattix.files }}) <(clang-format-10 ${{ mattix.files }})
