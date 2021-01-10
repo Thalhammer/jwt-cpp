@@ -1,0 +1,20 @@
+name: Lint CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+    paths:
+      - 'include/jwt-cpp/**'
+      - 'tests/**.cpp'
+      - '.github/workflows/lint.yml'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    container:
+      image: unibeautify/clang-format:latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: clang-format --version
