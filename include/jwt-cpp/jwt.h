@@ -1873,15 +1873,14 @@ namespace jwt {
 		static_assert(details::is_valid_traits<json_traits>::value, "traits must satisfy requirements");
 
 		typename json_traits::value_type val;
-
 	public:
 		using set_t = std::set<typename json_traits::string_type>;
 
 		basic_claim() = default;
 		basic_claim(const basic_claim&) = default;
-		basic_claim(basic_claim&&) noexcept = default;
+		basic_claim(basic_claim&&) = default;
 		basic_claim& operator=(const basic_claim&) = default;
-		basic_claim& operator=(basic_claim&&) noexcept = default;
+		basic_claim& operator=(basic_claim&&) = default;
 		~basic_claim() = default;
 
 		JWT_CLAIM_EXPLICIT basic_claim(typename json_traits::string_type s) : val(std::move(s)) {}
