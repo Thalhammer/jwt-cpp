@@ -12,12 +12,12 @@ on:
 
 jobs:
   cpp:
-    runs-on: ubuntu-latest
-    container: unibeautify/clang-format:latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         files: ["include/jwt-cpp/*.h", "tests/**.cpp"]
     steps:
+      - run: sudo apt-get install clang-format-10
       - uses: actions/checkout@v2
-      - run: clang-format -i ${{ matrix.files }}
+      - run: clang-format-10 -i ${{ matrix.files }}
       - run: exit $(git status -s | wc -l)
