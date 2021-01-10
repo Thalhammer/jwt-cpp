@@ -1,4 +1,4 @@
-# jwt-cpp
+# ![logo](https://raw.githubusercontent.com/prince-chrismc/jwt-cpp/linting-and-maintance/.github/logo.svg)
 
 [![License Badge](https://img.shields.io/github/license/Thalhammer/jwt-cpp)](https://github.com/Thalhammer/jwt-cpp/blob/master/LICENSE)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/5f7055e294744901991fd0a1620b231d)](https://app.codacy.com/app/Thalhammer/jwt-cpp?utm_source=github.com&utm_medium=referral&utm_content=Thalhammer/jwt-cpp&utm_campaign=Badge_Grade_Settings)
@@ -7,12 +7,13 @@
 [![Documentation Badge](https://img.shields.io/badge/Documentation-master-blue)](https://thalhammer.github.io/jwt-cpp/)
 [![Stars Badge](https://img.shields.io/github/stars/Thalhammer/jwt-cpp)](https://github.com/Thalhammer/jwt-cpp/stargazers)
 
-A header only library for creating and validating [JSON Web Tokens](https://tools.ietf.org/html/rfc7519) in C++11. For a great introduction, [read this](https://jwt.io/introduction/)
+A header only library for creating and validating [JSON Web Tokens](https://tools.ietf.org/html/rfc7519) in C++11. For a great introduction, [read this](https://jwt.io/introduction/).
 
 ## Signature algorithms
 
-jwt-cpp supports all algorithms defined by the spec. The modular design of jwt-cpp allows one to add additional algorithms without any problems. If you need any feel free to open a pull request.
-For the sake of completeness, here is a list of all supported algorithms:
+jwt-cpp supports all the algorithms defined by the specifications. The modular design allows to easily add additional algorithms without any problems. If you need any feel free to create a pull request or [open an issue](https://github.com/Thalhammer/jwt-cpp/issues/new).
+
+For completeness, here is a list of all supported algorithms:
 
 | HMSC  | RSA   | ECDSA | PSS   | EdDSA   |
 | ----- | ----- | ----- | ----- | ------- |
@@ -22,8 +23,7 @@ For the sake of completeness, here is a list of all supported algorithms:
 
 ## SSL Compatability
 
-In the name of flexibility and extensibility, jwt-cpp supports both [OpenSSL](https://github.com/openssl/openssl) and [LibreSSL](https://github.com/libressl-portable/portable).
-These are the version which are tested:
+In the name of flexibility and extensibility, jwt-cpp supports both [OpenSSL](https://github.com/openssl/openssl) and [LibreSSL](https://github.com/libressl-portable/portable). These are the version which are, or have been, tested:
 
 | OpenSSL        | LibreSSL        |
 | -------------- | --------------- |
@@ -38,13 +38,13 @@ These are the version which are tested:
 
 ## Overview
 
-Since 0.5.0-rc.0, there is no hard dependency on a JSON library; instead there's a generic `jwt::basic_claim` which is templated around the types required.It requires a traits type, which defines types for a value, object, array, string, number, integer and boolean, as well as methods to translate between them.
+There is no hard dependency on a JSON library. Instead, there's a generic `jwt::basic_claim` which is templated around type traits, which described the semantic [JSON types](https://json-schema.org/understanding-json-schema/reference/type.html) for a value, object, array, string, number, integer and boolean, as well as methods to translate between them.
 
 ```cpp
 jwt::basic_claim<my_favorite_json_library_traits> claim(json::object({{"json", true},{"example", 0}}));
 ```
 
-This allows for complete freedom when picking which libraries you want to use. For more information, [see below](#providing-your-own-json-traits-your-traits)
+This allows for complete freedom when picking which libraries you want to use. For more information, [see below](#providing-your-own-json-traits-your-traits).
 
 In order to maintain compatibility, [picojson](https://github.com/kazuho/picojson) is still used to provide a specialized `jwt::claim` along with all helpers. Defining `JWT_DISABLE_PICOJSON` will remove this optional dependency.
 
@@ -52,7 +52,7 @@ As for the base64 requirements of JWTs, this libary provides `base.h` with all t
 
 ### Getting Started
 
-Simple example of decoding a token and printing all claims ([try it out](https://github.com/Thalhammer/jwt-cpp/tree/master/example/print-claims.cpp)):
+Simple example of decoding a token and printing all [claims](https://tools.ietf.org/html/rfc7519#section-4) ([try it out](https://github.com/Thalhammer/jwt-cpp/tree/master/example/print-claims.cpp)):
 
 ```cpp
 #include <jwt-cpp/jwt.h>
@@ -110,6 +110,8 @@ There are several key items that need to be provided to a `jwt::basic_claim` in 
 * serialization and parsing
 
 If ever you are not sure, the traits are heavily checked against static asserts to make sure you provide everything that's required.
+
+> :warning: Not all JSON libraries are a like, you may need to extent certain types such that it can be used by jwt-cpp. See this [example](https://github.com/Thalhammer/jwt-cpp/blob/ac3de9e69bc698a464dacb256a1b50512843f092/tests/jsoncons/JsonconsTest.cpp).
 
 ```cpp
 struct my_favorite_json_library_traits {
