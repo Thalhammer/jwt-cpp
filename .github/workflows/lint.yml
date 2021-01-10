@@ -19,5 +19,5 @@ jobs:
         files: ["include/jwt-cpp/*.h", "tests/**.cpp"]
     steps:
       - uses: actions/checkout@v2
-      - run: clang-format --version
-      - run: diff -u <(cat ${{ matrix.files }}) <(clang-format-10 ${{ matrix.files }})
+      - run: clang-format -i ${{ matrix.files }}
+      - run: exit $(git status -s | wc -l)
