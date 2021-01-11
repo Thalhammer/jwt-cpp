@@ -1,18 +1,17 @@
-Conan example
-
+# Conan example
 
 In the current directory on Linux environment
-```
+
+```sh
 mkdir build && cd build
 conan install .. && cmake .. 
 cmake --build .
 ```
+
 run executable
-```
-./bin/conan-example
-```
-the output:
-```
+
+```sh
+$ ./bin/conan-example
 sub = "jrocket@example.com"
 iss = "Online JWT Builder"
 exp = 1641559177

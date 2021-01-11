@@ -170,7 +170,7 @@ MEMwBQYDK2VxAzoAQomzAH8FXc0rhznaLR9DYwe5+DNhP0UwpZzS5y6iJ/iirrzI
 MEMwBQYDK2VxAzoAQomzAH8FXc0rhznaLR9DYwe5+DNhP0UwpZzS5y6iJ/iirrzI
 9/Fjbc/UvFxwFKFW7ij8QUwFsE8A
 -----END PUBLIC KEY-----)";
-    std::string sample_cert = R"(-----BEGIN CERTIFICATE-----
+	std::string sample_cert = R"(-----BEGIN CERTIFICATE-----
 MIIDHDCCAgSgAwIBAgIIGlbUz5cvweUwDQYJKoZIhvcNAQEFBQAwMTEvMC0GA1UE
 AxMmc2VjdXJldG9rZW4uc3lzdGVtLmdzZXJ2aWNlYWNjb3VudC5jb20wHhcNMTkw
 NDEwMjEyMDUxWhcNMTkwNDI3MDkzNTUxWjAxMS8wLQYDVQQDEyZzZWN1cmV0b2tl
@@ -190,25 +190,24 @@ ftcs6dibdnbQtbX6o9E+KuvGHoNW5xcSjX8lwXTpopfvufPOLPcnFXi4UoYZ8NZ2
 flE/m/0zymX8I/Xu3+KKLhUnUROGC6zO3OnLHXCnEns=
 -----END CERTIFICATE-----
 )";
-    std::string sample_cert_base64_der =
-        "MIIDHDCCAgSgAwIBAgIIGlbUz5cvweUwDQYJKoZIhvcNAQEFBQAwMTEvMC0GA1UE"
-        "AxMmc2VjdXJldG9rZW4uc3lzdGVtLmdzZXJ2aWNlYWNjb3VudC5jb20wHhcNMTkw"
-        "NDEwMjEyMDUxWhcNMTkwNDI3MDkzNTUxWjAxMS8wLQYDVQQDEyZzZWN1cmV0b2tl"
-        "bi5zeXN0ZW0uZ3NlcnZpY2VhY2NvdW50LmNvbTCCASIwDQYJKoZIhvcNAQEBBQAD"
-        "ggEPADCCAQoCggEBALRPFSsUi/bGcMVkD+XjJ6z/71u+7Wn1C1bRnM9sU3q7+Ere"
-        "DV6an+z+YsjblskBX73h1GyYvmtkyuL7Uq0N+y+RTOmd2fwDw48gM5FEq6DNpVVW"
-        "ZRIzzoMSLZCB+tg1eQZdGKtmctdd5Jjhwihf9Aa759fcj60GDG39G6A/w4Jok+J6"
-        "7sRabxxontJ4Kpo6zmwUKbWF8naJeCRTO0VAYLkJqEWO4VJTIHJeu2WpxM0qzvY9"
-        "IY5Yd7Njegu64FoHU55dSfee2KwDa0/bajrknJfxWBN4hk/rqgGjxQmzAYMCB7/p"
-        "/9Snfg4NmfX5cJJ01SNzY6Q/mJRjB3iX2PBz+GsCAwEAAaM4MDYwDAYDVR0TAQH/"
-        "BAIwADAOBgNVHQ8BAf8EBAMCB4AwFgYDVR0lAQH/BAwwCgYIKwYBBQUHAwIwDQYJ"
-        "KoZIhvcNAQEFBQADggEBAKCSq0D+NIAsGULZrhXouurxInxDyq03xLNcxvKDQchc"
-        "XfGA1r3eltmlyKQb5TmAsuKwS/LAQ5z8SlRTOmDGVEtDwnw3S83C4ufXbP0eMB6H"
-        "eKf2XCA00T3odUfXmQZme8hG6z7GKVOdn/0oY+vaX38brlCpRXDTm1WldyddUpMz"
-        "ftcs6dibdnbQtbX6o9E+KuvGHoNW5xcSjX8lwXTpopfvufPOLPcnFXi4UoYZ8NZ2"
-        "2mRG78LkOA+SkOMutbt6w7TBDvADmFzuzvAULy4gsfcamOYcQ7uiHnnD+PoNiNbw"
-        "flE/m/0zymX8I/Xu3+KKLhUnUROGC6zO3OnLHXCnEns=";
-    std::string sample_cert_pubkey = R"(-----BEGIN PUBLIC KEY-----
+	std::string sample_cert_base64_der = "MIIDHDCCAgSgAwIBAgIIGlbUz5cvweUwDQYJKoZIhvcNAQEFBQAwMTEvMC0GA1UE"
+										 "AxMmc2VjdXJldG9rZW4uc3lzdGVtLmdzZXJ2aWNlYWNjb3VudC5jb20wHhcNMTkw"
+										 "NDEwMjEyMDUxWhcNMTkwNDI3MDkzNTUxWjAxMS8wLQYDVQQDEyZzZWN1cmV0b2tl"
+										 "bi5zeXN0ZW0uZ3NlcnZpY2VhY2NvdW50LmNvbTCCASIwDQYJKoZIhvcNAQEBBQAD"
+										 "ggEPADCCAQoCggEBALRPFSsUi/bGcMVkD+XjJ6z/71u+7Wn1C1bRnM9sU3q7+Ere"
+										 "DV6an+z+YsjblskBX73h1GyYvmtkyuL7Uq0N+y+RTOmd2fwDw48gM5FEq6DNpVVW"
+										 "ZRIzzoMSLZCB+tg1eQZdGKtmctdd5Jjhwihf9Aa759fcj60GDG39G6A/w4Jok+J6"
+										 "7sRabxxontJ4Kpo6zmwUKbWF8naJeCRTO0VAYLkJqEWO4VJTIHJeu2WpxM0qzvY9"
+										 "IY5Yd7Njegu64FoHU55dSfee2KwDa0/bajrknJfxWBN4hk/rqgGjxQmzAYMCB7/p"
+										 "/9Snfg4NmfX5cJJ01SNzY6Q/mJRjB3iX2PBz+GsCAwEAAaM4MDYwDAYDVR0TAQH/"
+										 "BAIwADAOBgNVHQ8BAf8EBAMCB4AwFgYDVR0lAQH/BAwwCgYIKwYBBQUHAwIwDQYJ"
+										 "KoZIhvcNAQEFBQADggEBAKCSq0D+NIAsGULZrhXouurxInxDyq03xLNcxvKDQchc"
+										 "XfGA1r3eltmlyKQb5TmAsuKwS/LAQ5z8SlRTOmDGVEtDwnw3S83C4ufXbP0eMB6H"
+										 "eKf2XCA00T3odUfXmQZme8hG6z7GKVOdn/0oY+vaX38brlCpRXDTm1WldyddUpMz"
+										 "ftcs6dibdnbQtbX6o9E+KuvGHoNW5xcSjX8lwXTpopfvufPOLPcnFXi4UoYZ8NZ2"
+										 "2mRG78LkOA+SkOMutbt6w7TBDvADmFzuzvAULy4gsfcamOYcQ7uiHnnD+PoNiNbw"
+										 "flE/m/0zymX8I/Xu3+KKLhUnUROGC6zO3OnLHXCnEns=";
+	std::string sample_cert_pubkey = R"(-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtE8VKxSL9sZwxWQP5eMn
 rP/vW77tafULVtGcz2xTerv4St4NXpqf7P5iyNuWyQFfveHUbJi+a2TK4vtSrQ37
 L5FM6Z3Z/APDjyAzkUSroM2lVVZlEjPOgxItkIH62DV5Bl0Yq2Zy113kmOHCKF/0
@@ -218,4 +217,4 @@ l/FYE3iGT+uqAaPFCbMBgwIHv+n/1Kd+Dg2Z9flwknTVI3NjpD+YlGMHeJfY8HP4
 awIDAQAB
 -----END PUBLIC KEY-----
 )";
-}
+} // namespace test_keys
