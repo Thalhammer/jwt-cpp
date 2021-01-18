@@ -21,7 +21,7 @@ For completeness, here is a list of all supported algorithms:
 | HS384 | RS384 | ES384 | PS384 | Ed448   |
 | HS512 | RS512 | ES512 | PS512 |         |
 
-## SSL Compatability
+## SSL Compatibility
 
 In the name of flexibility and extensibility, jwt-cpp supports both [OpenSSL](https://github.com/openssl/openssl) and [LibreSSL](https://github.com/libressl-portable/portable). These are the version which are, or have been, tested:
 
