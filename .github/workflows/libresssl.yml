@@ -36,15 +36,19 @@ jobs:
 
       - name: badge success
         if: github.event_name == 'push' && success()
-        run: |
-          mkdir -p badges/libressl/${{ matrix.libressl }}
-          echo '{ "schemaVersion": 1, "label": "${{ matrix.libressl }}", "message": "Passing", "color": "brightgreen" }' > badges/libressl/${{ matrix.libressl }}/shields.json
+        uses: ./.github/actions/badge
+        with:
+          category: libressl
+          label: ${{ matrix.libressl }}
 
       - name: badge failure
         if: github.event_name == 'push' && !success()
-        run: |
-          mkdir -p badges/libressl/${{ matrix.libressl }}
-          echo '{ "schemaVersion": 1, "label": "${{ matrix.libressl }}", "message": "Failing", "color": "red" }' > badges/libressl/${{ matrix.libressl }}/shields.json
+        uses: ./.github/actions/badge
+        with:
+          category: libressl
+          label: ${{ matrix.libressl }}
+          message: Failing
+          color: red
 
       - name: badge publish
         if: github.event_name == 'push'
