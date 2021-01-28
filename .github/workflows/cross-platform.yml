@@ -19,6 +19,9 @@ jobs:
         os: [macos-latest, windows-latest, ubuntu-latest]
 
     steps:
+    - if: matrix.os == "windows-latest"
+      run: choco install openssl
+          
     - uses: actions/checkout@v2
     - run: cmake -E make_directory ${{github.workspace}}/build
 
