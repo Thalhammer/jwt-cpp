@@ -1,0 +1,38 @@
+name: Cross-Platform CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+    paths:
+      - "CMakeLists.txt"
+      - "include/jwt-cpp/**"
+      - "tests/*"
+      - ".github/actions/**"
+      - ".github/workflows/coverate.yml"
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+
+    steps:
+    - uses: actions/checkout@v2
+    - run: cmake -E make_directory ${{github.workspace}}/build
+
+    - name: configure
+      shell: bash # access regardless of the host operating system
+      working-directory: ${{github.workspace}}/build
+      run: cmake $GITHUB_WORKSPACE -DJWT_BUILD_EXAMPLES=ON
+
+    - name: build
+      working-directory: ${{github.workspace}}/build
+      shell: bash
+      run: cmake --build .
+
+    - name: test
+      working-directory: ${{github.workspace}}/build
+      shell: bash
+      run: ./example/rsa-verify
