@@ -23,7 +23,7 @@ jobs:
       run: choco install openssl
       
     - if: matrix.os == 'macos-latest'
-      run: brew install openssl libssl-dev
+      run: brew install openssl
           
     - uses: actions/checkout@v2
     - run: cmake -E make_directory ${{github.workspace}}/build
