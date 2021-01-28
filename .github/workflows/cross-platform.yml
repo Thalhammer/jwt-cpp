@@ -8,9 +8,9 @@ on:
     paths:
       - "CMakeLists.txt"
       - "include/jwt-cpp/**"
-      - "tests/*"
+      - "example/*"
       - ".github/actions/**"
-      - ".github/workflows/coverate.yml"
+      - ".github/workflows/cross-platform.yml"
 jobs:
   build:
     runs-on: ${{ matrix.os }}
