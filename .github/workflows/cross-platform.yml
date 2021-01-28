@@ -23,7 +23,7 @@ jobs:
       run: choco install openssl
       
     - if: matrix.os == 'macos-latest'
-      run: brew --prefix openssl
+      run: cp /usr/local/opt/openssl@1.1/lib/pkgconfig/*.pc /usr/local/lib/pkgconfig/
           
     - uses: actions/checkout@v2
     - run: cmake -E make_directory ${{github.workspace}}/build
