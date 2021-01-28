@@ -54,16 +54,14 @@ jobs:
           example\Debug\rsa-verify.exe
 
       - name: badge success
-        if: success()
-        # if: github.event_name == 'push' && success()
+        if: github.event_name == 'push' && success()
         uses: ./.github/actions/badge
         with:
           category: cross-platform
           label: ${{ matrix.os }}
 
       - name: badge failure
-        if: ${{ !success() }}
-        # if: github.event_name == 'push' && !success()
+        if: github.event_name == 'push' && !success()
         uses: ./.github/actions/badge
         with:
           category: cross-platform
@@ -72,7 +70,7 @@ jobs:
           color: red
 
       - name: badge publish
-        # if: github.event_name == 'push'
+        if: github.event_name == 'push'
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
