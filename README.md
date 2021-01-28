@@ -7,6 +7,15 @@
 [![Documentation Badge](https://img.shields.io/badge/Documentation-master-blue)](https://thalhammer.github.io/jwt-cpp/)
 [![Stars Badge](https://img.shields.io/github/stars/Thalhammer/jwt-cpp)](https://github.com/Thalhammer/jwt-cpp/stargazers)
 
+[![Linux Badge][Linux]][Cross-Platform]
+[![MacOS Badge][MacOS]][Cross-Platform]
+[![Windows Badge][Windows]][Cross-Platform]
+
+[Linux]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/prince-chrismc/jwt-cpp/badges/cross-platform/ubuntu-latest/shields.json
+[MacOS]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/prince-chrismc/jwt-cpp/badges/cross-platform/macos-latest/shields.json
+[Windows]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/prince-chrismc/jwt-cpp/badges/cross-platform/windows-latest/shields.json
+[Cross-Platform]: https://github.com/prince-chrismc/jwt-cpp/actions?query=workflow%3A%22Cross-Platform+CI%22
+
 A header only library for creating and validating [JSON Web Tokens](https://tools.ietf.org/html/rfc7519) in C++11. For a great introduction, [read this](https://jwt.io/introduction/).
 
 ## Signature algorithms
