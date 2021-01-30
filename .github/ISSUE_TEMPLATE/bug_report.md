@@ -7,10 +7,15 @@ assignees: ''
 
 ---
 
+<!-- 
+  Please don't forget to update the issue title.
+  Include all applicable information to help us reproduce your problem.
+-->
+
 **Describe the bug**
 A clear and concise description of what the bug is.
 
-**How To Reproduce**
+**How To Reproduce** (Include if Applicable)
 Please provide a small snippet to reproduce the issue
 
 **Expected behavior**
@@ -26,3 +31,12 @@ If applicable, add screenshots to help explain your problem.
 
 **Additional context**
 Add any other context about the problem here.
+
+### Logs (Include/Attach if Applicable)
+<details><summary>Click to expand log</summary>
+
+```
+Put your log output here
+```
+
+</details>
