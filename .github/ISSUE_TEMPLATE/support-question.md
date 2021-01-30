@@ -1,7 +1,7 @@
 ---
 name: Support Question
 about: Open an issue describing the topic
-title: "[question]"
+title: "[question] Breif Description"
 labels: question
 assignees: ''
 
