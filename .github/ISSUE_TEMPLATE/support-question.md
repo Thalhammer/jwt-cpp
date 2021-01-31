@@ -1,6 +1,6 @@
 ---
 name: Support Question
-about: Open an issue describing the topic
+about: Have some questions? We can offer help.
 title: "[question] Brief Description"
 labels: question
 assignees: ''
@@ -12,16 +12,13 @@ assignees: ''
   Include all applicable information to help us reproduce your problem.
 -->
 
-**Describe the issue**
+**Describe the impediment**
 A clear and concise description of what the challenge is.
 
-**To Resolve**
+**Trying to obtain**
 The code implementation which needs attention.
 
-**Expected behavior**
-A clear and concise description of what you expect to achieve.
-
-**Desktop (please complete the following information):**
+**Desktop (please complete the following information):** (Include/Attach if Applicable)
  - OS: [e.g. iOS]
  - Compiler [e.g. msvc, gcc]
  - Version [e.g. 22]
@@ -29,7 +26,7 @@ A clear and concise description of what you expect to achieve.
 **Additional context**
 Add any other context about the problem here.
 
-### Logs (Include/Attach if Applicable)
+**Logs** (Include/Attach if Applicable)
 <details><summary>Click to expand log</summary>
 
 ```
