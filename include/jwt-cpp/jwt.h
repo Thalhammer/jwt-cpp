@@ -1800,7 +1800,8 @@ namespace jwt {
 
 		template<typename object_type, typename value_type, typename string_type>
 		using is_subcription_operator_signature =
-			typename std::is_same<decltype(std::declval<object_type>()[std::declval<const string_type>()]), value_type&>;
+			typename std::is_same<decltype(std::declval<object_type>()[std::declval<const string_type>()]),
+								  value_type&>;
 
 		template<typename object_type, typename value_type, typename string_type>
 		using is_at_const_signature =
