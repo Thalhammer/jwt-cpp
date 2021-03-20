@@ -1062,12 +1062,11 @@ namespace jwt {
 			 * \param public_key_password Password to decrypt public key pem.
 			 * \param private_key_password Password
 			 * to decrypt private key pem.
-			 * \param md Pointer to hash function
 			 * \param name Name of the algorithm
 			 */
 			eddsa(const std::string& public_key, const std::string& private_key, const std::string& public_key_password,
-				  const std::string& private_key_password, const EVP_MD* (*md)(), std::string name)
-				: md(md), alg_name(std::move(name)) {
+				  const std::string& private_key_password, std::string name)
+				: alg_name(std::move(name)) {
 				if (!private_key.empty()) {
 					pkey = helper::load_private_key_from_string(private_key, private_key_password);
 				} else if (!public_key.empty()) {
@@ -1173,8 +1172,6 @@ namespace jwt {
 		private:
 			/// OpenSSL struct containing keys
 			std::shared_ptr<EVP_PKEY> pkey;
-			/// Hash generator
-			const EVP_MD* (*md)();
 			/// algorithm's name
 			const std::string alg_name;
 		};
@@ -1467,7 +1464,7 @@ namespace jwt {
 			 */
 			explicit ed25519(const std::string& public_key, const std::string& private_key = "",
 							 const std::string& public_key_password = "", const std::string& private_key_password = "")
-				: eddsa(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "EdDSA") {}
+				: eddsa(public_key, private_key, public_key_password, private_key_password, "EdDSA") {}
 		};
 
 		/**
@@ -1487,7 +1484,7 @@ namespace jwt {
 			 */
 			explicit ed448(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
-				: eddsa(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "EdDSA") {}
+				: eddsa(public_key, private_key, public_key_password, private_key_password, "EdDSA") {}
 		};
 #endif
 
