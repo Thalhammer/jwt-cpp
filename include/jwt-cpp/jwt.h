@@ -1489,7 +1489,7 @@ namespace jwt {
 			 */
 			explicit ed448(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
-				: eddsa(public_key, private_key, public_key_password, private_key_password, EVP_shake256, "EdDSA") {}
+				: eddsa(public_key, private_key, public_key_password, private_key_password, "EdDSA") {}
 		};
 #endif
 
