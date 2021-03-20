@@ -1049,9 +1049,10 @@ namespace jwt {
 		/**
 		 * \brief Base class for EdDSA family of algorithms
 		 *
-		 * The EdDSA algorithms were introduced in [OpenSSL
-		 * v1.1.1](https://www.openssl.org/news/openssl-1.1.1-notes.html), so these algorithms are only available when
-		 * building against this version or higher.
+		 * https://tools.ietf.org/html/rfc8032
+		 *
+		 * The EdDSA algorithms were introduced in [OpenSSL v1.1.1](https://www.openssl.org/news/openssl-1.1.1-notes.html),
+		 * so these algorithms are only available when building against this version or higher.
 		 */
 		struct eddsa {
 			/**
@@ -1450,6 +1451,8 @@ namespace jwt {
 		/**
 		 * Ed25519 algorithm
 		 *
+		 * https://en.wikipedia.org/wiki/EdDSA#Ed25519
+		 *
 		 * Requires at least OpenSSL 1.1.1.
 		 */
 		struct ed25519 : public eddsa {
@@ -1470,6 +1473,8 @@ namespace jwt {
 		/**
 		 * Ed448 algorithm
 		 *
+		 * https://en.wikipedia.org/wiki/EdDSA#Ed448
+		 *
 		 * Requires at least OpenSSL 1.1.1.
 		 */
 		struct ed448 : public eddsa {
@@ -1484,7 +1489,7 @@ namespace jwt {
 			 */
 			explicit ed448(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
-				: eddsa(public_key, private_key, public_key_password, private_key_password, "EdDSA") {}
+				: eddsa(public_key, private_key, public_key_password, private_key_password, EVP_shake256, "EdDSA") {}
 		};
 #endif
 
