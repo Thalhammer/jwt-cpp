@@ -438,7 +438,7 @@ namespace jwt {
 			const auto decodedStr = decode(cert_base64_der_str);
 			auto c_str = reinterpret_cast<const unsigned char*>(decodedStr.c_str());
 
-			std::unique_ptr<X509, decltype(&X509_free)> cert(d2i_X509(NULL, &c_str, decodedStr.size()), X509_free);
+			std::unique_ptr<X509, decltype(&X509_free)> cert(d2i_X509(NULL, &c_str, static_cast<int>(decodedStr.size())), X509_free);
 			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(BIO_new(BIO_s_mem()), BIO_free_all);
 			if (!cert || !certbio) {
 				ec = error::rsa_error::create_mem_bio_failed;
