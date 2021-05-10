@@ -62,6 +62,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: lukka/get-cmake@latest
+      - run: choco install openssl
 
       - name: setup
         run: |
