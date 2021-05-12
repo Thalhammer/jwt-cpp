@@ -74,7 +74,7 @@ jobs:
       - name: test
         run: |
           cd tests/cmake
-          cmake . -DCMAKE_PREFIX_PATH="C:/jwt-cpp/cmake" -DTEST:STRING="defaults-enabled"
+          cmake . -DCMAKE_PREFIX_PATH="C:/jwt-cpp" -DTEST:STRING="defaults-enabled"
           cmake --build .
 
   no-pico:
