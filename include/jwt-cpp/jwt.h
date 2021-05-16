@@ -438,7 +438,8 @@ namespace jwt {
 			const auto decodedStr = decode(cert_base64_der_str);
 			auto c_str = reinterpret_cast<const unsigned char*>(decodedStr.c_str());
 
-			std::unique_ptr<X509, decltype(&X509_free)> cert(d2i_X509(NULL, &c_str, decodedStr.size()), X509_free);
+			std::unique_ptr<X509, decltype(&X509_free)> cert(
+				d2i_X509(NULL, &c_str, static_cast<int>(decodedStr.size())), X509_free);
 			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(BIO_new(BIO_s_mem()), BIO_free_all);
 			if (!cert || !certbio) {
 				ec = error::rsa_error::create_mem_bio_failed;
@@ -1049,9 +1050,10 @@ namespace jwt {
 		/**
 		 * \brief Base class for EdDSA family of algorithms
 		 *
-		 * The EdDSA algorithms were introduced in [OpenSSL
-		 * v1.1.1](https://www.openssl.org/news/openssl-1.1.1-notes.html), so these algorithms are only available when
-		 * building against this version or higher.
+		 * https://tools.ietf.org/html/rfc8032
+		 *
+		 * The EdDSA algorithms were introduced in [OpenSSL v1.1.1](https://www.openssl.org/news/openssl-1.1.1-notes.html),
+		 * so these algorithms are only available when building against this version or higher.
 		 */
 		struct eddsa {
 			/**
@@ -1062,12 +1064,11 @@ namespace jwt {
 			 * \param public_key_password Password to decrypt public key pem.
 			 * \param private_key_password Password
 			 * to decrypt private key pem.
-			 * \param md Pointer to hash function
 			 * \param name Name of the algorithm
 			 */
 			eddsa(const std::string& public_key, const std::string& private_key, const std::string& public_key_password,
-				  const std::string& private_key_password, const EVP_MD* (*md)(), std::string name)
-				: md(md), alg_name(std::move(name)) {
+				  const std::string& private_key_password, std::string name)
+				: alg_name(std::move(name)) {
 				if (!private_key.empty()) {
 					pkey = helper::load_private_key_from_string(private_key, private_key_password);
 				} else if (!public_key.empty()) {
@@ -1173,8 +1174,6 @@ namespace jwt {
 		private:
 			/// OpenSSL struct containing keys
 			std::shared_ptr<EVP_PKEY> pkey;
-			/// Hash generator
-			const EVP_MD* (*md)();
 			/// algorithm's name
 			const std::string alg_name;
 		};
@@ -1453,6 +1452,8 @@ namespace jwt {
 		/**
 		 * Ed25519 algorithm
 		 *
+		 * https://en.wikipedia.org/wiki/EdDSA#Ed25519
+		 *
 		 * Requires at least OpenSSL 1.1.1.
 		 */
 		struct ed25519 : public eddsa {
@@ -1467,11 +1468,13 @@ namespace jwt {
 			 */
 			explicit ed25519(const std::string& public_key, const std::string& private_key = "",
 							 const std::string& public_key_password = "", const std::string& private_key_password = "")
-				: eddsa(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "EdDSA") {}
+				: eddsa(public_key, private_key, public_key_password, private_key_password, "EdDSA") {}
 		};
 
 		/**
 		 * Ed448 algorithm
+		 *
+		 * https://en.wikipedia.org/wiki/EdDSA#Ed448
 		 *
 		 * Requires at least OpenSSL 1.1.1.
 		 */
@@ -1487,7 +1490,7 @@ namespace jwt {
 			 */
 			explicit ed448(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
-				: eddsa(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "EdDSA") {}
+				: eddsa(public_key, private_key, public_key_password, private_key_password, "EdDSA") {}
 		};
 #endif
 
