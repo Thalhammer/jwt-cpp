@@ -31,6 +31,6 @@ jobs:
       - name: test
         run: |
           cd tests/jsoncons
-          cmake .
-          cmake --build -DCMAKE_FIND_DEBUG_MODE=1 .
+          cmake . -DCMAKE_FIND_DEBUG_MODE=1
+          cmake --build .
           ./jsoncons-traits-narrow
