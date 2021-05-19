@@ -13,6 +13,45 @@ on:
       - ".github/workflows/cmake.yml"
 
 jobs:
+  default-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: lukka/get-cmake@latest
+      
+      - name: setup
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DJWT_BUILD_EXAMPLES=OFF
+          sudo make install
+
+      - name: test
+        run: |
+          cd tests/cmake
+          cmake . -DTEST:STRING="defaults-enabled" -DCMAKE_FIND_DEBUG_MODE=1
+          cmake --build .
+
+  default-win:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: lukka/get-cmake@latest
+      - run: choco install openssl
+
+      - name: setup
+        run: |
+          cmake -E make_directory build
+          cd build
+          cmake .. -DJWT_BUILD_EXAMPLES=OFF
+          cmake --install .
+
+      - name: test
+        run: |
+          cd tests/cmake
+          cmake . -DTEST:STRING="defaults-enabled" -DCMAKE_FIND_DEBUG_MODE=1
+          cmake --build .
+
   min-req:
     runs-on: ubuntu-latest
     steps:
@@ -34,10 +73,10 @@ jobs:
       - name: test
         run: |
           cd tests/cmake
-          cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake -DTEST:STRING="defaults-enabled"
+          cmake . -DTEST:STRING="defaults-enabled"
           cmake --build .
 
-  custom-install:
+  custom-install-linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -54,7 +93,27 @@ jobs:
       - name: test
         run: |
           cd tests/cmake
-          cmake . -DCMAKE_PREFIX_PATH=/opt/jwt-cpp/cmake -DTEST:STRING="defaults-enabled"
+          cmake . -DCMAKE_PREFIX_PATH="/opt/jwt-cpp" -DTEST:STRING="defaults-enabled" -DCMAKE_FIND_DEBUG_MODE=1
+          cmake --build .
+
+  custom-install-win:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: lukka/get-cmake@latest
+      - run: choco install openssl
+
+      - name: setup
+        run: |
+          cmake -E make_directory build
+          cd build
+          cmake .. -DCMAKE_INSTALL_PREFIX:STRING="C:/jwt-cpp" -DJWT_BUILD_EXAMPLES=OFF
+          cmake --install .
+
+      - name: test
+        run: |
+          cd tests/cmake
+          cmake . -DCMAKE_PREFIX_PATH="C:/jwt-cpp" -DTEST:STRING="defaults-enabled" -DCMAKE_FIND_DEBUG_MODE=1
           cmake --build .
 
   no-pico:
