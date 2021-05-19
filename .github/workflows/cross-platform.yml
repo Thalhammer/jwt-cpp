@@ -5,12 +5,6 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
-    paths:
-      - "CMakeLists.txt"
-      - "include/jwt-cpp/**"
-      - "example/*"
-      - ".github/actions/**"
-      - ".github/workflows/cross-platform.yml"
 jobs:
   build:
     runs-on: ${{ matrix.os }}
