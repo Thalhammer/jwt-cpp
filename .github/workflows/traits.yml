@@ -25,12 +25,12 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DJWT_BUILD_EXAMPLES=OFF
-          sudo make install
+          cmake .. -DJWT_BUILD_EXAMPLES=OFF -DCMAKE_FIND_DEBUG_MODE=1
+          sudo cmake --install .
 
       - name: test
         run: |
           cd tests/jsoncons
-          cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake
+          cmake . -DCMAKE_FIND_DEBUG_MODE=1
           cmake --build .
           ./jsoncons-traits-narrow
