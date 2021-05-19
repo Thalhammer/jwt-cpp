@@ -65,7 +65,7 @@ if(JWT_EXTERNAL_PICOJSON)
 endif()
 
 if(NOT JWT_CMAKE_FILES_INSTALL_DIR)
-  set(JWT_CMAKE_FILES_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/jwt-cpp/lib/cmake)
+  set(JWT_CMAKE_FILES_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib/cmake)
 endif()
 
 configure_package_config_file(
