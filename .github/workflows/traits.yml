@@ -26,11 +26,11 @@ jobs:
           mkdir build
           cd build
           cmake .. -DJWT_BUILD_EXAMPLES=OFF
-          sudo make install
+          sudo cmake --install .
 
       - name: test
         run: |
           cd tests/jsoncons
-          cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake
+          cmake .
           cmake --build .
           ./jsoncons-traits-narrow
