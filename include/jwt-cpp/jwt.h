@@ -1846,8 +1846,8 @@ namespace jwt {
 			static constexpr auto value =
 				is_detected<has_mapped_type, object_type>::value &&
 				std::is_same<typename object_type::mapped_type, value_type>::value &&
-				is_detected<has_key_type, object_type>::value &&
-				std::is_same<typename object_type::key_type, string_type>::value &&
+				// is_detected<has_key_type, object_type>::value &&
+				// std::is_same<typename object_type::key_type, string_type>::value &&
 				supports_begin<object_type>::value && supports_end<object_type>::value &&
 				is_count_signature<object_type, string_type>::value &&
 				is_subcription_operator_signature<object_type, value_type, string_type>::value &&
@@ -1896,8 +1896,8 @@ namespace jwt {
 		 * https://github.com/nlohmann/json/issues/774. It maybe be expanded to
 		 * support custom string types.
 		 */
-		static_assert(std::is_same<typename json_traits::string_type, std::string>::value,
-					  "string_type must be a std::string.");
+		// static_assert(std::is_same<typename json_traits::string_type, std::string>::value,
+		// 			  "string_type must be a std::string.");
 
 		static_assert(
 			details::is_valid_json_types<typename json_traits::value_type, typename json_traits::string_type,
@@ -3021,9 +3021,10 @@ namespace jwt {
 		 */
 		void verify(const decoded_jwt<json_traits>& jwt, std::error_code& ec) const {
 			ec.clear();
-			const typename json_traits::string_type data = jwt.get_header_base64() + "." + jwt.get_payload_base64();
+			typename json_traits::string_type data = jwt.get_header_base64();
+			data.append(".").append(jwt.get_payload_base64());
 			const typename json_traits::string_type sig = jwt.get_signature();
-			const std::string algo = jwt.get_algorithm();
+			const typename json_traits::string_type algo = jwt.get_algorithm();
 			if (algs.count(algo) == 0) {
 				ec = error::token_verification_error::wrong_algorithm;
 				return;
