@@ -13,7 +13,14 @@ struct boostjson_traits {
 	using value_type = json::value;
 	using object_type = json::object;
 	using array_type = json::array;
-	using string_type = json::string; // current limitation of traits implementation
+	using string_type = json::string;
+	// class string_type : public json::string {
+	// 	using json::string::string;
+	// 	string_type substr(std::size_t pos = 0, std::size_t count = npos) {
+	// 		const auto view = subview(pos, count);
+	// 		return string_type{view.begin(), view.end()};
+	// 	}
+	// };
 	using number_type = double;
 	using integer_type = std::int64_t;
 	using boolean_type = bool;
@@ -45,7 +52,7 @@ struct boostjson_traits {
 
 	static string_type as_string(const value_type& val) {
 		if (val.kind() != json::kind::string) throw std::bad_cast();
-		return val.get_string();
+		return string_type{val.get_string()};
 	}
 
 	static integer_type as_int(const value_type& val) {
@@ -71,7 +78,12 @@ struct boostjson_traits {
 		return true;
 	}
 
-	static std::string serialize(const value_type& val) { return json::serialize(val); }
+	static string_type serialize(const value_type& val) { return json::string_view{json::serialize(val)}; }
+
+	static std::string to_standard_string(const string_type& str) { return {str.c_str()}; };
+	static string_type do_substr(const string_type& str, std::size_t pos, std::size_t count = string_type::npos) {
+		return string_type { str.subview(pos, count) };
+	}
 };
 
 TEST(BoostJSONTest, BasicClaims) {
@@ -98,8 +110,6 @@ TEST(BoostJSONTest, AudienceAsString) {
 	ASSERT_FALSE(decoded.has_not_before());
 	ASSERT_FALSE(decoded.has_issued_at());
 	ASSERT_FALSE(decoded.has_id());
-	ASSERT_FALSE(decoded.get_payload_claims().empty());
-	ASSERT_FALSE(decoded.get_header_claims().empty());
 
 	ASSERT_EQ("HS256", decoded.get_algorithm());
 	ASSERT_EQ("JWT", decoded.get_type());
@@ -117,9 +127,7 @@ TEST(BoostJSONTest, SetArray) {
 }
 
 TEST(BoostJSONTest, SetObject) {
-	std::istringstream iss{"{\"api-x\": [1]}"};
-	jwt::basic_claim<boostjson_traits> object;
-	iss >> object;
+	jwt::basic_claim<boostjson_traits> object{json::parse("{\"api-x\": [1]}")};
 	ASSERT_EQ(object.get_type(), jwt::json::type::object);
 
 	auto token =

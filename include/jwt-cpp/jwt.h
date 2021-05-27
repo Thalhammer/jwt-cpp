@@ -1828,8 +1828,8 @@ namespace jwt {
 		};
 
 		template<typename object_type, typename string_type>
-		using is_count_signature = typename std::is_integral<decltype(
-			std::declval<const object_type>().count(std::declval<const string_type>()))>;
+		using is_count_signature = typename std::is_integral<decltype(std::declval<const object_type>().count(
+			std::declval<const string_type>()))>;
 
 		template<typename object_type, typename value_type, typename string_type>
 		using is_subcription_operator_signature =
@@ -1861,6 +1861,12 @@ namespace jwt {
 		template<typename value_type, typename array_type>
 		struct is_valid_json_array {
 			static constexpr auto value = std::is_same<typename array_type::value_type, value_type>::value;
+		};
+
+		template<typename value_type, typename string_type>
+		struct is_valid_json_string {
+			static constexpr auto value = true;
+			// TODO: check for `substr` and `operator+`
 		};
 
 		template<typename value_type, typename string_type, typename object_type, typename array_type>
@@ -2322,7 +2328,8 @@ namespace jwt {
 		 */
 		JWT_CLAIM_EXPLICIT decoded_jwt(const typename json_traits::string_type& token)
 			: decoded_jwt(token, [](const typename json_traits::string_type& token) {
-				  return base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(token));
+				  return base::decode<alphabet::base64url>(
+					  base::pad<alphabet::base64url>(json_traits::to_standard_string(token)));
 			  }) {}
 #endif
 		/**
@@ -2342,9 +2349,9 @@ namespace jwt {
 			if (hdr_end == json_traits::string_type::npos) throw std::invalid_argument("invalid token supplied");
 			auto payload_end = token.find('.', hdr_end + 1);
 			if (payload_end == json_traits::string_type::npos) throw std::invalid_argument("invalid token supplied");
-			header_base64 = token.substr(0, hdr_end);
-			payload_base64 = token.substr(hdr_end + 1, payload_end - hdr_end - 1);
-			signature_base64 = token.substr(payload_end + 1);
+			header_base64 = json_traits::do_substr(token, 0, hdr_end);
+			payload_base64 = json_traits::do_substr(token, hdr_end + 1, payload_end - hdr_end - 1);
+			signature_base64 = json_traits::do_substr(token, payload_end + 1);
 
 			header = decode(header_base64);
 			payload = decode(payload_base64);
@@ -2629,7 +2636,8 @@ namespace jwt {
 			return sign(
 				algo,
 				[](const typename json_traits::string_type& data) {
-					return base::trim<alphabet::base64url>(base::encode<alphabet::base64url>(data));
+					return base::trim<alphabet::base64url>(
+						base::encode<alphabet::base64url>(json_traits::to_standard_string(data)));
 				},
 				ec);
 		}
@@ -3024,12 +3032,12 @@ namespace jwt {
 			typename json_traits::string_type data = jwt.get_header_base64();
 			data.append(".").append(jwt.get_payload_base64());
 			const typename json_traits::string_type sig = jwt.get_signature();
-			const typename json_traits::string_type algo = jwt.get_algorithm();
+			const std::string algo = json_traits::to_standard_string(jwt.get_algorithm());
 			if (algs.count(algo) == 0) {
 				ec = error::token_verification_error::wrong_algorithm;
 				return;
 			}
-			algs.at(algo)->verify(data, sig, ec);
+			algs.at(algo)->verify(json_traits::to_standard_string(data), json_traits::to_standard_string(sig), ec);
 			if (ec) return;
 
 			verify_ops::verify_context<json_traits> ctx{clock.now(), jwt, default_leeway};
