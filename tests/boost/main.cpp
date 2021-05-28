@@ -73,12 +73,12 @@ struct boostjson_traits {
 		return val.get_double();
 	}
 
-	static bool parse(value_type& val, std::string str) {
+	static bool parse(value_type& val, string_type str) {
 		val = json::parse(str);
 		return true;
 	}
 
-	static string_type serialize(const value_type& val) { return json::string_view{json::serialize(val)}; }
+	static std::string serialize(const value_type& val) { return json::serialize(val); }
 
 	static std::string to_standard_string(const string_type& str) { return {str.c_str()}; };
 	static string_type do_substr(const string_type& str, std::size_t pos, std::size_t count = string_type::npos) {

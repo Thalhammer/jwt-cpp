@@ -2612,14 +2612,15 @@ namespace jwt {
 			typename json_traits::object_type obj_header = header_claims;
 			if (header_claims.count("alg") == 0) obj_header["alg"] = typename json_traits::value_type(algo.name());
 
-			const auto header = encode(json_traits::serialize(typename json_traits::value_type(obj_header)));
-			const auto payload = encode(json_traits::serialize(typename json_traits::value_type(payload_claims)));
-			const auto token = header + "." + payload;
+			const std::string header = encode(json_traits::serialize(typename json_traits::value_type(obj_header)));
+			const std::string payload = encode(json_traits::serialize(typename json_traits::value_type(payload_claims)));
+			const std::string token_body = header + "." + payload;
 
-			auto signature = algo.sign(token, ec);
+			const std::string signature = algo.sign(token_body, ec);
 			if (ec) return {};
 
-			return token + "." + encode(signature);
+			const auto token = token_body + "." + encode(signature);
+			return typename json_traits::string_type(token.data(), token.length());
 		}
 #ifndef JWT_DISABLE_BASE64
 		/**
@@ -2635,9 +2636,9 @@ namespace jwt {
 		typename json_traits::string_type sign(const Algo& algo, std::error_code& ec) const {
 			return sign(
 				algo,
-				[](const typename json_traits::string_type& data) {
+				[](const std::string& data) -> std::string {
 					return base::trim<alphabet::base64url>(
-						base::encode<alphabet::base64url>(json_traits::to_standard_string(data)));
+						base::encode<alphabet::base64url>(data));
 				},
 				ec);
 		}
