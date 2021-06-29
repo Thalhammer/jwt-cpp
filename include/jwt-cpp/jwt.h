@@ -2907,13 +2907,25 @@ namespace jwt {
 
 		/**
 		 * Get x5c claim
-		 * \return x5c as string
+		 * \return x5c as an array
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a array (Should not happen in a valid token)
+		 */
+		typename json_traits::array_type get_x5c() const { return get_jwk_claim("x5c").as_array(); };
+
+		/**
+		 * Get x5c claim as a string
+		 * \return x5c as an string
 		 * \throw std::runtime_error If claim was not present
 		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
 		 */
-		typename json_traits::string_type get_x5c() const {
-			return json_traits::as_string(get_jwk_claim("x5c").as_array().front());
-		} //do not use serialize() instead
+		typename json_traits::string_type get_x5c_key_value() const {
+			auto x5c_array = get_jwk_claim("x5c").as_array();
+			if (x5c_array.size() == 0) throw error::claim_not_present_exception();
+
+			return json_traits::as_string(x5c_array.front());
+		};
+
 		/**
 		 * Check if algortihm is present ("alg")
 		 * \return true if present, false otherwise
@@ -3170,11 +3182,22 @@ namespace jwt {
 	decoded_jwt<picojson_traits> decode(const std::string& token, Decode decode) {
 		return decoded_jwt<picojson_traits>(token, decode);
 	}
-
+	/**
+	 * Parse a jwk
+	 * \param token JWK Token to parse
+	 * \return Parsed JWK
+	 * \throw std::runtime_error Token is not in correct format
+	 */
 	inline jwk<picojson_traits> parse_jwk(const picojson_traits::string_type& token) {
 		return jwk<picojson_traits>(token);
 	}
 
+	/**
+	 * Parse a jwks
+	 * \param token JWKs Token to parse
+	 * \return Parsed JWKs
+	 * \throw std::runtime_error Token is not in correct format
+	 */
 	inline jwks<picojson_traits> parse_jwks(const picojson_traits::string_type& token) {
 		return jwks<picojson_traits>(token);
 	}

@@ -1,8 +1,8 @@
-#include <gtest/gtest.h>
 #include "jwt-cpp/jwt.h"
+#include <gtest/gtest.h>
 
 TEST(JwksTest, OneKeyParse) {
-std::string publicKey = R"({
+	std::string publicKey = R"({
     "alg": "RS256",
     "kty": "RSA",
     "use": "sig",
@@ -14,22 +14,22 @@ std::string publicKey = R"({
     "kid": "123456789",
     "x5t": "NjVBRjY5MDlCMUIwNzU4RTA2QzZFMDQ4QzQ2MDAyQjVDNjk1RTM2Qg"
   })";
-ASSERT_THROW(jwt::parse_jwk("__not_json__"), jwt::error::invalid_json_exception);
-ASSERT_THROW(jwt::parse_jwk(R"##(["not","an","object"])##"), std::bad_cast);
+	ASSERT_THROW(jwt::parse_jwk("__not_json__"), jwt::error::invalid_json_exception);
+	ASSERT_THROW(jwt::parse_jwk(R"##(["not","an","object"])##"), std::bad_cast);
 
-auto jwk = jwt::parse_jwk(publicKey);
+	auto jwk = jwt::parse_jwk(publicKey);
 
-ASSERT_TRUE(jwk.has_algorithm());
-ASSERT_TRUE(jwk.has_key_id());
-ASSERT_TRUE(jwk.has_x5c());
-ASSERT_FALSE(jwk.has_jwk_claim("foo"));
+	ASSERT_TRUE(jwk.has_algorithm());
+	ASSERT_TRUE(jwk.has_key_id());
+	ASSERT_TRUE(jwk.has_x5c());
+	ASSERT_FALSE(jwk.has_jwk_claim("foo"));
 
-ASSERT_EQ("RS256", jwk.get_algorithm());
-ASSERT_EQ("123456789", jwk.get_key_id());
+	ASSERT_EQ("RS256", jwk.get_algorithm());
+	ASSERT_EQ("123456789", jwk.get_key_id());
 }
 
 TEST(JwksTest, MultiKeysParse) {
-std::string publicKey = R"({
+	std::string publicKey = R"({
 	"keys": [{
 			"kid": "internal-gateway-jwt",
 			"use": "sig",
@@ -52,17 +52,67 @@ std::string publicKey = R"({
 		}
 	]
 })";
-auto jwks = jwt::parse_jwks(publicKey);
-auto jwk = jwks.get_jwk("internal-gateway-jwt");
+	auto jwks = jwt::parse_jwks(publicKey);
+	auto jwk = jwks.get_jwk("internal-gateway-jwt");
 
-ASSERT_TRUE(jwk.has_algorithm());
-ASSERT_TRUE(jwk.has_key_id());
-ASSERT_TRUE(jwk.has_x5c());
-ASSERT_FALSE(jwk.has_jwk_claim("foo"));
+	ASSERT_TRUE(jwk.has_algorithm());
+	ASSERT_TRUE(jwk.has_key_id());
+	ASSERT_TRUE(jwk.has_x5c());
+	ASSERT_FALSE(jwk.has_jwk_claim("foo"));
 
-ASSERT_EQ("RS256", jwk.get_algorithm());
-ASSERT_EQ("internal-gateway-jwt", jwk.get_key_id());
+	ASSERT_EQ("RS256", jwk.get_algorithm());
+	ASSERT_EQ("internal-gateway-jwt", jwk.get_key_id());
 
+	ASSERT_THROW(jwks.get_jwk("123456"), jwt::error::claim_not_present_exception);
+}
 
-ASSERT_THROW(jwks.get_jwk("123456"), jwt::error::claim_not_present_exception);
+TEST(JwksTest, Missingx5c) {
+	std::string publicKey = R"({
+	"keys": [{
+			"kid": "internal-gateway-jwt",
+			"use": "sig",
+			"n": "nr9UsxnPVd21iuiGcIJ_Qli2XVlAZe5VbELA1hO2-L4k5gI4fjHZ3ysUcautLpbOYogOQgsnlpsLrCmvNDvBDVzVp2nMbpguJlt12vHSP1fRJJpipGQ8qU-VaXsC4OjOQf3H9ojAU5Vfnl5gZ7kVCd8g4M29l-IRyNpxE-Ccxc2Y7molsCHT6GHLMMBVsd11JIOXMICJf4hz2YYkQ1t7C8SaB2RFRPuGO5Mn6mfAnwdmRera4TBz6_pIPPCgCbN8KOdJItWkr9F7Tjv_0nhh-ZVlQvbQ9PXHyKTj00g3IYUlbZIWHm0Ley__fzNZk2dyAAVjNA2QSzTZJc33MQx1pQ",
+			"e": "AQAB",
+			"x5t": "-qC0akuyiHT7GcV5a8O5nrFsKVWM9da7lzq6DLrj09I",
+			"alg": "RS256",
+			"kty": "RSA"
+		},
+		{
+			"kid": "internal-0",
+			"use": "sig",
+			"x5c": [],
+			"n": "nr9UsxnPVd21iuiGcIJ_Qli2XVlAZe5VbELA1hO2-L4k5gI4fjHZ3ysUcautLpbOYogOQgsnlpsLrCmvNDvBDVzVp2nMbpguJlt12vHSP1fRJJpipGQ8qU-VaXsC4OjOQf3H9ojAU5Vfnl5gZ7kVCd8g4M29l-IRyNpxE-Ccxc2Y7molsCHT6GHLMMBVsd11JIOXMICJf4hz2YYkQ1t7C8SaB2RFRPuGO5Mn6mfAnwdmRera4TBz6_pIPPCgCbN8KOdJItWkr9F7Tjv_0nhh-ZVlQvbQ9PXHyKTj00g3IYUlbZIWHm0Ley__fzNZk2dyAAVjNA2QSzTZJc33MQx1pQ",
+			"e": "AQAB",
+			"x5t": "-qC0akuyiHT7GcV5a8O5nrFsKVWM9da7lzq6DLrj09I",
+			"alg": "RS256",
+			"kty": "RSA"
+		},
+		{
+			"kid": "internal-1",
+			"x5c": ["1","2","3"],
+			"n": "nr9UsxnPVd21iuiGcIJ_Qli2XVlAZe5VbELA1hO2-L4k5gI4fjHZ3ysUcautLpbOYogOQgsnlpsLrCmvNDvBDVzVp2nMbpguJlt12vHSP1fRJJpipGQ8qU-VaXsC4OjOQf3H9ojAU5Vfnl5gZ7kVCd8g4M29l-IRyNpxE-Ccxc2Y7molsCHT6GHLMMBVsd11JIOXMICJf4hz2YYkQ1t7C8SaB2RFRPuGO5Mn6mfAnwdmRera4TBz6_pIPPCgCbN8KOdJItWkr9F7Tjv_0nhh-ZVlQvbQ9PXHyKTj00g3IYUlbZIWHm0Ley__fzNZk2dyAAVjNA2QSzTZJc33MQx1pQ",
+			"e": "AQAB",
+			"x5t": "-qC0akuyiHT7GcV5a8O5nrFsKVWM9da7lzq6DLrj09I",
+			"alg": "RS256",
+			"kty": "RSA"
+		}
+	]
+})";
+
+	auto jwks = jwt::parse_jwks(publicKey);
+	ASSERT_TRUE(jwks.has_jwk("internal-gateway-jwt"));
+	ASSERT_FALSE(jwks.has_jwk("random-jwt"));
+	auto jwk = jwks.get_jwk("internal-gateway-jwt");
+
+	ASSERT_TRUE(jwk.has_algorithm());
+	ASSERT_THROW(jwk.get_x5c(), jwt::error::claim_not_present_exception);
+
+	auto jwk2 = jwks.get_jwk("internal-0");
+
+	ASSERT_EQ(jwk2.get_x5c().size(), 0);
+	ASSERT_THROW(jwk2.get_x5c_key_value(), jwt::error::claim_not_present_exception);
+
+	auto jwk3 = jwks.get_jwk("internal-1");
+	ASSERT_EQ(jwk3.get_x5c().size(), 3);
+	ASSERT_EQ(jwk3.get_x5c_key_value(), "1");
 }
