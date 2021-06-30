@@ -2875,19 +2875,26 @@ namespace jwt {
 		}
 	};
 
+	/**
+	 * \brief JSON Web Key
+	 *
+	 * https://tools.ietf.org/html/rfc7517
+	 *
+	 * A JSON object that represents a cryptographic key.  The members of
+	 * the object represent properties of the key, including its value.
+	 */
 	template<typename json_traits>
 	class jwk {
 		using basic_claim_t = basic_claim<json_traits>;
-		details::map_of_claims<json_traits> jwk_claims;
+		const details::map_of_claims<json_traits> jwk_claims;
 
 	public:
-		JWT_CLAIM_EXPLICIT jwk(const typename json_traits::string_type& str) {
-			jwk_claims = details::map_of_claims<json_traits>::parse_claims(str);
-		}
+		JWT_CLAIM_EXPLICIT jwk(const typename json_traits::string_type& str) : 
+			jwk_claims(details::map_of_claims<json_traits>::parse_claims(str))
+		{}
 
-		JWT_CLAIM_EXPLICIT jwk(const typename json_traits::value_type& json) {
-			jwk_claims = {json_traits::as_object(json)};
-		}
+		JWT_CLAIM_EXPLICIT jwk(const typename json_traits::value_type& json) :
+			jwk_claims(json_traits::as_object(json)) {}
 
 		/**
 		 * Get key type claim
@@ -3050,6 +3057,16 @@ namespace jwt {
 		bool empty() const noexcept { return jwk_claims.empty(); }
 	};
 
+	/**
+	 * \brief JWK Set
+	 *
+	 * https://tools.ietf.org/html/rfc7517
+	 *
+	 * A JSON object that represents a set of JWKs.  The JSON object MUST
+	 * have a "keys" member, which is an array of JWKs.
+	 *
+	 * This container takes a JWKs and simplifies it to a vector of JWKs 
+	 */
 	template<typename json_traits>
 	class jwks {
 	public:
