@@ -2889,12 +2889,11 @@ namespace jwt {
 		const details::map_of_claims<json_traits> jwk_claims;
 
 	public:
-		JWT_CLAIM_EXPLICIT jwk(const typename json_traits::string_type& str) : 
-			jwk_claims(details::map_of_claims<json_traits>::parse_claims(str))
-		{}
+		JWT_CLAIM_EXPLICIT jwk(const typename json_traits::string_type& str)
+			: jwk_claims(details::map_of_claims<json_traits>::parse_claims(str)) {}
 
-		JWT_CLAIM_EXPLICIT jwk(const typename json_traits::value_type& json) :
-			jwk_claims(json_traits::as_object(json)) {}
+		JWT_CLAIM_EXPLICIT jwk(const typename json_traits::value_type& json)
+			: jwk_claims(json_traits::as_object(json)) {}
 
 		/**
 		 * Get key type claim
@@ -3125,10 +3124,10 @@ namespace jwt {
 	};
 
 	/**
-   * Create a verifier using the given clock
-   * \param c Clock instance to use
-   * \return verifier instance
-   */
+	 * Create a verifier using the given clock
+	 * \param c Clock instance to use
+	 * \return verifier instance
+	 */
 	template<typename Clock, typename json_traits>
 	verifier<Clock, json_traits> verify(Clock c) {
 		return verifier<Clock, json_traits>(c);
