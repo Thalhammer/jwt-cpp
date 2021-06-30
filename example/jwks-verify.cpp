@@ -34,7 +34,7 @@ int main()
 	auto jwk = jwks.get_jwk(decoded_jwt.get_key_id());
 
 	auto issuer = decoded_jwt.get_issuer();
-	auto x5c = jwk.get_x5c();
+	auto x5c = jwk.get_x5c_key_value();
 
 	if (!x5c.empty() && !issuer.empty()) {
 		auto verifier = jwt::verify()
