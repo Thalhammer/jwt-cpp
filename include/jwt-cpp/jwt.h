@@ -2890,6 +2890,32 @@ namespace jwt {
 		}
 
 		/**
+		 * Get key type claim
+		 *
+		 * This returns the general type (e.g. RSA or EC), not a specific algorithm value.
+		 * \return key type as string
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
+		 */
+		typename json_traits::string_type get_key_type() const { return get_jwk_claim("kty").as_string(); }
+
+		/**
+		 * Get public key usage claim
+		 * \return usage parameter as string
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
+		 */
+		typename json_traits::string_type get_use() const { return get_jwk_claim("use").as_string(); }
+
+		/**
+		 * Get key operation types claim
+		 * \return key operation types as a set of strings
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
+		 */
+		typename basic_claim_t::set_t get_key_operations() const { return get_jwk_claim("key_ops").as_set(); }
+
+		/**
 		 * Get algorithm claim
 		 * \return algorithm as string
 		 * \throw std::runtime_error If claim was not present
@@ -2914,6 +2940,30 @@ namespace jwt {
 		typename json_traits::array_type get_x5c() const { return get_jwk_claim("x5c").as_array(); };
 
 		/**
+		 * Get X509 URL claim
+		 * \return x5u as string
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
+		 */
+		typename json_traits::string_type get_x5u() const { return get_jwk_claim("x5u").as_string(); };
+
+		/**
+		 * Get X509 thumbprint claim
+		 * \return x5t as string
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
+		 */
+		typename json_traits::string_type get_x5t() const { return get_jwk_claim("x5t").as_string(); };
+
+		/**
+		 * Get X509 SHA256 thumbprint claim
+		 * \return x5t#S256 as string
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
+		 */
+		typename json_traits::string_type get_x5t_sha256() const { return get_jwk_claim("x5t#S256").as_string(); };
+
+		/**
 		 * Get x5c claim as a string
 		 * \return x5c as an string
 		 * \throw std::runtime_error If claim was not present
@@ -2925,6 +2975,24 @@ namespace jwt {
 
 			return json_traits::as_string(x5c_array.front());
 		};
+
+		/**
+		 * Check if a key type is present ("kty")
+		 * \return true if present, false otherwise
+		 */
+		bool has_key_type() const noexcept { return has_jwk_claim("kty"); }
+
+		/**
+		 * Check if a public key usage indication is present ("use")
+		 * \return true if present, false otherwise
+		 */
+		bool has_use() const noexcept { return has_jwk_claim("use"); }
+
+		/**
+		 * Check if a key operations parameter is present ("key_ops")
+		 * \return true if present, false otherwise
+		 */
+		bool has_key_operations() const noexcept { return has_jwk_claim("key_ops"); }
 
 		/**
 		 * Check if algortihm is present ("alg")
@@ -2939,10 +3007,28 @@ namespace jwt {
 		bool has_key_id() const noexcept { return has_jwk_claim("kid"); }
 
 		/**
-		 * Check if x5c is present ("x5c")
+		 * Check if X509 URL is present ("x5u")
+		 * \return true if present, false otherwise
+		 */
+		bool has_x5u() const noexcept { return has_jwk_claim("x5u"); }
+
+		/**
+		 * Check if X509 Chain is present ("x5c")
 		 * \return true if present, false otherwise
 		 */
 		bool has_x5c() const noexcept { return has_jwk_claim("x5c"); }
+
+		/**
+		 * Check if a X509 thumbprint is present ("x5t")
+		 * \return true if present, false otherwise
+		 */
+		bool has_x5t() const noexcept { return has_jwk_claim("x5t"); }
+
+		/**
+		 * Check if a X509 SHA256 thumbprint is present ("x5t#S256")
+		 * \return true if present, false otherwise
+		 */
+		bool has_x5t_sha256() const noexcept { return has_jwk_claim("x5t#S256"); }
 
 		/**
 		 * Check if a jwks claim is present
