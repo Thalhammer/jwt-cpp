@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <functional>
 #include <iterator>
 #include <memory>
 #include <set>
@@ -2606,12 +2607,167 @@ namespace jwt {
 #endif
 	};
 
+	namespace verify_ops {
+		template<typename json_traits>
+		struct verify_context {
+			// Current time, retrieved from the verifiers clock and cached for performance and consistency
+			date current_time;
+			// The jwt passed to the verifier
+			const decoded_jwt<json_traits>& jwt;
+			// The configured default leeway for this verification
+			size_t default_leeway{0};
+
+			// The claim key to apply this comparision on
+			typename json_traits::string_type claim_key{};
+		};
+
+		/**
+		 * This is the default operation and does case sensitive matching
+		 */
+		template<typename json_traits>
+		struct equals_claim {
+			basic_claim<json_traits> expected;
+			void operator()(const verify_context<json_traits>& ctx, std::error_code& ec) {
+				if (!ctx.jwt.has_payload_claim(ctx.claim_key)) {
+					ec = error::token_verification_error::missing_claim;
+					return;
+				}
+				auto jc = ctx.jwt.get_payload_claim(ctx.claim_key);
+				if (jc.get_type() != expected.get_type()) {
+					ec = error::token_verification_error::claim_type_missmatch;
+					return;
+				}
+				bool matches = false;
+				switch(expected.get_type()) {
+					case json::type::boolean: matches = expected.as_bool() == jc.as_bool(); break;
+					case json::type::integer: matches = expected.as_int() == jc.as_int(); break;
+					case json::type::number: matches = expected.as_number() == jc.as_number(); break;
+					case json::type::string: matches = expected.as_string() == jc.as_string(); break;
+					case json::type::array:
+					case json::type::object:
+						matches = json_traits::serialize(expected.to_json()) == json_traits::serialize(jc.to_json());
+						break;
+					default: throw std::logic_error("internal error, should be unreachable");
+				}
+				if(!matches) {
+					ec = error::token_verification_error::claim_value_missmatch;
+					return;
+				}
+			}
+		};
+
+		/**
+		 * Checks that the current time is before the time specified in the given
+		 * claim. This is identical to how the "exp" check works.
+		 */
+		template<typename json_traits>
+		struct date_before_claim {
+			size_t leeway;
+			void operator()(const verify_context<json_traits>& ctx, std::error_code& ec) {
+				auto c = ctx.jwt.get_payload_claim(ctx.claim_key).as_date();
+				if (ctx.current_time > c + std::chrono::seconds(leeway)) {
+					ec = error::token_verification_error::token_expired;
+				}
+			}
+		};
+
+		/**
+		 * Checks that the current time is after the time specified in the given
+		 * claim. This is identical to how the "nbf" and "iat" check works.
+		 */
+		template<typename json_traits>
+		struct date_after_claim {
+			size_t leeway;
+			void operator()(const verify_context<json_traits>& ctx, std::error_code& ec) {
+				auto c = ctx.jwt.get_payload_claim(ctx.claim_key).as_date();
+				if (ctx.current_time < c - std::chrono::seconds(leeway)) {
+					ec = error::token_verification_error::token_expired;
+				}
+			}
+		};
+
+		/**
+		 * Checks if the given set is a subset of the set inside the token.
+		 * If the token value is a string it is traited as a set of a single element.
+		 * The comparison is case sensitive.
+		 */
+		template<typename json_traits>
+		struct is_subset_claim {
+			typename basic_claim<json_traits>::set_t expected;
+			void operator()(const verify_context<json_traits>& ctx, std::error_code& ec) {
+				if (!ctx.jwt.has_payload_claim(ctx.claim_key)) {
+					ec = error::token_verification_error::audience_missmatch;
+					return;
+				}
+				auto c = ctx.jwt.get_payload_claim(ctx.claim_key);
+				if(c.get_type() == json::type::string) {
+					if(expected.size() > 1 || !(expected.empty() || *expected.begin() == c.as_string())) {
+						ec = error::token_verification_error::audience_missmatch;
+						return;
+					}
+				} else {
+					auto jc = c.as_set();
+					for (auto& e : expected) {
+						if (jc.find(e) == jc.end()) {
+							ec = error::token_verification_error::audience_missmatch;
+							return;
+						}
+					}
+				}
+			}
+		};
+
+		/**
+		 * Checks if the claim is a string and does an case insensitive comparison.
+		 */
+		template<typename json_traits>
+		struct insensitive_string_claim {
+			typename json_traits::string_type expected;
+			insensitive_string_claim(typename json_traits::string_type e)
+				: expected(std::move(e))
+			{
+				std::transform(expected.begin(), expected.end(), expected.begin(), [](char c) { return std::tolower(c); });
+			}
+			void operator()(const verify_context<json_traits>& ctx, std::error_code& ec) {
+				if (!ctx.jwt.has_payload_claim(ctx.claim_key)) {
+					ec = error::token_verification_error::missing_claim;
+					return;
+				}
+				auto c = ctx.jwt.get_payload_claim(ctx.claim_key);
+				if(c.get_type() != json::type::string) {
+					ec = error::token_verification_error::claim_type_missmatch;
+					return;
+				}
+				auto val = c.as_string();
+				std::transform(val.begin(), val.end(), val.begin(), [](char c) { return std::tolower(c); });
+				if(val != expected) {
+					ec = error::token_verification_error::claim_value_missmatch;
+				}
+			}
+		};
+	} // namespace verify_ops
+
 	/**
 	 * Verifier class used to check if a decoded token contains all claims required by your application and has a valid
 	 * signature.
 	 */
 	template<typename Clock, typename json_traits>
 	class verifier {
+	public:
+		using basic_claim_t = basic_claim<json_traits>;
+		/**
+		 * Verification function
+		 *
+		 * This gets passed the current verifier, a reference to the decoded jwt, a reference to the key of this claim,
+		 * as well as a reference to an error_code.
+		 * The function checks if the actual value matches certain rules (e.g. equality to value x) and sets the error_code if
+		 * it does not. Once a non zero error_code is encountered the verification stops and this error_code becomes the result
+		 * returned from verify
+		 */
+		using verify_check_fn_t =
+			std::function<void(const verify_ops::verify_context<json_traits>&, std::error_code& ec)>;
+
+	private:
 		struct algo_base {
 			virtual ~algo_base() = default;
 			virtual void verify(const std::string& data, const std::string& sig, std::error_code& ec) = 0;
@@ -2624,10 +2780,8 @@ namespace jwt {
 				alg.verify(data, sig, ec);
 			}
 		};
-
-		using basic_claim_t = basic_claim<json_traits>;
 		/// Required claims
-		std::unordered_map<typename json_traits::string_type, basic_claim_t> claims;
+		std::unordered_map<typename json_traits::string_type, verify_check_fn_t> claims;
 		/// Leeway time for exp, nbf and iat
 		size_t default_leeway = 0;
 		/// Instance of clock type
@@ -2640,7 +2794,29 @@ namespace jwt {
 		 * Constructor for building a new verifier instance
 		 * \param c Clock instance
 		 */
-		explicit verifier(Clock c) : clock(c) {}
+		explicit verifier(Clock c) : clock(c) {
+			claims["exp"] = [](const verify_ops::verify_context<json_traits>& ctx, std::error_code& ec) {
+				if (!ctx.jwt.has_expires_at()) return;
+				auto exp = ctx.jwt.get_expires_at();
+				if (ctx.current_time > exp + std::chrono::seconds(ctx.default_leeway)) {
+					ec = error::token_verification_error::token_expired;
+				}
+			};
+			claims["iat"] = [](const verify_ops::verify_context<json_traits>& ctx, std::error_code& ec) {
+				if (!ctx.jwt.has_issued_at()) return;
+				auto iat = ctx.jwt.get_issued_at();
+				if (ctx.current_time < iat - std::chrono::seconds(ctx.default_leeway)) {
+					ec = error::token_verification_error::token_expired;
+				}
+			};
+			claims["nbf"] = [](const verify_ops::verify_context<json_traits>& ctx, std::error_code& ec) {
+				if (!ctx.jwt.has_not_before()) return;
+				auto nbf = ctx.jwt.get_not_before();
+				if (ctx.current_time < nbf - std::chrono::seconds(ctx.default_leeway)) {
+					ec = error::token_verification_error::token_expired;
+				}
+			};
+		}
 
 		/**
 		 * Set default leeway to use.
@@ -2658,7 +2834,8 @@ namespace jwt {
 		 * \return *this to allow chaining
 		 */
 		verifier& expires_at_leeway(size_t leeway) {
-			return with_claim("exp", basic_claim_t(std::chrono::system_clock::from_time_t(leeway)));
+			claims["exp"] = verify_ops::date_before_claim<json_traits>{leeway};
+			return *this;
 		}
 		/**
 		 * Set leeway for not before.
@@ -2667,7 +2844,8 @@ namespace jwt {
 		 * \return *this to allow chaining
 		 */
 		verifier& not_before_leeway(size_t leeway) {
-			return with_claim("nbf", basic_claim_t(std::chrono::system_clock::from_time_t(leeway)));
+			claims["nbf"] = verify_ops::date_after_claim<json_traits>{leeway};
+			return *this;
 		}
 		/**
 		 * Set leeway for issued at.
@@ -2676,8 +2854,36 @@ namespace jwt {
 		 * \return *this to allow chaining
 		 */
 		verifier& issued_at_leeway(size_t leeway) {
-			return with_claim("iat", basic_claim_t(std::chrono::system_clock::from_time_t(leeway)));
+			claims["iat"] = verify_ops::date_after_claim<json_traits>{leeway};
+			return *this;
 		}
+
+		/**
+		 * Set an type to check for.
+		 * Check is casesensitive.
+		 * \param iss Issuer to check for.
+		 * \return *this to allow chaining
+		 */
+		verifier& with_type(typename json_traits::string_type type) {
+			std::transform(type.begin(), type.end(), type.begin(), [](char c) { return std::tolower(c); });
+			return with_claim("typ", [type](const verify_ops::verify_context<json_traits>& ctx, std::error_code& ec) {
+				if (!ctx.jwt.has_header_claim(ctx.claim_key)) {
+					ec = error::token_verification_error::missing_claim;
+					return;
+				}
+				auto c = ctx.jwt.get_header_claim(ctx.claim_key);
+				if(c.get_type() != json::type::string) {
+					ec = error::token_verification_error::claim_type_missmatch;
+					return;
+				}
+				auto val = c.as_string();
+				std::transform(val.begin(), val.end(), val.begin(), [](char c) { return std::tolower(c); });
+				if(val != type) {
+					ec = error::token_verification_error::claim_value_missmatch;
+				}
+			});
+		}
+
 		/**
 		 * Set an issuer to check for.
 		 * Check is casesensitive.
@@ -2687,6 +2893,7 @@ namespace jwt {
 		verifier& with_issuer(const typename json_traits::string_type& iss) {
 			return with_claim("iss", basic_claim_t(iss));
 		}
+
 		/**
 		 * Set a subject to check for.
 		 * Check is casesensitive.
@@ -2703,7 +2910,8 @@ namespace jwt {
 		 * \return *this to allow chaining
 		 */
 		verifier& with_audience(const typename basic_claim_t::set_t& aud) {
-			return with_claim("aud", basic_claim_t(aud));
+			claims["aud"] = verify_ops::is_subset_claim<json_traits>{aud};
+			return *this;
 		}
 		/**
 		 * Set an audience to check for.
@@ -2712,7 +2920,9 @@ namespace jwt {
 		 * \return *this to allow chaining
 		 */
 		verifier& with_audience(const typename json_traits::string_type& aud) {
-			return with_claim("aud", basic_claim_t(aud));
+			typename basic_claim_t::set_t s;
+			s.insert(aud);
+			return with_audience(s);
 		}
 		/**
 		 * Set an id to check for.
@@ -2721,15 +2931,26 @@ namespace jwt {
 		 * \return *this to allow chaining
 		 */
 		verifier& with_id(const typename json_traits::string_type& id) { return with_claim("jti", basic_claim_t(id)); }
+
 		/**
-		 * Specify a claim to check for.
+		 * Specify a claim to check for using the specified operation.
+		 * \param name Name of the claim to check for
+		 * \param fn Function to use for verifying the claim
+		 * \return *this to allow chaining
+		 */
+		verifier& with_claim(const typename json_traits::string_type& name, verify_check_fn_t fn) {
+			claims[name] = fn;
+			return *this;
+		}
+
+		/**
+		 * Specify a claim to check for equality (both type & value).
 		 * \param name Name of the claim to check for
 		 * \param c Claim to check for
 		 * \return *this to allow chaining
 		 */
 		verifier& with_claim(const typename json_traits::string_type& name, basic_claim_t c) {
-			claims[name] = c;
-			return *this;
+			return with_claim(name, verify_ops::equals_claim<json_traits>{c});
 		}
 
 		/**
@@ -2770,107 +2991,11 @@ namespace jwt {
 			algs.at(algo)->verify(data, sig, ec);
 			if (ec) return;
 
-			auto assert_claim_eq = [](const decoded_jwt<json_traits>& jwt, const typename json_traits::string_type& key,
-									  const basic_claim_t& c, std::error_code& ec) {
-				if (!jwt.has_payload_claim(key)) {
-					ec = error::token_verification_error::missing_claim;
-					return;
-				}
-				auto jc = jwt.get_payload_claim(key);
-				if (jc.get_type() != c.get_type()) {
-					ec = error::token_verification_error::claim_type_missmatch;
-					return;
-				}
-				if (c.get_type() == json::type::integer) {
-					if (c.as_date() != jc.as_date()) {
-						ec = error::token_verification_error::claim_value_missmatch;
-						return;
-					}
-				} else if (c.get_type() == json::type::array) {
-					auto s1 = c.as_set();
-					auto s2 = jc.as_set();
-					if (s1.size() != s2.size()) {
-						ec = error::token_verification_error::claim_value_missmatch;
-						return;
-					}
-					auto it1 = s1.cbegin();
-					auto it2 = s2.cbegin();
-					while (it1 != s1.cend() && it2 != s2.cend()) {
-						if (*it1++ != *it2++) {
-							ec = error::token_verification_error::claim_value_missmatch;
-							return;
-						}
-					}
-				} else if (c.get_type() == json::type::object) {
-					if (json_traits::serialize(c.to_json()) != json_traits::serialize(jc.to_json())) {
-						ec = error::token_verification_error::claim_value_missmatch;
-						return;
-					}
-				} else if (c.get_type() == json::type::string) {
-					if (c.as_string() != jc.as_string()) {
-						ec = error::token_verification_error::claim_value_missmatch;
-						return;
-					}
-				} else
-					throw std::logic_error("internal error, should be unreachable");
-			};
-
-			auto time = clock.now();
-
-			if (jwt.has_expires_at()) {
-				auto leeway = claims.count("exp") == 1
-								  ? std::chrono::system_clock::to_time_t(claims.at("exp").as_date())
-								  : default_leeway;
-				auto exp = jwt.get_expires_at();
-				if (time > exp + std::chrono::seconds(leeway)) {
-					ec = error::token_verification_error::token_expired;
-					return;
-				}
-			}
-			if (jwt.has_issued_at()) {
-				auto leeway = claims.count("iat") == 1
-								  ? std::chrono::system_clock::to_time_t(claims.at("iat").as_date())
-								  : default_leeway;
-				auto iat = jwt.get_issued_at();
-				if (time < iat - std::chrono::seconds(leeway)) {
-					ec = error::token_verification_error::token_expired;
-					return;
-				}
-			}
-			if (jwt.has_not_before()) {
-				auto leeway = claims.count("nbf") == 1
-								  ? std::chrono::system_clock::to_time_t(claims.at("nbf").as_date())
-								  : default_leeway;
-				auto nbf = jwt.get_not_before();
-				if (time < nbf - std::chrono::seconds(leeway)) {
-					ec = error::token_verification_error::token_expired;
-					return;
-				}
-			}
+			verify_ops::verify_context<json_traits> ctx{clock.now(), jwt, default_leeway};
 			for (auto& c : claims) {
-				if (c.first == "exp" || c.first == "iat" || c.first == "nbf") {
-					// Nothing to do here, already checked
-				} else if (c.first == "aud") {
-					if (!jwt.has_audience()) {
-						ec = error::token_verification_error::audience_missmatch;
-						return;
-					}
-					auto aud = jwt.get_audience();
-					typename basic_claim_t::set_t expected = {};
-					if (c.second.get_type() == json::type::string)
-						expected = {c.second.as_string()};
-					else
-						expected = c.second.as_set();
-					for (auto& e : expected) {
-						if (aud.count(e) == 0) {
-							ec = error::token_verification_error::audience_missmatch;
-							return;
-						}
-					}
-				} else {
-					assert_claim_eq(jwt, c.first, c.second, ec);
-					if (ec) return;
-				}
+				ctx.claim_key = c.first;
+				c.second(ctx, ec);
+				if (ec) return;
 			}
 		}
 	};
@@ -3064,7 +3189,7 @@ namespace jwt {
 	 * A JSON object that represents a set of JWKs.  The JSON object MUST
 	 * have a "keys" member, which is an array of JWKs.
 	 *
-	 * This container takes a JWKs and simplifies it to a vector of JWKs 
+	 * This container takes a JWKs and simplifies it to a vector of JWKs
 	 */
 	template<typename json_traits>
 	class jwks {
