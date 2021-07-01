@@ -720,9 +720,7 @@ TEST(TokenTest, VerifyTokenType) {
 	auto token = jwt::create().set_type("JWS").sign(jwt::algorithm::none{});
 	auto decoded_token = jwt::decode(token);
 
-	auto verify = jwt::verify()
-					.with_type("jws")
-					.allow_algorithm(jwt::algorithm::none{});
+	auto verify = jwt::verify().with_type("jws").allow_algorithm(jwt::algorithm::none{});
 	ASSERT_NO_THROW(verify.verify(decoded_token));
 	std::error_code ec;
 	ASSERT_NO_THROW(verify.verify(decoded_token, ec));

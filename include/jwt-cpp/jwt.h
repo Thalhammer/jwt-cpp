@@ -2610,6 +2610,8 @@ namespace jwt {
 	namespace verify_ops {
 		template<typename json_traits>
 		struct verify_context {
+			verify_context(date ctime, const decoded_jwt<json_traits>& j, size_t l)
+				: current_time(ctime), jwt(j), default_leeway(l) {}
 			// Current time, retrieved from the verifiers clock and cached for performance and consistency
 			date current_time;
 			// The jwt passed to the verifier
@@ -2638,18 +2640,18 @@ namespace jwt {
 					return;
 				}
 				bool matches = false;
-				switch(expected.get_type()) {
-					case json::type::boolean: matches = expected.as_bool() == jc.as_bool(); break;
-					case json::type::integer: matches = expected.as_int() == jc.as_int(); break;
-					case json::type::number: matches = expected.as_number() == jc.as_number(); break;
-					case json::type::string: matches = expected.as_string() == jc.as_string(); break;
-					case json::type::array:
-					case json::type::object:
-						matches = json_traits::serialize(expected.to_json()) == json_traits::serialize(jc.to_json());
-						break;
-					default: throw std::logic_error("internal error, should be unreachable");
+				switch (expected.get_type()) {
+				case json::type::boolean: matches = expected.as_bool() == jc.as_bool(); break;
+				case json::type::integer: matches = expected.as_int() == jc.as_int(); break;
+				case json::type::number: matches = expected.as_number() == jc.as_number(); break;
+				case json::type::string: matches = expected.as_string() == jc.as_string(); break;
+				case json::type::array:
+				case json::type::object:
+					matches = json_traits::serialize(expected.to_json()) == json_traits::serialize(jc.to_json());
+					break;
+				default: throw std::logic_error("internal error, should be unreachable");
 				}
-				if(!matches) {
+				if (!matches) {
 					ec = error::token_verification_error::claim_value_missmatch;
 					return;
 				}
@@ -2700,8 +2702,8 @@ namespace jwt {
 					return;
 				}
 				auto c = ctx.jwt.get_payload_claim(ctx.claim_key);
-				if(c.get_type() == json::type::string) {
-					if(expected.size() > 1 || !(expected.empty() || *expected.begin() == c.as_string())) {
+				if (c.get_type() == json::type::string) {
+					if (expected.size() > 1 || !(expected.empty() || *expected.begin() == c.as_string())) {
 						ec = error::token_verification_error::audience_missmatch;
 						return;
 					}
@@ -2723,10 +2725,9 @@ namespace jwt {
 		template<typename json_traits>
 		struct insensitive_string_claim {
 			typename json_traits::string_type expected;
-			insensitive_string_claim(typename json_traits::string_type e)
-				: expected(std::move(e))
-			{
-				std::transform(expected.begin(), expected.end(), expected.begin(), [](char c) { return std::tolower(c); });
+			insensitive_string_claim(typename json_traits::string_type e) : expected(std::move(e)) {
+				std::transform(expected.begin(), expected.end(), expected.begin(),
+							   [](char c) { return std::tolower(c); });
 			}
 			void operator()(const verify_context<json_traits>& ctx, std::error_code& ec) {
 				if (!ctx.jwt.has_payload_claim(ctx.claim_key)) {
@@ -2734,15 +2735,13 @@ namespace jwt {
 					return;
 				}
 				auto c = ctx.jwt.get_payload_claim(ctx.claim_key);
-				if(c.get_type() != json::type::string) {
+				if (c.get_type() != json::type::string) {
 					ec = error::token_verification_error::claim_type_missmatch;
 					return;
 				}
 				auto val = c.as_string();
 				std::transform(val.begin(), val.end(), val.begin(), [](char c) { return std::tolower(c); });
-				if(val != expected) {
-					ec = error::token_verification_error::claim_value_missmatch;
-				}
+				if (val != expected) { ec = error::token_verification_error::claim_value_missmatch; }
 			}
 		};
 	} // namespace verify_ops
@@ -2872,15 +2871,13 @@ namespace jwt {
 					return;
 				}
 				auto c = ctx.jwt.get_header_claim(ctx.claim_key);
-				if(c.get_type() != json::type::string) {
+				if (c.get_type() != json::type::string) {
 					ec = error::token_verification_error::claim_type_missmatch;
 					return;
 				}
 				auto val = c.as_string();
 				std::transform(val.begin(), val.end(), val.begin(), [](char c) { return std::tolower(c); });
-				if(val != type) {
-					ec = error::token_verification_error::claim_value_missmatch;
-				}
+				if (val != type) { ec = error::token_verification_error::claim_value_missmatch; }
 			});
 		}
 
