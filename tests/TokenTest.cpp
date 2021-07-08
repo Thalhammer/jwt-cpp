@@ -396,6 +396,10 @@ TEST(TokenTest, VerifyFail) {
 			ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
 		}
 		{
+			auto verify = jwt::verify().allow_algorithm(jwt::algorithm::none{}).with_type("JWT");
+			ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+		}
+		{
 			auto verify = jwt::verify()
 							  .allow_algorithm(jwt::algorithm::none{})
 							  .with_issuer("auth0")
@@ -705,6 +709,18 @@ TEST(TokenTest, VerifyTokenIAT) {
 
 	auto verify = jwt::verify<test_clock, jwt::picojson_traits>({std::chrono::system_clock::from_time_t(110)})
 					  .allow_algorithm(jwt::algorithm::none{});
+	ASSERT_NO_THROW(verify.verify(decoded_token));
+	std::error_code ec;
+	ASSERT_NO_THROW(verify.verify(decoded_token, ec));
+	ASSERT_FALSE(!(!ec));
+	ASSERT_EQ(ec.value(), 0);
+}
+
+TEST(TokenTest, VerifyTokenType) {
+	auto token = jwt::create().set_type("JWS").sign(jwt::algorithm::none{});
+	auto decoded_token = jwt::decode(token);
+
+	auto verify = jwt::verify().with_type("jws").allow_algorithm(jwt::algorithm::none{});
 	ASSERT_NO_THROW(verify.verify(decoded_token));
 	std::error_code ec;
 	ASSERT_NO_THROW(verify.verify(decoded_token, ec));
