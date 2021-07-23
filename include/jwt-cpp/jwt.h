@@ -3213,10 +3213,10 @@ namespace jwt {
 		using const_iterator = typename jwt_vector_t::const_iterator;
 
 		JWT_CLAIM_EXPLICIT jwks(const typename json_traits::string_type& str) {
-			typename json_traits::value_type val;
-			if (!json_traits::parse(val, str)) throw error::invalid_json_exception();
+			typename json_traits::value_type parsed_val;
+			if (!json_traits::parse(parsed_val, str)) throw error::invalid_json_exception();
 
-			const details::map_of_claims<json_traits> jwks_json = json_traits::as_object(val);
+			const details::map_of_claims<json_traits> jwks_json = json_traits::as_object(parsed_val);
 			if (!jwks_json.has_claim("keys")) throw error::invalid_json_exception();
 
 			auto jwk_list = jwks_json.get_claim("keys").as_array();
