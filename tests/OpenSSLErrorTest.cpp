@@ -73,8 +73,14 @@ EVP_PKEY* X509_get_pubkey(X509* x) {
 		return origMethod(x);
 }
 
-int PEM_write_bio_PUBKEY(BIO* bp, EVP_PKEY* x) {
-	static int (*origMethod)(BIO * bp, EVP_PKEY * x) = nullptr;
+#ifdef OPENSSL3
+#define OPENSSL_CONST const
+#else
+#define OPENSSL_CONST
+#endif
+
+int PEM_write_bio_PUBKEY(BIO* bp, OPENSSL_CONST EVP_PKEY* x) {
+	static int (*origMethod)(BIO * bp, OPENSSL_CONST EVP_PKEY * x) = nullptr;
 	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "PEM_write_bio_PUBKEY");
 	bool fail = fail_PEM_write_bio_PUBKEY & 1;
 	fail_PEM_write_bio_PUBKEY = fail_PEM_write_bio_PUBKEY >> 1;
@@ -84,8 +90,8 @@ int PEM_write_bio_PUBKEY(BIO* bp, EVP_PKEY* x) {
 		return origMethod(bp, x);
 }
 
-int PEM_write_bio_X509(BIO* bp, X509* x) {
-	static int (*origMethod)(BIO * bp, X509 * x) = nullptr;
+int PEM_write_bio_X509(BIO* bp, OPENSSL_CONST X509* x) {
+	static int (*origMethod)(BIO * bp, OPENSSL_CONST X509 * x) = nullptr;
 	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "PEM_write_bio_X509");
 	bool fail = fail_PEM_write_bio_cert & 1;
 	fail_PEM_write_bio_cert = fail_PEM_write_bio_cert >> 1;
