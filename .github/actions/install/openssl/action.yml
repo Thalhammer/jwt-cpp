@@ -1,0 +1,19 @@
+name: Install OpenSSL
+description: Install and setup OpenSSL for linking and building test application
+inputs:
+  version:
+    description: The desired OpenSSL version to install
+    required: false
+    default: "3.0.0-beta2"
+runs:
+  using: composite
+  steps:
+    - run: |
+        cd /tmp
+        wget http://artfiles.org/openssl.org/source/openssl-${{ inputs.version }}.tar.gz
+        tar -zvxf /tmp/openssl-${{ inputs.version }}.tar.gz
+        cd openssl-${{ inputs.version }}
+        ./config --prefix=/tmp --libdir=lib
+        make -j $(nproc)
+        sudo make -j $(nproc) install_sw
+      shell: bash
