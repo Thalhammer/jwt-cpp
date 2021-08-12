@@ -10,7 +10,7 @@ on:
       - "include/jwt-cpp/**"
       - "tests/cmake/**"
       - ".github/actions/**"
-      - ".github/workflows/cmake.yml"
+      - ".github/workflows/openssl.yml"
 
 jobs:
   with-openssl:
@@ -34,4 +34,3 @@ jobs:
 
       - name: test
         run: ./tests/jwt-cpp-test
-
