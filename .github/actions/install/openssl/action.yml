@@ -4,14 +4,14 @@ inputs:
   version:
     description: The desired OpenSSL version to install
     required: false
-    default: "3.0.0-beta2"
+    default: "openssl-3.0.0-beta2"
 runs:
   using: composite
   steps:
     - run: |
         cd /tmp
-        wget http://artfiles.org/openssl.org/source/openssl-${{ inputs.version }}.tar.gz
-        tar -zvxf /tmp/openssl-${{ inputs.version }}.tar.gz
+        wget https://github.com/openssl/openssl/archive/refs/tags/${{ inputs.version }}.tar.gz
+        tar -zxf /tmp/${{ inputs.version }}.tar.gz
         cd openssl-${{ inputs.version }}
         ./config --prefix=/tmp --libdir=lib
         make -j $(nproc)
