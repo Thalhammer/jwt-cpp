@@ -1,0 +1,36 @@
+name: OpenSSL CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+    paths:
+      - "CMakeLists.txt"
+      - "include/jwt-cpp/**"
+      - "tests/cmake/**"
+      - ".github/actions/**"
+      - ".github/workflows/openssl.yml"
+
+jobs:
+  with-openssl:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        openssl: ["openssl-3.0.0-beta2", "OpenSSL_1_1_1k"]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: lukka/get-cmake@latest
+      - uses: ./.github/actions/install/gtest
+      - uses: ./.github/actions/install/openssl
+        with:
+          version: ${{ matrix.openssl }}
+
+      - name: configure
+        run: |
+          cmake . -DJWT_BUILD_TESTS=ON -DOPENSSL_ROOT_DIR=/tmp
+
+      - run: make
+
+      - name: test
+        run: ./tests/jwt-cpp-test

@@ -40,6 +40,10 @@
 #endif
 #endif
 
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+#define OPENSSL3
+#endif
+
 // If openssl version less than 1.1
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
 #define OPENSSL10
