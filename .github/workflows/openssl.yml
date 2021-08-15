@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        openssl: ["openssl-3.0.0-beta2", "OpenSSL_1_1_1k", "OpenSSL_1_1_0l", "OpenSSL_1_0_2u"]
+        openssl: ["openssl-3.0.0-beta2", "OpenSSL_1_1_1k", "OpenSSL_1_1_0i", "OpenSSL_1_0_2u"]
     steps:
       - uses: actions/checkout@v2
       - uses: lukka/get-cmake@latest
