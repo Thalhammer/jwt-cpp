@@ -34,3 +34,30 @@ jobs:
 
       - name: test
         run: ./tests/jwt-cpp-test
+
+      - name: badge success
+        if: github.event_name == 'push' && success()
+        uses: ./.github/actions/badge
+        with:
+          category: openssl
+          label: ${{ matrix.openssl }}
+
+      - name: badge failure
+        if: github.event_name == 'push' && !success()
+        uses: ./.github/actions/badge
+        with:
+          category: openssl
+          label: ${{ matrix.openssl }}
+          message: Failing
+          color: red
+
+      - name: badge publish
+        if: github.event_name == 'push'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: badges
+          publish_dir: ./badges
+          keep_files: true
+          user_name: "github-actions[bot]"
+          user_email: "github-actions[bot]@users.noreply.github.com"
