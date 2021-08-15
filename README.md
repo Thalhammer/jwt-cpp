@@ -35,15 +35,15 @@ In the name of flexibility and extensibility, jwt-cpp supports both [OpenSSL](ht
 
 | OpenSSL        | LibreSSL        |
 | -------------- | --------------- |
-| [1.0.2][1.0.2] | ![3.1.5][3.1]   |
-| 1.1.0          | ![3.2.3][3.2]   |
-| [1.1.1][1.1.1] | ![3.3.1][3.3]   |
+| [1.0.2][1.0.2] | ![3.1.5][l3.1]  |
+| 1.1.0          | ![3.2.5][l3.2]  |
+| [1.1.1][1.1.1] | ![3.3.3][l3.3]  |
 
 [1.0.2]: https://travis-ci.com/github/Thalhammer/jwt-cpp
 [1.1.1]: https://github.com/Thalhammer/jwt-cpp/actions?query=workflow%3A%22Coverage+CI%22
-[3.1]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/libressl/3.1.5/shields.json
-[3.2]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/libressl/3.2.3/shields.json
-[3.3]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/libressl/3.3.1/shields.json
+[l3.1]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/libressl/3.1.5/shields.json
+[l3.2]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/libressl/3.2.5/shields.json
+[l3.3]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/libressl/3.3.3/shields.json
 
 ## Overview
 
