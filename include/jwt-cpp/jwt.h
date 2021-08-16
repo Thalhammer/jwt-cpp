@@ -1469,7 +1469,7 @@ namespace jwt {
 			 * \param private_key_password Password to decrypt private key pem.
 			 */
 			explicit es256k(const std::string& public_key, const std::string& private_key = "",
-						   const std::string& public_key_password = "", const std::string& private_key_password = "")
+							const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "ES256K", 64) {}
 		};
 
