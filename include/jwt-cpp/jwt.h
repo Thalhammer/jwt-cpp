@@ -1052,6 +1052,7 @@ namespace jwt {
 		};
 
 #ifndef OPENSSL110
+#ifndef OPENSSL10
 		/**
 		 * \brief Base class for EdDSA family of algorithms
 		 *
@@ -1192,6 +1193,7 @@ namespace jwt {
 			/// algorithm's name
 			const std::string alg_name;
 		};
+#endif
 #endif
 		/**
 		 * \brief Base class for PSS-RSA family of algorithms
