@@ -174,7 +174,7 @@ TEST(TokenTest, CreateTokenES512NoPrivate) {
 		jwt::signature_generation_exception);
 }
 
-#ifndef OPENSSL110
+#if !defined(JWT_OPENSSL_1_0_0) && !defined(JWT_OPENSSL_1_1_0)
 TEST(TokenTest, CreateTokenEd25519) {
 
 	auto token =
@@ -582,7 +582,7 @@ TEST(TokenTest, VerifyTokenPS256FailNoKey) {
 		jwt::rsa_exception);
 }
 
-#ifndef OPENSSL110
+#if !defined(JWT_OPENSSL_1_0_0) && !defined(JWT_OPENSSL_1_1_0)
 TEST(TokenTest, VerifyTokenEd25519) {
 	const std::string token =
 		"eyJhbGciOiJFZERTQSIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.OujgVcO8xQx5xLcAYWENCRU1SCGH5HcX4MX4o6wU3M4"
