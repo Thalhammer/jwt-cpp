@@ -1089,7 +1089,12 @@ namespace jwt {
 			 */
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_free);
+#ifdef OPENSSL10
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(),
+																			   &EVP_MD_CTX_destroy);
+#else
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+#endif
 				if (!ctx) {
 					ec = error::signature_generation_error::create_context_failed;
 					return {};
@@ -1137,7 +1142,12 @@ namespace jwt {
 			 */
 			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
 				ec.clear();
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_free);
+#ifdef OPENSSL10
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(),
+																			   &EVP_MD_CTX_destroy);
+#else
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+#endif
 				if (!ctx) {
 					ec = error::signature_verification_error::create_context_failed;
 					return;
