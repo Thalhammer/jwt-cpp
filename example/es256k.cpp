@@ -17,9 +17,6 @@ K9EDZi0mZ7VUeeNKq476CU5X940yusahgneePQrDMF2nWFEtBCOiXQ==
 	auto token = jwt::create()
 					 .set_issuer("auth0")
 					 .set_type("JWT")
-					 // https://datatracker.ietf.org/doc/html/rfc8812#section-3.1
-					 .set_key_type("EC")
-					 .set_curve("secp256k1")
 					 .set_id("es256k-create-example")
 					 .set_issued_at(std::chrono::system_clock::now())
 					 .set_expires_at(std::chrono::system_clock::now() + std::chrono::seconds{36000})
