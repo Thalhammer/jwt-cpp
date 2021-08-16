@@ -1456,6 +1456,22 @@ namespace jwt {
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "ES512", 132) {}
 		};
+		/**
+		 * ES256K algorithm
+		 */
+		struct es256k : public ecdsa {
+			/**
+			 * Construct new instance of algorithm
+			 * \param public_key ECDSA public key in PEM format
+			 * \param private_key ECDSA private key or empty string if not available. If empty, signing will always
+			 * fail.
+			 * \param public_key_password Password to decrypt public key pem.
+			 * \param private_key_password Password to decrypt private key pem.
+			 */
+			explicit es256k(const std::string& public_key, const std::string& private_key = "",
+						   const std::string& public_key_password = "", const std::string& private_key_password = "")
+				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "ES256K", 64) {}
+		};
 
 #ifndef OPENSSL110
 		/**
@@ -2437,8 +2453,9 @@ namespace jwt {
 			return *this;
 		}
 		/**
-		 * Set algorithm claim
+		 * \brief Set algorithm claim
 		 * You normally don't need to do this, as the algorithm is automatically set if you don't change it.
+		 *
 		 * \param str Name of algorithm
 		 * \return *this to allow for method chaining
 		 */
@@ -2462,7 +2479,8 @@ namespace jwt {
 			return set_header_claim("cty", typename json_traits::value_type(str));
 		}
 		/**
-		 * Set key id claim
+		 * \brief Set key id claim
+		 *
 		 * \param str Key id to set
 		 * \return *this to allow for method chaining
 		 */
@@ -3080,6 +3098,18 @@ namespace jwt {
 		typename json_traits::string_type get_key_id() const { return get_jwk_claim("kid").as_string(); }
 
 		/**
+		 * \brief Get curve claim
+		 *
+		 * https://www.rfc-editor.org/rfc/rfc7518.html#section-6.2.1.1
+		 * https://www.iana.org/assignments/jose/jose.xhtml#table-web-key-elliptic-curve
+		 *
+		 * \return curve as string
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
+		 */
+		typename json_traits::string_type get_curve() const { return get_jwk_claim("crv").as_string(); }
+
+		/**
 		 * Get x5c claim
 		 * \return x5c as an array
 		 * \throw std::runtime_error If claim was not present
@@ -3147,6 +3177,12 @@ namespace jwt {
 		 * \return true if present, false otherwise
 		 */
 		bool has_algorithm() const noexcept { return has_jwk_claim("alg"); }
+
+		/**
+		 * Check if curve is present ("crv")
+		 * \return true if present, false otherwise
+		 */
+		bool has_curve() const noexcept { return has_jwk_claim("crv"); }
 
 		/**
 		 * Check if key id is present ("kid")
