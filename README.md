@@ -23,11 +23,12 @@ jwt-cpp supports all the algorithms defined by the specifications. The modular d
 
 For completeness, here is a list of all supported algorithms:
 
-| HMSC  | RSA   | ECDSA | PSS   | EdDSA   |
-| ----- | ----- | ----- | ----- | ------- |
-| HS256 | RS256 | ES256 | PS256 | Ed25519 |
-| HS384 | RS384 | ES384 | PS384 | Ed448   |
-| HS512 | RS512 | ES512 | PS512 |         |
+| HMSC  | RSA   | ECDSA  | PSS   | EdDSA   |
+| ----- | ----- | ------ | ----- | ------- |
+| HS256 | RS256 | ES256  | PS256 | Ed25519 |
+| HS384 | RS384 | ES384  | PS384 | Ed448   |
+| HS512 | RS512 | ES512  | PS512 |         |
+|       |       | ES256K |       |         |
 
 ## SSL Compatibility
 
