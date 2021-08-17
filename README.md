@@ -6,9 +6,13 @@
 [![MacOS Badge][MacOS]][Cross-Platform]
 [![Windows Badge][Windows]][Cross-Platform]
 [![Coverage Status](https://coveralls.io/repos/github/Thalhammer/jwt-cpp/badge.svg?branch=master)](https://coveralls.io/github/Thalhammer/jwt-cpp?branch=master)
+
 [![Documentation Badge](https://img.shields.io/badge/Documentation-master-blue)](https://thalhammer.github.io/jwt-cpp/)
-[![GitHub release (latest SemVer including pre-releases)](https://img.shields.io/github/v/release/Thalhammer/jwt-cpp?include_prereleases)](https://github.com/Thalhammer/jwt-cpp/releases)
+
 [![Stars Badge](https://img.shields.io/github/stars/Thalhammer/jwt-cpp)](https://github.com/Thalhammer/jwt-cpp/stargazers)
+[![GitHub release (latest SemVer including pre-releases)](https://img.shields.io/github/v/release/Thalhammer/jwt-cpp?include_prereleases)](https://github.com/Thalhammer/jwt-cpp/releases)
+[![ConanCenter package](https://repology.org/badge/version-for-repo/conancenter/jwt-cpp.svg)](https://repology.org/project/jwt-cpp/versions)
+[![Vcpkg package](https://repology.org/badge/version-for-repo/vcpkg/jwt-cpp.svg)](https://repology.org/project/jwt-cpp/versions)
 
 [Linux]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/cross-platform/ubuntu-latest/shields.json
 [MacOS]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/cross-platform/macos-latest/shields.json
@@ -23,11 +27,12 @@ jwt-cpp supports all the algorithms defined by the specifications. The modular d
 
 For completeness, here is a list of all supported algorithms:
 
-| HMSC  | RSA   | ECDSA | PSS   | EdDSA   |
-| ----- | ----- | ----- | ----- | ------- |
-| HS256 | RS256 | ES256 | PS256 | Ed25519 |
-| HS384 | RS384 | ES384 | PS384 | Ed448   |
-| HS512 | RS512 | ES512 | PS512 |         |
+| HMSC  | RSA   | ECDSA  | PSS   | EdDSA   |
+| ----- | ----- | ------ | ----- | ------- |
+| HS256 | RS256 | ES256  | PS256 | Ed25519 |
+| HS384 | RS384 | ES384  | PS384 | Ed448   |
+| HS512 | RS512 | ES512  | PS512 |         |
+|       |       | ES256K |       |         |
 
 ## SSL Compatibility
 
