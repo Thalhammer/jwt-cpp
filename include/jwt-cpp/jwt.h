@@ -40,23 +40,18 @@
 #endif
 #endif
 
-#if OPENSSL_VERSION_NUMBER >= 0x30000000L
-#define OPENSSL3
-#endif
-
-// If openssl version less than 1.1
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-#define OPENSSL10
-#endif
-
-// If openssl version less than 1.1.1
-#if OPENSSL_VERSION_NUMBER < 0x10101000L
-#define OPENSSL110
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L // 3.0.0
+#define JWT_OPENSSL_3_0
+#elif OPENSSL_VERSION_NUMBER >= 0x10101000L // 1.1.1
+#define JWT_OPENSSL_1_1_1
+#elif OPENSSL_VERSION_NUMBER >= 0x10100000L // 1.1.0
+#define JWT_OPENSSL_1_1_0
+#elif OPENSSL_VERSION_NUMBER >= 0x10000000L // 1.0.0
+#define JWT_OPENSSL_1_0_0
 #endif
 
 #if defined(LIBRESSL_VERSION_NUMBER)
-#define OPENSSL10
-#define OPENSSL110
+#define JWT_OPENSSL_1_0_0
 #endif
 
 #ifndef JWT_CLAIM_EXPLICIT
@@ -635,7 +630,7 @@ namespace jwt {
 		 * \return bignum as string
 		 */
 		inline
-#ifdef OPENSSL10
+#ifdef JWT_OPENSSL_1_0_0
 			static std::string
 			bn2raw(BIGNUM* bn)
 #else
@@ -793,7 +788,7 @@ namespace jwt {
 			 */
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
-#ifdef OPENSSL10
+#ifdef JWT_OPENSSL_1_0_0
 				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_destroy);
 #else
 				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_free);
@@ -830,7 +825,7 @@ namespace jwt {
 			 */
 			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
 				ec.clear();
-#ifdef OPENSSL10
+#ifdef JWT_OPENSSL_1_0_0
 				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_destroy);
 #else
 				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_free);
@@ -944,7 +939,7 @@ namespace jwt {
 					ec = error::signature_generation_error::ecdsa_do_sign_failed;
 					return {};
 				}
-#ifdef OPENSSL10
+#ifdef JWT_OPENSSL_1_0_0
 
 				auto rr = helper::bn2raw(sig->r);
 				auto rs = helper::bn2raw(sig->s);
@@ -975,7 +970,7 @@ namespace jwt {
 				auto r = helper::raw2bn(signature.substr(0, signature.size() / 2));
 				auto s = helper::raw2bn(signature.substr(signature.size() / 2));
 
-#ifdef OPENSSL10
+#ifdef JWT_OPENSSL_1_0_0
 				ECDSA_SIG sig;
 				sig.r = r.get();
 				sig.s = s.get();
@@ -1014,7 +1009,7 @@ namespace jwt {
 			 * \return Hash of data
 			 */
 			std::string generate_hash(const std::string& data, std::error_code& ec) const {
-#ifdef OPENSSL10
+#ifdef JWT_OPENSSL_1_0_0
 				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(),
 																			   &EVP_MD_CTX_destroy);
 #else
@@ -1055,7 +1050,7 @@ namespace jwt {
 			const size_t signature_length;
 		};
 
-#ifndef OPENSSL110
+#if !defined(JWT_OPENSSL_1_0_0) && !defined(JWT_OPENSSL_1_1_0)
 		/**
 		 * \brief Base class for EdDSA family of algorithms
 		 *
@@ -1093,7 +1088,12 @@ namespace jwt {
 			 */
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_free);
+#ifdef JWT_OPENSSL_1_0_0
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(),
+																			   &EVP_MD_CTX_destroy);
+#else
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+#endif
 				if (!ctx) {
 					ec = error::signature_generation_error::create_context_failed;
 					return {};
@@ -1141,7 +1141,12 @@ namespace jwt {
 			 */
 			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
 				ec.clear();
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_free);
+#ifdef JWT_OPENSSL_1_0_0
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(),
+																			   &EVP_MD_CTX_destroy);
+#else
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+#endif
 				if (!ctx) {
 					ec = error::signature_verification_error::create_context_failed;
 					return;
@@ -1293,7 +1298,7 @@ namespace jwt {
 			 * \return Hash of data
 			 */
 			std::string generate_hash(const std::string& data, std::error_code& ec) const {
-#ifdef OPENSSL10
+#ifdef JWT_OPENSSL_1_0_0
 				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(),
 																			   &EVP_MD_CTX_destroy);
 #else
@@ -1473,7 +1478,7 @@ namespace jwt {
 				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "ES256K", 64) {}
 		};
 
-#ifndef OPENSSL110
+#if !defined(JWT_OPENSSL_1_0_0) && !defined(JWT_OPENSSL_1_1_0)
 		/**
 		 * Ed25519 algorithm
 		 *
