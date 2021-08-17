@@ -33,17 +33,20 @@ For completeness, here is a list of all supported algorithms:
 
 In the name of flexibility and extensibility, jwt-cpp supports both [OpenSSL](https://github.com/openssl/openssl) and [LibreSSL](https://github.com/libressl-portable/portable). These are the version which are, or have been, tested:
 
-| OpenSSL        | LibreSSL        |
-| -------------- | --------------- |
-| [1.0.2][1.0.2] | ![3.1.5][3.1]   |
-| 1.1.0          | ![3.2.3][3.2]   |
-| [1.1.1][1.1.1] | ![3.3.1][3.3]   |
+| OpenSSL              | LibreSSL        |
+| -------------------- | --------------- |
+| ![1.0.2u][o1.0.2]    | ![3.1.5][l3.1]  |
+| ![1.1.0i][o1.1.0]    | ![3.2.5][l3.2]  |
+| ![1.1.1k][o1.1.1]    | ![3.3.3][l3.3]  |
+| ![3.0.0-beta2][o3.0] |                 |
 
-[1.0.2]: https://travis-ci.com/github/Thalhammer/jwt-cpp
-[1.1.1]: https://github.com/Thalhammer/jwt-cpp/actions?query=workflow%3A%22Coverage+CI%22
-[3.1]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/libressl/3.1.5/shields.json
-[3.2]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/libressl/3.2.3/shields.json
-[3.3]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/libressl/3.3.1/shields.json
+[o1.0.2]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/openssl/OpenSSL_1_0_2u/shields.json
+[o1.1.0]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/openssl/OpenSSL_1_1_0i/shields.json
+[o1.1.1]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/openssl/OpenSSL_1_1_1k/shields.json
+[o3.0]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/openssl/openssl-3.0.0-beta2/shields.json
+[l3.1]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/libressl/3.1.5/shields.json
+[l3.2]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/libressl/3.2.5/shields.json
+[l3.3]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/libressl/3.3.3/shields.json
 
 ## Overview
 

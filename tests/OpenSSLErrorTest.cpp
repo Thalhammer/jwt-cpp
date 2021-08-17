@@ -4,7 +4,7 @@
 
 #include <dlfcn.h>
 // TODO: Figure out why the tests fail on older openssl versions
-#ifndef OPENSSL110 // It fails on < 1.1 but no idea why.
+#ifndef JWT_OPENSSL_1_0_0 // It fails on < 1.1 but no idea why.
 // LibreSSL has different return codes but was already outside of the effective scope
 
 /**
@@ -73,7 +73,7 @@ EVP_PKEY* X509_get_pubkey(X509* x) {
 		return origMethod(x);
 }
 
-#ifdef OPENSSL3
+#ifdef JWT_OPENSSL_3_0
 #define OPENSSL_CONST const
 #else
 #define OPENSSL_CONST
@@ -733,7 +733,7 @@ TEST(OpenSSLErrorTest, PS256VerifyErrorCode) {
 	run_multitest(mapping, [&alg, &signature](std::error_code& ec) { alg.verify("testdata", signature, ec); });
 }
 
-#ifndef OPENSSL110
+#if !defined(JWT_OPENSSL_1_0_0) && !defined(JWT_OPENSSL_1_1_0)
 TEST(OpenSSLErrorTest, EdDSAKey) {
 	std::vector<multitest_entry> mapping{
 		// load_private_key_from_string
