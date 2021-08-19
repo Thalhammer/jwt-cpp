@@ -23,3 +23,6 @@ target_link_libraries(rsa-verify jwt-cpp::jwt-cpp)
 
 add_executable(jwks-verify jwks-verify.cpp)
 target_link_libraries(jwks-verify jwt-cpp::jwt-cpp)
+
+add_executable(es256k es256k.cpp)
+target_link_libraries(es256k jwt-cpp::jwt-cpp)
