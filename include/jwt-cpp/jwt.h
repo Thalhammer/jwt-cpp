@@ -1316,7 +1316,7 @@ namespace jwt {
 					ec = error::signature_generation_error::get_key_failed;
 					return {};
 				}
-				const int size = RSA_size(key.get());
+				const int size = EVP_PKEY_size(pkey.get());
 
 				std::string padded(size, 0x00);
 				if (RSA_padding_add_PKCS1_PSS(key.get(), (unsigned char*)padded.data(),
@@ -1352,7 +1352,7 @@ namespace jwt {
 					ec = error::signature_verification_error::get_key_failed;
 					return;
 				}
-				const int size = RSA_size(key.get());
+				const int size = EVP_PKEY_size(pkey.get());
 
 				std::string sig(size, 0x00);
 				if (RSA_public_decrypt(
