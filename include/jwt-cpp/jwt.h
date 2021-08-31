@@ -259,7 +259,7 @@ namespace jwt {
 					case signature_generation_error::digestfinal_failed:
 						return "failed to create signature: DigestFinal failed";
 					case signature_generation_error::rsa_padding_failed:
-						return "failed to create signature: RSA_padding_add_PKCS1_PSS_mgf1 failed";
+						return "failed to create signature: RSA_padding_add_PKCS1_PSS failed";
 					case signature_generation_error::rsa_private_encrypt_failed:
 						return "failed to create signature: RSA_private_encrypt failed";
 					case signature_generation_error::get_key_failed:
@@ -1235,9 +1235,9 @@ namespace jwt {
 				const int size = RSA_size(key.get());
 
 				std::string padded(size, 0x00);
-				if (RSA_padding_add_PKCS1_PSS_mgf1(
-						key.get(), (unsigned char*)padded.data(), reinterpret_cast<const unsigned char*>(hash.data()),
-						md(), md(), -1) == 0) { // NOLINT(google-readability-casting) requires `const_cast`
+				if (RSA_padding_add_PKCS1_PSS(key.get(), (unsigned char*)padded.data(),
+											  reinterpret_cast<const unsigned char*>(hash.data()), md(),
+											  -1) == 0) { // NOLINT(google-readability-casting) requires `const_cast`
 					ec = error::signature_generation_error::rsa_padding_failed;
 					return {};
 				}
@@ -1279,8 +1279,8 @@ namespace jwt {
 					return;
 				}
 
-				if (RSA_verify_PKCS1_PSS_mgf1(key.get(), reinterpret_cast<const unsigned char*>(hash.data()), md(),
-											  md(), reinterpret_cast<const unsigned char*>(sig.data()), -1) == 0) {
+				if (RSA_verify_PKCS1_PSS(key.get(), reinterpret_cast<const unsigned char*>(hash.data()), md(),
+										 reinterpret_cast<const unsigned char*>(sig.data()), -1) == 0) {
 					ec = error::signature_verification_error::invalid_signature;
 					return;
 				}
