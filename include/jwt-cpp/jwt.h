@@ -2797,7 +2797,7 @@ namespace jwt {
 				std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> conv;
 				auto wide = conv.from_bytes(str);
 				auto& f = std::use_facet<std::ctype<wchar_t>>(loc);
-				f.toupper(&wide[0], &wide[0] + wide.size());
+				f.tolower(&wide[0], &wide[0] + wide.size());
 				return conv.to_bytes(wide);
 			}
 		};
