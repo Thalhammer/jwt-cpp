@@ -1,4 +1,7 @@
 #ifdef __linux__ // None of this stuff is going to work outside of linux!
+
+#ifndef HUNTER_ENABLED // Static linking (which hunter always? does) breaks the tests (duplicate definition), so skip them
+
 #include "jwt-cpp/jwt.h"
 #include <gtest/gtest.h>
 
@@ -808,6 +811,7 @@ TEST(OpenSSLErrorTest, Ed25519VerifyErrorCode) {
 
 	run_multitest(mapping, [&alg, &signature](std::error_code& ec) { alg.verify("testdata", signature, ec); });
 }
+#endif
 #endif
 #endif
 #endif

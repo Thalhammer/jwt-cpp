@@ -8,7 +8,9 @@ endif()
 
 enable_testing()
 include(GoogleTest)
-
+if(HUNTER_ENABLED)
+hunter_add_package(GTest)
+endif()
 find_package(GTest REQUIRED)
 
 set(TEST_SOURCES
@@ -27,8 +29,14 @@ set(JWT_TESTER_CLANG_FLAGS -Weverything -Wno-c++98-compat -Wno-global-constructo
 target_compile_options(
   jwt-cpp-test PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/W4> $<$<CXX_COMPILER_ID:GNU>:${JWT_TESTER_GCC_FLAGS}>
                        $<$<CXX_COMPILER_ID:Clang>:${JWT_TESTER_CLANG_FLAGS}>)
-target_link_libraries(jwt-cpp-test PRIVATE jwt-cpp GTest::GTest GTest::Main
-                                           $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:${CMAKE_DL_LIBS}>)
+if(HUNTER_ENABLED)
+target_link_libraries(jwt-cpp-test PRIVATE GTest::gtest GTest::gtest_main)
+# Define a compile define to bypass openssl error tests
+target_compile_options(jwt-cpp-test PRIVATE -DHUNTER_ENABLED=1)
+else()
+target_link_libraries(jwt-cpp-test PRIVATE GTest::GTest GTest::Main)
+endif()
+target_link_libraries(jwt-cpp-test PRIVATE jwt-cpp $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:${CMAKE_DL_LIBS}>)
 
 gtest_add_tests(TARGET jwt-cpp-test)
 

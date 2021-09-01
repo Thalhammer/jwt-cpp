@@ -1,5 +1,17 @@
 cmake_minimum_required(VERSION 3.8)
 
+# HUNTER_ENABLED is always set if this package is included in a project using hunter (HunterGate sets it)
+# In this case we will use hunter as well to stay consistent. If not the use can supply it on configure
+# to force using hunter.
+if(HUNTER_ENABLED)
+	include("cmake/HunterGate.cmake")
+	HunterGate(
+		URL "https://github.com/cpp-pm/hunter/archive/v0.23.314.tar.gz"
+		SHA1 "95c47c92f68edb091b5d6d18924baabe02a6962a"
+	)
+	message(STATUS "jwt-cpp: using hunter for dependency resolution")
+endif()
+
 project(jwt-cpp)
 
 option(JWT_BUILD_EXAMPLES "Configure CMake to build examples (or not)" ON)
@@ -20,12 +32,23 @@ if(NOT JWT_SSL_LIBRARY IN_LIST JWT_SSL_LIBRARY_OPTIONS)
   message(FATAL_ERROR "JWT_SSL_LIBRARY must be one of ${JWT_SSL_LIBRARY_OPTIONS}")
 endif()
 
-if(${JWT_SSL_LIBRARY} MATCHES "OpenSSL")
-  find_package(OpenSSL 1.0.2 REQUIRED)
+# If Hunter is enabled, we configure it to resolve OpenSSL and warn
+# the user if he selected an option not supported by hunter.
+# We fall back to the system library in this case.
+if(HUNTER_ENABLED)
+    if(${JWT_SSL_LIBRARY} MATCHES "OpenSSL")
+        hunter_add_package(OpenSSL)
+    elseif(${JWT_SSL_LIBRARY} MATCHES "LibreSSL")
+        message(WARNING "Hunter does not support LibreSSL yet, the system library will be used (if available)")
+    endif()
+    if(JWT_EXTERNAL_PICOJSON)
+        message(WARNING "Hunter does not support picojson yet, the system library will be used (if available)")
+    endif()
 endif()
-
-if(${JWT_SSL_LIBRARY} MATCHES "LibreSSL")
-  find_package(LibreSSL 3.0.0 REQUIRED)
+if(${JWT_SSL_LIBRARY} MATCHES "OpenSSL")
+    find_package(OpenSSL 1.0.2 REQUIRED)
+elseif(${JWT_SSL_LIBRARY} MATCHES "LibreSSL")
+    find_package(LibreSSL 3.0.0 REQUIRED)
 endif()
 
 if(JWT_EXTERNAL_PICOJSON)
