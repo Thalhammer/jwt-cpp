@@ -703,7 +703,7 @@ TEST(OpenSSLErrorTest, PS256SignErrorCode) {
 		{&fail_EVP_DigestUpdate, 1, jwt::error::signature_generation_error::digestupdate_failed},
 		{&fail_EVP_DigestFinal, 1, jwt::error::signature_generation_error::digestfinal_failed},
 		{&fail_EVP_PKEY_get1_RSA, 1, jwt::error::signature_generation_error::get_key_failed}
-		//TODO: RSA_padding_add_PKCS1_PSS_mgf1, RSA_private_encrypt
+		//TODO: RSA_padding_add_PKCS1_PSS, RSA_private_encrypt
 	};
 
 	run_multitest(mapping, [&alg](std::error_code& ec) {
