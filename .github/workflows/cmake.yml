@@ -190,10 +190,9 @@ jobs:
           mkdir build
           cd build
           cmake .. -DJWT_BUILD_TESTS=ON -DJWT_BUILD_EXAMPLES=ON -DJWT_ENABLE_COVERAGE=OFF -DHUNTER_ENABLED=ON
-          sudo make install
+          make
 
       - name: test
         run: |
-          cd tests/cmake
-          cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake -DTEST:STRING="hunter-is-used"
-          cmake --build .
+          cd build
+          ./tests/jwt-cpp-test
