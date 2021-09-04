@@ -177,3 +177,22 @@ jobs:
           cd tests/cmake
           cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake -DCMAKE_MODULE_PATH=../../cmake -DTEST:STRING="libressl-is-used"
           cmake --build .
+
+  with-hunter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: install cmake
+        uses: lukka/get-cmake@latest
+
+      - name: setup
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DJWT_BUILD_TESTS=ON -DJWT_BUILD_EXAMPLES=ON -DJWT_ENABLE_COVERAGE=OFF -DHUNTER_ENABLED=ON
+          make
+
+      - name: test
+        run: |
+          cd build
+          ./tests/jwt-cpp-test
