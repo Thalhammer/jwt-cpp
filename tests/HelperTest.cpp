@@ -66,7 +66,7 @@ TEST(HelperTest, ErrorCodeMessages) {
 	ASSERT_EQ(std::error_code(static_cast<jwt::error::signature_verification_error>(i)).message(),
 			  std::error_code(static_cast<jwt::error::signature_verification_error>(-1)).message());
 
-	for (i = 10; i < 22; i++) {
+	for (i = 10; i < 23; i++) {
 		ASSERT_NE(std::error_code(static_cast<jwt::error::signature_generation_error>(i)).message(),
 				  std::error_code(static_cast<jwt::error::signature_generation_error>(-1)).message());
 	}
