@@ -1,0 +1,19 @@
+name: Install wolfSSL
+description: Install and setup wolfSSL for linking and building test application
+inputs:
+  version:
+    description: The desired stable wolfSSL version to install
+    required: false
+    default: "4.8.1"
+runs:
+  using: composite
+  steps:
+    - run: |
+        cd /tmp
+        wget https://github.com/wolfSSL/wolfssl/archive/refs/tags/v${{ inputs.version }}-stable.tar.gz
+        tar -zxf /tmp/v${{ inputs.version }}-stable.tar.gz
+        cd wolfssl-${{ inputs.version }}-stable
+        ./configure --enable-opensslall --enable-opensslextra --disable-examples --disable-crypttests --enable-sha512 --enable-sha384 --enable-curve25519 --enable-ed25519 --enable-curve448 --enable-ed448 --enable-rsapss
+        make
+        sudo make install
+      shell: bash

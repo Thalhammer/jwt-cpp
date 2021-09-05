@@ -22,7 +22,7 @@ option(JWT_EXTERNAL_PICOJSON "Use find_package() to locate picojson, provided to
 option(JWT_DISABLE_BASE64 "Do not include the base64 implementation from this library" OFF)
 option(JWT_DISABLE_PICOJSON "Do not provide the picojson template specialiaze" OFF)
 
-set(JWT_SSL_LIBRARY_OPTIONS OpenSSL LibreSSL)
+set(JWT_SSL_LIBRARY_OPTIONS OpenSSL LibreSSL wolfSSL)
 set(JWT_SSL_LIBRARY OpenSSL CACHE STRING "Determines which SSL library to build with")
 set_property(CACHE JWT_SSL_LIBRARY PROPERTY STRINGS ${JWT_SSL_LIBRARY_OPTIONS})
 
@@ -40,6 +40,8 @@ if(HUNTER_ENABLED)
         hunter_add_package(OpenSSL)
     elseif(${JWT_SSL_LIBRARY} MATCHES "LibreSSL")
         message(WARNING "Hunter does not support LibreSSL yet, the system library will be used (if available)")
+    elseif(${JWT_SSL_LIBRARY} MATCHES "wolfSSL")
+        message(WARNING "TBD")
     endif()
     if(JWT_EXTERNAL_PICOJSON)
         message(WARNING "Hunter does not support picojson yet, the system library will be used (if available)")
@@ -49,6 +51,9 @@ if(${JWT_SSL_LIBRARY} MATCHES "OpenSSL")
     find_package(OpenSSL 1.0.2 REQUIRED)
 elseif(${JWT_SSL_LIBRARY} MATCHES "LibreSSL")
     find_package(LibreSSL 3.0.0 REQUIRED)
+elseif(${JWT_SSL_LIBRARY} MATCHES "wolfSSL")
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(wolfssl REQUIRED IMPORTED_TARGET wolfssl)
 endif()
 
 if(JWT_EXTERNAL_PICOJSON)
@@ -81,6 +86,10 @@ endif()
 
 if(${JWT_SSL_LIBRARY} MATCHES "LibreSSL")
   target_link_libraries(jwt-cpp INTERFACE LibreSSL::TLS)
+endif()
+
+if(${JWT_SSL_LIBRARY} MATCHES "wolfSSL")
+  target_link_libraries(jwt-cpp INTERFACE PkgConfig::wolfssl)
 endif()
 
 if(JWT_EXTERNAL_PICOJSON)
