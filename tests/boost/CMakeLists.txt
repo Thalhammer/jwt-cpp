@@ -15,6 +15,3 @@ target_link_libraries(boostjson-traits GTest::GTest GTest::Main)
 target_compile_definitions(boostjson-traits PRIVATE BOOST_JSON_STANDALONE)
 target_compile_features(boostjson-traits PRIVATE cxx_std_17)
 target_include_directories(boostjson-traits PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/json-boost-1.77.0/include" "../../include")
-
-get_target_property(BJT_INCLUDES boostjson-traits INCLUDE_DIRECTORIES)
-message(STATUS ${BJT_INCLUDES})

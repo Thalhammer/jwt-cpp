@@ -15,14 +15,7 @@ struct boostjson_traits {
 	using value_type = json::value;
 	using object_type = json::object;
 	using array_type = json::array;
-	using string_type = json::string;
-	// class string_type : public json::string {
-	// 	using json::string::string;
-	// 	string_type substr(std::size_t pos = 0, std::size_t count = npos) {
-	// 		const auto view = subview(pos, count);
-	// 		return string_type{view.begin(), view.end()};
-	// 	}
-	// };
+	using string_type = std::string;
 	using number_type = double;
 	using integer_type = std::int64_t;
 	using boolean_type = bool;
@@ -81,11 +74,6 @@ struct boostjson_traits {
 	}
 
 	static std::string serialize(const value_type& val) { return json::serialize(val); }
-
-	static std::string to_standard_string(const string_type& str) { return {str.c_str()}; };
-	static string_type do_substr(const string_type& str, std::size_t pos, std::size_t count = string_type::npos) {
-		return string_type { str.subview(pos, count) };
-	}
 };
 
 TEST(BoostJSONTest, BasicClaims) {
