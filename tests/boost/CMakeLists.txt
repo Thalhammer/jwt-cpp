@@ -1,19 +1,20 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.18)
 project(jwt-cpp-boostjson-tests)
 
-find_package(OpenSSL CONFIG REQUIRED)
-find_package(jwt-cpp CONFIG REQUIRED)
-find_package(Boost CONFIG REQUIRED COMPONENTS json)
+find_package(OpenSSL REQUIRED)
+# find_package(jwt-cpp CONFIG REQUIRED)
+# find_package(Boost CONFIG REQUIRED COMPONENTS json)
 find_package(GTest REQUIRED)
 
+file(DOWNLOAD https://github.com/boostorg/json/archive/refs/tags/boost-1.77.0.tar.gz
+     ${CMAKE_CURRENT_BINARY_DIR}/boost-1.77.0.tar.gz)
+file(ARCHIVE_EXTRACT INPUT ${CMAKE_CURRENT_BINARY_DIR}/boost-1.77.0.tar.gz DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
 add_executable(boostjson-traits main.cpp)
-target_link_libraries(boostjson-traits jwt-cpp::jwt-cpp GTest::GTest GTest::Main Boost::json)
-target_include_directories(
-  boostjson-traits
-  PRIVATE "/mnt/c/Users/Chris McArthur/Documents/jwt-cpp/include"
-          "/home/cmcarthur/programming/jwt-cpp/include"
-          "/home/cmcarthur/.conan/data/boost/1.76.0/_/_/package/2adb9cf00cbe707175dd8b1d6fea6cdf6aa108bf/include"
-          "/home/cmcarthur/.conan/data/boost/1.76.0/_/_/package/85e3a50ba657ee206605ff8a7593591f64dddff7/include")
+target_link_libraries(boostjson-traits GTest::GTest GTest::Main)
+target_compile_definitions(boostjson-traits PRIVATE BOOST_JSON_STANDALONE)
+target_compile_features(boostjson-traits PRIVATE cxx_std_17)
+target_include_directories(boostjson-traits PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/json-boost-1.77.0/include" "../../include")
 
 get_target_property(BJT_INCLUDES boostjson-traits INCLUDE_DIRECTORIES)
 message(STATUS ${BJT_INCLUDES})
