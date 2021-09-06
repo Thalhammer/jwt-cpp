@@ -1,4 +1,4 @@
-name: SSL Compatability CI
+name: SSL Compatibility CI
 
 on:
   push:
