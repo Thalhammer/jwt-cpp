@@ -456,6 +456,10 @@ namespace jwt {
 				return {};
 			}
 
+#ifdef LIBWOLFSSL_VERSION_HEX
+			BIO_set_flags(certbio, BIO_FLAG_BASE64_NO_NL);
+#endif
+
 			if (!PEM_write_bio_X509(certbio.get(), cert.get())) {
 				ec = error::rsa_error::write_cert_failed;
 				return {};
