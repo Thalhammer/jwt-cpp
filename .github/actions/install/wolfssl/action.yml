@@ -18,5 +18,5 @@ runs:
         make
         sudo make install
       shell: bash
-    - run: rm -rf /usr/include/openssl
+    - run: sudo rm -rf /usr/include/openssl
       shell: bash
