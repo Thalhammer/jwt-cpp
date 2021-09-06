@@ -457,7 +457,7 @@ namespace jwt {
 			}
 
 #ifdef LIBWOLFSSL_VERSION_HEX
-			BIO_set_flags(certbio, BIO_FLAGS_BASE64_NO_NL);
+			BIO_set_flags(certbio.get(), BIO_FLAGS_BASE64_NO_NL);
 #endif
 
 			if (!PEM_write_bio_X509(certbio.get(), cert.get())) {
