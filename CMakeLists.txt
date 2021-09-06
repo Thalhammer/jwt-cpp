@@ -117,6 +117,9 @@ endif()
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config.cmake ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-version.cmake
         DESTINATION ${JWT_CMAKE_FILES_INSTALL_DIR})
 
+get_target_property(TEMP_TEST_INCLUDES jwt-cpp INCLUDE_DIRECTORIES)
+message(STATUS "${TEMP_TEST_INCLUDES}")
+
 if(JWT_BUILD_EXAMPLES)
   add_subdirectory(example)
 endif()
