@@ -12,13 +12,13 @@
 #include "base.h"
 #endif
 
-#include <openssl/ssl.h>
 #include <openssl/ec.h>
 #include <openssl/ecdsa.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 #include <openssl/pem.h>
+#include <openssl/ssl.h>
 
 #include <algorithm>
 #include <chrono>
