@@ -92,6 +92,7 @@ if(${JWT_SSL_LIBRARY} MATCHES "wolfSSL")
   target_link_libraries(jwt-cpp INTERFACE PkgConfig::wolfssl)
   # This is required to access OpenSSL compatability API
   target_include_directories(jwt-cpp INTERFACE ${wolfssl_INCLUDE_DIRS})
+  target_compile_definitions(jwt-cpp INTERFACE OPENSSL_EXTRA OPENSSL_ALL)
 endif()
 
 if(JWT_EXTERNAL_PICOJSON)
