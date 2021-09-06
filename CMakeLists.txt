@@ -91,6 +91,11 @@ endif()
 if(${JWT_SSL_LIBRARY} MATCHES "wolfSSL")
   target_link_libraries(jwt-cpp INTERFACE PkgConfig::wolfssl)
   target_include_directories(jwt-cpp INTERFACE ${wolfssl_LIBRARY_DIRS})
+
+  get_target_property(TEMP_TEST_INCLUDES PkgConfig::wolfssl INCLUDE_DIRECTORIES)
+  message(STATUS "${TEMP_TEST_INCLUDES}")
+  message(STATUS "---")
+  message(STATUS "${wolfssl_LIBRARY_DIRS}")
 endif()
 
 if(JWT_EXTERNAL_PICOJSON)
@@ -116,9 +121,6 @@ if(NOT JWT_EXTERNAL_PICOJSON AND NOT JWT_DISABLE_PICOJSON)
 endif()
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config.cmake ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-version.cmake
         DESTINATION ${JWT_CMAKE_FILES_INSTALL_DIR})
-
-get_target_property(TEMP_TEST_INCLUDES jwt-cpp INCLUDE_DIRECTORIES)
-message(STATUS "${TEMP_TEST_INCLUDES}")
 
 if(JWT_BUILD_EXAMPLES)
   add_subdirectory(example)
