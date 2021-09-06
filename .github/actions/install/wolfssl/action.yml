@@ -4,15 +4,15 @@ inputs:
   version:
     description: The desired stable wolfSSL version to install
     required: false
-    default: "4.8.1"
+    default: "v4.8.1-stable"
 runs:
   using: composite
   steps:
     - run: |
         cd /tmp
-        wget https://github.com/wolfSSL/wolfssl/archive/refs/tags/v${{ inputs.version }}-stable.tar.gz
-        tar -zxf /tmp/v${{ inputs.version }}-stable.tar.gz
-        cd wolfssl-${{ inputs.version }}-stable
+        wget https://github.com/wolfSSL/wolfssl/archive/${{ inputs.version }}.tar.gz
+        tar -zxf /tmp/${{ inputs.version }}.tar.gz
+        cd wolfssl-${{ inputs.version }}
         autoreconf -fiv
         ./configure --enable-opensslall --enable-opensslextra --disable-examples --disable-crypttests --enable-harden --enable-all --enable-all-crypto
         make
