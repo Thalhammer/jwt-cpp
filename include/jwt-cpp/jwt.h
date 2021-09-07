@@ -1864,18 +1864,36 @@ namespace jwt {
 			static constexpr auto value = std::is_same<typename array_type::value_type, value_type>::value;
 		};
 
-		template<typename value_type, typename string_type>
+		template<typename string_type, typename integer_type>
+		using is_substr_start_end_index_signature =
+			typename std::is_same<decltype(std::declval<string_type>().substr(std::declval<integer_type>(),
+																			  std::declval<integer_type>())),
+								  string_type>;
+
+		template<typename string_type, typename integer_type>
+		using is_substr_start_index_signature =
+			typename std::is_same<decltype(std::declval<string_type>().substr(std::declval<integer_type>())),
+								  string_type>;
+
+		template<typename string_type, typename integer_type>
 		struct is_valid_json_string {
-			static constexpr auto value = true;
+
+			static constexpr auto substr = is_substr_start_end_index_signature<string_type, integer_type>::value &&
+										   is_substr_start_index_signature<string_type, integer_type>::value;
+			static_assert(substr, "string_type must have a substr method taking only a start index and an overload "
+								  "taking a start and end index");
+
+			static constexpr auto value = substr;
 			// TODO(prince-chrismc): check for `substr` and `operator+`
 			// Alternate might be append and ctor
 		};
 
-		template<typename value_type, typename string_type, typename object_type, typename array_type>
+		template<typename value_type, typename string_type, typename integer_type, typename object_type,
+				 typename array_type>
 		struct is_valid_json_types {
 			// Internal assertions for better feedback
 			static_assert(is_valid_json_value<value_type>::value,
-						  "value type must meet basic requirements, default constructor, copyable, moveable");
+						  "value_type must meet basic requirements, default constructor, copyable, moveable");
 			static_assert(is_valid_json_object<value_type, string_type, object_type>::value,
 						  "object_type must be a string_type to value_type container");
 			static_assert(is_valid_json_array<value_type, array_type>::value,
@@ -1883,7 +1901,8 @@ namespace jwt {
 
 			static constexpr auto value = is_valid_json_object<value_type, string_type, object_type>::value &&
 										  is_valid_json_value<value_type>::value &&
-										  is_valid_json_array<value_type, array_type>::value;
+										  is_valid_json_array<value_type, array_type>::value &&
+										  is_valid_json_string<string_type, integer_type>::value;
 		};
 	} // namespace details
 
@@ -1911,7 +1930,8 @@ namespace jwt {
 
 		static_assert(
 			details::is_valid_json_types<typename json_traits::value_type, typename json_traits::string_type,
-										 typename json_traits::object_type, typename json_traits::array_type>::value,
+										 typename json_traits::integer_type, typename json_traits::object_type,
+										 typename json_traits::array_type>::value,
 			"must staisfy json container requirements");
 		static_assert(details::is_valid_traits<json_traits>::value, "traits must satisfy requirements");
 
