@@ -1875,17 +1875,33 @@ namespace jwt {
 			typename std::is_same<decltype(std::declval<string_type>().substr(std::declval<integer_type>())),
 								  string_type>;
 
+		template<typename string_type>
+		using has_operate_plus_method = typename std::is_integral<decltype(&string_type::operator+, void())>;
+
+		template<typename string_type>
+		using is_operate_plus_method_signature =
+			typename std::is_same<decltype(std::declval<string_type>().operator+(std::declval<string_type>())),
+								  string_type>;
+
+		template<typename string_type>
+		using is_std_operate_plus_signature =
+			typename std::is_same<decltype(std::operator+(std::declval<string_type>(), std::declval<string_type>())),
+								  string_type>;
+
 		template<typename string_type, typename integer_type>
 		struct is_valid_json_string {
-
 			static constexpr auto substr = is_substr_start_end_index_signature<string_type, integer_type>::value &&
 										   is_substr_start_index_signature<string_type, integer_type>::value;
 			static_assert(substr, "string_type must have a substr method taking only a start index and an overload "
-								  "taking a start and end index");
+								  "taking a start and end index, both must return a string_type");
 
-			static constexpr auto value = substr;
-			// TODO(prince-chrismc): check for `substr` and `operator+`
-			// Alternate might be append and ctor
+			static constexpr auto operator_plus =
+				(has_operate_plus_method<string_type>::value && is_operate_plus_method_signature<string_type>::value) ||
+				is_std_operate_plus_signature<string_type>::value;
+			static_assert(operator_plus,
+						  "string_type must have a '+' operator implemented which returns the concatenated string");
+
+			static constexpr auto value = substr && operator_plus;
 		};
 
 		template<typename value_type, typename string_type, typename integer_type, typename object_type,
