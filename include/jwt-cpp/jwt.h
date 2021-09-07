@@ -1876,12 +1876,18 @@ namespace jwt {
 								  string_type>;
 
 		template<typename string_type>
-		using has_operate_plus_method = typename std::is_integral<decltype(&string_type::operator+, void())>;
+		struct has_operate_plus_method { // https://stackoverflow.com/a/9154394/8480874
+			template<class>
+			struct sfinae_true : std::true_type {};
 
-		template<typename string_type>
-		using is_operate_plus_method_signature =
-			typename std::is_same<decltype(std::declval<string_type>().operator+(std::declval<string_type>())),
-								  string_type>;
+			template<class T, class A0>
+			static auto test_operator_plus(int)
+				-> sfinae_true<decltype(std::declval<T>().operator+(std::declval<A0>()))>;
+			template<class, class A0>
+			static auto test_operator_plus(long) -> std::false_type;
+
+			static constexpr auto value = decltype(test_operator_plus<string_type, string_type>(0)){};
+		};
 
 		template<typename string_type>
 		using is_std_operate_plus_signature =
@@ -1896,8 +1902,7 @@ namespace jwt {
 								  "taking a start and end index, both must return a string_type");
 
 			static constexpr auto operator_plus =
-				(has_operate_plus_method<string_type>::value && is_operate_plus_method_signature<string_type>::value) ||
-				is_std_operate_plus_signature<string_type>::value;
+				has_operate_plus_method<string_type>::value || is_std_operate_plus_signature<string_type>::value;
 			static_assert(operator_plus,
 						  "string_type must have a '+' operator implemented which returns the concatenated string");
 
