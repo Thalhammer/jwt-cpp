@@ -1,5 +1,0 @@
-[requires]
-boost/1.76.0
-
-[generators]
-cmake_find_package_multi
