@@ -1944,10 +1944,10 @@ namespace jwt {
 		 * https://github.com/nlohmann/json/issues/774. It maybe be expanded to
 		 * support custom string types.
 		 */
-		static_assert(std::is_same<typename json_traits::string_type, std::string>::value,
-					  "string_type must be a std::string.");
-		// static_assert(std::is_convertible<typename json_traits::string_type, std::string>::value,
-		// 			  "string_type must be implicity converted to std::string.");
+		static_assert(std::is_same<typename json_traits::string_type, std::string>::value ||
+						  std::is_convertible<typename json_traits::string_type, std::string>::value ||
+						  std::is_constructible<typename json_traits::string_type, std::string>::value,
+					  "string_type must be a std::string, convertible to a std::string, or construct a std::string.");
 
 		static_assert(
 			details::is_valid_json_types<typename json_traits::value_type, typename json_traits::string_type,
