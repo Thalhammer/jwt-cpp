@@ -1779,7 +1779,7 @@ namespace jwt {
 				std::is_constructible<value_type, const value_type&>::value && // a more generic is_copy_constructible
 				std::is_move_constructible<value_type>::value && std::is_assignable<value_type, value_type>::value &&
 				std::is_copy_assignable<value_type>::value && std::is_move_assignable<value_type>::value;
-			// TODO(cmcarthur): Stream operators
+			// TODO(prince-chrismc): Stream operators
 		};
 
 		template<typename traits_type>
@@ -1867,7 +1867,8 @@ namespace jwt {
 		template<typename value_type, typename string_type>
 		struct is_valid_json_string {
 			static constexpr auto value = true;
-			// TODO: check for `substr` and `operator+`
+			// TODO(prince-chrismc): check for `substr` and `operator+`
+			// Alternate might be append and ctor
 		};
 
 		template<typename value_type, typename string_type, typename object_type, typename array_type>
@@ -2614,16 +2615,14 @@ namespace jwt {
 			typename json_traits::object_type obj_header = header_claims;
 			if (header_claims.count("alg") == 0) obj_header["alg"] = typename json_traits::value_type(algo.name());
 
-			const std::string header = encode(json_traits::serialize(typename json_traits::value_type(obj_header)));
-			const std::string payload =
-				encode(json_traits::serialize(typename json_traits::value_type(payload_claims)));
-			const std::string token_body = header + "." + payload;
+			const auto header = encode(json_traits::serialize(typename json_traits::value_type(obj_header)));
+			const auto payload = encode(json_traits::serialize(typename json_traits::value_type(payload_claims)));
+			const auto token = header + "." + payload;
 
-			const std::string signature = algo.sign(token_body, ec);
+			auto signature = algo.sign(token, ec);
 			if (ec) return {};
 
-			const auto token = token_body + "." + encode(signature);
-			return typename json_traits::string_type(token.data(), token.length());
+			return token + "." + encode(signature);
 		}
 #ifndef JWT_DISABLE_BASE64
 		/**
@@ -2639,7 +2638,7 @@ namespace jwt {
 		typename json_traits::string_type sign(const Algo& algo, std::error_code& ec) const {
 			return sign(
 				algo,
-				[](const std::string& data) -> std::string {
+				[](const typename json_traits::string_type& data) {
 					return base::trim<alphabet::base64url>(base::encode<alphabet::base64url>(data));
 				},
 				ec);
@@ -3032,8 +3031,7 @@ namespace jwt {
 		 */
 		void verify(const decoded_jwt<json_traits>& jwt, std::error_code& ec) const {
 			ec.clear();
-			typename json_traits::string_type data = jwt.get_header_base64();
-			data.append(".").append(jwt.get_payload_base64());
+			const typename json_traits::string_type data = jwt.get_header_base64() + "." + jwt.get_payload_base64();
 			const typename json_traits::string_type sig = jwt.get_signature();
 			const std::string algo = jwt.get_algorithm();
 			if (algs.count(algo) == 0) {
