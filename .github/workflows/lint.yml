@@ -29,7 +29,8 @@ jobs:
           python-version: '3.x'
       - run: pip install cmakelang
       - uses: actions/checkout@v2
-      - run: cmake-format --check ${{ matrix.files }}
+      - run: cmake-format -i ${{ matrix.files }}
+      - run: exit $(git status -s | wc -l)
 
   clang-tidy:
     runs-on: ubuntu-20.04
