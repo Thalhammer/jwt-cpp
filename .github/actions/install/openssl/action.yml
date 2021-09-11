@@ -4,7 +4,7 @@ inputs:
   version:
     description: The desired OpenSSL version to install
     required: false
-    default: "openssl-3.0.0-beta2"
+    default: "openssl-3.0.0"
 runs:
   using: composite
   steps:
