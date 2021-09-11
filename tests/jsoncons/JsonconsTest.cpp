@@ -18,9 +18,9 @@ struct jsoncons_traits {
 
 		object_type() = default;
 		object_type(const object_type&) = default;
-		object_type(const json::object& o) : json::object(o) {}
+		explicit object_type(const json::object& o) : json::object(o) {}
 		object_type(object_type&&) = default;
-		object_type(json::object&& o) : json::object(o) {}
+		explicit object_type(json::object&& o) : json::object(o) {}
 		object_type& operator=(const object_type& o) {
 			// avoid private deleted copy operator= https://github.com/danielaparker/jsoncons/pull/298
 			object_type t(static_cast<const json::object&>(o));
@@ -46,13 +46,13 @@ struct jsoncons_traits {
 			auto target = find(key);
 			if (target != end()) { return target->value(); }
 
-			std::out_of_range("invalid key");
+			throw std::out_of_range("invalid key");
 		}
 
 		size_t count(const key_type& key) const {
 			size_t ret = 0;
-			for (const_iterator first = begin(); first != end(); ++first) {
-				if (first->key() == key) { ++ret; }
+			for (const auto & first : *this) {
+				if (first.key() == key) { ++ret; }
 			}
 			return ret;
 		}
@@ -108,7 +108,7 @@ struct jsoncons_traits {
 		return val.as_bool();
 	}
 
-	static bool parse(json& val, std::string str) {
+	static bool parse(json& val, const std::string& str) {
 		val = json::parse(str);
 		return true;
 	}
