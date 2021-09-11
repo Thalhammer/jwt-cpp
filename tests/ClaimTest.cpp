@@ -89,12 +89,12 @@ TEST(ClaimTest, SetAlgorithm) {
 }
 
 TEST(ClaimTest, AsInt) {
-	jwt::claim c(picojson::value((int64_t)10));
+	jwt::claim c(picojson::value(static_cast<int64_t>(10)));
 	ASSERT_EQ(c.as_int(), 10);
 }
 
 TEST(ClaimTest, AsDate) {
-	jwt::claim c(picojson::value((int64_t)10));
+	jwt::claim c(picojson::value(static_cast<int64_t>(10)));
 	ASSERT_EQ(c.as_date(), std::chrono::system_clock::from_time_t(10));
 }
 
