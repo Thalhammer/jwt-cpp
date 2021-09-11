@@ -2603,8 +2603,7 @@ namespace jwt {
 		typename json_traits::string_type sign(const Algo& algo, Encode encode, std::error_code& ec) const {
 			// make a copy such that a builder can be re-used
 			typename json_traits::object_type obj_header = header_claims;
-			if (header_claims.count("alg") == 0)
-				obj_header.emplace(std::make_pair("alg", typename json_traits::value_type(algo.name())));
+			if (header_claims.count("alg") == 0) obj_header["alg"] = typename json_traits::value_type(algo.name());
 
 			const auto header = encode(json_traits::serialize(typename json_traits::value_type(obj_header)));
 			const auto payload = encode(json_traits::serialize(typename json_traits::value_type(payload_claims)));
