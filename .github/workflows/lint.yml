@@ -5,11 +5,6 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
-    paths:
-      - "include/jwt-cpp/**.h"
-      - "tests/**.cpp"
-      - "example/**.cpp"
-      - ".github/workflows/lint.yml"
 
 jobs:
   clang-format:
@@ -22,6 +17,19 @@ jobs:
       - uses: actions/checkout@v2
       - run: clang-format -i ${{ matrix.files }}
       - run: exit $(git status -s | wc -l)
+
+  cmake-format:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        files: ["**/CMakeLists.txt", "cmake/code-coverage.cmake"]
+    steps:
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - run: pip install cmakelang
+      - uses: actions/checkout@v2
+      - run: cmake-format --check ${{ matrix.files }}
 
   clang-tidy:
     runs-on: ubuntu-20.04
