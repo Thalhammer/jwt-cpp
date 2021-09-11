@@ -70,4 +70,4 @@ jobs:
           cd build
           ./example/rsa-create
           ./example/rsa-verify
-          ./tests/jwt-cpp-tests
+          ./tests/jwt-cpp-test
