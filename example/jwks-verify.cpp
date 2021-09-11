@@ -2,7 +2,7 @@
 #include <jwt-cpp/jwt.h>
 
 int main() {
-	std::string jwks = R"({"keys": [{
+	std::string raw_jwks = R"({"keys": [{
 		"kid":"internal-gateway-jwt.api.sc.net",
 		"alg": "RS256",
     "kty": "RSA",
@@ -38,7 +38,7 @@ int main() {
 		"gYr6eqKyGPVwc6fLZ5zqAup59SefdPEY23-WWmHzj968jlsDSEiCp_YiYTnF3tHVLFWDsrprYKwNb0_p95tBmPA";
 
 	auto decoded_jwt = jwt::decode(token);
-	auto jwks = jwt::parse_jwks(jwks);
+	auto jwks = jwt::parse_jwks(raw_jwks);
 	auto jwk = jwks.get_jwk(decoded_jwt.get_key_id());
 
 	auto issuer = decoded_jwt.get_issuer();
