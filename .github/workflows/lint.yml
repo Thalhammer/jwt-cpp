@@ -22,14 +22,14 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        files: ["CMakeLists.txt", "cmake/code-coverage.cmake"]
+        files: ["CMakeLists.txt", "**/CMakeLists.txt", "cmake/code-coverage.cmake"]
     steps:
       - uses: actions/setup-python@v2
         with:
           python-version: '3.x'
       - run: pip install cmakelang
       - uses: actions/checkout@v2
-      - run: ls -la
+      - run: ls -laR
       - run: cmake-format --check ${{ matrix.files }}
 
   clang-tidy:
