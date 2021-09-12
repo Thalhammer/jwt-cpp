@@ -29,6 +29,7 @@ jobs:
           python-version: '3.x'
       - run: pip install cmakelang
       - uses: actions/checkout@v2
+      - run: ls -la
       - run: cmake-format --check ${{ matrix.files }}
 
   clang-tidy:
