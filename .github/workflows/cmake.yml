@@ -176,6 +176,26 @@ jobs:
           cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake -DCMAKE_MODULE_PATH=../../cmake -DTEST:STRING="libressl-is-used"
           cmake --build .
 
+  with-wolfssl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: lukka/get-cmake@latest
+      - uses: ./.github/actions/install/wolfssl
+
+      - name: setup
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DJWT_SSL_LIBRARY:STRING="wolfSSL" -DJWT_BUILD_EXAMPLES=OFF
+          sudo make install
+
+      - name: test
+        run: |
+          cd tests/cmake
+          cmake . -DTEST:STRING="wolfssl-is-used.cpp"
+          cmake --build .
+
   with-hunter:
     runs-on: ubuntu-latest
     steps:
