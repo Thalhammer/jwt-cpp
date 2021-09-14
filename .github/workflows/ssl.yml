@@ -12,10 +12,10 @@ jobs:
     strategy:
       matrix:
         openssl:
-        - {tag: "openssl-3.0.0", name: "3.0.0"}
-        - {tag: "OpenSSL_1_1_1l", name: "1.1.1l"}
-        - {tag: "OpenSSL_1_1_0i", name: "1.1.0i"}
-        - {tag: "OpenSSL_1_0_2u", name: "1.0.2u"}
+          - { tag: "openssl-3.0.0", name: "3.0.0" }
+          - { tag: "OpenSSL_1_1_1l", name: "1.1.1l" }
+          - { tag: "OpenSSL_1_1_0i", name: "1.1.0i" }
+          - { tag: "OpenSSL_1_0_2u", name: "1.0.2u" }
     name: OpenSSL ${{ matrix.openssl.name }}
     steps:
       - uses: actions/checkout@v2
@@ -83,15 +83,16 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        wolfssl: ["90116a28733f7b23ebcb74cb8e7aba88603e6eb0"]
-    name: wolfSSL ${{ matrix.wolfssl }}
+        wolfssl:
+          - { ref: "90116a28733f7b23ebcb74cb8e7aba88603e6eb0", name: "master" }
+    name: wolfSSL ${{ matrix.wolfssl.name }}
     steps:
       - uses: actions/checkout@v2
       - uses: lukka/get-cmake@latest
       - uses: ./.github/actions/install/gtest
       - uses: ./.github/actions/install/wolfssl
         with:
-          version: ${{ matrix.wolfssl }}
+          version: ${{ matrix.wolfssl.ref }}
 
       - name: configure
         run: cmake . -DJWT_BUILD_TESTS=ON -DJWT_SSL_LIBRARY:STRING=wolfSSL
@@ -104,11 +105,11 @@ jobs:
         uses: ./.github/actions/badge/success
         with:
           category: wolfssl
-          label: ${{ matrix.wolfssl }}
+          label: ${{ matrix.wolfssl.name }}
 
       - name: badge failure
         if: github.event_name == 'push' && !success()
         uses: ./.github/actions/badge/failure
         with:
           category: wolfssl
-          label: ${{ matrix.wolfssl }}
+          label: ${{ matrix.wolfssl.name }}
