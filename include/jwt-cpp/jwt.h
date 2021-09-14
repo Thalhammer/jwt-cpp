@@ -1785,7 +1785,7 @@ namespace jwt {
 				std::is_constructible<value_type, const value_type&>::value && // a more generic is_copy_constructible
 				std::is_move_constructible<value_type>::value && std::is_assignable<value_type, value_type>::value &&
 				std::is_copy_assignable<value_type>::value && std::is_move_assignable<value_type>::value;
-			// TODO(cmcarthur): Stream operators
+			// TODO(prince-chrismc): Stream operators
 		};
 
 		template<typename traits_type>
@@ -1853,7 +1853,8 @@ namespace jwt {
 				is_detected<has_mapped_type, object_type>::value &&
 				std::is_same<typename object_type::mapped_type, value_type>::value &&
 				is_detected<has_key_type, object_type>::value &&
-				std::is_same<typename object_type::key_type, string_type>::value &&
+				(std::is_same<typename object_type::key_type, string_type>::value ||
+				 std::is_constructible<typename object_type::key_type, string_type>::value) &&
 				supports_begin<object_type>::value && supports_end<object_type>::value &&
 				is_count_signature<object_type, string_type>::value &&
 				is_subcription_operator_signature<object_type, value_type, string_type>::value &&
@@ -1869,11 +1870,57 @@ namespace jwt {
 			static constexpr auto value = std::is_same<typename array_type::value_type, value_type>::value;
 		};
 
-		template<typename value_type, typename string_type, typename object_type, typename array_type>
+		template<typename string_type, typename integer_type>
+		using is_substr_start_end_index_signature =
+			typename std::is_same<decltype(std::declval<string_type>().substr(std::declval<integer_type>(),
+																			  std::declval<integer_type>())),
+								  string_type>;
+
+		template<typename string_type, typename integer_type>
+		using is_substr_start_index_signature =
+			typename std::is_same<decltype(std::declval<string_type>().substr(std::declval<integer_type>())),
+								  string_type>;
+
+		template<typename string_type>
+		struct has_operate_plus_method { // https://stackoverflow.com/a/9154394/8480874
+			template<class>
+			struct sfinae_true : std::true_type {};
+
+			template<class T, class A0>
+			static auto test_operator_plus(int)
+				-> sfinae_true<decltype(std::declval<T>().operator+(std::declval<A0>()))>;
+			template<class, class A0>
+			static auto test_operator_plus(long) -> std::false_type;
+
+			static constexpr auto value = decltype(test_operator_plus<string_type, string_type>(0)){};
+		};
+
+		template<typename string_type>
+		using is_std_operate_plus_signature =
+			typename std::is_same<decltype(std::operator+(std::declval<string_type>(), std::declval<string_type>())),
+								  string_type>;
+
+		template<typename string_type, typename integer_type>
+		struct is_valid_json_string {
+			static constexpr auto substr = is_substr_start_end_index_signature<string_type, integer_type>::value &&
+										   is_substr_start_index_signature<string_type, integer_type>::value;
+			static_assert(substr, "string_type must have a substr method taking only a start index and an overload "
+								  "taking a start and end index, both must return a string_type");
+
+			static constexpr auto operator_plus =
+				has_operate_plus_method<string_type>::value || is_std_operate_plus_signature<string_type>::value;
+			static_assert(operator_plus,
+						  "string_type must have a '+' operator implemented which returns the concatenated string");
+
+			static constexpr auto value = substr && operator_plus;
+		};
+
+		template<typename value_type, typename string_type, typename integer_type, typename object_type,
+				 typename array_type>
 		struct is_valid_json_types {
 			// Internal assertions for better feedback
 			static_assert(is_valid_json_value<value_type>::value,
-						  "value type must meet basic requirements, default constructor, copyable, moveable");
+						  "value_type must meet basic requirements, default constructor, copyable, moveable");
 			static_assert(is_valid_json_object<value_type, string_type, object_type>::value,
 						  "object_type must be a string_type to value_type container");
 			static_assert(is_valid_json_array<value_type, array_type>::value,
@@ -1881,7 +1928,8 @@ namespace jwt {
 
 			static constexpr auto value = is_valid_json_object<value_type, string_type, object_type>::value &&
 										  is_valid_json_value<value_type>::value &&
-										  is_valid_json_array<value_type, array_type>::value;
+										  is_valid_json_array<value_type, array_type>::value &&
+										  is_valid_json_string<string_type, integer_type>::value;
 		};
 	} // namespace details
 
@@ -1902,12 +1950,15 @@ namespace jwt {
 		 * https://github.com/nlohmann/json/issues/774. It maybe be expanded to
 		 * support custom string types.
 		 */
-		static_assert(std::is_same<typename json_traits::string_type, std::string>::value,
-					  "string_type must be a std::string.");
+		static_assert(std::is_same<typename json_traits::string_type, std::string>::value ||
+						  std::is_convertible<typename json_traits::string_type, std::string>::value ||
+						  std::is_constructible<typename json_traits::string_type, std::string>::value,
+					  "string_type must be a std::string, convertible to a std::string, or construct a std::string.");
 
 		static_assert(
 			details::is_valid_json_types<typename json_traits::value_type, typename json_traits::string_type,
-										 typename json_traits::object_type, typename json_traits::array_type>::value,
+										 typename json_traits::integer_type, typename json_traits::object_type,
+										 typename json_traits::array_type>::value,
 			"must staisfy json container requirements");
 		static_assert(details::is_valid_traits<json_traits>::value, "traits must satisfy requirements");
 
@@ -2327,8 +2378,8 @@ namespace jwt {
 		 * \throw std::runtime_error Base64 decoding failed or invalid json
 		 */
 		JWT_CLAIM_EXPLICIT decoded_jwt(const typename json_traits::string_type& token)
-			: decoded_jwt(token, [](const typename json_traits::string_type& token) {
-				  return base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(token));
+			: decoded_jwt(token, [](const typename json_traits::string_type& str) {
+				  return base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(str));
 			  }) {}
 #endif
 		/**
@@ -3264,10 +3315,10 @@ namespace jwt {
 		using const_iterator = typename jwt_vector_t::const_iterator;
 
 		JWT_CLAIM_EXPLICIT jwks(const typename json_traits::string_type& str) {
-			typename json_traits::value_type val;
-			if (!json_traits::parse(val, str)) throw error::invalid_json_exception();
+			typename json_traits::value_type parsed_val;
+			if (!json_traits::parse(parsed_val, str)) throw error::invalid_json_exception();
 
-			const details::map_of_claims<json_traits> jwks_json = json_traits::as_object(val);
+			const details::map_of_claims<json_traits> jwks_json = json_traits::as_object(parsed_val);
 			if (!jwks_json.has_claim("keys")) throw error::invalid_json_exception();
 
 			auto jwk_list = jwks_json.get_claim("keys").as_array();
