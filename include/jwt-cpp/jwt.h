@@ -2372,8 +2372,8 @@ namespace jwt {
 		 * \throw std::runtime_error Base64 decoding failed or invalid json
 		 */
 		JWT_CLAIM_EXPLICIT decoded_jwt(const typename json_traits::string_type& token)
-			: decoded_jwt(token, [](const typename json_traits::string_type& token) {
-				  return base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(token));
+			: decoded_jwt(token, [](const typename json_traits::string_type& tok) {
+				  return base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(tok));
 			  }) {}
 #endif
 		/**
