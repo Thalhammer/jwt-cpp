@@ -193,6 +193,7 @@ jobs:
       - name: test
         run: |
           cat /usr/local/cmake/jwt-cpp-targets.cmake
+          cat /usr/local/lib/pkgconfig/wolfssl.pc
           cd tests/cmake
           cmake . -DTEST:STRING="wolfssl-is-used"
           cmake --build .

@@ -10,6 +10,8 @@
 #error "missing wolfSSL's OPENSSL_ALL macro!"
 #endif
 
+#define HAVE_ECC // This is not preserved across the installations
+
 #include "jwt-cpp/jwt.h"
 
 #include <wolfssl/ssl.h>
