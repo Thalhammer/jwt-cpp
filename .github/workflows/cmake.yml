@@ -182,6 +182,8 @@ jobs:
       - uses: actions/checkout@v2
       - uses: lukka/get-cmake@latest
       - uses: ./.github/actions/install/wolfssl
+        with:
+          version: 90116a28733f7b23ebcb74cb8e7aba88603e6eb0
 
       - name: setup
         run: |
@@ -192,8 +194,6 @@ jobs:
 
       - name: test
         run: |
-          cat /usr/local/cmake/jwt-cpp-targets.cmake
-          cat /usr/local/lib/pkgconfig/wolfssl.pc
           cd tests/cmake
           cmake . -DTEST:STRING="wolfssl-is-used"
           cmake --build .
