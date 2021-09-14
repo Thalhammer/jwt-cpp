@@ -183,7 +183,7 @@ jobs:
       - uses: lukka/get-cmake@latest
       - uses: ./.github/actions/install/wolfssl
         with:
-          version: 90116a28733f7b23ebcb74cb8e7aba88603e6eb0
+          version: ab3bbf11e9d39b52e24bf42bbc6babc16d4a669b
 
       - name: setup
         run: |
