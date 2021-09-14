@@ -193,7 +193,7 @@ jobs:
       - name: test
         run: |
           cd tests/cmake
-          cmake . -DTEST:STRING="wolfssl-is-used.cpp"
+          cmake . -DTEST:STRING="wolfssl-is-used"
           cmake --build .
 
   with-hunter:
