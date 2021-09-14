@@ -10,9 +10,9 @@ runs:
   steps:
     - run: |
         cd /tmp
-        wget https://github.com/wolfSSL/wolfssl/archive/${{ inputs.version }}.tar.gz
-        tar -zxf /tmp/${{ inputs.version }}.tar.gz
-        cd wolfssl-${{ inputs.version }}
+        wget -O wolfssl.tar.gz https://github.com/wolfSSL/wolfssl/archive/${{ inputs.version }}.tar.gz
+        tar -zxf /tmp/wolfssl.tar.gz
+        cd wolfssl-*
         autoreconf -fiv
         ./configure --enable-opensslall --enable-opensslextra --disable-examples --disable-crypttests --enable-harden --enable-all --enable-all-crypto
         make
