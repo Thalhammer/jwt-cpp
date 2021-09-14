@@ -84,7 +84,7 @@ jobs:
     strategy:
       matrix:
         wolfssl:
-          - { ref: "90116a28733f7b23ebcb74cb8e7aba88603e6eb0", name: "master" }
+          - { ref: "ab3bbf11e9d39b52e24bf42bbc6babc16d4a669b", name: "master" }
     name: wolfSSL ${{ matrix.wolfssl.name }}
     steps:
       - uses: actions/checkout@v2
