@@ -1,8 +1,9 @@
-#include <gtest/gtest.h>
 #include "jwt-cpp/jwt.h"
+#include <gtest/gtest.h>
 
 TEST(ClaimTest, AudienceAsString) {
-	std::string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0.WZnM3SIiSRHsbO3O7Z2bmIzTJ4EC32HRBKfLznHhrh4";
+	std::string token =
+		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0.WZnM3SIiSRHsbO3O7Z2bmIzTJ4EC32HRBKfLznHhrh4";
 	auto decoded = jwt::decode(token);
 
 	ASSERT_TRUE(decoded.has_algorithm());
@@ -25,11 +26,9 @@ TEST(ClaimTest, AudienceAsString) {
 }
 
 TEST(ClaimTest, SetAudienceAsString) {
-	auto token = jwt::create()
-		.set_type("JWT")
-		.set_audience("test")
-		.sign(jwt::algorithm::hs256("test"));
-	ASSERT_EQ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0.ny5Fa0vzAg7tNL95KWg_ecBNd3XP3tdAzq0SFA6diY4", token);
+	auto token = jwt::create().set_type("JWT").set_audience("test").sign(jwt::algorithm::hs256("test"));
+	ASSERT_EQ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0.ny5Fa0vzAg7tNL95KWg_ecBNd3XP3tdAzq0SFA6diY4",
+			  token);
 }
 
 TEST(ClaimTest, AudienceAsSet) {
@@ -58,21 +57,16 @@ TEST(ClaimTest, AudienceAsSet) {
 
 TEST(ClaimTest, SetAudienceAsSet) {
 	auto token = jwt::create()
-		.set_type("JWT")
-		.set_audience({picojson::value("test"), picojson::value("test2")})
-		.sign(jwt::algorithm::none{});
+					 .set_type("JWT")
+					 .set_audience({{picojson::value("test"), picojson::value("test2")}})
+					 .sign(jwt::algorithm::none{});
 	ASSERT_EQ("eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJhdWQiOlsidGVzdCIsInRlc3QyIl19.", token);
 }
 
 TEST(ClaimTest, SetArray) {
-	std::vector<int64_t> vect = {
-		100,
-		20,
-		10
-	};
-	auto token = jwt::create()
-		.set_payload_claim("test", jwt::claim(vect.begin(), vect.end()))
-		.sign(jwt::algorithm::none{});
+	std::vector<int64_t> vect = {100, 20, 10};
+	auto token =
+		jwt::create().set_payload_claim("test", jwt::claim(vect.begin(), vect.end())).sign(jwt::algorithm::none{});
 	ASSERT_EQ(token, "eyJhbGciOiJub25lIn0.eyJ0ZXN0IjpbMTAwLDIwLDEwXX0.");
 }
 
@@ -80,18 +74,15 @@ TEST(ClaimTest, SetObject) {
 	std::istringstream iss{"{\"api-x\": [1]}"};
 	jwt::claim object;
 	iss >> object;
-	ASSERT_EQ(object.get_type() , jwt::json::type::object);
+	ASSERT_EQ(object.get_type(), jwt::json::type::object);
 
-	auto token = jwt::create()
-		.set_payload_claim("namespace", object)
-		.sign(jwt::algorithm::hs256("test"));
-	ASSERT_EQ(token, "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lc3BhY2UiOnsiYXBpLXgiOlsxXX19.F8I6I2RcSF98bKa0IpIz09fRZtHr1CWnWKx2za-tFQA");
+	auto token = jwt::create().set_payload_claim("namespace", object).sign(jwt::algorithm::hs256("test"));
+	ASSERT_EQ(token,
+			  "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lc3BhY2UiOnsiYXBpLXgiOlsxXX19.F8I6I2RcSF98bKa0IpIz09fRZtHr1CWnWKx2za-tFQA");
 }
 
 TEST(ClaimTest, SetAlgorithm) {
-	auto token = jwt::create()
-		.set_algorithm("test")
-		.sign(jwt::algorithm::none{});
+	auto token = jwt::create().set_algorithm("test").sign(jwt::algorithm::none{});
 
 	auto decoded_token = jwt::decode(token);
 	ASSERT_EQ(decoded_token.get_algorithm(), "test");
@@ -130,3 +121,21 @@ TEST(ClaimTest, PicoJSONTraitsAsDouble) {
 	ASSERT_EQ(jwt::picojson_traits::get_type(val), jwt::json::type::number);
 }
 
+TEST(ClaimTest, MapOfClaim) {
+	using map = jwt::details::map_of_claims<jwt::picojson_traits>;
+	ASSERT_THROW(map::parse_claims(R"##(__ not json __)##"), jwt::error::invalid_json_exception);
+	const map claims{
+		map::parse_claims(R"##({ "array": [1], "string" : "hello world", "number": 9.9, "bool": true})##")};
+
+	ASSERT_TRUE(claims.has_claim("array"));
+	ASSERT_TRUE(claims.has_claim("string"));
+	ASSERT_TRUE(claims.has_claim("number"));
+	ASSERT_TRUE(claims.has_claim("bool"));
+	ASSERT_FALSE(claims.has_claim("__missing__"));
+
+	ASSERT_EQ(map::basic_claim_t{claims.get_claim("array").as_array().at(0)}.as_int(), (int)1);
+	ASSERT_EQ(claims.get_claim("string").as_string(), "hello world");
+	ASSERT_EQ(claims.get_claim("number").as_number(), 9.9);
+	ASSERT_EQ(claims.get_claim("bool").as_bool(), true);
+	ASSERT_THROW(claims.get_claim("__missing__"), jwt::error::claim_not_present_exception);
+}

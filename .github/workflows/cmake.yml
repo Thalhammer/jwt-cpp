@@ -1,0 +1,198 @@
+name: CMake CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+    paths:
+      - "CMakeLists.txt"
+      - "include/jwt-cpp/**"
+      - "tests/cmake/**"
+      - ".github/actions/**"
+      - ".github/workflows/cmake.yml"
+
+jobs:
+  default-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: lukka/get-cmake@latest
+      
+      - name: setup
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DJWT_BUILD_EXAMPLES=OFF
+          sudo make install
+
+      - name: test
+        run: |
+          cd tests/cmake
+          cmake . -DTEST:STRING="defaults-enabled" -DCMAKE_FIND_DEBUG_MODE=1
+          cmake --build .
+
+  default-win:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: lukka/get-cmake@latest
+      - run: choco install openssl
+
+      - name: setup
+        run: |
+          cmake -E make_directory build
+          cd build
+          cmake .. -DJWT_BUILD_EXAMPLES=OFF
+          cmake --install .
+
+      - name: test
+        run: |
+          cd tests/cmake
+          cmake . -DTEST:STRING="defaults-enabled" -DCMAKE_FIND_DEBUG_MODE=1
+          cmake --build .
+
+  min-req:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: install cmake
+        run: |
+          wget https://cmake.org/files/v3.8/cmake-3.8.2.tar.gz
+          tar -zxf cmake-3.8.2.tar.gz
+          cd cmake-3.8.2
+          ./bootstrap && make -j $(nproc) && sudo make install
+
+      - name: setup
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DJWT_BUILD_EXAMPLES=OFF
+          sudo make install
+
+      - name: test
+        run: |
+          cd tests/cmake
+          cmake . -DTEST:STRING="defaults-enabled"
+          cmake --build .
+
+  custom-install-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: install cmake
+        uses: lukka/get-cmake@latest
+
+      - name: setup
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_INSTALL_PREFIX:STRING="/opt/jwt-cpp" -DJWT_BUILD_EXAMPLES=OFF
+          make install
+
+      - name: test
+        run: |
+          cd tests/cmake
+          cmake . -DCMAKE_PREFIX_PATH="/opt/jwt-cpp" -DTEST:STRING="defaults-enabled" -DCMAKE_FIND_DEBUG_MODE=1
+          cmake --build .
+
+  custom-install-win:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: lukka/get-cmake@latest
+      - run: choco install openssl
+
+      - name: setup
+        run: |
+          cmake -E make_directory build
+          cd build
+          cmake .. -DCMAKE_INSTALL_PREFIX:STRING="C:/jwt-cpp" -DJWT_BUILD_EXAMPLES=OFF
+          cmake --install .
+
+      - name: test
+        run: |
+          cd tests/cmake
+          cmake . -DCMAKE_PREFIX_PATH="C:/jwt-cpp" -DTEST:STRING="defaults-enabled" -DCMAKE_FIND_DEBUG_MODE=1
+          cmake --build .
+
+  no-pico:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: install cmake
+        uses: lukka/get-cmake@latest
+
+      - name: setup
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DJWT_DISABLE_PICOJSON=ON -DJWT_BUILD_EXAMPLES=OFF
+          sudo make install
+
+      - name: test
+        run: |
+          cd tests/cmake
+          cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake -DTEST:STRING="picojson-is-disabled"
+          cmake --build .
+
+  no-base64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: install cmake
+        uses: lukka/get-cmake@latest
+
+      - name: setup
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DJWT_DISABLE_BASE64=ON -DJWT_BUILD_EXAMPLES=OFF
+          sudo make install
+
+      - name: test
+        run: |
+          cd tests/cmake
+          cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake -DTEST:STRING="base64-is-disabled"
+          cmake --build .
+
+  with-libressl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: install cmake
+        uses: lukka/get-cmake@latest
+      - name: install libressl
+        uses: ./.github/actions/install/libressl
+
+      - name: setup
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DJWT_SSL_LIBRARY:STRING="LibreSSL" -DJWT_BUILD_EXAMPLES=OFF
+          sudo make install
+
+      - name: test
+        run: |
+          cd tests/cmake
+          cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake -DCMAKE_MODULE_PATH=../../cmake -DTEST:STRING="libressl-is-used"
+          cmake --build .
+
+  with-hunter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: install cmake
+        uses: lukka/get-cmake@latest
+
+      - name: setup
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DJWT_BUILD_TESTS=ON -DJWT_BUILD_EXAMPLES=ON -DJWT_ENABLE_COVERAGE=OFF -DHUNTER_ENABLED=ON
+          make
+
+      - name: test
+        run: |
+          cd build
+          ./tests/jwt-cpp-test

@@ -1,0 +1,58 @@
+name: OpenSSL CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  with-openssl:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        openssl:
+        - {tag: "openssl-3.0.0", name: "3.0.0"}
+        - {tag: "OpenSSL_1_1_1l", name: "1.1.1l"}
+        - {tag: "OpenSSL_1_1_0i", name: "1.1.0i"}
+        - {tag: "OpenSSL_1_0_2u", name: "1.0.2u"}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: lukka/get-cmake@latest
+      - uses: ./.github/actions/install/gtest
+      - uses: ./.github/actions/install/openssl
+        with:
+          version: ${{ matrix.openssl.tag }}
+
+      - name: configure
+        run: cmake . -DJWT_BUILD_TESTS=ON -DOPENSSL_ROOT_DIR=/tmp
+      - run: make
+      - name: test
+        run: ./tests/jwt-cpp-test
+
+      - name: badge success
+        if: github.event_name == 'push' && success()
+        uses: ./.github/actions/badge
+        with:
+          category: openssl
+          label: ${{ matrix.openssl.name }}
+
+      - name: badge failure
+        if: github.event_name == 'push' && !success()
+        uses: ./.github/actions/badge
+        with:
+          category: openssl
+          label: ${{ matrix.openssl.name }}
+          message: Failing
+          color: red
+
+      - name: badge publish
+        if: github.event_name == 'push'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: badges
+          publish_dir: ./badges
+          keep_files: true
+          user_name: "github-actions[bot]"
+          user_email: "github-actions[bot]@users.noreply.github.com"

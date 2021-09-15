@@ -1,62 +1,53 @@
-name: C/C++ CI
+name: Coverage CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
+    paths:
+      - "CMakeLists.txt"
+      - "include/jwt-cpp/**"
+      - "tests/*"
+      - ".github/actions/**"
+      - ".github/workflows/coverate.yml"
 
 jobs:
   coverage:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v2
-      
-    - name: install cmake
-      uses: lukka/get-cmake@v3.17.2
-      
-    - name: configure
-      run: |
-        sudo apt update
-        sudo apt install libgtest-dev lcov
-        (cd /usr/src/gtest && sudo `which cmake` .)
-        sudo make -C /usr/src/gtest
-        sudo ln -s /usr/src/gtest/libgtest.a /usr/lib/libgtest.a
-        sudo ln -s /usr/src/gtest/libgtest_main.a /usr/lib/libgtest_main.a
-        mkdir build
-        cd build
-        cmake .. -DBUILD_TESTS=ON -DCOVERAGE=ON -DCMAKE_BUILD_TYPE=Debug
-        
-    - name: make
-      run: cd build && make jwt-cpp-test coverage
-      
-    - name: Coveralls GitHub Action
-      uses: coverallsapp/github-action@v1.1.1
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: build/coverage.info
+      - uses: actions/checkout@v2
+      - uses: lukka/get-cmake@latest
+      - uses: ./.github/actions/install/gtest
 
-  fuzz:
+      - name: configure
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DJWT_BUILD_EXAMPLES=OFF -DJWT_BUILD_TESTS=ON -DJWT_ENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug
+
+      - name: run
+        run: |
+          cd build
+          make jwt-cpp-test coverage
+
+      - uses: coverallsapp/github-action@v1.1.1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: build/coverage.info
+
+  fuzzing:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
-      
-    - name: install cmake
-      uses: lukka/get-cmake@v3.17.2
+    - uses: lukka/get-cmake@latest
+    - uses: ./.github/actions/install/gtest
       
     - name: configure
       run: |
-        sudo apt update
-        sudo apt install libgtest-dev
-        (cd /usr/src/gtest && sudo `which cmake` .)
-        sudo make -C /usr/src/gtest
-        sudo ln -s /usr/src/gtest/libgtest.a /usr/lib/libgtest.a
-        sudo ln -s /usr/src/gtest/libgtest_main.a /usr/lib/libgtest_main.a
         mkdir build
         cd build
-        cmake .. -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DFUZZING=ON
+        cmake .. -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DJWT_ENABLE_FUZZING=ON
         
     - name: make
       run: |
