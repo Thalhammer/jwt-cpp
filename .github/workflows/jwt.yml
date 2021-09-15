@@ -1,4 +1,4 @@
-name: Coverage CI
+name: JWT CI
 
 on:
   push:
@@ -8,9 +8,9 @@ on:
     paths:
       - "CMakeLists.txt"
       - "include/jwt-cpp/**"
-      - "tests/*"
+      - "tests/**"
       - ".github/actions/**"
-      - ".github/workflows/coverate.yml"
+      - ".github/workflows/jwt.yml"
 
 jobs:
   coverage:
