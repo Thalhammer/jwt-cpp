@@ -14,7 +14,7 @@ std::string make_pico_token() {
 
 	jwt::claim::set_t list{"once", "twice"};
 
-	std::vector<int64_t> big_numbers{727663072ull, 770979831ull, 427239169ull, 525936436ull};
+	std::vector<int64_t> big_numbers{727663072ULL, 770979831ULL, 427239169ULL, 525936436ULL};
 
 	const auto time = jwt::date::clock::now();
 
@@ -48,22 +48,15 @@ std::string make_nlohmann_token() {
 		static jwt::json::type get_type(const json& val) {
 			using jwt::json::type;
 
-			if (val.type() == json::value_t::boolean)
-				return type::boolean;
-			else if (val.type() == json::value_t::number_integer)
-				return type::integer;
-			else if (val.type() == json::value_t::number_unsigned) // nlohmann internally tracks two types of integers
-				return type::integer;
-			else if (val.type() == json::value_t::number_float)
-				return type::number;
-			else if (val.type() == json::value_t::string)
-				return type::string;
-			else if (val.type() == json::value_t::array)
-				return type::array;
-			else if (val.type() == json::value_t::object)
-				return type::object;
-			else
-				throw std::logic_error("invalid type");
+			if (val.type() == json::value_t::boolean) return type::boolean;
+			if (val.type() == json::value_t::number_integer) return type::integer;
+			// nlohmann internally tracks two types of integers
+			if (val.type() == json::value_t::number_unsigned) return type::integer;
+			if (val.type() == json::value_t::number_float) return type::number;
+			if (val.type() == json::value_t::string) return type::string;
+			if (val.type() == json::value_t::array) return type::array;
+			if (val.type() == json::value_t::object) return type::object;
+			throw std::logic_error("invalid type");
 		}
 
 		static json::object_t as_object(const json& val) {
@@ -115,7 +108,7 @@ std::string make_nlohmann_token() {
 
 	claim::set_t list{"once", "twice"};
 
-	std::vector<int64_t> big_numbers{727663072ull, 770979831ull, 427239169ull, 525936436ull};
+	std::vector<int64_t> big_numbers{727663072ULL, 770979831ULL, 427239169ULL, 525936436ULL};
 
 	const auto time = jwt::date::clock::now();
 
@@ -135,7 +128,7 @@ std::string make_nlohmann_token() {
 		.sign(jwt::algorithm::none{});
 }
 
-int main(int argc, const char** argv) {
+int main() {
 	const auto token = make_pico_token();
 	auto decoded = jwt::decode(token);
 
