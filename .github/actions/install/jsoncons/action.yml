@@ -11,7 +11,7 @@ runs:
     - run: |
         cd /tmp
         wget https://github.com/danielaparker/jsoncons/archive/v${{ inputs.version }}.tar.gz
-        tar -zvxf /tmp/v${{ inputs.version }}.tar.gz
+        tar -zxf /tmp/v${{ inputs.version }}.tar.gz
         cd jsoncons-${{ inputs.version }}
         cmake .
         sudo cmake --install .

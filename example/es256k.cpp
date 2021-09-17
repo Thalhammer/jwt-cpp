@@ -1,7 +1,7 @@
 #include <iostream>
 #include <jwt-cpp/jwt.h>
 
-int main(int argc, const char** argv) {
+int main() {
 	// openssl ecparam -name secp256k1 -genkey -noout -out ec-secp256k1-priv-key.pem
 	std::string es256k_priv_key = R"(-----BEGIN EC PRIVATE KEY-----
 MHQCAQEEIArnQWnspKtjiVuZuzuZ/l1Uqqq8gb2unLJ/6U/Saf4ioAcGBSuBBAAK

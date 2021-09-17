@@ -1,7 +1,7 @@
 #include <iostream>
 #include <jwt-cpp/jwt.h>
 
-int main(int argc, const char** argv) {
+int main() {
 	std::string rsa_priv_key = R"(-----BEGIN PRIVATE KEY-----
 MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQC4ZtdaIrd1BPIJ
 tfnF0TjIK5inQAXZ3XlCrUlJdP+XHwIRxdv1FsN12XyMYO/6ymLmo9ryoQeIrsXB
