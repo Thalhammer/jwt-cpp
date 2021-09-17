@@ -56,3 +56,32 @@ jobs:
         ./tests/fuzz/jwt-cpp-fuzz-BaseEncodeFuzz -runs=100000
         ./tests/fuzz/jwt-cpp-fuzz-BaseDecodeFuzz -runs=100000 ../tests/fuzz/decode-corpus
         ./tests/fuzz/jwt-cpp-fuzz-TokenDecodeFuzz -runs=100000 ../tests/fuzz/token-corpus
+
+  asan: ## Based on https://gist.github.com/jlblancoc/44be9d4d466f0a973b1f3808a8e56782
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: lukka/get-cmake@latest
+      - uses: ./.github/actions/install/gtest
+
+      - name: configure
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DJWT_BUILD_TESTS=ON -DCMAKE_CXX_FLAGS="-fsanitize=address  -fsanitize=leak -g" \
+                                        -DCMAKE_C_FLAGS="-fsanitize=address  -fsanitize=leak -g" \
+                                        -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address  -fsanitize=leak" \
+                                        -DCMAKE_MODULE_LINKER_FLAGS="-fsanitize=address  -fsanitize=leak"
+
+      - name: build
+        run: |
+          cd build
+          make
+
+      - name: run
+        run: |
+          export ASAN_OPTIONS=fast_unwind_on_malloc=0
+          cd build
+          ./example/rsa-create
+          ./example/rsa-verify
+          ./tests/jwt-cpp-test
