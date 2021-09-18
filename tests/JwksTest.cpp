@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 TEST(JwksTest, OneKeyParse) {
-	std::string publicKey = R"({
+	std::string public_key = R"({
     "alg": "RS256",
     "kty": "RSA",
     "use": "sig",
@@ -17,7 +17,7 @@ TEST(JwksTest, OneKeyParse) {
 	ASSERT_THROW(jwt::parse_jwk("__not_json__"), jwt::error::invalid_json_exception);
 	ASSERT_THROW(jwt::parse_jwk(R"##(["not","an","object"])##"), std::bad_cast);
 
-	auto jwk = jwt::parse_jwk(publicKey);
+	auto jwk = jwt::parse_jwk(public_key);
 
 	ASSERT_TRUE(jwk.has_algorithm());
 	ASSERT_TRUE(jwk.has_key_id());
@@ -29,7 +29,7 @@ TEST(JwksTest, OneKeyParse) {
 }
 
 TEST(JwksTest, MultiKeysParse) {
-	std::string publicKey = R"({
+	std::string public_key = R"({
 	"keys": [{
 			"kid": "internal-gateway-jwt",
 			"use": "sig",
@@ -52,7 +52,7 @@ TEST(JwksTest, MultiKeysParse) {
 		}
 	]
 })";
-	auto jwks = jwt::parse_jwks(publicKey);
+	auto jwks = jwt::parse_jwks(public_key);
 	auto jwk = jwks.get_jwk("internal-gateway-jwt");
 
 	ASSERT_TRUE(jwk.has_algorithm());
@@ -67,7 +67,7 @@ TEST(JwksTest, MultiKeysParse) {
 }
 
 TEST(JwksTest, Missingx5c) {
-	std::string publicKey = R"({
+	std::string public_key = R"({
 	"keys": [{
 			"kid": "internal-gateway-jwt",
 			"use": "sig",
@@ -99,7 +99,7 @@ TEST(JwksTest, Missingx5c) {
 	]
 })";
 
-	auto jwks = jwt::parse_jwks(publicKey);
+	auto jwks = jwt::parse_jwks(public_key);
 	ASSERT_TRUE(jwks.has_jwk("internal-gateway-jwt"));
 	ASSERT_FALSE(jwks.has_jwk("random-jwt"));
 	auto jwk = jwks.get_jwk("internal-gateway-jwt");

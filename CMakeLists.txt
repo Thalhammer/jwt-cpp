@@ -14,6 +14,7 @@ project(jwt-cpp)
 option(JWT_BUILD_EXAMPLES "Configure CMake to build examples (or not)" ON)
 option(JWT_BUILD_TESTS "Configure CMake to build tests (or not)" OFF)
 option(JWT_ENABLE_COVERAGE "Enable code coverage testing" OFF)
+option(JWT_ENABLE_FUZZING "Enable fuzz testing" OFF)
 
 option(JWT_EXTERNAL_PICOJSON "Use find_package() to locate picojson, provided to integrate with package managers" OFF)
 option(JWT_DISABLE_BASE64 "Do not include the base64 implementation from this library" OFF)
@@ -125,4 +126,8 @@ endif()
 
 if(JWT_BUILD_TESTS)
   add_subdirectory(tests)
+endif()
+
+if(JWT_ENABLE_FUZZING)
+  add_subdirectory(tests/fuzz)
 endif()

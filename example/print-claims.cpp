@@ -1,7 +1,7 @@
 #include <iostream>
 #include <jwt-cpp/jwt.h>
 
-int main(int argc, const char** argv) {
+int main() {
 	std::string token =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
 	auto decoded = jwt::decode(token);

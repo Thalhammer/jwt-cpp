@@ -2,22 +2,52 @@ name: Lint CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
-    paths:
-      - 'include/jwt-cpp/**.h'
-      - 'tests/**.cpp'
-      - '.github/workflows/lint.yml'
+    branches: [master]
 
 jobs:
-  cpp:
+  clang-format:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
         files: ["include/jwt-cpp/*.h", "tests/**.cpp"]
     steps:
-      - run: sudo apt-get install clang-format-10
+      - run: sudo apt-get install clang-format
       - uses: actions/checkout@v2
-      - run: clang-format-10 -i ${{ matrix.files }}
+      - run: clang-format -i ${{ matrix.files }}
+      - run: exit $(git status -s | wc -l)
+
+  cmake-format:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        files: ["CMakeLists.txt", "**/CMakeLists.txt", "cmake/code-coverage.cmake"]
+    steps:
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - run: pip install cmakelang
+      - uses: actions/checkout@v2
+      - run: ls ${{ matrix.files }}
+      - run: cmake-format --check $(ls ${{ matrix.files }})
+
+  clang-tidy:
+    runs-on: ubuntu-20.04
+    steps:
+      - run: sudo apt-get install clang-tidy
+      - uses: actions/checkout@v2
+      - uses: lukka/get-cmake@latest
+      - uses: ./.github/actions/install/gtest
+
+      - name: configure
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-fix"
+
+      - name: run
+        run: |
+          cd build
+          make
       - run: exit $(git status -s | wc -l)

@@ -19,7 +19,8 @@ Checks: '-*,
          portability-*,
          readability-*,
          -readability-magic-numbers,
-         -readability-braces-around-statements'
+         -readability-braces-around-statements,
+         -readability-uppercase-literal-suffix'
 
 CheckOptions:
   - key: readability-identifier-naming.TypedefCase
