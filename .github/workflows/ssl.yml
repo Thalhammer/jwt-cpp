@@ -1,0 +1,115 @@
+name: SSL Compatibility CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  openssl:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        openssl:
+          - { tag: "openssl-3.0.0", name: "3.0.0" }
+          - { tag: "OpenSSL_1_1_1l", name: "1.1.1l" }
+          - { tag: "OpenSSL_1_1_0i", name: "1.1.0i" }
+          - { tag: "OpenSSL_1_0_2u", name: "1.0.2u" }
+    name: OpenSSL ${{ matrix.openssl.name }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: lukka/get-cmake@latest
+      - uses: ./.github/actions/install/gtest
+      - uses: ./.github/actions/install/openssl
+        with:
+          version: ${{ matrix.openssl.tag }}
+
+      - name: configure
+        run: cmake . -DJWT_BUILD_TESTS=ON -DOPENSSL_ROOT_DIR=/tmp
+      - run: make
+      - name: test
+        run: ./tests/jwt-cpp-test
+
+      - name: badge success
+        if: github.event_name == 'push' && success()
+        uses: ./.github/actions/badge/success
+        with:
+          category: openssl
+          label: ${{ matrix.openssl.name }}
+
+      - name: badge failure
+        if: github.event_name == 'push' && !success()
+        uses: ./.github/actions/badge/failure
+        with:
+          category: openssl
+          label: ${{ matrix.openssl.name }}
+
+  libressl:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        libressl: ["3.3.4", "3.2.6", "3.1.5"]
+    name: LibreSSL ${{ matrix.libressl }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: lukka/get-cmake@latest
+      - uses: ./.github/actions/install/gtest
+      - uses: ./.github/actions/install/libressl
+        with:
+          version: ${{ matrix.libressl }}
+
+      - name: configure
+        run: cmake . -DJWT_BUILD_TESTS=ON -DJWT_SSL_LIBRARY:STRING=LibreSSL
+      - run: make
+      - name: test
+        run: ./tests/jwt-cpp-test
+
+      - name: badge success
+        if: github.event_name == 'push' && success()
+        uses: ./.github/actions/badge/success
+        with:
+          category: libressl
+          label: ${{ matrix.libressl }}
+
+      - name: badge failure
+        if: github.event_name == 'push' && !success()
+        uses: ./.github/actions/badge/failure
+        with:
+          category: libressl
+          label: ${{ matrix.libressl }}
+
+  wolfssl:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        wolfssl:
+          - { ref: "ab3bbf11e9d39b52e24bf42bbc6babc16d4a669b", name: "ab3bbf1" }
+    name: wolfSSL ${{ matrix.wolfssl.name }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: lukka/get-cmake@latest
+      - uses: ./.github/actions/install/gtest
+      - uses: ./.github/actions/install/wolfssl
+        with:
+          version: ${{ matrix.wolfssl.ref }}
+
+      - name: configure
+        run: cmake . -DJWT_BUILD_TESTS=ON -DJWT_SSL_LIBRARY:STRING=wolfSSL
+      - run: make
+      - name: test
+        run: ./tests/jwt-cpp-test
+
+      - name: badge success
+        if: github.event_name == 'push' && success()
+        uses: ./.github/actions/badge/success
+        with:
+          category: wolfssl
+          label: ${{ matrix.wolfssl.name }}
+
+      - name: badge failure
+        if: github.event_name == 'push' && !success()
+        uses: ./.github/actions/badge/failure
+        with:
+          category: wolfssl
+          label: ${{ matrix.wolfssl.name }}

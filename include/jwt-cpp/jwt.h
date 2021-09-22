@@ -13,10 +13,12 @@
 #endif
 
 #include <openssl/ec.h>
+#include <openssl/ecdsa.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 #include <openssl/pem.h>
+#include <openssl/ssl.h>
 
 #include <algorithm>
 #include <chrono>
@@ -52,6 +54,10 @@
 
 #if defined(LIBRESSL_VERSION_NUMBER)
 #define JWT_OPENSSL_1_0_0
+#endif
+
+#if defined(LIBWOLFSSL_VERSION_HEX)
+#define JWT_OPENSSL_1_1_1
 #endif
 
 #ifndef JWT_CLAIM_EXPLICIT
@@ -1109,7 +1115,7 @@ namespace jwt {
 // LibreSSL is the special kid in the block, as it does not support EVP_DigestSign.
 // OpenSSL on the otherhand does not support using EVP_DigestSignUpdate for eddsa, which is why we end up with this
 // mess.
-#ifdef LIBRESSL_VERSION_NUMBER
+#if defined(LIBRESSL_VERSION_NUMBER) || defined(LIBWOLFSSL_VERSION_HEX)
 				ERR_clear_error();
 				if (EVP_DigestSignUpdate(ctx.get(), reinterpret_cast<const unsigned char*>(data.data()), data.size()) !=
 					1) {
@@ -1158,7 +1164,7 @@ namespace jwt {
 // LibreSSL is the special kid in the block, as it does not support EVP_DigestVerify.
 // OpenSSL on the otherhand does not support using EVP_DigestVerifyUpdate for eddsa, which is why we end up with this
 // mess.
-#ifdef LIBRESSL_VERSION_NUMBER
+#if defined(LIBRESSL_VERSION_NUMBER) || defined(LIBWOLFSSL_VERSION_HEX)
 				if (EVP_DigestVerifyUpdate(ctx.get(), reinterpret_cast<const unsigned char*>(data.data()),
 										   data.size()) != 1) {
 					ec = error::signature_verification_error::verifyupdate_failed;

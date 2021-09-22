@@ -7,6 +7,7 @@ on:
     branches: [master]
     paths:
       - "CMakeLists.txt"
+      - "cmake/**"
       - "include/jwt-cpp/**"
       - "tests/cmake/**"
       - ".github/actions/**"
@@ -18,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: lukka/get-cmake@latest
-      
+
       - name: setup
         run: |
           mkdir build
@@ -58,10 +59,12 @@ jobs:
       - uses: actions/checkout@v2
       - name: install cmake
         run: |
-          wget https://cmake.org/files/v3.8/cmake-3.8.2.tar.gz
-          tar -zxf cmake-3.8.2.tar.gz
-          cd cmake-3.8.2
-          ./bootstrap && make -j $(nproc) && sudo make install
+          wget https://cmake.org/files/v3.12/cmake-3.12.4.tar.gz
+          tar -zxf cmake-3.12.4.tar.gz
+          cd cmake-3.12.4
+          ./bootstrap
+          make -j $(nproc)
+          sudo make install
 
       - name: setup
         run: |
@@ -80,8 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: install cmake
-        uses: lukka/get-cmake@latest
+      - uses: lukka/get-cmake@latest
 
       - name: setup
         run: |
@@ -120,8 +122,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: install cmake
-        uses: lukka/get-cmake@latest
+      - uses: lukka/get-cmake@latest
 
       - name: setup
         run: |
@@ -140,8 +141,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: install cmake
-        uses: lukka/get-cmake@latest
+      - uses: lukka/get-cmake@latest
 
       - name: setup
         run: |
@@ -160,10 +160,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: install cmake
-        uses: lukka/get-cmake@latest
-      - name: install libressl
-        uses: ./.github/actions/install/libressl
+      - uses: lukka/get-cmake@latest
+      - uses: ./.github/actions/install/libressl
 
       - name: setup
         run: |
@@ -178,12 +176,33 @@ jobs:
           cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake -DCMAKE_MODULE_PATH=../../cmake -DTEST:STRING="libressl-is-used"
           cmake --build .
 
+  with-wolfssl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: lukka/get-cmake@latest
+      - uses: ./.github/actions/install/wolfssl
+        with:
+          version: ab3bbf11e9d39b52e24bf42bbc6babc16d4a669b
+
+      - name: setup
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DJWT_SSL_LIBRARY:STRING="wolfSSL" -DJWT_BUILD_EXAMPLES=OFF
+          sudo make install
+
+      - name: test
+        run: |
+          cd tests/cmake
+          cmake . -DTEST:STRING="wolfssl-is-used"
+          cmake --build .
+
   with-hunter:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: install cmake
-        uses: lukka/get-cmake@latest
+      - uses: lukka/get-cmake@latest
 
       - name: setup
         run: |

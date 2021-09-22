@@ -4,12 +4,12 @@
 namespace {
 	extern std::string google_cert;
 	extern std::string google_cert_base64_der;
-	extern std::string google_cert_key;
+	extern std::string google_public_key;
 } // namespace
 
 TEST(HelperTest, Cert2Pubkey) {
 	auto key = jwt::helper::extract_pubkey_from_cert(google_cert);
-	ASSERT_EQ(google_cert_key, key);
+	ASSERT_EQ(google_public_key, key);
 }
 
 TEST(HelperTest, Base64DER2PemCert) {
@@ -82,7 +82,42 @@ TEST(HelperTest, ErrorCodeMessages) {
 }
 
 namespace {
-	std::string google_cert = R"(-----BEGIN CERTIFICATE-----
+	std::string google_cert =
+// This is to handle the different subject alternate name ordering
+// see https://github.com/wolfSSL/wolfssl/issues/4397
+#ifdef LIBWOLFSSL_VERSION_HEX
+		R"(-----BEGIN CERTIFICATE-----
+MIIFATCCBGqgAwIBAgIKYFOB9QABAACIvTANBgkqhkiG9w0BAQUFADBGMQswCQYD
+VQQGEwJVUzETMBEGA1UEChMKR29vZ2xlIEluYzEiMCAGA1UEAxMZR29vZ2xlIElu
+dGVybmV0IEF1dGhvcml0eTAeFw0xMzA1MjIxNTQ5MDRaFw0xMzEwMzEyMzU5NTla
+MGYxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1N
+b3VudGFpbiBWaWV3MRMwEQYDVQQKEwpHb29nbGUgSW5jMRUwEwYDVQQDDAwqLmdv
+b2dsZS5jb20wWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAARmSpIUbCqhUBq1UwnR
+Ai7/TNSk6W8JmasR+I0r/NLDYv5yApbAz8HXXN8hDdurMRP6Jy1Q0UIKmyls8HPH
+exoCo4IDGzCCAxcwggLDBgNVHREEggK6MIICtoIUeW91dHViZWVkdWNhdGlvbi5j
+b22CC3lvdXR1YmUuY29tggh5b3V0dS5iZYIKdXJjaGluLmNvbYISZ29vZ2xlY29t
+bWVyY2UuY29tggpnb29nbGUuY29tghRnb29nbGUtYW5hbHl0aWNzLmNvbYIGZ29v
+LmdsggRnLmNvggthbmRyb2lkLmNvbYILKi55dGltZy5jb22CFioueW91dHViZWVk
+dWNhdGlvbi5jb22CDSoueW91dHViZS5jb22CFioueW91dHViZS1ub2Nvb2tpZS5j
+b22CECoudXJsLmdvb2dsZS5jb22CDCoudXJjaGluLmNvbYINKi5nc3RhdGljLmNv
+bYIUKi5nb29nbGVjb21tZXJjZS5jb22CDyouZ29vZ2xlYXBpcy5jboILKi5nb29n
+bGUucHSCCyouZ29vZ2xlLnBsggsqLmdvb2dsZS5ubIILKi5nb29nbGUuaXSCCyou
+Z29vZ2xlLmh1ggsqLmdvb2dsZS5mcoILKi5nb29nbGUuZXOCCyouZ29vZ2xlLmRl
+gg8qLmdvb2dsZS5jb20udm6CDyouZ29vZ2xlLmNvbS50coIPKi5nb29nbGUuY29t
+Lm14gg8qLmdvb2dsZS5jb20uY2+CDyouZ29vZ2xlLmNvbS5icoIPKi5nb29nbGUu
+Y29tLmF1gg8qLmdvb2dsZS5jb20uYXKCDiouZ29vZ2xlLmNvLnVrgg4qLmdvb2ds
+ZS5jby5qcIIOKi5nb29nbGUuY28uaW6CCyouZ29vZ2xlLmNsggsqLmdvb2dsZS5j
+YYIWKi5nb29nbGUtYW5hbHl0aWNzLmNvbYISKi5jbG91ZC5nb29nbGUuY29tghYq
+LmFwcGVuZ2luZS5nb29nbGUuY29tgg0qLmFuZHJvaWQuY29tggwqLmdvb2dsZS5j
+b20wHQYDVR0OBBYEFFN409DVTUYFOWYp0Rxq5cqBhJ6GMB8GA1UdIwQYMBaAFL/A
+MOv1QxE+Z7qekfv8atrjaxIkMA4GA1UdDwEB/wQEAwIHgDANBgkqhkiG9w0BAQUF
+AAOBgQADJ9Ct498oQvl/rsoengAWthKu8YmOf5lAfPOiK9fb8ZbkjDSg+p/4mPLx
+47a59AYblvP75icrnRZCHBA1GBOIr0DJbHyC+0jhsOjnr1S5ptNmokR1o+U9tA7P
+kjqbnmFBtzQXBz/+SM4VGCECWxs5UGlGmQTGkHgvGbJTDS1iNg==
+-----END CERTIFICATE-----
+)";
+#else
+		R"(-----BEGIN CERTIFICATE-----
 MIIF8DCCBVmgAwIBAgIKYFOB9QABAACIvTANBgkqhkiG9w0BAQUFADBGMQswCQYD
 VQQGEwJVUzETMBEGA1UEChMKR29vZ2xlIEluYzEiMCAGA1UEAxMZR29vZ2xlIElu
 dGVybmV0IEF1dGhvcml0eTAeFw0xMzA1MjIxNTQ5MDRaFw0xMzEwMzEyMzU5NTla
@@ -117,6 +152,7 @@ trn0BhuW8/vmJyudFkIcEDUYE4ivQMlsfIL7SOGw6OevVLmm02aiRHWj5T20Ds+S
 OpueYUG3NBcHP/5IzhUYIQJbGzlQaUaZBMaQeC8ZslMNLWI2
 -----END CERTIFICATE-----
 )";
+#endif
 
 	std::string google_cert_base64_der = "MIIF8DCCBVmgAwIBAgIKYFOB9QABAACIvTANBgkqhkiG9w0BAQUFADBGMQswCQYD"
 										 "VQQGEwJVUzETMBEGA1UEChMKR29vZ2xlIEluYzEiMCAGA1UEAxMZR29vZ2xlIElu"
@@ -151,7 +187,7 @@ OpueYUG3NBcHP/5IzhUYIQJbGzlQaUaZBMaQeC8ZslMNLWI2
 										 "trn0BhuW8/vmJyudFkIcEDUYE4ivQMlsfIL7SOGw6OevVLmm02aiRHWj5T20Ds+S"
 										 "OpueYUG3NBcHP/5IzhUYIQJbGzlQaUaZBMaQeC8ZslMNLWI2";
 
-	std::string google_cert_key = R"(-----BEGIN PUBLIC KEY-----
+	std::string google_public_key = R"(-----BEGIN PUBLIC KEY-----
 MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEZkqSFGwqoVAatVMJ0QIu/0zUpOlv
 CZmrEfiNK/zSw2L+cgKWwM/B11zfIQ3bqzET+ictUNFCCpspbPBzx3saAg==
 -----END PUBLIC KEY-----

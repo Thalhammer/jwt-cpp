@@ -3,8 +3,14 @@
 set(JWT_EXTERNAL_PICOJSON @JWT_EXTERNAL_PICOJSON@)
 set(JWT_SSL_LIBRARY @JWT_SSL_LIBRARY@)
 
-include(CMakeFindDependencyMacro) 
-find_dependency(${JWT_SSL_LIBRARY} REQUIRED)
+include(CMakeFindDependencyMacro)
+if(${JWT_SSL_LIBRARY} MATCHES "wolfSSL")
+  find_dependency(PkgConfig REQUIRED)
+  pkg_check_modules(wolfssl REQUIRED IMPORTED_TARGET wolfssl)
+  list(TRANSFORM wolfssl_INCLUDE_DIRS APPEND "/wolfssl") # This is required to access OpenSSL compatability API
+else()
+  find_dependency(${JWT_SSL_LIBRARY} REQUIRED)
+endif()
 
 if(JWT_EXTERNAL_PICOJSON)
   find_dependency(picojson REQUIRED)

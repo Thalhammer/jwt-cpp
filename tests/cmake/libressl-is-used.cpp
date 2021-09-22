@@ -1,5 +1,5 @@
 #if !__has_include(<tls.h>)
-#error "missing LibreSSL's TLS header!
+#error "missing LibreSSL's TLS header!"
 #endif
 
 #include <tls.h>

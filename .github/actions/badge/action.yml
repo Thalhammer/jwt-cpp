@@ -1,4 +1,4 @@
-name: Make a Basge
+name: Make a Badge
 description: Creates a JSON file for use with Sheilds.io. The default is a "brightgreen" "Passing" badge
 inputs:
   category:
