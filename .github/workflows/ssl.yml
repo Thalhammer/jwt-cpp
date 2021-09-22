@@ -37,6 +37,7 @@ jobs:
         with:
           category: openssl
           label: ${{ matrix.openssl.name }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: badge failure
         if: github.event_name == 'push' && !success()
@@ -44,6 +45,7 @@ jobs:
         with:
           category: openssl
           label: ${{ matrix.openssl.name }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
   libressl:
     runs-on: ubuntu-latest
@@ -71,6 +73,7 @@ jobs:
         with:
           category: libressl
           label: ${{ matrix.libressl }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: badge failure
         if: github.event_name == 'push' && !success()
@@ -78,6 +81,7 @@ jobs:
         with:
           category: libressl
           label: ${{ matrix.libressl }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
   wolfssl:
     runs-on: ubuntu-latest
@@ -106,6 +110,7 @@ jobs:
         with:
           category: wolfssl
           label: ${{ matrix.wolfssl.name }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: badge failure
         if: github.event_name == 'push' && !success()
@@ -113,3 +118,4 @@ jobs:
         with:
           category: wolfssl
           label: ${{ matrix.wolfssl.name }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}

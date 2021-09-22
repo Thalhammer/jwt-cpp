@@ -49,27 +49,16 @@ jobs:
 
       - name: badge success
         if: github.event_name == 'push' && success()
-        uses: ./.github/actions/badge
+        uses: ./.github/actions/badge/success
         with:
           category: cross-platform
           label: ${{ matrix.os }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: badge failure
         if: github.event_name == 'push' && !success()
-        uses: ./.github/actions/badge
+        uses: ./.github/actions/badge/failure
         with:
           category: cross-platform
           label: ${{ matrix.os }}
-          message: Failing
-          color: red
-
-      - name: badge publish
-        if: github.event_name == 'push'
-        uses: peaceiris/actions-gh-pages@v3
-        with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: badges
-          publish_dir: ./badges
-          keep_files: true
-          user_name: "github-actions[bot]"
-          user_email: "github-actions[bot]@users.noreply.github.com"
