@@ -40,9 +40,9 @@ In the name of flexibility and extensibility, jwt-cpp supports [OpenSSL](https:/
 
 | OpenSSL           | LibreSSL       | wolfSSL        |
 |-------------------|----------------|----------------|
-| ![1.0.2u][o1.0.2] | ![3.1.5][l3.1] | ![ab3bbf1][wolf-master] |
-| ![1.1.0i][o1.1.0] | ![3.2.6][l3.2] |                |
-| ![1.1.1l][o1.1.1] | ![3.3.4][l3.3] |                |
+| ![1.0.2u][o1.0.2] | ![3.2.6][l3.2] | ![ab3bbf1][wolf-master] |
+| ![1.1.0i][o1.1.0] | ![3.3.4][l3.3] |                |
+| ![1.1.1l][o1.1.1] | ![3.4.0][l3.4] |                |
 | ![3.0.0][o3.0]    |                |                |
 
 > ℹ️ Note: A complete list of versions tested in the past can be found [here](https://github.com/Thalhammer/jwt-cpp/tree/badges).
@@ -51,9 +51,9 @@ In the name of flexibility and extensibility, jwt-cpp supports [OpenSSL](https:/
 [o1.1.0]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/openssl/1.1.0i/shields.json
 [o1.1.1]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/openssl/1.1.1l/shields.json
 [o3.0]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/openssl/3.0.0/shields.json
-[l3.1]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/libressl/3.1.5/shields.json
 [l3.2]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/libressl/3.2.6/shields.json
 [l3.3]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/libressl/3.3.4/shields.json
+[l3.4]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/libressl/3.4.0/shields.json
 [wolf-master]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/wolfssl/ab3bbf1/shields.json
 
 ## Overview
