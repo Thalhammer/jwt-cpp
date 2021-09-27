@@ -9,6 +9,7 @@ on:
       - "CMakeLists.txt"
       - "include/jwt-cpp/**"
       - "tests/jsoncons/**"
+      - "tests/boost/**"
       - ".github/actions/**"
       - ".github/workflows/traits.yml"
 
@@ -20,6 +21,8 @@ jobs:
       - uses: lukka/get-cmake@latest
       - uses: ./.github/actions/install/gtest
       - uses: ./.github/actions/install/jsoncons
+        with:
+          version: 0.167.1
 
       - name: setup
         run: |

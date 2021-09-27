@@ -1837,10 +1837,28 @@ namespace jwt {
 		using is_count_signature = typename std::is_integral<decltype(
 			std::declval<const object_type>().count(std::declval<const string_type>()))>;
 
+		template<typename object_type, typename string_type>
+		struct has_subcription_operator {
+			template<class>
+			struct sfinae_true : std::true_type {};
+
+			template<class T, class A0>
+			static auto test_operator_plus(int)
+				-> sfinae_true<decltype(std::declval<T>().operator[](std::declval<A0>()))>;
+			template<class, class A0>
+			static auto test_operator_plus(long) -> std::false_type;
+
+			static constexpr auto value = decltype(test_operator_plus<object_type, string_type>(0)){};
+		};
+
 		template<typename object_type, typename value_type, typename string_type>
-		using is_subcription_operator_signature =
-			typename std::is_same<decltype(std::declval<object_type>()[std::declval<const string_type>()]),
-								  value_type&>;
+		struct is_subcription_operator_signature {
+			static constexpr auto has_subscription_operator = has_subcription_operator<object_type, string_type>::value;
+			static_assert(has_subscription_operator,
+						  "object_type must implementate the subscription operator '[]' for this library");
+
+			static constexpr auto value = has_subscription_operator;
+		};
 
 		template<typename object_type, typename value_type, typename string_type>
 		using is_at_const_signature =
