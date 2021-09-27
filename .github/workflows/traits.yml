@@ -9,6 +9,7 @@ on:
       - "CMakeLists.txt"
       - "include/jwt-cpp/**"
       - "tests/jsoncons/**"
+      - "tests/boost/**"
       - ".github/actions/**"
       - ".github/workflows/traits.yml"
 
