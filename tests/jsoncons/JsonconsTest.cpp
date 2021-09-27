@@ -9,52 +9,51 @@
 #include <sstream>
 
 struct jsoncons_traits {
+	// Needs at least https://github.com/danielaparker/jsoncons/commit/28c56b90ec7337f98a5b8942574590111a5e5831
+	static_assert(jsoncons::version().minor >= 167);
+
 	using json = jsoncons::json;
 	using value_type = json;
 	struct object_type : json::object {
-		using value_type = key_value_type;
-		using mapped_type = key_value_type::
-			value_type; // https://github.com/danielaparker/jsoncons/commit/1b1ceeb572f9a2db6d37cff47ac78a4f14e072e2#commitcomment-45391411
+		// Add missing C++11 member types
+		// https://github.com/danielaparker/jsoncons/commit/1b1ceeb572f9a2db6d37cff47ac78a4f14e072e2#commitcomment-45391411
+		using value_type = key_value_type; // Enable optional jwt-cpp methods
+		using mapped_type = key_value_type::value_type;
+		using size_type = size_t; // for implementing count
 
 		object_type() = default;
 		object_type(const object_type&) = default;
 		explicit object_type(const json::object& o) : json::object(o) {}
 		object_type(object_type&&) = default;
 		explicit object_type(json::object&& o) : json::object(o) {}
-		object_type& operator=(const object_type& o) {
-			// avoid private deleted copy operator= https://github.com/danielaparker/jsoncons/pull/298
-			object_type t(static_cast<const json::object&>(o));
-			(*this) = std::move(t);
-			return *this;
-		}
-		object_type& operator=(object_type&& o) noexcept {
-			swap(o);
-			return *this;
-		}
+		~object_type() = default;
+		object_type& operator=(const object_type& o) = default;
+		object_type& operator=(object_type&& o) noexcept = default;
 
+		// Add missing C++11 subscription operator
 		mapped_type& operator[](const key_type& key) {
-			auto ret = try_emplace(
-				key); // https://github.com/microsoft/STL/blob/2914b4301c59dc7ffc09d16ac6f7979fde2b7f2c/stl/inc/map#L325
-			return ret.first->value();
-		}
-		mapped_type& operator[](key_type&& key) {
-			auto ret = try_emplace(key);
-			return ret.first->value();
+			// https://github.com/microsoft/STL/blob/2914b4301c59dc7ffc09d16ac6f7979fde2b7f2c/stl/inc/map#L325
+			return try_emplace(key).first->value();
 		}
 
+		// Add missing C++11 element access
 		const mapped_type& at(const key_type& key) const {
 			auto target = find(key);
-			if (target != end()) { return target->value(); }
+			if (target != end()) return target->value();
 
 			throw std::out_of_range("invalid key");
 		}
 
-		size_t count(const key_type& key) const {
-			size_t ret = 0;
-			for (const auto & first : *this) {
-				if (first.key() == key) { ++ret; }
-			}
-			return ret;
+		// Add missing C++11 lookup method
+		size_type count(const key_type& key) const {
+			struct compare {
+				bool operator()(const value_type& val, const key_type& key) const { return val.key() < key; }
+				bool operator()(const key_type& key, const value_type& val) const { return key < val.key(); }
+			};
+
+			// https://en.cppreference.com/w/cpp/algorithm/binary_search#Complexity
+			if (std::binary_search(this->begin(), this->end(), key, compare{})) return 1;
+			return 0;
 		}
 	};
 	using array_type = json::array;
