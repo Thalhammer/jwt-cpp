@@ -24,6 +24,8 @@ set(JWT_SSL_LIBRARY_OPTIONS OpenSSL LibreSSL wolfSSL)
 set(JWT_SSL_LIBRARY OpenSSL CACHE STRING "Determines which SSL library to build with")
 set_property(CACHE JWT_SSL_LIBRARY PROPERTY STRINGS ${JWT_SSL_LIBRARY_OPTIONS})
 
+set(JWT_JSON_TRAITS_OPTIONS boost-json danielaparker-jsoncons kazuho-picojson nlohmann-json)
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 if(NOT JWT_SSL_LIBRARY IN_LIST JWT_SSL_LIBRARY_OPTIONS)
@@ -62,6 +64,12 @@ endif()
 
 set(JWT_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(JWT_HEADER_FILES ${JWT_INCLUDE_PATH}/jwt-cpp/jwt.h)
+foreach(traits ${JWT_JSON_TRAITS_OPTIONS})
+  list(APPEND JWT_HEADER_FILES
+      ${JWT_INCLUDE_PATH}/jwt-cpp/traits/${traits}/defaults.h
+      ${JWT_INCLUDE_PATH}/jwt-cpp/traits/${traits}/traits.h)
+endforeach()
+
 if(NOT JWT_DISABLE_BASE64)
   list(APPEND JWT_HEADER_FILES ${JWT_INCLUDE_PATH}/jwt-cpp/base.h)
 endif()
