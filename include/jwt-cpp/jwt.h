@@ -1,6 +1,10 @@
 #ifndef JWT_CPP_JWT_H
 #define JWT_CPP_JWT_H
 
+#ifndef JWT_DISABLE_PICOJSON
+#include "traits/kazuho-picojson/defaults.h"
+#endif
+
 #ifndef JWT_DISABLE_BASE64
 #include "base.h"
 #endif
@@ -3442,9 +3446,5 @@ template<typename json_traits>
 std::ostream& operator<<(std::ostream& os, const jwt::basic_claim<json_traits>& c) {
 	return os << c.to_json();
 }
-
-#ifndef JWT_DISABLE_PICOJSON
-#include "traits/kazuho-picojson/defaults.h"
-#endif
 
 #endif
