@@ -5,7 +5,7 @@
 // if not boost JSON standalone then error...
 
 struct boostjson_traits {
-        namespace json = boost::json;
+	namespace json = boost::json;
 	using value_type = json::value;
 	using object_type = json::object;
 	using array_type = json::array;

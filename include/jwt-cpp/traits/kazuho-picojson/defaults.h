@@ -10,20 +10,20 @@ namespace jwt {
 	 * This type is the specialization of the \ref basic_claim class which
 	 * uses the standard template types.
 	 */
-	using claim = basic_claim<picojson_traits>;
+	using claim = basic_claim<traits::kazuho_picojson>;
 
 	/**
 	 * Create a verifier using the default clock
 	 * \return verifier instance
 	 */
-	inline verifier<default_clock, picojson_traits> verify() {
-		return verify<default_clock, picojson_traits>(default_clock{});
+	inline verifier<default_clock, traits::kazuho_picojson> verify() {
+		return verify<default_clock, traits::kazuho_picojson>(default_clock{});
 	}
 
 	/**
 	 * Return a picojson builder instance to create a new token
 	 */
-	inline builder<picojson_traits> create() { return builder<picojson_traits>(); }
+	inline builder<traits::kazuho_picojson> create() { return builder<traits::kazuho_picojson>(); }
 
 #ifndef JWT_DISABLE_BASE64
 	/**
@@ -33,7 +33,9 @@ namespace jwt {
 	 * \throw std::invalid_argument Token is not in correct format
 	 * \throw std::runtime_error Base64 decoding failed or invalid json
 	 */
-	inline decoded_jwt<picojson_traits> decode(const std::string& token) { return decoded_jwt<picojson_traits>(token); }
+	inline decoded_jwt<traits::kazuho_picojson> decode(const std::string& token) {
+		return decoded_jwt<traits::kazuho_picojson>(token);
+	}
 #endif
 
 	/**
@@ -48,8 +50,8 @@ namespace jwt {
 	 * \throw std::runtime_error Base64 decoding failed or invalid json
 	 */
 	template<typename Decode>
-	decoded_jwt<picojson_traits> decode(const std::string& token, Decode decode) {
-		return decoded_jwt<picojson_traits>(token, decode);
+	decoded_jwt<traits::kazuho_picojson> decode(const std::string& token, Decode decode) {
+		return decoded_jwt<traits::kazuho_picojson>(token, decode);
 	}
 
 	/**
@@ -58,8 +60,8 @@ namespace jwt {
 	 * \return Parsed JWK
 	 * \throw std::runtime_error Token is not in correct format
 	 */
-	inline jwk<picojson_traits> parse_jwk(const picojson_traits::string_type& token) {
-		return jwk<picojson_traits>(token);
+	inline jwk<traits::kazuho_picojson> parse_jwk(const traits::kazuho_picojson::string_type& token) {
+		return jwk<traits::kazuho_picojson>(token);
 	}
 
 	/**
@@ -68,8 +70,8 @@ namespace jwt {
 	 * \return Parsed JWKs
 	 * \throw std::runtime_error Token is not in correct format
 	 */
-	inline jwks<picojson_traits> parse_jwks(const picojson_traits::string_type& token) {
-		return jwks<picojson_traits>(token);
+	inline jwks<traits::kazuho_picojson> parse_jwks(const traits::kazuho_picojson::string_type& token) {
+		return jwks<traits::kazuho_picojson>(token);
 	}
 } // namespace jwt
 

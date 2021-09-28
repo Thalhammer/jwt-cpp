@@ -1,29 +1,31 @@
 #ifndef JWT_CPP_NLOHMANN_JSON_DEFAULTS_H
 #define JWT_CPP_NLOHMANN_JSON_DEFAULTS_H
 
+#define JWT_DISABLE_PICOJSON
+
 #include "traits.h"
 
 namespace jwt {
 	/**
-	 * \brief a class to store a generic [picojson](https://github.com/kazuho/picojson) value as claim
+	 * \brief a class to store a generic [JSON for Modern C++](https://github.com/nlohmann/json) value as claim
 	 *
 	 * This type is the specialization of the \ref basic_claim class which
 	 * uses the standard template types.
 	 */
-	using claim = basic_claim<nlohmann_traits>;
+	using claim = basic_claim<traits::nlohmann_json>;
 
 	/**
 	 * Create a verifier using the default clock
 	 * \return verifier instance
 	 */
-	inline verifier<default_clock, nlohmann_traits> verify() {
-		return verify<default_clock, nlohmann_traits>(default_clock{});
+	inline verifier<default_clock, traits::nlohmann_json> verify() {
+		return verify<default_clock, traits::nlohmann_json>(default_clock{});
 	}
 
 	/**
 	 * Return a picojson builder instance to create a new token
 	 */
-	inline builder<nlohmann_traits> create() { return builder<nlohmann_traits>(); }
+	inline builder<traits::nlohmann_json> create() { return builder<traits::nlohmann_json>(); }
 
 #ifndef JWT_DISABLE_BASE64
 	/**
@@ -33,7 +35,9 @@ namespace jwt {
 	 * \throw std::invalid_argument Token is not in correct format
 	 * \throw std::runtime_error Base64 decoding failed or invalid json
 	 */
-	inline decoded_jwt<nlohmann_traits> decode(const std::string& token) { return decoded_jwt<nlohmann_traits>(token); }
+	inline decoded_jwt<traits::nlohmann_json> decode(const std::string& token) {
+		return decoded_jwt<traits::nlohmann_json>(token);
+	}
 #endif
 
 	/**
@@ -48,8 +52,8 @@ namespace jwt {
 	 * \throw std::runtime_error Base64 decoding failed or invalid json
 	 */
 	template<typename Decode>
-	decoded_jwt<nlohmann_traits> decode(const std::string& token, Decode decode) {
-		return decoded_jwt<nlohmann_traits>(token, decode);
+	decoded_jwt<traits::nlohmann_json> decode(const std::string& token, Decode decode) {
+		return decoded_jwt<traits::nlohmann_json>(token, decode);
 	}
 
 	/**
@@ -58,8 +62,8 @@ namespace jwt {
 	 * \return Parsed JWK
 	 * \throw std::runtime_error Token is not in correct format
 	 */
-	inline jwk<nlohmann_traits> parse_jwk(const nlohmann_traits::string_type& token) {
-		return jwk<nlohmann_traits>(token);
+	inline jwk<traits::nlohmann_json> parse_jwk(const traits::nlohmann_json::string_type& token) {
+		return jwk<traits::nlohmann_json>(token);
 	}
 
 	/**
@@ -68,8 +72,8 @@ namespace jwt {
 	 * \return Parsed JWKs
 	 * \throw std::runtime_error Token is not in correct format
 	 */
-	inline jwks<nlohmann_traits> parse_jwks(const nlohmann_traits::string_type& token) {
-		return jwks<nlohmann_traits>(token);
+	inline jwks<traits::nlohmann_json> parse_jwks(const traits::nlohmann_json::string_type& token) {
+		return jwks<traits::nlohmann_json>(token);
 	}
 } // namespace jwt
 

@@ -639,7 +639,7 @@ TEST(TokenTest, VerifyTokenExpireFail) {
 	auto token = jwt::create().set_expires_at(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
 	auto decoded_token = jwt::decode(token);
 
-	auto verify = jwt::verify<test_clock, jwt::picojson_traits>({std::chrono::system_clock::from_time_t(110)})
+	auto verify = jwt::verify<test_clock, jwt::traits::kazuho_picojson>({std::chrono::system_clock::from_time_t(110)})
 					  .allow_algorithm(jwt::algorithm::none{});
 	ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
 	std::error_code ec;
@@ -653,7 +653,7 @@ TEST(TokenTest, VerifyTokenExpire) {
 	auto token = jwt::create().set_expires_at(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
 	auto decoded_token = jwt::decode(token);
 
-	auto verify = jwt::verify<test_clock, jwt::picojson_traits>({std::chrono::system_clock::from_time_t(90)})
+	auto verify = jwt::verify<test_clock, jwt::traits::kazuho_picojson>({std::chrono::system_clock::from_time_t(90)})
 					  .allow_algorithm(jwt::algorithm::none{});
 	ASSERT_NO_THROW(verify.verify(decoded_token));
 	std::error_code ec;
@@ -666,7 +666,7 @@ TEST(TokenTest, VerifyTokenNBFFail) {
 	auto token = jwt::create().set_not_before(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
 	auto decoded_token = jwt::decode(token);
 
-	auto verify = jwt::verify<test_clock, jwt::picojson_traits>({std::chrono::system_clock::from_time_t(90)})
+	auto verify = jwt::verify<test_clock, jwt::traits::kazuho_picojson>({std::chrono::system_clock::from_time_t(90)})
 					  .allow_algorithm(jwt::algorithm::none{});
 	ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
 	std::error_code ec;
@@ -680,7 +680,7 @@ TEST(TokenTest, VerifyTokenNBF) {
 	auto token = jwt::create().set_not_before(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
 	auto decoded_token = jwt::decode(token);
 
-	auto verify = jwt::verify<test_clock, jwt::picojson_traits>({std::chrono::system_clock::from_time_t(110)})
+	auto verify = jwt::verify<test_clock, jwt::traits::kazuho_picojson>({std::chrono::system_clock::from_time_t(110)})
 					  .allow_algorithm(jwt::algorithm::none{});
 	ASSERT_NO_THROW(verify.verify(decoded_token));
 	std::error_code ec;
@@ -693,7 +693,7 @@ TEST(TokenTest, VerifyTokenIATFail) {
 	auto token = jwt::create().set_issued_at(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
 	auto decoded_token = jwt::decode(token);
 
-	auto verify = jwt::verify<test_clock, jwt::picojson_traits>({std::chrono::system_clock::from_time_t(90)})
+	auto verify = jwt::verify<test_clock, jwt::traits::kazuho_picojson>({std::chrono::system_clock::from_time_t(90)})
 					  .allow_algorithm(jwt::algorithm::none{});
 	ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
 	std::error_code ec;
@@ -707,7 +707,7 @@ TEST(TokenTest, VerifyTokenIAT) {
 	auto token = jwt::create().set_issued_at(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
 	auto decoded_token = jwt::decode(token);
 
-	auto verify = jwt::verify<test_clock, jwt::picojson_traits>({std::chrono::system_clock::from_time_t(110)})
+	auto verify = jwt::verify<test_clock, jwt::traits::kazuho_picojson>({std::chrono::system_clock::from_time_t(110)})
 					  .allow_algorithm(jwt::algorithm::none{});
 	ASSERT_NO_THROW(verify.verify(decoded_token));
 	std::error_code ec;
