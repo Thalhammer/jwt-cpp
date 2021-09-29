@@ -33,13 +33,13 @@ jobs:
       - uses: actions/github-script@v5
         with:
           script: |
-            let output = '';
+            let output = ''
             const options = {
               listeners: {
-                stdout: (data: Buffer) => output += data.toString()
+                stdout: data => output += data.toString()
               },
-            };
-            await exec.exec('git', ['--no-pager', 'diff', '--minimal', 'HEAD'], options);            
+            }
+            await exec.exec('git', ['--no-pager', 'diff', '--minimal', 'HEAD'], options)
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
