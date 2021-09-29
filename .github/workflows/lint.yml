@@ -40,13 +40,14 @@ jobs:
               },
             }
             await exec.exec('git', ['--no-pager', 'diff', '--minimal', 'HEAD'], options)
+            if(output === '') return
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: `👋 cmake-format: linting has some concerns
               
-              <details><summary><b>Diff</b></summary>
+              <details><summary>Suggestion</summary>
 
               \`\`\`diff
               ${output}
@@ -56,7 +57,7 @@ jobs:
 
               `
             })
-      - run: cmake-format --check ${{ matrix.files }}
+      - run: exit $(git status -s | wc -l)
 
   clang-tidy:
     runs-on: ubuntu-20.04
