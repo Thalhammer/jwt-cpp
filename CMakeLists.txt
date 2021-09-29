@@ -65,9 +65,8 @@ endif()
 set(JWT_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(JWT_HEADER_FILES ${JWT_INCLUDE_PATH}/jwt-cpp/jwt.h)
 foreach(traits ${JWT_JSON_TRAITS_OPTIONS})
-  list(APPEND JWT_HEADER_FILES
-      ${JWT_INCLUDE_PATH}/jwt-cpp/traits/${traits}/defaults.h
-      ${JWT_INCLUDE_PATH}/jwt-cpp/traits/${traits}/traits.h)
+  list(APPEND JWT_HEADER_FILES ${JWT_INCLUDE_PATH}/jwt-cpp/traits/${traits}/defaults.h
+       ${JWT_INCLUDE_PATH}/jwt-cpp/traits/${traits}/traits.h)
 endforeach()
 
 if(NOT JWT_DISABLE_BASE64)
