@@ -29,8 +29,34 @@ jobs:
           python-version: '3.x'
       - run: pip install cmakelang
       - uses: actions/checkout@v2
-      - run: ls ${{ matrix.files }}
-      - run: cmake-format --check $(ls ${{ matrix.files }})
+      - run: cmake-format ${{ matrix.files }}
+      - uses: actions/github-script@v5
+        with:
+          script: |
+            let output = '';
+            const options = {
+              listeners: {
+                stdout: (data: Buffer) => output += data.toString()
+              },
+            };
+            await exec.exec('git', ['--no-pager', 'diff', '--minimal', 'HEAD'], options);            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `👋 cmake-format: linting has some concerns
+              
+              <details><summary><b>Diff</b></summary>
+
+              \`\`\`diff
+              ${output}
+              \`\`\`
+
+              </details>
+
+              `
+            })
+      - run: cmake-format --check ${{ matrix.files }}
 
   clang-tidy:
     runs-on: ubuntu-20.04
@@ -47,7 +73,6 @@ jobs:
           cmake .. -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-fix"
 
       - name: run
-        run: |
-          cd build
-          make
+        working-directory: build
+        run: make
       - run: exit $(git status -s | wc -l)
