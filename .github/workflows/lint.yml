@@ -16,6 +16,7 @@ jobs:
       - run: sudo apt-get install clang-format
       - run: shopt -s globstar
       - uses: actions/checkout@v2
+      - run: ls ${{ matrix.files }}
       - run: clang-format -i ${{ matrix.files }}
       - uses: ./.github/actions/comment-linting
         with:
