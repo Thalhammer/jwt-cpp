@@ -20,7 +20,7 @@ runs:
     - uses: actions/setup-node@v2
       with:
         node-version: 14
-    - run: npm install mustache
+    - run: npm install -g mustache
       shell: bash
     - uses: actions/github-script@v5
       env:
