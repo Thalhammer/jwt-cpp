@@ -17,7 +17,9 @@ jobs:
       - run: shopt -s globstar
       - uses: actions/checkout@v2
       - run: |
-          ls include/jwt-cpp/**/*.h
+          cd include
+          ls jwt-cpp/**/*.h
+          cd ..
           ls ${{ matrix.files }}
       - run: clang-format -i ${{ matrix.files }}
       - uses: ./.github/actions/comment-linting
