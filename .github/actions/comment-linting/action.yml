@@ -10,7 +10,7 @@ runs:
     - uses: actions/github-script@v5
       with:
         script: |
-          if (github.context.eventName !== 'pull_request') return
+          if (context.eventName !== 'pull_request') return
 
           let output = ''
           const options = {
