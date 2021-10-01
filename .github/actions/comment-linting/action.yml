@@ -8,6 +8,8 @@ runs:
   using: "composite"
   steps:
     - uses: actions/github-script@v5
+      env:
+        LINTER_NAME: ${{ inputs.linter_name }}
       with:
         script: |
           if (context.eventName !== 'pull_request') return
@@ -24,7 +26,7 @@ runs:
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: `👋 ${process.env.INPUT_LINTER_NAME}: linting had some concerns
+            body: `👋 ${process.env.LINTER_NAME}: linting had some concerns
             
             <details><summary>Suggestion</summary>
 
