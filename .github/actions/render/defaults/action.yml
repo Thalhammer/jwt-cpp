@@ -24,31 +24,29 @@ runs:
       shell: bash
     - uses: actions/github-script@v5
       env:
-        INPUT_TRAITS_NAME: ${{ inputs.traits_name }}
-        INPUT_LIBRARY_NAME: ${{ inputs.library_name }}
-        INPUT_LIBRARY_URL: ${{ inputs.library_url }}
-        INPUT_DISABLE_DEFAULT_TRAITS: ${{ inputs.disable_default_traits }}
+        TRAITS_NAME: ${{ inputs.traits_name }}
+        LIBRARY_NAME: ${{ inputs.library_name }}
+        LIBRARY_URL: ${{ inputs.library_url }}
+        DISABLE_DEFAULT_TRAITS: ${{ inputs.disable_default_traits }}
       with:
         script: |
           const mustache = require('mustache')
           const path = require('path')
           const fs = require('fs')
 
-          const traitsName = core.getInput('traits_name', { required: true })
-          console.log(`Rendering ${traitsName}!`)
+          const { TRAITS_NAME, LIBRARY_NAME, LIBRARY_URL, DISABLE_DEFAULT_TRAITS } = process.env
+          console.log(`Rendering ${TRAITS_NAME}!`)
 
-          const libraryName = core.getInput('library_name', { required: true })
-          const libraryUrl = core.getInput('library_url', { required: true })
-          const disableDefault = core.getInput('disable_default_traits') === 'true'
+          const disableDefault = DISABLE_DEFAULT_TRAITS === 'true'
 
           const template = fs.readFileSync(path.join('include', 'jwt-cpp', 'traits', 'defaults.h.mustache'), 'utf8')
           const content = mustache.render(template, {
-              traits_name: traitsName,
-              traits_name_upper: traitsName.toUpperCase(),
-              library_name: libraryName,
-              library_url: libraryUrl,
+              traits_name: TRAITS_NAME,
+              traits_name_upper: TRAITS_NAME.toUpperCase(),
+              library_name: LIBRARY_NAME,
+              library_url: LIBRARY_URL,
               disable_default_traits: disableDefault,
           })
-          const outputDir = path.join('include', 'jwt-cpp', 'traits', traitsName.replace('_', '-'))
+          const outputDir = path.join('include', 'jwt-cpp', 'traits', TRAITS_NAME.replace('_', '-'))
           fs.mkdirSync(outputDir, { recursive: true })
           fs.writeFileSync(path.join(outputDir, 'defaults.h'), content)
