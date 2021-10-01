@@ -62,7 +62,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        triats:
+        traits:
           - { name: "boost_json", library: "Boost.JSON", url: "https://github.com/boostorg/json", disable_pico: true }
           - { name: "danielaparker_jsoncons", library: "jsoncons", url: "https://github.com/danielaparker/jsoncons", disable_pico: true }
           - { name: "kazuho_picojson", library: "picojson", url: "https://github.com/kazuho/picojson", disable_pico: false }
