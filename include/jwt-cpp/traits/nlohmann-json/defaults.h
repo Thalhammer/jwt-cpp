@@ -1,13 +1,15 @@
 #ifndef JWT_CPP_NLOHMANN_JSON_DEFAULTS_H
 #define JWT_CPP_NLOHMANN_JSON_DEFAULTS_H
 
+#ifndef JWT_DISABLE_PICOJSON
 #define JWT_DISABLE_PICOJSON
+#endif
 
 #include "traits.h"
 
 namespace jwt {
 	/**
-	 * \brief a class to store a generic [JSON for Modern C++](https://github.com/nlohmann/json) value as claim
+	 * \brief a class to store a generic [JSON for Modern C++]((https://github.com/nlohmann/json) value as claim
 	 *
 	 * This type is the specialization of the \ref basic_claim class which
 	 * uses the standard template types.
@@ -23,7 +25,7 @@ namespace jwt {
 	}
 
 	/**
-	 * Return a picojson builder instance to create a new token
+	 * Return a builder instance to create a new token
 	 */
 	inline builder<traits::nlohmann_json> create() { return builder<traits::nlohmann_json>(); }
 

@@ -1,5 +1,5 @@
-#ifndef JWT_CPP_PICOJSON_DEFAULTS_H
-#define JWT_CPP_PICOJSON_DEFAULTS_H
+#ifndef JWT_CPP_KAZUHO_PICOJSON_DEFAULTS_H
+#define JWT_CPP_KAZUHO_PICOJSON_DEFAULTS_H
 
 #include "traits.h"
 
@@ -21,7 +21,7 @@ namespace jwt {
 	}
 
 	/**
-	 * Return a picojson builder instance to create a new token
+	 * Return a builder instance to create a new token
 	 */
 	inline builder<traits::kazuho_picojson> create() { return builder<traits::kazuho_picojson>(); }
 
@@ -75,4 +75,4 @@ namespace jwt {
 	}
 } // namespace jwt
 
-#endif // JWT_CPP_PICOJSON_DEFAULTS_H
+#endif // JWT_CPP_KAZUHO_PICOJSON_DEFAULTS_H
