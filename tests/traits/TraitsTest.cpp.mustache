@@ -1,11 +1,10 @@
-#define JSONCONS_NO_DEPRECATED
 
-#include "jwt-cpp/traits/danielaparker-jsoncons/defaults.h"
+#include "jwt-cpp/traits/{{traits_dir}}/defaults.h"
 
 #include <gtest/gtest.h>
 
-TEST(JsonconsTest, BasicClaims) {
-	const auto string = jwt::claim(std::string("string"));
+TEST({{test_suite_name}}, BasicClaims) {
+	const auto string = jwt::basic_claim<jwt::traits::{{traits_name}}>(std::string("string"));
 	ASSERT_EQ(string.get_type(), jwt::json::type::string);
 
 	const auto array = jwt::claim(std::set<std::string>{"string", "string"});
@@ -15,7 +14,7 @@ TEST(JsonconsTest, BasicClaims) {
 	ASSERT_EQ(integer.get_type(), jwt::json::type::integer);
 }
 
-TEST(JsonconsTest, AudienceAsString) {
+TEST({{test_suite_name}}, AudienceAsString) {
 	std::string token =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0.WZnM3SIiSRHsbO3O7Z2bmIzTJ4EC32HRBKfLznHhrh4";
 	auto decoded = jwt::decode(token);
@@ -39,14 +38,14 @@ TEST(JsonconsTest, AudienceAsString) {
 	ASSERT_EQ("test", *aud.begin());
 }
 
-TEST(JsonconsTest, SetArray) {
+TEST({{test_suite_name}}, SetArray) {
 	std::vector<int64_t> vect = {100, 20, 10};
 	auto token =
 		jwt::create().set_payload_claim("test", jwt::claim(vect.begin(), vect.end())).sign(jwt::algorithm::none{});
 	ASSERT_EQ(token, "eyJhbGciOiJub25lIn0.eyJ0ZXN0IjpbMTAwLDIwLDEwXX0.");
 }
 
-TEST(JsonconsTest, SetObject) {
+TEST({{test_suite_name}}, SetObject) {
 	std::istringstream iss{"{\"api-x\": [1]}"};
 	jwt::claim object;
 	iss >> object;
@@ -57,7 +56,7 @@ TEST(JsonconsTest, SetObject) {
 			  "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lc3BhY2UiOnsiYXBpLXgiOlsxXX19.F8I6I2RcSF98bKa0IpIz09fRZtHr1CWnWKx2za-tFQA");
 }
 
-TEST(JsonconsTest, VerifyTokenHS256) {
+TEST({{test_suite_name}}, VerifyTokenHS256) {
 	std::string token =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
 
@@ -66,7 +65,7 @@ TEST(JsonconsTest, VerifyTokenHS256) {
 	verify.verify(decoded_token);
 }
 
-TEST(JsonconsTest, VerifyTokenExpirationValid) {
+TEST({{test_suite_name}}, VerifyTokenExpirationValid) {
 	const auto token = jwt::create()
 						   .set_issuer("auth0")
 						   .set_issued_at(std::chrono::system_clock::now())
@@ -78,7 +77,7 @@ TEST(JsonconsTest, VerifyTokenExpirationValid) {
 	verify.verify(decoded_token);
 }
 
-TEST(JsonconsTest, VerifyTokenExpired) {
+TEST({{test_suite_name}}, VerifyTokenExpired) {
 	const auto token = jwt::create()
 						   .set_issuer("auth0")
 						   .set_issued_at(std::chrono::system_clock::now() - std::chrono::seconds{3601})
