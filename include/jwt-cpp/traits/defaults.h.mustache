@@ -2,7 +2,9 @@
 #define JWT_CPP_{{traits_name_upper}}_DEFAULTS_H
 {{#disable_default_traits}}
 
+#ifndef JWT_DISABLE_PICOJSON
 #define JWT_DISABLE_PICOJSON
+#endif
 {{/disable_default_traits}}
 
 #include "traits.h"

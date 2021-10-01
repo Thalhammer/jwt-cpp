@@ -1,0 +1,40 @@
+name: Comment Linting Results
+description: Add a comment to a pull request with any `git diff` present
+inputs:
+  linter_name:
+    description: The name of the tool to credit in the comment
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/github-script@v5
+      with:
+        script: |
+          if (github.context.eventName !== 'pull_request') return
+
+          let output = ''
+          const options = {
+            listeners: {
+              stdout: data => output += data.toString()
+            },
+          }
+          await exec.exec('git', ['--no-pager', 'diff', '--minimal', 'HEAD'], options)
+          if(output === '') return
+          await github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `👋 ${process.env.INPUT_LINTER_NAME}: linting had some concerns
+            
+            <details><summary>Suggestion</summary>
+
+            \`\`\`diff
+            ${output}
+            \`\`\`
+
+            </details>
+
+            `
+          })
+    - run: exit $(git status -s | wc -l)
+      shell: bash
