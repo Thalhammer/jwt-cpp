@@ -17,7 +17,7 @@ jobs:
       - run: shopt -s globstar
       - uses: actions/checkout@v2
       - run: |
-          ls -laR include/jwt-cpp
+          ls include/jwt-cpp/**/*.h
           ls ${{ matrix.files }}
       - run: clang-format -i ${{ matrix.files }}
       - uses: ./.github/actions/comment-linting
@@ -69,7 +69,7 @@ jobs:
           - { name: "boost_json", library: "Boost.JSON", url: "https://github.com/boostorg/json", disable_pico: true }
           - { name: "danielaparker_jsoncons", library: "jsoncons", url: "https://github.com/danielaparker/jsoncons", disable_pico: true }
           - { name: "kazuho_picojson", library: "picojson", url: "https://github.com/kazuho/picojson", disable_pico: false }
-          - { name: "nlohmann_json", library: "JSON for Modern C++", url: "(https://github.com/nlohmann/json", disable_pico: true }
+          - { name: "nlohmann_json", library: "JSON for Modern C++", url: "https://github.com/nlohmann/json", disable_pico: true }
     name: render-defaults (${{ matrix.traits.name }})
     steps:
       - uses: actions/checkout@v2
