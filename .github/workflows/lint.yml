@@ -11,13 +11,10 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        files:
-          - "include/jwt-cpp/*.h"
-          - "include/jwt-cpp/**/*.h"
-          - "tests/*.cpp"
-          - "tests/**/*.cpp"
+        files: ["include/jwt-cpp/**/*.h", "tests/**/*.cpp"]
     steps:
       - run: sudo apt-get install clang-format
+      - run: shopt -s globstar
       - uses: actions/checkout@v2
       - run: clang-format -i ${{ matrix.files }}
       - uses: ./.github/actions/comment-linting
@@ -28,12 +25,13 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        files: ["CMakeLists.txt", "**/CMakeLists.txt", "cmake/code-coverage.cmake"]
+        files: ["**/CMakeLists.txt", "cmake/code-coverage.cmake"]
     steps:
       - uses: actions/setup-python@v2
         with:
           python-version: "3.x"
       - run: pip install cmakelang
+      - run: shopt -s globstar
       - uses: actions/checkout@v2
       - run: cmake-format -i ${{ matrix.files }}
       - uses: ./.github/actions/comment-linting
