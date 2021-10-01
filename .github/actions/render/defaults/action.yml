@@ -23,6 +23,11 @@ runs:
     - run: npm install mustache
       shell: bash
     - uses: actions/github-script@v5
+      env:
+        INPUT_TRAITS_NAME: ${{ inputs.traits_name }}
+        INPUT_LIBRARY_NAME: ${{ inputs.library_name }}
+        INPUT_LIBRARY_URL: ${{ inputs.library_url }}
+        INPUT_DISABLE_DEFAULT_TRAITS: ${{ inputs.disable_default_traits }}
       with:
         script: |
           const mustache = require('mustache')
