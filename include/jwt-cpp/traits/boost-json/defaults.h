@@ -1,7 +1,9 @@
 #ifndef JWT_CPP_BOOST_JSON_DEFAULTS_H
 #define JWT_CPP_BOOST_JSON_DEFAULTS_H
 
+#ifndef JWT_DISABLE_PICOJSON
 #define JWT_DISABLE_PICOJSON
+#endif
 
 #include "traits.h"
 
