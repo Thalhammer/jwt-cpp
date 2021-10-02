@@ -21,8 +21,6 @@ jobs:
       - uses: lukka/get-cmake@latest
       - uses: ./.github/actions/install/gtest
       - uses: ./.github/actions/install/jsoncons
-        with:
-          version: 0.167.1
 
       - name: setup
         run: |
