@@ -9,7 +9,7 @@
 
 namespace jwt {
 	/**
-	 * \brief a class to store a generic [JSON for Modern C++]((https://github.com/nlohmann/json) value as claim
+	 * \brief a class to store a generic [JSON for Modern C++](https://github.com/nlohmann/json) value as claim
 	 *
 	 * This type is the specialization of the \ref basic_claim class which
 	 * uses the standard template types.
