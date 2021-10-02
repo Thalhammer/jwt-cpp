@@ -38,5 +38,5 @@ runs:
 
             `
           })
-    - run: exit $(git status -s | wc -l)
+    - run: exit $(git status -uno -s | wc -l)
       shell: bash
