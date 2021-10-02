@@ -20,6 +20,11 @@ set(TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/TokenTest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/NlohmannTest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/OpenSSLErrorTest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/JwksTest.cpp)
 
+find_package(jsoncons CONFIG)
+if(TARGET jsoncons)
+  list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/JsonconsTest.cpp)
+endif()
+
 add_executable(jwt-cpp-test ${TEST_SOURCES})
 
 # NOTE: Don't use space inside a generator expression here, because the function prematurely breaks the expression into

@@ -11,7 +11,7 @@ namespace jwt {
 	namespace traits {
 		struct danielaparker_jsoncons {
 			// Needs at least https://github.com/danielaparker/jsoncons/commit/28c56b90ec7337f98a5b8942574590111a5e5831
-			static_assert(jsoncons::version().minor >= 167);
+			static_assert(jsoncons::version().minor >= 167, "A higher version of jsoncons is required!");
 
 			using json = jsoncons::json;
 			using value_type = json;
