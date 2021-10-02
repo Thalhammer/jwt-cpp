@@ -10,17 +10,13 @@ jobs:
   clang-format:
     runs-on: ubuntu-20.04
     strategy:
+      fail-fast: false
       matrix:
-        files: ["include/jwt-cpp/**/*.h", "tests/**/*.cpp"]
+        files: ["include/jwt-cpp/*.h", "include/jwt-cpp/traits/**/*.h", "tests/**/*.cpp"]
     steps:
       - run: sudo apt-get install clang-format
       - run: shopt -s globstar
       - uses: actions/checkout@v2
-      - run: |
-          cd include
-          ls jwt-cpp/**/*.h
-          cd ..
-          ls ${{ matrix.files }}
       - run: clang-format -i ${{ matrix.files }}
       - uses: ./.github/actions/comment-linting
         with:
@@ -29,6 +25,7 @@ jobs:
   cmake-format:
     runs-on: ubuntu-20.04
     strategy:
+      fail-fast: false
       matrix:
         files: ["**/CMakeLists.txt", "cmake/code-coverage.cmake"]
     steps:
@@ -66,6 +63,7 @@ jobs:
   render-defaults:
     runs-on: ubuntu-20.04
     strategy:
+      fail-fast: false
       matrix:
         traits:
           - { name: "boost_json", library: "Boost.JSON", url: "https://github.com/boostorg/json", disable_pico: true }
