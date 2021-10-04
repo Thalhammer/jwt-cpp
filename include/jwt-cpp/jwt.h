@@ -3397,6 +3397,16 @@ namespace jwt {
 	};
 
 	/**
+	 * Create a verifier using the given clock
+	 * \param c Clock instance to use
+	 * \return verifier instance
+	 */
+	template<typename json_traits>
+	verifier<default_clock, json_traits> verify(default_clock c = {}) {
+		return verifier<default_clock, json_traits>(c);
+	}
+
+	/**
 	 * Return a builder instance to create a new token
 	 */
 	template<typename json_traits>
