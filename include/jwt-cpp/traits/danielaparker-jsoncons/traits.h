@@ -47,14 +47,23 @@ namespace jwt {
 
 				// Add missing C++11 lookup method
 				size_type count(const key_type& key) const {
-					struct compare {
-						bool operator()(const value_type& val, const key_type& key) const { return val.key() < key; }
-						bool operator()(const key_type& key, const value_type& val) const { return key < val.key(); }
-					};
+					size_t ret = 0;
+					for (size_t i = 0; i < this->size(); i++)
+					{
+						if (json::object::at(i).as<std::string>() == key) { ++ret; }
 
-					// https://en.cppreference.com/w/cpp/algorithm/binary_search#Complexity
-					if (std::binary_search(this->begin(), this->end(), key, compare{})) return 1;
-					return 0;
+						/* code */
+					}
+					return ret;
+					// FIXME: Gives runtime problems in tests
+					// struct compare {
+					// 	bool operator()(const value_type& val, const key_type& key) const { return val.key() < key; }
+					// 	bool operator()(const key_type& key, const value_type& val) const { return key < val.key(); }
+					// };
+
+					// // https://en.cppreference.com/w/cpp/algorithm/binary_search#Complexity
+					// if (std::binary_search(json::object::begin(), json::object::end(), key, compare{})) return 1;
+					// return 0;
 				}
 			};
 			using array_type = json::array;

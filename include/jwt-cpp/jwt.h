@@ -2173,9 +2173,9 @@ namespace jwt {
 	template<typename json_traits>
 	class payload {
 	protected:
-		details::map_of_claims<json_traits> payload_claims;
 
 	public:
+		details::map_of_claims<json_traits> payload_claims;
 		using basic_claim_t = basic_claim<json_traits>;
 
 		/**
