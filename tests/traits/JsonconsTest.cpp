@@ -1,24 +1,24 @@
 #define JSONCONS_NO_DEPRECATED
 
-#include "jwt-cpp/traits/danielaparker-jsoncons/defaults.h"
+#include "jwt-cpp/traits/danielaparker-jsoncons/traits.h"
 
 #include <gtest/gtest.h>
 
 TEST(JsonconsTest, BasicClaims) {
-	const auto string = jwt::claim(std::string("string"));
+	const auto string = jwt::basic_claim<jwt::traits::danielaparker_jsoncons>(std::string("string"));
 	ASSERT_EQ(string.get_type(), jwt::json::type::string);
 
-	const auto array = jwt::claim(std::set<std::string>{"string", "string"});
+	const auto array = jwt::basic_claim<jwt::traits::danielaparker_jsoncons>(std::set<std::string>{"string", "string"});
 	ASSERT_EQ(array.get_type(), jwt::json::type::array);
 
-	const auto integer = jwt::claim(159816816);
+	const auto integer = jwt::basic_claim<jwt::traits::danielaparker_jsoncons>(159816816);
 	ASSERT_EQ(integer.get_type(), jwt::json::type::integer);
 }
 
 TEST(JsonconsTest, AudienceAsString) {
 	std::string token =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0.WZnM3SIiSRHsbO3O7Z2bmIzTJ4EC32HRBKfLznHhrh4";
-	auto decoded = jwt::decode(token);
+	auto decoded = jwt::decode<jwt::traits::danielaparker_jsoncons>(token);
 
 	ASSERT_TRUE(decoded.has_algorithm());
 	ASSERT_TRUE(decoded.has_type());
@@ -42,17 +42,21 @@ TEST(JsonconsTest, AudienceAsString) {
 TEST(JsonconsTest, SetArray) {
 	std::vector<int64_t> vect = {100, 20, 10};
 	auto token =
-		jwt::create().set_payload_claim("test", jwt::claim(vect.begin(), vect.end())).sign(jwt::algorithm::none{});
+		jwt::create<jwt::traits::danielaparker_jsoncons>()
+			.set_payload_claim("test", jwt::basic_claim<jwt::traits::danielaparker_jsoncons>(vect.begin(), vect.end()))
+			.sign(jwt::algorithm::none{});
 	ASSERT_EQ(token, "eyJhbGciOiJub25lIn0.eyJ0ZXN0IjpbMTAwLDIwLDEwXX0.");
 }
 
 TEST(JsonconsTest, SetObject) {
 	std::istringstream iss{"{\"api-x\": [1]}"};
-	jwt::claim object;
+	jwt::basic_claim<jwt::traits::danielaparker_jsoncons> object;
 	iss >> object;
 	ASSERT_EQ(object.get_type(), jwt::json::type::object);
 
-	auto token = jwt::create().set_payload_claim("namespace", object).sign(jwt::algorithm::hs256("test"));
+	auto token = jwt::create<jwt::traits::danielaparker_jsoncons>()
+					 .set_payload_claim("namespace", object)
+					 .sign(jwt::algorithm::hs256("test"));
 	ASSERT_EQ(token,
 			  "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lc3BhY2UiOnsiYXBpLXgiOlsxXX19.F8I6I2RcSF98bKa0IpIz09fRZtHr1CWnWKx2za-tFQA");
 }
@@ -61,32 +65,38 @@ TEST(JsonconsTest, VerifyTokenHS256) {
 	std::string token =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
 
-	const auto decoded_token = jwt::decode(token);
-	const auto verify = jwt::verify().allow_algorithm(jwt::algorithm::hs256{"secret"}).with_issuer("auth0");
+	const auto decoded_token = jwt::decode<jwt::traits::danielaparker_jsoncons>(token);
+	const auto verify = jwt::verify<jwt::traits::danielaparker_jsoncons>()
+							.allow_algorithm(jwt::algorithm::hs256{"secret"})
+							.with_issuer("auth0");
 	verify.verify(decoded_token);
 }
 
 TEST(JsonconsTest, VerifyTokenExpirationValid) {
-	const auto token = jwt::create()
+	const auto token = jwt::create<jwt::traits::danielaparker_jsoncons>()
 						   .set_issuer("auth0")
 						   .set_issued_at(std::chrono::system_clock::now())
 						   .set_expires_at(std::chrono::system_clock::now() + std::chrono::seconds{3600})
 						   .sign(jwt::algorithm::hs256{"secret"});
 
-	const auto decoded_token = jwt::decode(token);
-	const auto verify = jwt::verify().allow_algorithm(jwt::algorithm::hs256{"secret"}).with_issuer("auth0");
+	const auto decoded_token = jwt::decode<jwt::traits::danielaparker_jsoncons>(token);
+	const auto verify = jwt::verify<jwt::traits::danielaparker_jsoncons>()
+							.allow_algorithm(jwt::algorithm::hs256{"secret"})
+							.with_issuer("auth0");
 	verify.verify(decoded_token);
 }
 
 TEST(JsonconsTest, VerifyTokenExpired) {
-	const auto token = jwt::create()
+	const auto token = jwt::create<jwt::traits::danielaparker_jsoncons>()
 						   .set_issuer("auth0")
 						   .set_issued_at(std::chrono::system_clock::now() - std::chrono::seconds{3601})
 						   .set_expires_at(std::chrono::system_clock::now() - std::chrono::seconds{1})
 						   .sign(jwt::algorithm::hs256{"secret"});
 
-	const auto decoded_token = jwt::decode(token);
-	const auto verify = jwt::verify().allow_algorithm(jwt::algorithm::hs256{"secret"}).with_issuer("auth0");
+	const auto decoded_token = jwt::decode<jwt::traits::danielaparker_jsoncons>(token);
+	const auto verify = jwt::verify<jwt::traits::danielaparker_jsoncons>()
+							.allow_algorithm(jwt::algorithm::hs256{"secret"})
+							.with_issuer("auth0");
 	ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
 
 	std::error_code ec;
