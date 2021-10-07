@@ -8,7 +8,7 @@ on:
     paths:
       - "CMakeLists.txt"
       - "include/jwt-cpp/**"
-      - "tests/jsoncons/**"
+      - "example/traits/**"
       - "tests/boost/**"
       - ".github/actions/**"
       - ".github/workflows/traits.yml"
@@ -31,10 +31,10 @@ jobs:
 
       - name: test
         run: |
-          cd tests/jsoncons
+          cd example/traits
           cmake . -DCMAKE_FIND_DEBUG_MODE=1
           cmake --build .
-          ./jsoncons-traits-narrow
+          ./danielaparker-jsoncons
 
   boost-json:
     runs-on: ubuntu-latest
