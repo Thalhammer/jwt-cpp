@@ -2476,6 +2476,26 @@ namespace jwt {
 		std::unordered_map<typename json_traits::string_type, basic_claim_t> get_header_claims() const {
 			return this->header_claims.get_claims();
 		}
+		/**
+		 * Get a payload claim by name
+		 *
+		 * \param name the name of the desired claim
+		 * \return Requested claim
+		 * \throw jwt::error::claim_not_present_exception if the claim was not present
+		 */
+		basic_claim_t get_payload_claim(const typename json_traits::string_type& name) const {
+			return this->payload_claims.get_claim(name);
+		}
+		/**
+		 * Get a header claim by name
+		 *
+		 * \param name the name of the desired claim
+		 * \return Requested claim
+		 * \throw jwt::error::claim_not_present_exception if the claim was not present
+		 */
+		basic_claim_t get_header_claim(const typename json_traits::string_type& name) const {
+			return this->header_claims.get_claim(name);
+		}
 	};
 
 	/**

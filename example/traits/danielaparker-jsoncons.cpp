@@ -6,11 +6,8 @@
 int main() {
 	using sec = std::chrono::seconds;
 	using min = std::chrono::minutes;
-	using claim = jwt::basic_claim<jwt::traits::danielaparker_jsoncons>;
-	const create = []() { return jwt::create<jwt::traits::danielaparker_jsoncons>(); };
-	const decode = [](const jwt::traits::danielaparker_jsoncons::string_type& token) {
-		return jwt::decode<jwt::traits::danielaparker_jsoncons>(token);
-	};
+	using traits = jwt::traits::danielaparker_jsoncons;
+	using claim = jwt::basic_claim<traits>;
 
 	claim from_raw_json;
 	std::istringstream iss{R"##({"api":{"array":[1,2,3],"null":null}})##"};
@@ -20,7 +17,7 @@ int main() {
 	std::vector<int64_t> big_numbers{727663072ULL, 770979831ULL, 427239169ULL, 525936436ULL};
 
 	const auto time = jwt::date::clock::now();
-	const auto token = create()
+	const auto token = jwt::create<traits>()
 						   .set_type("JWT")
 						   .set_issuer("auth.mydomain.io")
 						   .set_audience("mydomain.io")
@@ -34,8 +31,17 @@ int main() {
 						   .set_payload_claim("array", {big_numbers.begin(), big_numbers.end()})
 						   .set_payload_claim("object", from_raw_json)
 						   .sign(jwt::algorithm::none{});
-	const auto decoded = decode(token);
+	const auto decoded = jwt::decode<traits>(token);
 
-	const auto api_array = decoded.get_payload_claims()["object"].to_json().get("api").get("array");
-	std::cout << "api array = " << api_array << std::endl;
+	const auto array = traits::as_array(decoded.get_payload_claim("object").to_json()["api"]["array"]);
+	std::cout << "payload /object/api/array = " << array << std::endl;
+
+	jwt::verify<traits>()
+		.allow_algorithm(jwt::algorithm::none{})
+		.with_issuer("auth.mydomain.io")
+		.with_audience("mydomain.io")
+		.with_claim("object", from_raw_json)
+		.verify(decoded);
+
+	return 0;
 }
