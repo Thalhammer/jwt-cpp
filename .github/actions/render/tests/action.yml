@@ -28,7 +28,7 @@ runs:
           const { TRAITS_NAME, SUITE_NAME } = process.env
           console.log(`Rendering ${TRAITS_NAME}!`)
 
-          const template = fs.readFileSync(path.join('tests', 'traits', 'TraitsTests.cpp.mustache'), 'utf8')
+          const template = fs.readFileSync(path.join('tests', 'traits', 'TraitsTest.cpp.mustache'), 'utf8')
           const content = mustache.render(template, {
               traits_name: TRAITS_NAME,
               traits_dir: TRAITS_NAME.replace('_', '-'),
