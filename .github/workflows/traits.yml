@@ -19,21 +19,19 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: lukka/get-cmake@latest
-      - uses: ./.github/actions/install/gtest
-      - uses: ./.github/actions/install/jsoncons
-
       - name: setup
         run: |
           mkdir build
           cd build
-          cmake .. -DJWT_BUILD_EXAMPLES=OFF -DCMAKE_FIND_DEBUG_MODE=1
+          cmake .. -DJWT_BUILD_EXAMPLES=OFF
           sudo cmake --install .
 
+      - uses: ./.github/actions/install/jsoncons
       - name: test
         run: |
           cd example/traits
           cmake . -DCMAKE_FIND_DEBUG_MODE=1
-          cmake --build .
+          cmake --build . --target danielaparker-jsoncons
           ./danielaparker-jsoncons
 
   boost-json:
