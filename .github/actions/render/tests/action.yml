@@ -16,23 +16,24 @@ runs:
     - run: npm install mustache
       shell: bash
     - uses: actions/github-script@v5
+      env:
+        TRAITS_NAME: ${{ inputs.traits_name }}
+        SUITE_NAME: ${{ inputs.test_suite_name }}
       with:
         script: |
           const mustache = require('mustache')
           const path = require('path')
           const fs = require('fs')
 
-          const traitsName = core.getInput('traits_name', { required: true })
-          console.log(`Rendering ${traitsName}!`)
-
-          const testSuiteName = core.getInput('test_suite_name', { required: true })
+          const { TRAITS_NAME, SUITE_NAME } = process.env
+          console.log(`Rendering ${TRAITS_NAME}!`)
 
           const template = fs.readFileSync(path.join('tests', 'traits', 'TraitsTests.cpp.mustache'), 'utf8')
           const content = mustache.render(template, {
-              traits_name: traitsName,
-              traits_dir: traitsName.replace('_', '-'),
-              test_suite_name: testSuiteName,
+              traits_name: TRAITS_NAME,
+              traits_dir: TRAITS_NAME.replace('_', '-'),
+              test_suite_name: SUITE_NAME,
           })
           const outputDir = path.join('tests', 'traits')
           fs.mkdirSync(outputDir, { recursive: true })
-          fs.writeFileSync(path.join(outputDir, `${testSuiteName}.cpp`), content)
+          fs.writeFileSync(path.join(outputDir, `${SUITE_NAME}.cpp`), content)
