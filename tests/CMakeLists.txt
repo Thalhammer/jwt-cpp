@@ -25,6 +25,12 @@ if(TARGET jsoncons)
   list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/JsonconsTest.cpp)
 endif()
 
+unset(BOOSTJSON_INCLUDE_DIR CACHE)
+find_path(BOOSTJSON_INCLUDE_DIR "boost/json.hpp")
+if(EXISTS "${BOOSTJSON_INCLUDE_DIR}/boost/json.hpp")
+  list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/BoostJsonTest.cpp)
+endif()
+
 add_executable(jwt-cpp-test ${TEST_SOURCES})
 
 # NOTE: Don't use space inside a generator expression here, because the function prematurely breaks the expression into
@@ -42,7 +48,11 @@ else()
   target_link_libraries(jwt-cpp-test PRIVATE GTest::GTest GTest::Main)
   if(TARGET jsoncons)
     target_link_libraries(jwt-cpp-test PRIVATE jsoncons)
-    target_compile_definitions(jwt-cpp-test PRIVATE JSONCONS_NO_DEPRECATED)
+  endif()
+
+  if(EXISTS "${BOOSTJSON_INCLUDE_DIR}/boost/json.hpp")
+    target_compile_definitions(jwt-cpp-test PRIVATE BOOST_JSON_STANDALONE)
+    target_compile_features(jwt-cpp-test PRIVATE cxx_std_17)
   endif()
 endif()
 target_link_libraries(jwt-cpp-test PRIVATE jwt-cpp $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:${CMAKE_DL_LIBS}>)

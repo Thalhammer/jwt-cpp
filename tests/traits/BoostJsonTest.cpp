@@ -1,17 +1,18 @@
 #include "jwt-cpp/traits/boost-json/traits.h"
 
+#include <boost/json/src.hpp>
 #include <gtest/gtest.h>
 
 TEST(BoostJsonTest, BasicClaims) {
-	const auto string = jwt::basic_claim<jwt::traits::boost_json>(
-		jwt::traits::boost_json::string_type("string"));
+	const auto string = jwt::basic_claim<jwt::traits::boost_json>(jwt::traits::boost_json::string_type("string"));
 	ASSERT_EQ(string.get_type(), jwt::json::type::string);
 
-	const auto array = jwt::basic_claim<jwt::traits::boost_json>(
-		std::set<jwt::traits::boost_json::string_type>{"string", "string"});
+	const auto array =
+		jwt::basic_claim<jwt::traits::boost_json>(std::set<jwt::traits::boost_json::string_type>{"string", "string"});
 	ASSERT_EQ(array.get_type(), jwt::json::type::array);
 
-	const auto integer = jwt::basic_claim<jwt::traits::boost_json>(159816816);
+	jwt::traits::boost_json::value_type jvi = 159816816;
+	const auto integer = jwt::basic_claim<jwt::traits::boost_json>(jvi);
 	ASSERT_EQ(integer.get_type(), jwt::json::type::integer);
 }
 
@@ -41,17 +42,16 @@ TEST(BoostJsonTest, AudienceAsString) {
 
 TEST(BoostJsonTest, SetArray) {
 	std::vector<int64_t> vect = {100, 20, 10};
-	auto token =
-		jwt::create<jwt::traits::boost_json>()
-			.set_payload_claim("test", jwt::basic_claim<jwt::traits::boost_json>(vect.begin(), vect.end()))
-			.sign(jwt::algorithm::none{});
+	auto token = jwt::create<jwt::traits::boost_json>()
+					 .set_payload_claim("test", jwt::basic_claim<jwt::traits::boost_json>(vect.begin(), vect.end()))
+					 .sign(jwt::algorithm::none{});
 	ASSERT_EQ(token, "eyJhbGciOiJub25lIn0.eyJ0ZXN0IjpbMTAwLDIwLDEwXX0.");
 }
 
 TEST(BoostJsonTest, SetObject) {
-	std::istringstream iss{"{\"api-x\": [1]}"};
-	jwt::basic_claim<jwt::traits::boost_json> object;
-	iss >> object;
+	jwt::traits::boost_json::value_type value;
+	ASSERT_TRUE(jwt::traits::boost_json::parse(value, "{\"api-x\": [1]}"));
+	jwt::basic_claim<jwt::traits::boost_json> object(value);
 	ASSERT_EQ(object.get_type(), jwt::json::type::object);
 
 	auto token = jwt::create<jwt::traits::boost_json>()
@@ -66,9 +66,8 @@ TEST(BoostJsonTest, VerifyTokenHS256) {
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
 
 	const auto decoded_token = jwt::decode<jwt::traits::boost_json>(token);
-	const auto verify = jwt::verify<jwt::traits::boost_json>()
-							.allow_algorithm(jwt::algorithm::hs256{"secret"})
-							.with_issuer("auth0");
+	const auto verify =
+		jwt::verify<jwt::traits::boost_json>().allow_algorithm(jwt::algorithm::hs256{"secret"}).with_issuer("auth0");
 	verify.verify(decoded_token);
 }
 
@@ -80,9 +79,8 @@ TEST(BoostJsonTest, VerifyTokenExpirationValid) {
 						   .sign(jwt::algorithm::hs256{"secret"});
 
 	const auto decoded_token = jwt::decode<jwt::traits::boost_json>(token);
-	const auto verify = jwt::verify<jwt::traits::boost_json>()
-							.allow_algorithm(jwt::algorithm::hs256{"secret"})
-							.with_issuer("auth0");
+	const auto verify =
+		jwt::verify<jwt::traits::boost_json>().allow_algorithm(jwt::algorithm::hs256{"secret"}).with_issuer("auth0");
 	verify.verify(decoded_token);
 }
 
@@ -94,9 +92,8 @@ TEST(BoostJsonTest, VerifyTokenExpired) {
 						   .sign(jwt::algorithm::hs256{"secret"});
 
 	const auto decoded_token = jwt::decode<jwt::traits::boost_json>(token);
-	const auto verify = jwt::verify<jwt::traits::boost_json>()
-							.allow_algorithm(jwt::algorithm::hs256{"secret"})
-							.with_issuer("auth0");
+	const auto verify =
+		jwt::verify<jwt::traits::boost_json>().allow_algorithm(jwt::algorithm::hs256{"secret"}).with_issuer("auth0");
 	ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
 
 	std::error_code ec;
@@ -112,9 +109,8 @@ TEST(BoostJsonTest, VerifyArray) {
 
 	std::vector<int64_t> vect = {100, 20, 10};
 	jwt::basic_claim<jwt::traits::boost_json> array_claim(vect.begin(), vect.end());
-	const auto verify = jwt::verify<jwt::traits::boost_json>()
-							.allow_algorithm(jwt::algorithm::none{})
-							.with_claim("test", array_claim);
+	const auto verify =
+		jwt::verify<jwt::traits::boost_json>().allow_algorithm(jwt::algorithm::none{}).with_claim("test", array_claim);
 	ASSERT_NO_THROW(verify.verify(decoded_token));
 }
 
@@ -123,9 +119,9 @@ TEST(BoostJsonTest, VerifyObject) {
 		"eyJhbGciOiJIUzI1NiJ9.eyJuYW1lc3BhY2UiOnsiYXBpLXgiOlsxXX19.F8I6I2RcSF98bKa0IpIz09fRZtHr1CWnWKx2za-tFQA";
 	const auto decoded_token = jwt::decode<jwt::traits::boost_json>(token);
 
-	jwt::basic_claim<jwt::traits::boost_json> object_claim;
-	std::istringstream iss{"{\"api-x\": [1]}"};
-	iss >> object_claim;
+	jwt::traits::boost_json::value_type value;
+	ASSERT_TRUE(jwt::traits::boost_json::parse(value, "{\"api-x\": [1]}"));
+	jwt::basic_claim<jwt::traits::boost_json> object_claim(value);
 	const auto verify = jwt::verify<jwt::traits::boost_json>()
 							.allow_algorithm(jwt::algorithm::hs256("test"))
 							.with_claim("namespace", object_claim);
