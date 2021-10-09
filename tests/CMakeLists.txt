@@ -17,13 +17,12 @@ set(TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/BaseTest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/ClaimTest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Keys.cpp ${CMAKE_CURRENT_SOURCE_DIR}/HelperTest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/TestMain.cpp ${CMAKE_CURRENT_SOURCE_DIR}/TokenFormatTest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/TokenTest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/NlohmannTest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/OpenSSLErrorTest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/JwksTest.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/TokenTest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/JwksTest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/OpenSSLErrorTest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/traits/NlohmannTest.cpp)
 
 find_package(jsoncons CONFIG)
 if(TARGET jsoncons)
   list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/JsonconsTest.cpp)
-  # define JSONCONS_NO_DEPRECATED
 endif()
 
 add_executable(jwt-cpp-test ${TEST_SOURCES})
@@ -38,9 +37,13 @@ target_compile_options(
 if(HUNTER_ENABLED)
   target_link_libraries(jwt-cpp-test PRIVATE GTest::gtest GTest::gtest_main)
   # Define a compile define to bypass openssl error tests
-  target_compile_options(jwt-cpp-test PRIVATE -DHUNTER_ENABLED=1)
+  target_compile_definitions(jwt-cpp-test PRIVATE HUNTER_ENABLED=1)
 else()
   target_link_libraries(jwt-cpp-test PRIVATE GTest::GTest GTest::Main)
+  if(TARGET jsoncons)
+    target_link_libraries(jwt-cpp-test PRIVATE jsoncons)
+    target_compile_definitions(jwt-cpp-test PRIVATE JSONCONS_NO_DEPRECATED)
+  endif()
 endif()
 target_link_libraries(jwt-cpp-test PRIVATE jwt-cpp $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:${CMAKE_DL_LIBS}>)
 

@@ -79,6 +79,29 @@ jobs:
           library_name: ${{ matrix.traits.library }}
           library_url: ${{ matrix.traits.url }}
           disable_default_traits: ${{ matrix.traits.disable_pico }}
+      - run: git add include/jwt-cpp/traits/*
       - uses: ./.github/actions/comment-linting
         with:
           linter_name: render-defaults
+
+  render-tests:
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        traits:
+          - { name: "boost_json", suite: "BoostJsonTest" }
+          - { name: "danielaparker_jsoncons", suite: "JsonconsTest" }
+          # - { name: "kazuho_picojson", suite: "PicoJsonTest" } # Currently the default everything tests against this!
+          - { name: "nlohmann_json", suite: "NlohmannTest" }
+    name: render-tests (${{ matrix.traits.name }})
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/render/tests
+        with:
+          traits_name: ${{ matrix.traits.name }}
+          test_suite_name: ${{ matrix.traits.suite }}
+      - run: git add tests/traits/*
+      - uses: ./.github/actions/comment-linting
+        with:
+          linter_name: render-tests
