@@ -23,6 +23,7 @@ set(TEST_SOURCES
 find_package(jsoncons CONFIG)
 if(TARGET jsoncons)
   list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/JsonconsTest.cpp)
+  # define JSONCONS_NO_DEPRECATED
 endif()
 
 add_executable(jwt-cpp-test ${TEST_SOURCES})

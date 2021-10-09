@@ -5,10 +5,12 @@
 #include <gtest/gtest.h>
 
 TEST(JsonconsTest, BasicClaims) {
-	const auto string = jwt::basic_claim<jwt::traits::danielaparker_jsoncons>(std::string("string"));
+	const auto string = jwt::basic_claim<jwt::traits::danielaparker_jsoncons>(
+		jwt::traits::danielaparker_jsoncons::string_type("string"));
 	ASSERT_EQ(string.get_type(), jwt::json::type::string);
 
-	const auto array = jwt::basic_claim<jwt::traits::danielaparker_jsoncons>(std::set<std::string>{"string", "string"});
+	const auto array = jwt::basic_claim<jwt::traits::danielaparker_jsoncons>(
+		std::set<jwt::traits::danielaparker_jsoncons::string_type>{"string", "string"});
 	ASSERT_EQ(array.get_type(), jwt::json::type::array);
 
 	const auto integer = jwt::basic_claim<jwt::traits::danielaparker_jsoncons>(159816816);
@@ -16,7 +18,7 @@ TEST(JsonconsTest, BasicClaims) {
 }
 
 TEST(JsonconsTest, AudienceAsString) {
-	std::string token =
+	jwt::traits::danielaparker_jsoncons::string_type token =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0.WZnM3SIiSRHsbO3O7Z2bmIzTJ4EC32HRBKfLznHhrh4";
 	auto decoded = jwt::decode<jwt::traits::danielaparker_jsoncons>(token);
 
@@ -62,7 +64,7 @@ TEST(JsonconsTest, SetObject) {
 }
 
 TEST(JsonconsTest, VerifyTokenHS256) {
-	std::string token =
+	jwt::traits::danielaparker_jsoncons::string_type token =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
 
 	const auto decoded_token = jwt::decode<jwt::traits::danielaparker_jsoncons>(token);
@@ -104,4 +106,30 @@ TEST(JsonconsTest, VerifyTokenExpired) {
 	ASSERT_TRUE(!(!ec));
 	ASSERT_EQ(ec.category(), jwt::error::token_verification_error_category());
 	ASSERT_EQ(ec.value(), static_cast<int>(jwt::error::token_verification_error::token_expired));
+}
+
+TEST(JsonconsTest, VerifyArray) {
+	jwt::traits::danielaparker_jsoncons::string_type token = "eyJhbGciOiJub25lIn0.eyJ0ZXN0IjpbMTAwLDIwLDEwXX0.";
+	const auto decoded_token = jwt::decode<jwt::traits::danielaparker_jsoncons>(token);
+
+	std::vector<int64_t> vect = {100, 20, 10};
+	jwt::basic_claim<jwt::traits::danielaparker_jsoncons> array_claim(vect.begin(), vect.end());
+	const auto verify = jwt::verify<jwt::traits::danielaparker_jsoncons>()
+							.allow_algorithm(jwt::algorithm::none{})
+							.with_claim("test", array_claim);
+	ASSERT_NO_THROW(verify.verify(decoded_token));
+}
+
+TEST(JsonconsTest, VerifyObject) {
+	jwt::traits::danielaparker_jsoncons::string_type token =
+		"eyJhbGciOiJIUzI1NiJ9.eyJuYW1lc3BhY2UiOnsiYXBpLXgiOlsxXX19.F8I6I2RcSF98bKa0IpIz09fRZtHr1CWnWKx2za-tFQA";
+	const auto decoded_token = jwt::decode<jwt::traits::danielaparker_jsoncons>(token);
+
+	jwt::basic_claim<jwt::traits::danielaparker_jsoncons> object_claim;
+	std::istringstream iss{"{\"api-x\": [1]}"};
+	iss >> object_claim;
+	const auto verify = jwt::verify<jwt::traits::danielaparker_jsoncons>()
+							.allow_algorithm(jwt::algorithm::hs256("test"))
+							.with_claim("namespace", object_claim);
+	ASSERT_NO_THROW(verify.verify(decoded_token));
 }
