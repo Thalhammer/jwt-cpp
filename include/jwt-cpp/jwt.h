@@ -631,6 +631,111 @@ namespace jwt {
 		}
 
 		/**
+		 * \brief Load a public key from a string.
+		 *
+		 * The string should contain a pem encoded certificate or public key
+		 *
+		 * \param certstr	String containing the certificate encoded as pem
+		 * \param pw		Password used to decrypt certificate (leave empty if not encrypted)
+		 * \param ec		error_code for error_detection (gets cleared if no error occures)
+		 */
+		inline std::shared_ptr<EVP_PKEY> load_public_ec_key_from_string(const std::string& key,
+																	 const std::string& password, std::error_code& ec) {
+			ec.clear();
+			std::unique_ptr<BIO, decltype(&BIO_free_all)> pubkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
+			if (!pubkey_bio) {
+				ec = error::ecdsa_error::create_mem_bio_failed;
+				return nullptr;
+			}
+			if (key.substr(0, 27) == "-----BEGIN CERTIFICATE-----") {
+				auto epkey = helper::extract_pubkey_from_cert(key, password, ec);
+				if (ec) return nullptr;
+				const int len = static_cast<int>(epkey.size());
+				if (BIO_write(pubkey_bio.get(), epkey.data(), len) != len) {
+					ec = error::ecdsa_error::load_key_bio_write;
+					return nullptr;
+				}
+			} else {
+				const int len = static_cast<int>(key.size());
+				if (BIO_write(pubkey_bio.get(), key.data(), len) != len) {
+					ec = error::ecdsa_error::load_key_bio_write;
+					return nullptr;
+				}
+			}
+
+			std::shared_ptr<EVP_PKEY> pkey(
+				PEM_read_bio_PUBKEY(pubkey_bio.get(), nullptr, nullptr,
+									(void*)password.data()), // NOLINT(google-readability-casting) requires `const_cast`
+				EVP_PKEY_free);
+			if (!pkey) {
+				ec = error::ecdsa_error::load_key_bio_read;
+				return nullptr;
+			}
+			return pkey;
+		}
+
+		/**
+		 * \brief Load a public key from a string.
+		 *
+		 * The string should contain a pem encoded certificate or public key
+		 *
+		 * \param certstr	String containing the certificate or key encoded as pem
+		 * \param pw		Password used to decrypt certificate or key (leave empty if not encrypted)
+		 * \throw			ecdsa_exception if an error occurred
+		 */
+		inline std::shared_ptr<EVP_PKEY> load_public_ec_key_from_string(const std::string& key,
+																	 const std::string& password = "") {
+			std::error_code ec;
+			auto res = load_public_ec_key_from_string(key, password, ec);
+			error::throw_if_error(ec);
+			return res;
+		}
+
+		/**
+		 * \brief Load a private key from a string.
+		 *
+		 * \param key		String containing a private key as pem
+		 * \param pw		Password used to decrypt key (leave empty if not encrypted)
+		 * \param ec		error_code for error_detection (gets cleared if no error occures)
+		 */
+		inline std::shared_ptr<EVP_PKEY>
+		load_private_ec_key_from_string(const std::string& key, const std::string& password, std::error_code& ec) {
+			std::unique_ptr<BIO, decltype(&BIO_free_all)> privkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
+			if (!privkey_bio) {
+				ec = error::ecdsa_error::create_mem_bio_failed;
+				return nullptr;
+			}
+			const int len = static_cast<int>(key.size());
+			if (BIO_write(privkey_bio.get(), key.data(), len) != len) {
+				ec = error::ecdsa_error::load_key_bio_write;
+				return nullptr;
+			}
+			std::shared_ptr<EVP_PKEY> pkey(
+				PEM_read_bio_PrivateKey(privkey_bio.get(), nullptr, nullptr, const_cast<char*>(password.c_str())),
+				EVP_PKEY_free);
+			if (!pkey) {
+				ec = error::ecdsa_error::load_key_bio_read;
+				return nullptr;
+			}
+			return pkey;
+		}
+
+		/**
+		 * \brief Load a private key from a string.
+		 *
+		 * \param key		String containing a private key as pem
+		 * \param pw		Password used to decrypt key (leave empty if not encrypted)
+		 * \throw			ecdsa_exception if an error occurred
+		 */
+		inline std::shared_ptr<EVP_PKEY> load_private_ec_key_from_string(const std::string& key,
+																		const std::string& password = "") {
+			std::error_code ec;
+			auto res = load_private_ec_key_from_string(key, password, ec);
+			error::throw_if_error(ec);
+			return res;
+		}
+
+		/**
 		 * Convert a OpenSSL BIGNUM to a std::string
 		 * \param bn BIGNUM to convert
 		 * \return bignum as string
@@ -883,46 +988,19 @@ namespace jwt {
 			ecdsa(const std::string& public_key, const std::string& private_key, const std::string& public_key_password,
 				  const std::string& private_key_password, const EVP_MD* (*md)(), std::string name, size_t siglen)
 				: md(md), alg_name(std::move(name)), signature_length(siglen) {
-				if (!public_key.empty()) {
-					std::unique_ptr<BIO, decltype(&BIO_free_all)> pubkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
-					if (!pubkey_bio) throw ecdsa_exception(error::ecdsa_error::create_mem_bio_failed);
-					if (public_key.substr(0, 27) == "-----BEGIN CERTIFICATE-----") {
-						auto epkey = helper::extract_pubkey_from_cert(public_key, public_key_password);
-						const int len = static_cast<int>(epkey.size());
-						if (BIO_write(pubkey_bio.get(), epkey.data(), len) != len)
-							throw ecdsa_exception(error::ecdsa_error::load_key_bio_write);
-					} else {
-						const int len = static_cast<int>(public_key.size());
-						if (BIO_write(pubkey_bio.get(), public_key.data(), len) != len)
-							throw ecdsa_exception(error::ecdsa_error::load_key_bio_write);
-					}
-
-					pkey.reset(PEM_read_bio_EC_PUBKEY(
-								   pubkey_bio.get(), nullptr, nullptr,
-								   (void*)public_key_password
-									   .c_str()), // NOLINT(google-readability-casting) requires `const_cast`
-							   EC_KEY_free);
-					if (!pkey) throw ecdsa_exception(error::ecdsa_error::load_key_bio_read);
-					size_t keysize = EC_GROUP_get_degree(EC_KEY_get0_group(pkey.get()));
-					if (keysize != signature_length * 4 && (signature_length != 132 || keysize != 521))
-						throw ecdsa_exception(error::ecdsa_error::invalid_key_size);
-				}
-
 				if (!private_key.empty()) {
-					std::unique_ptr<BIO, decltype(&BIO_free_all)> privkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
-					if (!privkey_bio) throw ecdsa_exception(error::ecdsa_error::create_mem_bio_failed);
-					const int len = static_cast<int>(private_key.size());
-					if (BIO_write(privkey_bio.get(), private_key.data(), len) != len)
-						throw ecdsa_exception(error::ecdsa_error::load_key_bio_write);
-					pkey.reset(PEM_read_bio_ECPrivateKey(privkey_bio.get(), nullptr, nullptr,
-														 const_cast<char*>(private_key_password.c_str())),
-							   EC_KEY_free);
-					if (!pkey) throw ecdsa_exception(error::ecdsa_error::load_key_bio_read);
-					size_t keysize = EC_GROUP_get_degree(EC_KEY_get0_group(pkey.get()));
-					if (keysize != signature_length * 4 && (signature_length != 132 || keysize != 521))
-						throw ecdsa_exception(error::ecdsa_error::invalid_key_size);
+					auto epkey = helper::load_private_ec_key_from_string(private_key, private_key_password);
+					pkey.reset(EVP_PKEY_get1_EC_KEY(epkey.get()), EC_KEY_free);
+				} else if (!public_key.empty()) {
+					auto epkey = helper::load_public_ec_key_from_string(public_key, public_key_password);
+					pkey.reset(EVP_PKEY_get1_EC_KEY(epkey.get()), EC_KEY_free);
+				} else {
+					throw ecdsa_exception(error::ecdsa_error::no_key_provided);
 				}
-				if (!pkey) throw ecdsa_exception(error::ecdsa_error::no_key_provided);
+				if (!pkey) throw ecdsa_exception(error::ecdsa_error::invalid_key);
+				size_t keysize = EC_GROUP_get_degree(EC_KEY_get0_group(pkey.get()));
+				if (keysize != signature_length * 4 && (signature_length != 132 || keysize != 521))
+					throw ecdsa_exception(error::ecdsa_error::invalid_key_size);
 
 				if (EC_KEY_check_key(pkey.get()) == 0) throw ecdsa_exception(error::ecdsa_error::invalid_key);
 			}
