@@ -1412,41 +1412,6 @@ namespace jwt {
 			std::string name() const { return alg_name; }
 
 		private:
-			/**
-			 * Hash the provided data using the hash function specified in constructor
-			 * \param data Data to hash
-			 * \return Hash of data
-			 */
-			std::string generate_hash(const std::string& data, std::error_code& ec) const {
-#ifdef JWT_OPENSSL_1_0_0
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(),
-																			   &EVP_MD_CTX_destroy);
-#else
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
-#endif
-				if (!ctx) {
-					ec = error::signature_generation_error::create_context_failed;
-					return {};
-				}
-				if (EVP_DigestInit(ctx.get(), md()) == 0) {
-					ec = error::signature_generation_error::digestinit_failed;
-					return {};
-				}
-				if (EVP_DigestUpdate(ctx.get(), data.data(), data.size()) == 0) {
-					ec = error::signature_generation_error::digestupdate_failed;
-					return {};
-				}
-				unsigned int len = 0;
-				std::string res(EVP_MD_CTX_size(ctx.get()), '\0');
-				if (EVP_DigestFinal(ctx.get(), (unsigned char*)res.data(), &len) ==
-					0) { // NOLINT(google-readability-casting) requires `const_cast`
-					ec = error::signature_generation_error::digestfinal_failed;
-					return {};
-				}
-				res.resize(len);
-				return res;
-			}
-
 			/// OpenSSL structure containing keys
 			std::shared_ptr<EVP_PKEY> pkey;
 			/// Hash generator function
