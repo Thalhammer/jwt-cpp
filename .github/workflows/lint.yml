@@ -90,7 +90,7 @@ jobs:
       fail-fast: false
       matrix:
         traits:
-          - { name: "boost_json", suite: "BoostJsonTest" }
+          # - { name: "boost_json", suite: "BoostJsonTest" } # Currently needs work arounds for API limitations
           - { name: "danielaparker_jsoncons", suite: "JsonconsTest" }
           # - { name: "kazuho_picojson", suite: "PicoJsonTest" } # Currently the default everything tests against this!
           - { name: "nlohmann_json", suite: "NlohmannTest" }
