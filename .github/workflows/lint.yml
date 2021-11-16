@@ -69,5 +69,7 @@ jobs:
       - run: shopt -s globstar
       - uses: actions/checkout@v2
       - run: hub pr checkout ${{ github.event.issue.number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: clang-format -i ${{ matrix.files }}
       - uses: stefanzweifel/git-auto-commit-action@v4
