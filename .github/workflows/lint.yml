@@ -5,6 +5,10 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
+  pull_request_review_comment:
+  issue_comment:
+  commit_comment:
+  discussion_comment:
 
 jobs:
   clang-format:
@@ -51,3 +55,18 @@ jobs:
           cd build
           make
       - run: exit $(git status -s | wc -l)
+
+  clang-format-push:
+    if: contains(github.event_name, 'comment') && contains(github.event.comment.body, '//apply-linting') && github.event.pull_request.user.login == github.event.comment.user.login
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        files: ["include/jwt-cpp/*.h", "include/jwt-cpp/traits/**/*.h", "tests/**/*.cpp", "example/**/*.cpp"]
+    steps:
+      - uses: dkershner6/reaction-action@v1
+      - run: sudo apt-get install clang-format
+      - run: shopt -s globstar
+      - uses: actions/checkout@v2
+      - run: clang-format -i ${{ matrix.files }}
+      - uses: stefanzweifel/git-auto-commit-action@v4
