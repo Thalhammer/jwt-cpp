@@ -5,7 +5,7 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
-  issue_comment:
+  pull_request_review_comment:
     types: [created]
 
 jobs:
@@ -26,13 +26,14 @@ jobs:
           linter_name: clang-format
 
   clang-format-push:
-    if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting') && github.event.issue.user.login == github.event.comment.user.login
+    if: github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '//apply-linting') && github.event.pull_request.user.login == github.event.comment.user.login
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
         files: ["include/jwt-cpp/*.h", "include/jwt-cpp/traits/**/*.h", "tests/**/*.cpp", "example/**/*.cpp"]
     steps:
+      - uses: dkershner6/reaction-action@v1
       - run: sudo apt-get install clang-format
       - run: shopt -s globstar
       - uses: actions/checkout@v2
