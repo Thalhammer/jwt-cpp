@@ -63,6 +63,8 @@ jobs:
         files: ["include/jwt-cpp/*.h", "include/jwt-cpp/traits/**/*.h", "tests/**/*.cpp", "example/**/*.cpp"]
     steps:
       - uses: dkershner6/reaction-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - run: sudo apt-get install clang-format
       - run: shopt -s globstar
       - uses: actions/checkout@v2
