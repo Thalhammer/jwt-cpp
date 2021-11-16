@@ -7,8 +7,6 @@ on:
     branches: [master]
   pull_request_review_comment:
   issue_comment:
-  commit_comment:
-  discussion_comment:
 
 jobs:
   clang-format:
