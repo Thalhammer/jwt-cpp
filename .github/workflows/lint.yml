@@ -57,32 +57,6 @@ jobs:
       - run: clang-format -i ${{ matrix.files }}
       - uses: stefanzweifel/git-auto-commit-action@v4
 
-  clang-format-push:
-    if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
-    runs-on: ubuntu-20.04
-    strategy:
-      fail-fast: false
-      matrix:
-        files:
-        - "include/jwt-cpp/*.h"
-        - "include/jwt-cpp/traits/**/*.h"
-        - "tests/*.cpp"
-        - "tests/**/*.cpp"
-        - "example/*.cpp"
-        - "example/**/*.cpp"
-    steps:
-      - uses: dkershner6/reaction-action@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - run: sudo apt-get install clang-format
-      - run: shopt -s globstar
-      - uses: actions/checkout@v2
-      - run: hub pr checkout ${{ github.event.issue.number }} # Checking out 'issue_comment' does not pick the correct branch
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: clang-format -i ${{ matrix.files }}
-      - uses: stefanzweifel/git-auto-commit-action@v4
-
   cmake-format:
     if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
     runs-on: ubuntu-20.04
