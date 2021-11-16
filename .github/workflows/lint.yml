@@ -60,7 +60,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        files: ["include/jwt-cpp/*.h", "include/jwt-cpp/traits/**/*.h", "tests/**/*.cpp", "example/**/*.cpp"]
+        files: ["include/jwt-cpp/*.h", "tests/**/*.cpp", "example/**/*.cpp"]
     steps:
       - uses: dkershner6/reaction-action@v1
         with:
@@ -68,5 +68,6 @@ jobs:
       - run: sudo apt-get install clang-format
       - run: shopt -s globstar
       - uses: actions/checkout@v2
+      - run: hub pr checkout ${{ github.event.issue.number }}
       - run: clang-format -i ${{ matrix.files }}
       - uses: stefanzweifel/git-auto-commit-action@v4
