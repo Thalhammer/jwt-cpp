@@ -15,7 +15,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        files: ["include/jwt-cpp/*.h", "include/jwt-cpp/traits/**/*.h", "tests/**/*.cpp", "example/**/*.cpp"]
+        files:
+        - "include/jwt-cpp/*.h"
+        - "include/jwt-cpp/traits/**/*.h"
+        - "tests/*.cpp"
+        - "tests/**/*.cpp"
+        - "example/**/*.cpp"
+        - "example/*.cpp"
     steps:
       - run: sudo apt-get install clang-format
       - run: shopt -s globstar
@@ -26,12 +32,8 @@ jobs:
           linter_name: clang-format
 
   clang-format-push:
-    if: contains(github.event_name, 'comment') && contains(github.event.comment.body, '//apply-linting')
+    if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
     runs-on: ubuntu-20.04
-    strategy:
-      fail-fast: false
-      matrix:
-        files: ["include/jwt-cpp/*.h", "include/jwt-cpp/traits/**/*.h", "tests/**/*.cpp", "example/**/*.cpp"]
     steps:
       - uses: dkershner6/reaction-action@v1
         with:
@@ -42,7 +44,7 @@ jobs:
       - run: hub pr checkout ${{ github.event.issue.number }} # Checking out 'issue_comment' does not pick the correct branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: clang-format -i ${{ matrix.files }}
+      - run: clang-format -i "include/jwt-cpp/*.h include/jwt-cpp/traits/**/*.h tests/**/*.cpp example/**/*.cpp"
       - uses: stefanzweifel/git-auto-commit-action@v4
 
   cmake-format:
