@@ -64,9 +64,8 @@ TEST(NlohmannTest, VerifyTokenHS256) {
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
 
 	const auto decoded_token = jwt::decode<jwt::traits::nlohmann_json>(token);
-	const auto verify = jwt::verify<jwt::traits::nlohmann_json>()
-							.allow_algorithm(jwt::algorithm::hs256{"secret"})
-							.with_issuer("auth0");
+	const auto verify =
+		jwt::verify<jwt::traits::nlohmann_json>().allow_algorithm(jwt::algorithm::hs256{"secret"}).with_issuer("auth0");
 	verify.verify(decoded_token);
 }
 
