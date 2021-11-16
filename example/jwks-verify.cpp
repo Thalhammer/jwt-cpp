@@ -1,8 +1,10 @@
 #include <iostream>
 #include <jwt-cpp/jwt.h>
 
-int main() {
-	std::string raw_jwks = R"({"keys": [{
+int main()
+ {
+	std::string raw_jwks =
+	 R"({"keys": [{
 		"kid":"internal-gateway-jwt.api.sc.net",
 		"alg": "RS256",
     "kty": "RSA",
@@ -26,7 +28,7 @@ int main() {
 	}
 ]})";
 
-	std::string token =
+std::string token =
 		"eyJraWQiOiJpbnRlcm5hbC1nYXRld2F5LWp3dC5hcGkuc2MubmV0IiwiYWxnIjoiUlMyNTYiLCJ0eXAiOiJKV1QifQ."
 		"eyJuYmYiOjE1Mzk3NjcwMTUsImlhdCI6MTUzOTc2Njk5MiwiaXNzIjoia29uZyIsImh0dHA6XC9cL3dzbzIub3JnXC9nYXRld2F5XC9zdWJzY3"
 		"JpYmVyIjoidXZ0dXNlcjJAY2FyYm9uLnN1cGVyIiwib3JpZ2luYWxfaXNzIjoiaHR0cDpcL1wvd3NvMi5vcmdcL2dhdGV3YXkiLCJzdWIiOiJ1"
@@ -37,8 +39,7 @@ int main() {
 		"zytjx_9hlVm5SS1lZ0I21n45BIWu5JvBD51TZXEURb_XhL7RcF9I8mfzrRpB2fSHW38gj-nogsdOPA_y3S-hJKylmmaqmaQgTF-jP-"
 		"gYr6eqKyGPVwc6fLZ5zqAup59SefdPEY23-WWmHzj968jlsDSEiCp_YiYTnF3tHVLFWDsrprYKwNb0_p95tBmPA";
 
-	auto decoded_jwt = jwt::decode(token);
-	auto jwks = jwt::parse_jwks(raw_jwks);
+	auto decoded_jwt = jwt::decode(token);auto jwks = jwt::parse_jwks(raw_jwks);
 	auto jwk = jwks.get_jwk(decoded_jwt.get_key_id());
 
 	auto issuer = decoded_jwt.get_issuer();

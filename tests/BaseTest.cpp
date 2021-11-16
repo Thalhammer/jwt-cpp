@@ -1,11 +1,10 @@
 #include "jwt-cpp/base.h"
 #include <gtest/gtest.h>
 
-TEST(BaseTest, Base64Decode) {
-	ASSERT_EQ("1", jwt::base::decode<jwt::alphabet::base64>("MQ=="));
-	ASSERT_EQ("12", jwt::base::decode<jwt::alphabet::base64>("MTI="));
-	ASSERT_EQ("123", jwt::base::decode<jwt::alphabet::base64>("MTIz"));
-	ASSERT_EQ("1234", jwt::base::decode<jwt::alphabet::base64>("MTIzNA=="));
+TEST(BaseTest, Base64Decode)
+ {
+	ASSERT_EQ("1", jwt::base::decode<jwt::alphabet::base64>("MQ=="));ASSERT_EQ("12", jwt::base::decode<jwt::alphabet::base64>("MTI="));ASSERT_EQ("123", jwt::base::decode<jwt::alphabet::base64>("MTIz"));
+ASSERT_EQ("1234", jwt::base::decode<jwt::alphabet::base64>("MTIzNA=="));
 }
 
 TEST(BaseTest, Base64DecodeURL) {
