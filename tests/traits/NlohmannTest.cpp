@@ -6,8 +6,7 @@ TEST(NlohmannTest, BasicClaims) {
 	const auto string = jwt::basic_claim<jwt::traits::nlohmann_json>(jwt::traits::nlohmann_json::string_type("string"));
 	ASSERT_EQ(string.get_type(), jwt::json::type::string);
 
-	const auto array = jwt::basic_claim<jwt::traits::nlohmann_json>(
-		std::set<jwt::traits::nlohmann_json::string_type>{"string", "string"});
+	const auto array = jwt::basic_claim<jwt::traits::nlohmann_json>(std::set<jwt::traits::nlohmann_json::string_type>{"string", "string"});
 	ASSERT_EQ(array.get_type(), jwt::json::type::array);
 
 	const auto integer = jwt::basic_claim<jwt::traits::nlohmann_json>(159816816);
