@@ -144,3 +144,26 @@ jobs:
       - uses: ./.github/actions/comment-linting
         with:
           linter_name: render-tests
+
+  render-tests-push:
+    if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        traits:
+          # - { name: "boost_json", suite: "BoostJsonTest" } # Currently needs work arounds for API limitations
+          - { name: "danielaparker_jsoncons", suite: "JsonconsTest" }
+          # - { name: "kazuho_picojson", suite: "PicoJsonTest" } # Currently the default everything tests against this!
+          - { name: "nlohmann_json", suite: "NlohmannTest" }
+    name: render-tests (${{ matrix.traits.name }})
+    steps:
+      - uses: actions/checkout@v2
+      - run: hub pr checkout ${{ github.event.issue.number }} # Checking out 'issue_comment' does not pick the correct branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: ./.github/actions/render/tests
+        with:
+          traits_name: ${{ matrix.traits.name }}
+          test_suite_name: ${{ matrix.traits.suite }}
+      - uses: stefanzweifel/git-auto-commit-action@v4
