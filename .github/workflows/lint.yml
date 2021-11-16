@@ -5,7 +5,7 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
-  pull_request_review_comment:
+  issue_comment:
     types: [created]
 
 jobs:
@@ -26,7 +26,7 @@ jobs:
           linter_name: clang-format
 
   clang-format-push:
-    if: contains(github.event_name, 'comment') && contains(github.event.comment.body, '//apply-linting') && github.event.pull_request.user.login == github.event.comment.user.login
+    if: contains(github.event_name, 'comment') && contains(github.event.comment.body, '//apply-linting')
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
@@ -39,6 +39,9 @@ jobs:
       - run: sudo apt-get install clang-format
       - run: shopt -s globstar
       - uses: actions/checkout@v2
+      - run: hub pr checkout ${{ github.event.issue.number }} # Checking out 'issue_comment' does not pick the correct branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: clang-format -i ${{ matrix.files }}
       - uses: stefanzweifel/git-auto-commit-action@v4
 
@@ -84,10 +87,6 @@ jobs:
 
   render-defaults:
     if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
-    runs-on: ubuntu-20.04
-    strategy:
-      fail-fast: false
-      matrix:
         traits:
           - { name: "boost_json", library: "Boost.JSON", url: "https://github.com/boostorg/json", disable_pico: true }
           - { name: "danielaparker_jsoncons", library: "jsoncons", url: "https://github.com/danielaparker/jsoncons", disable_pico: true }
