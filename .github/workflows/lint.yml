@@ -5,9 +5,12 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
+  issue_comment:
+    types: [created]
 
 jobs:
   clang-format:
+    if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
@@ -22,7 +25,22 @@ jobs:
         with:
           linter_name: clang-format
 
+  clang-format-push:
+    if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting') && github.event.issue.user.login == github.event.comment.user.login
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        files: ["include/jwt-cpp/*.h", "include/jwt-cpp/traits/**/*.h", "tests/**/*.cpp", "example/**/*.cpp"]
+    steps:
+      - run: sudo apt-get install clang-format
+      - run: shopt -s globstar
+      - uses: actions/checkout@v2
+      - run: clang-format -i ${{ matrix.files }}
+      - uses: stefanzweifel/git-auto-commit-action@v4
+
   cmake-format:
+    if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
@@ -41,6 +59,7 @@ jobs:
           linter_name: cmake-format
 
   clang-tidy:
+    if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
     runs-on: ubuntu-20.04
     steps:
       - run: sudo apt-get install clang-tidy
@@ -61,6 +80,7 @@ jobs:
           linter_name: clang-tidy
 
   render-defaults:
+    if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
@@ -85,6 +105,7 @@ jobs:
           linter_name: render-defaults
 
   render-tests:
+    if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
