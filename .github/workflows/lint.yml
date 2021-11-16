@@ -18,7 +18,7 @@ jobs:
         files:
         - "include/jwt-cpp/*.h"
         - "include/jwt-cpp/traits/**/*.h"
-        - "tests/*.cpp"
+        - "tests/**.cpp"
         - "tests/**/*.cpp"
         - "example/**/*.cpp"
         - "example/*.cpp"
