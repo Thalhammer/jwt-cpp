@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [master]
   pull_request_review_comment:
-  issue_comment:
+    types: [created]
 
 jobs:
   clang-format:
@@ -26,7 +26,7 @@ jobs:
           linter_name: clang-format
 
   clang-format-push:
-    if: github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '//apply-linting') && github.event.pull_request.user.login == github.event.comment.user.login
+    if: contains(github.event_name, 'comment') && contains(github.event.comment.body, '//apply-linting') && github.event.pull_request.user.login == github.event.comment.user.login
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
