@@ -41,7 +41,7 @@ In the name of flexibility and extensibility, jwt-cpp supports [OpenSSL](https:/
 | OpenSSL           | LibreSSL       | wolfSSL        |
 |-------------------|----------------|----------------|
 | ![1.0.2u][o1.0.2] | ![3.2.6][l3.2] | ![ab3bbf1][wolf-master] |
-| ![1.1.0i][o1.1.0] | ![3.3.4][l3.3] |                |
+| ![1.1.0i][o1.1.0] | ![3.3.4][l3.3] | ![5.0.0][w5.0]        |
 | ![1.1.1l][o1.1.1] | ![3.4.0][l3.4] |                |
 | ![3.0.0][o3.0]    |                |                |
 
@@ -55,6 +55,7 @@ In the name of flexibility and extensibility, jwt-cpp supports [OpenSSL](https:/
 [l3.3]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/libressl/3.3.4/shields.json
 [l3.4]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/libressl/3.4.0/shields.json
 [wolf-master]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/wolfssl/ab3bbf1/shields.json
+[w5.0]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/wolfssl/5.0.0/shields.json
 
 ## Overview
 
