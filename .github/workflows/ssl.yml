@@ -88,7 +88,6 @@ jobs:
     strategy:
       matrix:
         wolfssl:
-          - { ref: "ab3bbf11e9d39b52e24bf42bbc6babc16d4a669b", name: "ab3bbf1" }
           - { ref: "v5.0.0-stable", name: "5.0.0" }
     name: wolfSSL ${{ matrix.wolfssl.name }}
     steps:
