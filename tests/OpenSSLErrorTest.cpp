@@ -343,8 +343,8 @@ int EVP_DigestVerify(EVP_MD_CTX* ctx, unsigned char* sigret, size_t* siglen, con
 		return origMethod(ctx, sigret, siglen, tbs, tbslen);
 }
 
-EC_KEY* EVP_PKEY_get1_EC_KEY(EVP_PKEY *pkey) {
-	static EC_KEY* (*origMethod)(EVP_PKEY *pkey) = nullptr;
+EC_KEY* EVP_PKEY_get1_EC_KEY(EVP_PKEY* pkey) {
+	static EC_KEY* (*origMethod)(EVP_PKEY * pkey) = nullptr;
 	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_PKEY_get1_EC_KEY");
 	bool fail = fail_EVP_PKEY_get1_EC_KEY & 1;
 	fail_EVP_PKEY_get1_EC_KEY = fail_EVP_PKEY_get1_EC_KEY >> 1;

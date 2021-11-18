@@ -639,8 +639,8 @@ namespace jwt {
 		 * \param pw		Password used to decrypt certificate (leave empty if not encrypted)
 		 * \param ec		error_code for error_detection (gets cleared if no error occures)
 		 */
-		inline std::shared_ptr<EVP_PKEY> load_public_ec_key_from_string(const std::string& key,
-																	 const std::string& password, std::error_code& ec) {
+		inline std::shared_ptr<EVP_PKEY>
+		load_public_ec_key_from_string(const std::string& key, const std::string& password, std::error_code& ec) {
 			ec.clear();
 			std::unique_ptr<BIO, decltype(&BIO_free_all)> pubkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
 			if (!pubkey_bio) {
@@ -684,7 +684,7 @@ namespace jwt {
 		 * \throw			ecdsa_exception if an error occurred
 		 */
 		inline std::shared_ptr<EVP_PKEY> load_public_ec_key_from_string(const std::string& key,
-																	 const std::string& password = "") {
+																		const std::string& password = "") {
 			std::error_code ec;
 			auto res = load_public_ec_key_from_string(key, password, ec);
 			error::throw_if_error(ec);
@@ -728,7 +728,7 @@ namespace jwt {
 		 * \throw			ecdsa_exception if an error occurred
 		 */
 		inline std::shared_ptr<EVP_PKEY> load_private_ec_key_from_string(const std::string& key,
-																		const std::string& password = "") {
+																		 const std::string& password = "") {
 			std::error_code ec;
 			auto res = load_private_ec_key_from_string(key, password, ec);
 			error::throw_if_error(ec);
