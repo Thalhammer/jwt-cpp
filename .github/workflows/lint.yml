@@ -42,7 +42,6 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v4
 
   cmake-format:
-    if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
@@ -68,7 +67,6 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v4
 
   clang-tidy:
-    if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
     runs-on: ubuntu-20.04
     steps:
       - run: sudo apt-get install clang-tidy
@@ -127,7 +125,6 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v4
 
   render-tests:
-    if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
