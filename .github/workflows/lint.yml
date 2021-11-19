@@ -140,6 +140,7 @@ jobs:
     name: render-tests (${{ matrix.traits.name }})
     steps:
       - uses: actions/checkout@v2
+      - run: shopt -s globstar
       - if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
         run: hub pr checkout ${{ github.event.issue.number }} # Checking out 'issue_comment' does not pick the correct branch
         env:
@@ -148,6 +149,7 @@ jobs:
         with:
           traits_name: ${{ matrix.traits.name }}
           test_suite_name: ${{ matrix.traits.suite }}
+      - run: clang-format -i tests/**/*.cpp
       - run: git add tests/traits/*
       - if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
         uses: ./.github/actions/comment-linting
