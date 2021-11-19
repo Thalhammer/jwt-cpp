@@ -5,23 +5,11 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
-  pull_request_review_comment:
   issue_comment:
+    types: [created]
 
 jobs:
   clang-format:
-    runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        files: ["include/jwt-cpp/*.h", "tests/**.cpp"]
-    steps:
-      - run: sudo apt-get install clang-format
-      - uses: actions/checkout@v2
-      - run: clang-format -i ${{ matrix.files }}
-      - run: exit $(git status -s | wc -l)
-
-  clang-format-push:
-    if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
@@ -34,39 +22,62 @@ jobs:
         - "example/*.cpp"
         - "example/**/*.cpp"
     steps:
-      - uses: dkershner6/reaction-action@v1
+      - if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
+        uses: dkershner6/reaction-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - run: sudo apt-get install clang-format
       - run: shopt -s globstar
       - uses: actions/checkout@v2
-      - run: hub pr checkout ${{ github.event.issue.number }} # Checking out 'issue_comment' does not pick the correct branch
+      - if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
+        run: hub pr checkout ${{ github.event.issue.number }} # Checking out 'issue_comment' does not pick the correct branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: clang-format -i ${{ matrix.files }}
-      - uses: stefanzweifel/git-auto-commit-action@v4
+      - if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+        uses: ./.github/actions/comment-linting
+        with:
+          linter_name: clang-format
+      - if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
+        uses: stefanzweifel/git-auto-commit-action@v4
 
   cmake-format:
+    if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
     runs-on: ubuntu-20.04
     strategy:
+      fail-fast: false
       matrix:
-        files: ["CMakeLists.txt", "**/CMakeLists.txt", "cmake/code-coverage.cmake"]
+        files: ["**/CMakeLists.txt", "cmake/code-coverage.cmake"]
     steps:
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.x'
+          python-version: "3.x"
       - run: pip install cmakelang
+      - run: shopt -s globstar
       - uses: actions/checkout@v2
-      - run: ls ${{ matrix.files }}
-      - run: cmake-format --check $(ls ${{ matrix.files }})
+      - if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
+        run: hub pr checkout ${{ github.event.issue.number }} # Checking out 'issue_comment' does not pick the correct branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: cmake-format -i ${{ matrix.files }}
+      - if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+        uses: ./.github/actions/comment-linting
+        with:
+          linter_name: cmake-format
+      - if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
+        uses: stefanzweifel/git-auto-commit-action@v4
 
   clang-tidy:
+    if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
     runs-on: ubuntu-20.04
     steps:
       - run: sudo apt-get install clang-tidy
-      - uses: actions/checkout@v2
       - uses: lukka/get-cmake@latest
-      - uses: ./.github/actions/install/gtest
+      - uses: actions/checkout@v2
+      - if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
+        run: hub pr checkout ${{ github.event.issue.number }} # Checking out 'issue_comment' does not pick the correct branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: configure
         run: |
@@ -75,13 +86,48 @@ jobs:
           cmake .. -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-fix"
 
       - name: run
-        run: |
-          cd build
-          make
-      - run: exit $(git status -s | wc -l)
+        working-directory: build
+        run: make
+      - if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+        uses: ./.github/actions/comment-linting
+        with:
+          linter_name: clang-tidy
+      - if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
+        uses: stefanzweifel/git-auto-commit-action@v4
 
-  render-tests-push:
-    if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
+  render-defaults:
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        traits:
+          - { name: "boost_json", library: "Boost.JSON", url: "https://github.com/boostorg/json", disable_pico: true }
+          - { name: "danielaparker_jsoncons", library: "jsoncons", url: "https://github.com/danielaparker/jsoncons", disable_pico: true }
+          - { name: "kazuho_picojson", library: "picojson", url: "https://github.com/kazuho/picojson", disable_pico: false }
+          - { name: "nlohmann_json", library: "JSON for Modern C++", url: "https://github.com/nlohmann/json", disable_pico: true }
+    name: render-defaults (${{ matrix.traits.name }})
+    steps:
+      - uses: actions/checkout@v2
+      - if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
+        run: hub pr checkout ${{ github.event.issue.number }} # Checking out 'issue_comment' does not pick the correct branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: ./.github/actions/render/defaults
+        with:
+          traits_name: ${{ matrix.traits.name }}
+          library_name: ${{ matrix.traits.library }}
+          library_url: ${{ matrix.traits.url }}
+          disable_default_traits: ${{ matrix.traits.disable_pico }}
+      - run: git add include/jwt-cpp/traits/*
+      - if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+        uses: ./.github/actions/comment-linting
+        with:
+          linter_name: render-defaults
+      - if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
+        uses: stefanzweifel/git-auto-commit-action@v4
+
+  render-tests:
+    if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
@@ -94,11 +140,18 @@ jobs:
     name: render-tests (${{ matrix.traits.name }})
     steps:
       - uses: actions/checkout@v2
-      - run: hub pr checkout ${{ github.event.issue.number }} # Checking out 'issue_comment' does not pick the correct branch
+      - if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
+        run: hub pr checkout ${{ github.event.issue.number }} # Checking out 'issue_comment' does not pick the correct branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: ./.github/actions/render/tests
         with:
           traits_name: ${{ matrix.traits.name }}
           test_suite_name: ${{ matrix.traits.suite }}
-      - uses: stefanzweifel/git-auto-commit-action@v4
+      - run: git add tests/traits/*
+      - if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+        uses: ./.github/actions/comment-linting
+        with:
+          linter_name: render-tests
+      - if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
+        uses: stefanzweifel/git-auto-commit-action@v4
