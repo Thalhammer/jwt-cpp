@@ -42,6 +42,7 @@ static uint64_t fail_EVP_DigestSignInit = 0;
 static uint64_t fail_EVP_DigestSign = 0;
 static uint64_t fail_EVP_DigestVerifyInit = 0;
 static uint64_t fail_EVP_DigestVerify = 0;
+static uint64_t fail_EVP_PKEY_get1_EC_KEY = 0;
 
 BIO* BIO_new(const BIO_METHOD* type) {
 	static BIO* (*origMethod)(const BIO_METHOD*) = nullptr;
@@ -342,6 +343,17 @@ int EVP_DigestVerify(EVP_MD_CTX* ctx, unsigned char* sigret, size_t* siglen, con
 		return origMethod(ctx, sigret, siglen, tbs, tbslen);
 }
 
+EC_KEY* EVP_PKEY_get1_EC_KEY(EVP_PKEY* pkey) {
+	static EC_KEY* (*origMethod)(EVP_PKEY * pkey) = nullptr;
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_PKEY_get1_EC_KEY");
+	bool fail = fail_EVP_PKEY_get1_EC_KEY & 1;
+	fail_EVP_PKEY_get1_EC_KEY = fail_EVP_PKEY_get1_EC_KEY >> 1;
+	if (fail)
+		return nullptr;
+	else
+		return origMethod(pkey);
+}
+
 /**
  * =========== End of black magic ============
  */
@@ -609,21 +621,35 @@ TEST(OpenSSLErrorTest, RS256VerifyErrorCode) {
 	run_multitest(mapping, [&alg, &signature](std::error_code& ec) { alg.verify("testdata", signature, ec); });
 }
 
-TEST(OpenSSLErrorTest, ECDSAKey) {
+TEST(OpenSSLErrorTest, LoadECDSAPrivateKeyFromString) {
 	std::vector<multitest_entry> mapping{
 		{&fail_BIO_new, 1, jwt::error::ecdsa_error::create_mem_bio_failed},
 		{&fail_BIO_write, 1, jwt::error::ecdsa_error::load_key_bio_write},
-		{&fail_PEM_read_bio_EC_PUBKEY, 1, jwt::error::ecdsa_error::load_key_bio_read},
-		// Privkey section
-		{&fail_BIO_new, 2, jwt::error::ecdsa_error::create_mem_bio_failed},
-		{&fail_BIO_write, 2, jwt::error::ecdsa_error::load_key_bio_write},
-		{&fail_PEM_read_bio_ECPrivateKey, 1, jwt::error::ecdsa_error::load_key_bio_read},
+		{&fail_PEM_read_bio_PrivateKey, 1, jwt::error::ecdsa_error::load_key_bio_read},
 		{&fail_EC_KEY_check_key, 1, jwt::error::ecdsa_error::invalid_key},
+		{&fail_EVP_PKEY_get1_EC_KEY, 1, jwt::error::ecdsa_error::invalid_key},
 	};
 
 	run_multitest(mapping, [](std::error_code& ec) {
 		try {
-			jwt::algorithm::es256 alg{ecdsa256_pub_key, ecdsa256_priv_key};
+			jwt::algorithm::es256 alg{"", ecdsa256_priv_key};
+			FAIL(); // Should never reach this
+		} catch (const std::system_error& e) { ec = e.code(); }
+	});
+}
+
+TEST(OpenSSLErrorTest, LoadECDSAPublicKeyFromString) {
+	std::vector<multitest_entry> mapping{
+		{&fail_BIO_new, 1, jwt::error::ecdsa_error::create_mem_bio_failed},
+		{&fail_BIO_write, 1, jwt::error::ecdsa_error::load_key_bio_write},
+		{&fail_PEM_read_bio_PUBKEY, 1, jwt::error::ecdsa_error::load_key_bio_read},
+		{&fail_EC_KEY_check_key, 1, jwt::error::ecdsa_error::invalid_key},
+		{&fail_EVP_PKEY_get1_EC_KEY, 1, jwt::error::ecdsa_error::invalid_key},
+	};
+
+	run_multitest(mapping, [](std::error_code& ec) {
+		try {
+			jwt::algorithm::es256 alg{ecdsa256_pub_key, ""};
 			FAIL(); // Should never reach this
 		} catch (const std::system_error& e) { ec = e.code(); }
 	});
@@ -632,7 +658,7 @@ TEST(OpenSSLErrorTest, ECDSAKey) {
 TEST(OpenSSLErrorTest, ECDSACertificate) {
 	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::ecdsa_error::create_mem_bio_failed},
 										 {&fail_BIO_write, 1, jwt::error::ecdsa_error::load_key_bio_write},
-										 {&fail_PEM_read_bio_EC_PUBKEY, 1, jwt::error::ecdsa_error::load_key_bio_read},
+										 {&fail_PEM_read_bio_PUBKEY, 1, jwt::error::ecdsa_error::load_key_bio_read},
 										 // extract_pubkey_from_cert
 										 {&fail_BIO_new, 2, jwt::error::rsa_error::create_mem_bio_failed},
 										 {&fail_PEM_read_bio_X509, 1, jwt::error::rsa_error::cert_load_failed},
