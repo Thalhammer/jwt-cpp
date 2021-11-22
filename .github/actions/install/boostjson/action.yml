@@ -12,7 +12,7 @@ runs:
         cd /tmp
         wget https://github.com/boostorg/json/archive/boost-${{ inputs.version }}.tar.gz
         tar -zxf /tmp/boost-${{ inputs.version }}.tar.gz
-        ls -la
-        cd boost-json-${{ inputs.version }}
+        cd json-boost-${{ inputs.version }}
         sudo cp -R include /usr/local/include
+        ls -la /usr/local/include/boost
       shell: bash
