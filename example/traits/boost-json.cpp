@@ -10,10 +10,11 @@ int main() {
 	using traits = jwt::traits::boost_json;
 	using claim = jwt::basic_claim<traits>;
 
-	claim from_raw_json;
-	jwt::traits::boost_json::parse(from_raw_json, R"##({"api":{"array":[1,2,3],"null":null}})##")
-
-		claim::set_t list{"once", "twice"};
+	traits::value_type raw_value;
+	traits::parse(from_raw_json, R"##({"api":{"array":[1,2,3],"null":null}})##");
+	claim from_raw_json(raw_value);
+	
+	claim::set_t list{"once", "twice"};
 	std::vector<int64_t> big_numbers{727663072ULL, 770979831ULL, 427239169ULL, 525936436ULL};
 
 	const auto time = jwt::date::clock::now();
