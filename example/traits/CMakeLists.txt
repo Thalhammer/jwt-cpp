@@ -5,11 +5,14 @@ if(NOT TARGET jwt-cpp)
   find_package(jwt-cpp CONFIG REQUIRED)
 endif()
 
-find_package(jsoncons CONFIG REQUIRED)
+find_package(jsoncons CONFIG)
+if(TARGET jsoncons)
+  add_executable(danielaparker-jsoncons danielaparker-jsoncons.cpp)
+  target_link_libraries(danielaparker-jsoncons jwt-cpp::jwt-cpp jsoncons)
+endif()
 
-add_executable(danielaparker-jsoncons danielaparker-jsoncons.cpp)
-target_link_libraries(danielaparker-jsoncons jwt-cpp::jwt-cpp jsoncons)
-
-
-add_executable(boost-json boost-json.cpp)
-target_link_libraries(boost-json jwt-cpp::jwt-cpp boost_json)
+include("private-find-boost-json")
+if(TARGET boost_json)
+  add_executable(boost-json boost-json.cpp)
+  target_link_libraries(boost-json jwt-cpp::jwt-cpp boost_json)
+endif()

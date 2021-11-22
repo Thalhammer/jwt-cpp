@@ -1,6 +1,5 @@
 #include "jwt-cpp/traits/boost-json/traits.h"
 
-#include <boost/json/src.hpp>
 #include <gtest/gtest.h>
 
 TEST(BoostJsonTest, BasicClaims) {
