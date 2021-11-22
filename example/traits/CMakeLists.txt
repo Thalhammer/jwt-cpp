@@ -9,3 +9,7 @@ find_package(jsoncons CONFIG REQUIRED)
 
 add_executable(danielaparker-jsoncons danielaparker-jsoncons.cpp)
 target_link_libraries(danielaparker-jsoncons jwt-cpp::jwt-cpp jsoncons)
+
+
+add_executable(boost-json boost-json.cpp)
+target_link_libraries(boost-json jwt-cpp::jwt-cpp boost_json)
