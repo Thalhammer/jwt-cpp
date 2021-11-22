@@ -11,7 +11,7 @@ if(TARGET jsoncons)
   target_link_libraries(danielaparker-jsoncons jwt-cpp::jwt-cpp jsoncons)
 endif()
 
-include("private-find-boost-json")
+include("../../private-find-boost-json")
 if(TARGET boost_json)
   add_executable(boost-json boost-json.cpp)
   target_link_libraries(boost-json jwt-cpp::jwt-cpp boost_json)
