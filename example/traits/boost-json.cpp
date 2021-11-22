@@ -11,7 +11,7 @@ int main() {
 	using claim = jwt::basic_claim<traits>;
 
 	traits::value_type raw_value;
-	traits::parse(from_raw_json, R"##({"api":{"array":[1,2,3],"null":null}})##");
+	traits::parse(raw_value, R"##({"api":{"array":[1,2,3],"null":null}})##");
 	claim from_raw_json(raw_value);
 	
 	claim::set_t list{"once", "twice"};
