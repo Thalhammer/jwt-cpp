@@ -13,7 +13,7 @@ int main() {
 	traits::value_type raw_value;
 	traits::parse(raw_value, R"##({"api":{"array":[1,2,3],"null":null}})##");
 	claim from_raw_json(raw_value);
-	
+
 	claim::set_t list{"once", "twice"};
 	std::vector<int64_t> big_numbers{727663072ULL, 770979831ULL, 427239169ULL, 525936436ULL};
 
@@ -34,7 +34,8 @@ int main() {
 						   .sign(jwt::algorithm::none{});
 	const auto decoded = jwt::decode<traits>(token);
 
-	const auto array = traits::as_array(decoded.get_payload_claim("object").to_json()["api"]["array"]);
+	const auto array =
+		traits::as_array(decoded.get_payload_claim("object").to_json().as_object()["api"].as_object()["array"]);
 	std::cout << "payload /object/api/array = " << array << std::endl;
 
 	jwt::verify<traits>()
