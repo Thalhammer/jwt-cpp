@@ -1,5 +1,4 @@
 #include <jwt-cpp/jwt.h>
-#include <jwt-cpp/traits/nlohmann-json/traits.h>
 
 #include <iostream>
 #include <sstream>
@@ -7,7 +6,7 @@
 using sec = std::chrono::seconds;
 using min = std::chrono::minutes;
 
-std::string make_pico_token() {
+int main() {
 	jwt::claim from_raw_json;
 	std::istringstream iss{R"##({"api":{"array":[1,2,3],"null":null}})##"};
 	iss >> from_raw_json;
@@ -16,7 +15,7 @@ std::string make_pico_token() {
 	std::vector<int64_t> big_numbers{727663072ULL, 770979831ULL, 427239169ULL, 525936436ULL};
 
 	const auto time = jwt::date::clock::now();
-	return jwt::create()
+	const auto token =  jwt::create()
 		.set_type("JWT")
 		.set_issuer("auth.mydomain.io")
 		.set_audience("mydomain.io")
@@ -30,39 +29,18 @@ std::string make_pico_token() {
 		.set_payload_claim("array", jwt::claim(big_numbers.begin(), big_numbers.end()))
 		.set_payload_claim("object", from_raw_json)
 		.sign(jwt::algorithm::none{});
-}
 
-std::string make_nlohmann_token() {
-	using claim = jwt::basic_claim<jwt::traits::nlohmann_json>;
-
-	claim from_raw_json;
-	std::istringstream iss{R"##({"api":{"array":[1,2,3],"null":null}})##"};
-	iss >> from_raw_json;
-
-	claim::set_t list{"once", "twice"};
-	std::vector<int64_t> big_numbers{727663072ULL, 770979831ULL, 427239169ULL, 525936436ULL};
-
-	const auto time = jwt::date::clock::now();
-	return jwt::create<jwt::traits::nlohmann_json>()
-		.set_type("JWT")
-		.set_issuer("auth.mydomain.io")
-		.set_audience("mydomain.io")
-		.set_issued_at(time)
-		.set_not_before(time + sec{15})
-		.set_expires_at(time + sec{15} + min{2})
-		.set_payload_claim("boolean", true)
-		.set_payload_claim("integer", 12345)
-		.set_payload_claim("precision", 12.345)
-		.set_payload_claim("strings", list)
-		.set_payload_claim("array", {big_numbers.begin(), big_numbers.end()})
-		.set_payload_claim("object", from_raw_json)
-		.sign(jwt::algorithm::none{});
-}
-
-int main() {
-	const auto token = make_pico_token();
 	const auto decoded = jwt::decode(token);
 
 	const auto api_array = decoded.get_payload_claims()["object"].to_json().get("api").get("array");
 	std::cout << "api array = " << api_array << std::endl;
+
+	jwt::verify()
+		.allow_algorithm(jwt::algorithm::none{})
+		.with_issuer("auth.mydomain.io")
+		.with_audience("mydomain.io")
+		.with_claim("object", from_raw_json)
+		.verify(decoded);
+
+	return 0;
 }

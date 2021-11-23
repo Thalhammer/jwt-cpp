@@ -16,3 +16,6 @@ if(TARGET boost_json)
   add_executable(boost-json boost-json.cpp)
   target_link_libraries(boost-json jwt-cpp::jwt-cpp boost_json)
 endif()
+
+add_executable(nlohmann-json nlohmann-json.cpp)
+target_link_libraries(nlohmann-json jwt-cpp::jwt-cpp)

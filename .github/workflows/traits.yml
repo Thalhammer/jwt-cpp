@@ -48,3 +48,25 @@ jobs:
           cmake . -DCMAKE_FIND_DEBUG_MODE=1
           cmake --build . --target boost-json
           ./boost-json
+
+  nlohmann-json:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: lukka/get-cmake@latest
+      - uses: ./.github/actions/install/gtest
+
+      - name: setup
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DJWT_BUILD_EXAMPLES=OFF
+          sudo cmake --install .
+
+      - uses: ./.github/actions/install/nlohmannjson
+      - name: test
+        run: |
+          cd example/traits
+          cmake . -DCMAKE_FIND_DEBUG_MODE=1
+          cmake --build . --target nlohmann-json
+          ./nlohmann-json
