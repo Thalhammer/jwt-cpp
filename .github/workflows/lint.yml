@@ -18,7 +18,7 @@ jobs:
     - id: commit
       if: |
           github.event_name == 'issue_comment' &&
-          contains(github.event.comment.body, '//apply-linting')
+          contains(github.event.comment.body, '//apply-linting') &&
           (github.event.sender.login == 'Thalhammer' ||
            github.event.sender.login == 'prince-chrismc')
       run: echo "::set-output name=commmit::true"
