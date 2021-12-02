@@ -26,17 +26,17 @@ jobs:
           cmake .. -DJWT_BUILD_EXAMPLES=OFF
           sudo cmake --install .
 
-      - if: matrix.target.name == "danielaparker-jsoncons"
+      - if: matrix.target.name == 'danielaparker-jsoncons'
         uses: ./.github/actions/install/jsoncons
         with:
           version: ${{matrix.target.tag}}
 
-      - if: matrix.target.name == "boost-json"
+      - if: matrix.target.name == 'boost-json'
         uses: ./.github/actions/install/boostjson
         with:
           version: ${{matrix.target.tag}}
 
-      - if: matrix.target.name == "nlohmann-json"
+      - if: matrix.target.name == 'nlohmann-json'
         uses: ./.github/actions/install/nlohmannjson
         with:
           version: ${{matrix.target.tag}}
