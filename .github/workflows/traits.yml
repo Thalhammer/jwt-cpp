@@ -2,13 +2,20 @@ name: Traits CI
 
 on:
   push:
-    branches: [master]
+    # branches: [master]
   pull_request:
     branches: [master]
 
 jobs:
-  jsoncons:
+  traits:
+    name: Traits (${{matrix.target.name}})
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target:
+          - { name: "danielaparker-jsoncons", tag: "0.167.1", version: "v0.167.1" }
+          - { name: "boost-json", tag: "1.77.0", version: "v1.77.0" }
+          - { name: "nlohmann-json", tag: "3.10.4", version: "v3.10.4" }
     steps:
       - uses: actions/checkout@v2
       - uses: lukka/get-cmake@latest
@@ -19,54 +26,45 @@ jobs:
           cmake .. -DJWT_BUILD_EXAMPLES=OFF
           sudo cmake --install .
 
-      - uses: ./.github/actions/install/jsoncons
+      - if: ${{matrix.target.name}} == "danielaparker-jsoncons"
+        uses: ./.github/actions/install/jsoncons
+        with:
+          version: ${{matrix.target.tag}}
+
+      - if: ${{matrix.target.name}} == "boost-json"
+        uses: ./.github/actions/install/boostjson
+        with:
+          version: ${{matrix.target.tag}}
+
+      - if: ${{matrix.target.name}} == "nlohmann-json"
+        uses: ./.github/actions/install/nlohmannjson
+        with:
+          version: ${{matrix.target.tag}}
+
       - name: test
+        working-directory: example/traits
         run: |
-          cd example/traits
           cmake . -DCMAKE_FIND_DEBUG_MODE=1
-          cmake --build . --target danielaparker-jsoncons
-          ./danielaparker-jsoncons
+          cmake --build . --target ${{matrix.target.name}}
+          ./${{matrix.target.name}}
 
-  boost-json:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: lukka/get-cmake@latest
-      - uses: ./.github/actions/install/gtest
+      - name: badge success
+        if: github.event_name == 'push' && success()
+        uses: ./.github/actions/badge
+        with:
+          category: traits
+          label: ${{matrix.target.name}}
+          message: ${{matrix.target.version}}
+          color: lightblue
+      - if: github.event_name == 'push' && success()
+        uses: ./.github/actions/badge/publish
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: setup
-        run: |
-          mkdir build
-          cd build
-          cmake .. -DJWT_BUILD_EXAMPLES=OFF
-          sudo cmake --install .
-
-      - uses: ./.github/actions/install/boostjson
-      - name: test
-        run: |
-          cd example/traits
-          cmake . -DCMAKE_FIND_DEBUG_MODE=1
-          cmake --build . --target boost-json
-          ./boost-json
-
-  nlohmann-json:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: lukka/get-cmake@latest
-      - uses: ./.github/actions/install/gtest
-
-      - name: setup
-        run: |
-          mkdir build
-          cd build
-          cmake .. -DJWT_BUILD_EXAMPLES=OFF
-          sudo cmake --install .
-
-      - uses: ./.github/actions/install/nlohmannjson
-      - name: test
-        run: |
-          cd example/traits
-          cmake . -DCMAKE_FIND_DEBUG_MODE=1
-          cmake --build . --target nlohmann-json
-          ./nlohmann-json
+      - name: badge failure
+        if: github.event_name == 'push' && !success()
+        uses: ./.github/actions/badge/failure
+        with:
+          category: traits
+          label: ${{matrix.target.name}}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
