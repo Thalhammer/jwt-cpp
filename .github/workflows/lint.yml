@@ -11,6 +11,11 @@ on:
 jobs:
   setup:
     runs-on: ubuntu-20.04
+    if: |
+        github.event_name == 'push' ||
+        github.event_name == 'pull_request' ||
+        (github.event_name == 'issue_comment' &&
+          contains(github.event.comment.body, '//apply-linting'))
     outputs:
       commit-change: ${{ steps.commit.outputs.retval }}
       post-comment: ${{ steps.post.outputs.retval }}
