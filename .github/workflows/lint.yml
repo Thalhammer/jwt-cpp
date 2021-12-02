@@ -21,10 +21,10 @@ jobs:
           contains(github.event.comment.body, '//apply-linting') &&
           (github.event.sender.login == 'Thalhammer' ||
            github.event.sender.login == 'prince-chrismc')
-      run: echo "::set-output name=commmit::true"
+      run: echo "::set-output name=retval::true"
     - id: post
-      if: github.event_name == 'pull_request' || github.event_name == 'push'
-      run: echo "::set-output name=false::true"
+      if: github.event_name == 'pull_request'
+      run: echo "::set-output name=retval::true"
 
   clang-format:
     runs-on: ubuntu-20.04
