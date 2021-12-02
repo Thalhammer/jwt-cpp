@@ -185,7 +185,8 @@ namespace jwt {
 			verifyinit_failed,
 			verifyupdate_failed,
 			verifyfinal_failed,
-			get_key_failed
+			get_key_failed,
+			set_rsa_pss_saltlen_failed
 		};
 		/**
 		 * \brief Error category for verification errors
@@ -208,6 +209,8 @@ namespace jwt {
 						return "failed to verify signature: VerifyFinal failed";
 					case signature_verification_error::get_key_failed:
 						return "failed to verify signature: Could not get key";
+					case signature_verification_error::set_rsa_pss_saltlen_failed:
+						return "failed to verify signature: EVP_PKEY_CTX_set_rsa_pss_saltlen failed";
 					default: return "unknown signature verification error";
 					}
 				}
@@ -236,7 +239,8 @@ namespace jwt {
 			digestfinal_failed,
 			rsa_padding_failed,
 			rsa_private_encrypt_failed,
-			get_key_failed
+			get_key_failed,
+			set_rsa_pss_saltlen_failed,
 		};
 		/**
 		 * \brief Error category for signature generation errors
@@ -265,11 +269,13 @@ namespace jwt {
 					case signature_generation_error::digestfinal_failed:
 						return "failed to create signature: DigestFinal failed";
 					case signature_generation_error::rsa_padding_failed:
-						return "failed to create signature: RSA_padding_add_PKCS1_PSS failed";
+						return "failed to create signature: EVP_PKEY_CTX_set_rsa_padding failed";
 					case signature_generation_error::rsa_private_encrypt_failed:
 						return "failed to create signature: RSA_private_encrypt failed";
 					case signature_generation_error::get_key_failed:
 						return "failed to generate signature: Could not get key";
+					case signature_generation_error::set_rsa_pss_saltlen_failed:
+						return "failed to create signature: EVP_PKEY_CTX_set_rsa_pss_saltlen failed";
 					default: return "unknown signature generation error";
 					}
 				}
@@ -1308,31 +1314,48 @@ namespace jwt {
 			 */
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
-				auto hash = this->generate_hash(data, ec);
-				if (ec) return {};
-
-				std::unique_ptr<RSA, decltype(&RSA_free)> key(EVP_PKEY_get1_RSA(pkey.get()), RSA_free);
-				if (!key) {
-					ec = error::signature_generation_error::get_key_failed;
+#ifdef JWT_OPENSSL_1_0_0
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> md_ctx(EVP_MD_CTX_create(),
+																				  &EVP_MD_CTX_destroy);
+#else
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> md_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+#endif
+				if (!md_ctx) {
+					ec = error::signature_generation_error::create_context_failed;
 					return {};
 				}
-				const int size = RSA_size(key.get());
-
-				std::string padded(size, 0x00);
-				if (RSA_padding_add_PKCS1_PSS(key.get(), (unsigned char*)padded.data(),
-											  reinterpret_cast<const unsigned char*>(hash.data()), md(),
-											  -1) == 0) { // NOLINT(google-readability-casting) requires `const_cast`
+				EVP_PKEY_CTX* ctx = nullptr;
+				if (EVP_DigestSignInit(md_ctx.get(), &ctx, md(), nullptr, pkey.get()) != 1) {
+					ec = error::signature_generation_error::signinit_failed;
+					return {};
+				}
+				if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PSS_PADDING) <= 0) {
 					ec = error::signature_generation_error::rsa_padding_failed;
 					return {};
 				}
-
-				std::string res(size, 0x00);
-				if (RSA_private_encrypt(size, reinterpret_cast<const unsigned char*>(padded.data()),
-										(unsigned char*)res.data(), key.get(), RSA_NO_PADDING) <
-					0) { // NOLINT(google-readability-casting) requires `const_cast`
-					ec = error::signature_generation_error::rsa_private_encrypt_failed;
+// wolfSSL does not require EVP_PKEY_CTX_set_rsa_pss_saltlen. The default behavior
+// sets the salt length to the hash length. Unlike OpenSSL which exposes this functionality.
+#ifndef LIBWOLFSSL_VERSION_HEX
+				if (EVP_PKEY_CTX_set_rsa_pss_saltlen(ctx, -1) <= 0) {
+					ec = error::signature_generation_error::set_rsa_pss_saltlen_failed;
 					return {};
 				}
+#endif
+				if (EVP_DigestUpdate(md_ctx.get(), data.data(), data.size()) != 1) {
+					ec = error::signature_generation_error::digestupdate_failed;
+					return {};
+				}
+
+				size_t size = EVP_PKEY_size(pkey.get());
+				std::string res(size, 0x00);
+				if (EVP_DigestSignFinal(
+						md_ctx.get(),
+						(unsigned char*)res.data(), // NOLINT(google-readability-casting) requires `const_cast`
+						&size) <= 0) {
+					ec = error::signature_generation_error::signfinal_failed;
+					return {};
+				}
+
 				return res;
 			}
 
@@ -1344,28 +1367,41 @@ namespace jwt {
 			 */
 			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
 				ec.clear();
-				auto hash = this->generate_hash(data, ec);
-				if (ec) return;
 
-				std::unique_ptr<RSA, decltype(&RSA_free)> key(EVP_PKEY_get1_RSA(pkey.get()), RSA_free);
-				if (!key) {
-					ec = error::signature_verification_error::get_key_failed;
+#ifdef JWT_OPENSSL_1_0_0
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> md_ctx(EVP_MD_CTX_create(),
+																				  &EVP_MD_CTX_destroy);
+#else
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> md_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+#endif
+				if (!md_ctx) {
+					ec = error::signature_verification_error::create_context_failed;
 					return;
 				}
-				const int size = RSA_size(key.get());
-
-				std::string sig(size, 0x00);
-				if (RSA_public_decrypt(
-						static_cast<int>(signature.size()), reinterpret_cast<const unsigned char*>(signature.data()),
-						(unsigned char*)sig.data(), // NOLINT(google-readability-casting) requires `const_cast`
-						key.get(), RSA_NO_PADDING) == 0) {
-					ec = error::signature_verification_error::invalid_signature;
+				EVP_PKEY_CTX* ctx = nullptr;
+				if (EVP_DigestVerifyInit(md_ctx.get(), &ctx, md(), nullptr, pkey.get()) != 1) {
+					ec = error::signature_verification_error::verifyinit_failed;
+					return;
+				}
+				if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PSS_PADDING) <= 0) {
+					ec = error::signature_generation_error::rsa_padding_failed;
+					return;
+				}
+// wolfSSL does not require EVP_PKEY_CTX_set_rsa_pss_saltlen. The default behavior
+// sets the salt length to the hash length. Unlike OpenSSL which exposes this functionality.
+#ifndef LIBWOLFSSL_VERSION_HEX
+				if (EVP_PKEY_CTX_set_rsa_pss_saltlen(ctx, -1) <= 0) {
+					ec = error::signature_verification_error::set_rsa_pss_saltlen_failed;
+					return;
+				}
+#endif
+				if (EVP_DigestUpdate(md_ctx.get(), data.data(), data.size()) != 1) {
+					ec = error::signature_verification_error::verifyupdate_failed;
 					return;
 				}
 
-				if (RSA_verify_PKCS1_PSS(key.get(), reinterpret_cast<const unsigned char*>(hash.data()), md(),
-										 reinterpret_cast<const unsigned char*>(sig.data()), -1) == 0) {
-					ec = error::signature_verification_error::invalid_signature;
+				if (EVP_DigestVerifyFinal(md_ctx.get(), (unsigned char*)signature.data(), signature.size()) <= 0) {
+					ec = error::signature_verification_error::verifyfinal_failed;
 					return;
 				}
 			}
@@ -1376,41 +1412,6 @@ namespace jwt {
 			std::string name() const { return alg_name; }
 
 		private:
-			/**
-			 * Hash the provided data using the hash function specified in constructor
-			 * \param data Data to hash
-			 * \return Hash of data
-			 */
-			std::string generate_hash(const std::string& data, std::error_code& ec) const {
-#ifdef JWT_OPENSSL_1_0_0
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(),
-																			   &EVP_MD_CTX_destroy);
-#else
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
-#endif
-				if (!ctx) {
-					ec = error::signature_generation_error::create_context_failed;
-					return {};
-				}
-				if (EVP_DigestInit(ctx.get(), md()) == 0) {
-					ec = error::signature_generation_error::digestinit_failed;
-					return {};
-				}
-				if (EVP_DigestUpdate(ctx.get(), data.data(), data.size()) == 0) {
-					ec = error::signature_generation_error::digestupdate_failed;
-					return {};
-				}
-				unsigned int len = 0;
-				std::string res(EVP_MD_CTX_size(ctx.get()), '\0');
-				if (EVP_DigestFinal(ctx.get(), (unsigned char*)res.data(), &len) ==
-					0) { // NOLINT(google-readability-casting) requires `const_cast`
-					ec = error::signature_generation_error::digestfinal_failed;
-					return {};
-				}
-				res.resize(len);
-				return res;
-			}
-
 			/// OpenSSL structure containing keys
 			std::shared_ptr<EVP_PKEY> pkey;
 			/// Hash generator function

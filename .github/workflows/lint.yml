@@ -9,8 +9,26 @@ on:
     types: [created]
 
 jobs:
+  setup:
+    runs-on: ubuntu-20.04
+    outputs:
+      commit-change: ${{ steps.commit.outputs.retval }}
+      post-comment: ${{ steps.post.outputs.retval }}
+    steps:
+    - id: commit
+      if: |
+          github.event_name == 'issue_comment' &&
+          contains(github.event.comment.body, '//apply-linting') &&
+          (github.event.sender.login == 'Thalhammer' ||
+           github.event.sender.login == 'prince-chrismc')
+      run: echo "::set-output name=retval::true"
+    - id: post
+      if: github.event_name == 'pull_request'
+      run: echo "::set-output name=retval::true"
+
   clang-format:
     runs-on: ubuntu-20.04
+    needs: setup
     strategy:
       fail-fast: false
       matrix:
@@ -22,27 +40,28 @@ jobs:
         - "example/*.cpp"
         - "example/**/*.cpp"
     steps:
-      - if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
+      - if: needs.setup.outputs.commit-change == 'true'
         uses: dkershner6/reaction-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - run: sudo apt-get install clang-format
       - run: shopt -s globstar
       - uses: actions/checkout@v2
-      - if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
+      - if: needs.setup.outputs.commit-change == 'true'
         run: hub pr checkout ${{ github.event.issue.number }} # Checking out 'issue_comment' does not pick the correct branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: clang-format -i ${{ matrix.files }}
-      - if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+      - if: needs.setup.outputs.post-comment == 'true'
         uses: ./.github/actions/comment-linting
         with:
           linter_name: clang-format
-      - if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
+      - if: needs.setup.outputs.commit-change == 'true'
         uses: stefanzweifel/git-auto-commit-action@v4
 
   cmake-format:
     runs-on: ubuntu-20.04
+    needs: setup
     strategy:
       fail-fast: false
       matrix:
@@ -54,25 +73,26 @@ jobs:
       - run: pip install cmakelang
       - run: shopt -s globstar
       - uses: actions/checkout@v2
-      - if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
+      - if: needs.setup.outputs.commit-change == 'true'
         run: hub pr checkout ${{ github.event.issue.number }} # Checking out 'issue_comment' does not pick the correct branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: cmake-format -i ${{ matrix.files }}
-      - if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+      - if: needs.setup.outputs.post-comment == 'true'
         uses: ./.github/actions/comment-linting
         with:
           linter_name: cmake-format
-      - if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
+      - if: needs.setup.outputs.commit-change == 'true'
         uses: stefanzweifel/git-auto-commit-action@v4
 
   clang-tidy:
     runs-on: ubuntu-20.04
+    needs: setup
     steps:
       - run: sudo apt-get install clang-tidy
       - uses: lukka/get-cmake@latest
       - uses: actions/checkout@v2
-      - if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
+      - if: needs.setup.outputs.commit-change == 'true'
         run: hub pr checkout ${{ github.event.issue.number }} # Checking out 'issue_comment' does not pick the correct branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -86,15 +106,16 @@ jobs:
       - name: run
         working-directory: build
         run: make
-      - if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+      - if: needs.setup.outputs.post-comment == 'true'
         uses: ./.github/actions/comment-linting
         with:
           linter_name: clang-tidy
-      - if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
+      - if: needs.setup.outputs.commit-change == 'true'
         uses: stefanzweifel/git-auto-commit-action@v4
 
   render-defaults:
     runs-on: ubuntu-20.04
+    needs: setup
     strategy:
       fail-fast: false
       matrix:
@@ -106,7 +127,7 @@ jobs:
     name: render-defaults (${{ matrix.traits.name }})
     steps:
       - uses: actions/checkout@v2
-      - if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
+      - if: needs.setup.outputs.commit-change == 'true'
         run: hub pr checkout ${{ github.event.issue.number }} # Checking out 'issue_comment' does not pick the correct branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -117,15 +138,16 @@ jobs:
           library_url: ${{ matrix.traits.url }}
           disable_default_traits: ${{ matrix.traits.disable_pico }}
       - run: git add include/jwt-cpp/traits/*
-      - if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+      - if: needs.setup.outputs.post-comment == 'true'
         uses: ./.github/actions/comment-linting
         with:
           linter_name: render-defaults
-      - if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
+      - if: needs.setup.outputs.commit-change == 'true'
         uses: stefanzweifel/git-auto-commit-action@v4
 
   render-tests:
     runs-on: ubuntu-20.04
+    needs: setup
     strategy:
       fail-fast: false
       matrix:
@@ -138,7 +160,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: shopt -s globstar
-      - if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
+      - if: needs.setup.outputs.commit-change == 'true'
         run: hub pr checkout ${{ github.event.issue.number }} # Checking out 'issue_comment' does not pick the correct branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -148,9 +170,9 @@ jobs:
           test_suite_name: ${{ matrix.traits.suite }}
       - run: clang-format -i tests/**/*.cpp
       - run: git add tests/traits/*
-      - if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+      - if: needs.setup.outputs.post-comment == 'true'
         uses: ./.github/actions/comment-linting
         with:
           linter_name: render-tests
-      - if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '//apply-linting')
+      - if: needs.setup.outputs.commit-change == 'true'
         uses: stefanzweifel/git-auto-commit-action@v4

@@ -43,6 +43,8 @@ static uint64_t fail_EVP_DigestSign = 0;
 static uint64_t fail_EVP_DigestVerifyInit = 0;
 static uint64_t fail_EVP_DigestVerify = 0;
 static uint64_t fail_EVP_PKEY_get1_EC_KEY = 0;
+static uint64_t fail_EVP_DigestSignFinal = 0;
+static uint64_t fail_EVP_DigestVerifyFinal = 0;
 
 BIO* BIO_new(const BIO_METHOD* type) {
 	static BIO* (*origMethod)(const BIO_METHOD*) = nullptr;
@@ -193,6 +195,17 @@ EVP_MD_CTX* EVP_MD_CTX_new(void) {
 		return nullptr;
 	else
 		return origMethod();
+}
+
+int EVP_DigestSignFinal(EVP_MD_CTX* ctx, unsigned char* sigret, size_t* siglen) {
+	static int (*origMethod)(EVP_MD_CTX * ctx, unsigned char* sigret, size_t* siglen) = nullptr;
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_DigestSignFinal");
+	bool fail = fail_EVP_DigestSignFinal & 1;
+	fail_EVP_DigestSignFinal = fail_EVP_DigestSignFinal >> 1;
+	if (fail)
+		return 0;
+	else
+		return origMethod(ctx, sigret, siglen);
 }
 
 int EVP_DigestInit(EVP_MD_CTX* ctx, const EVP_MD* type) {
@@ -352,6 +365,17 @@ EC_KEY* EVP_PKEY_get1_EC_KEY(EVP_PKEY* pkey) {
 		return nullptr;
 	else
 		return origMethod(pkey);
+}
+
+int EVP_DigestVerifyFinal(EVP_MD_CTX* ctx, const unsigned char* sigret, size_t siglen) {
+	static int (*origMethod)(EVP_MD_CTX * ctx, const unsigned char* sigret, size_t siglen) = nullptr;
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_DigestVerifyFinal");
+	bool fail = fail_EVP_DigestVerifyFinal & 1;
+	fail_EVP_DigestVerifyFinal = fail_EVP_DigestVerifyFinal >> 1;
+	if (fail)
+		return 0;
+	else
+		return origMethod(ctx, sigret, siglen);
 }
 
 /**
@@ -728,11 +752,10 @@ TEST(OpenSSLErrorTest, PS256SignErrorCode) {
 	jwt::algorithm::ps256 alg{rsa_pub_key, rsa_priv_key};
 	std::vector<multitest_entry> mapping{
 		{&fail_EVP_MD_CTX_new, 1, jwt::error::signature_generation_error::create_context_failed},
-		{&fail_EVP_DigestInit, 1, jwt::error::signature_generation_error::digestinit_failed},
+		{&fail_EVP_DigestSignInit, 1, jwt::error::signature_generation_error::signinit_failed},
 		{&fail_EVP_DigestUpdate, 1, jwt::error::signature_generation_error::digestupdate_failed},
-		{&fail_EVP_DigestFinal, 1, jwt::error::signature_generation_error::digestfinal_failed},
-		{&fail_EVP_PKEY_get1_RSA, 1, jwt::error::signature_generation_error::get_key_failed}
-		//TODO: RSA_padding_add_PKCS1_PSS, RSA_private_encrypt
+		{&fail_EVP_DigestSignFinal, 1, jwt::error::signature_generation_error::signfinal_failed},
+		//TODO: EVP_PKEY_CTX_set_rsa_padding, EVP_PKEY_CTX_set_rsa_pss_saltlen
 	};
 
 	run_multitest(mapping, [&alg](std::error_code& ec) {
@@ -751,12 +774,10 @@ TEST(OpenSSLErrorTest, PS256VerifyErrorCode) {
 		"B59uW3x1QUCKYKgZeqZOoqIP1YgLwvEpPtXYutQCFr4eBKgV7vdtE0wgHR43ka16fi5L4SyaZv53NCg==";
 	signature = jwt::base::decode<jwt::alphabet::base64>(signature);
 	std::vector<multitest_entry> mapping{
-		{&fail_EVP_MD_CTX_new, 1, jwt::error::signature_generation_error::create_context_failed},
-		{&fail_EVP_DigestInit, 1, jwt::error::signature_generation_error::digestinit_failed},
-		{&fail_EVP_DigestUpdate, 1, jwt::error::signature_generation_error::digestupdate_failed},
-		{&fail_EVP_DigestFinal, 1, jwt::error::signature_generation_error::digestfinal_failed},
-		{&fail_EVP_PKEY_get1_RSA, 1, jwt::error::signature_verification_error::get_key_failed}
-		//TODO: RSA_public_decrypt
+		{&fail_EVP_MD_CTX_new, 1, jwt::error::signature_verification_error::create_context_failed},
+		{&fail_EVP_DigestVerifyInit, 1, jwt::error::signature_verification_error::verifyinit_failed},
+		{&fail_EVP_DigestUpdate, 1, jwt::error::signature_verification_error::verifyupdate_failed},
+		{&fail_EVP_DigestVerifyFinal, 1, jwt::error::signature_verification_error::verifyfinal_failed},
 	};
 
 	run_multitest(mapping, [&alg, &signature](std::error_code& ec) { alg.verify("testdata", signature, ec); });
