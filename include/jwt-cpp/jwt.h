@@ -186,7 +186,8 @@ namespace jwt {
 			verifyupdate_failed,
 			verifyfinal_failed,
 			get_key_failed,
-			set_rsa_pss_saltlen_failed
+			set_rsa_pss_saltlen_failed,
+			signature_encoding_failed
 		};
 		/**
 		 * \brief Error category for verification errors
@@ -211,6 +212,8 @@ namespace jwt {
 						return "failed to verify signature: Could not get key";
 					case signature_verification_error::set_rsa_pss_saltlen_failed:
 						return "failed to verify signature: EVP_PKEY_CTX_set_rsa_pss_saltlen failed";
+					case signature_verification_error::signature_encoding_failed:
+						return "failed to verify signature: i2d_ECDSA_SIG failed";
 					default: return "unknown signature verification error";
 					}
 				}
@@ -241,6 +244,7 @@ namespace jwt {
 			rsa_private_encrypt_failed,
 			get_key_failed,
 			set_rsa_pss_saltlen_failed,
+			signature_decoding_failed
 		};
 		/**
 		 * \brief Error category for signature generation errors
@@ -276,6 +280,8 @@ namespace jwt {
 						return "failed to generate signature: Could not get key";
 					case signature_generation_error::set_rsa_pss_saltlen_failed:
 						return "failed to create signature: EVP_PKEY_CTX_set_rsa_pss_saltlen failed";
+					case signature_generation_error::signature_decoding_failed:
+						return "failed to create signature: d2i_ECDSA_SIG failed";
 					default: return "unknown signature generation error";
 					}
 				}
@@ -995,20 +1001,22 @@ namespace jwt {
 				  const std::string& private_key_password, const EVP_MD* (*md)(), std::string name, size_t siglen)
 				: md(md), alg_name(std::move(name)), signature_length(siglen) {
 				if (!private_key.empty()) {
-					auto epkey = helper::load_private_ec_key_from_string(private_key, private_key_password);
-					pkey.reset(EVP_PKEY_get1_EC_KEY(epkey.get()), EC_KEY_free);
+					pkey = helper::load_private_ec_key_from_string(private_key, private_key_password);
 				} else if (!public_key.empty()) {
-					auto epkey = helper::load_public_ec_key_from_string(public_key, public_key_password);
-					pkey.reset(EVP_PKEY_get1_EC_KEY(epkey.get()), EC_KEY_free);
+					pkey = helper::load_public_ec_key_from_string(public_key, public_key_password);
 				} else {
 					throw ecdsa_exception(error::ecdsa_error::no_key_provided);
 				}
 				if (!pkey) throw ecdsa_exception(error::ecdsa_error::invalid_key);
-				size_t keysize = EC_GROUP_get_degree(EC_KEY_get0_group(pkey.get()));
+
+				size_t keysize = EVP_PKEY_bits(pkey.get());
 				if (keysize != signature_length * 4 && (signature_length != 132 || keysize != 521))
 					throw ecdsa_exception(error::ecdsa_error::invalid_key_size);
 
-				if (EC_KEY_check_key(pkey.get()) == 0) throw ecdsa_exception(error::ecdsa_error::invalid_key);
+				// TODO:mk somehow check pkey instead of eckey
+				std::shared_ptr<EC_KEY> eckey(EVP_PKEY_get1_EC_KEY(pkey.get()), EC_KEY_free);
+				if (!eckey) { throw ecdsa_exception(error::ecdsa_error::invalid_key); }
+				if (EC_KEY_check_key(eckey.get()) == 0) throw ecdsa_exception(error::ecdsa_error::invalid_key);
 			}
 			/**
 			 * Sign jwt data
@@ -1018,17 +1026,95 @@ namespace jwt {
 			 */
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
-				const std::string hash = generate_hash(data, ec);
-				if (ec) return {};
-
-				std::unique_ptr<ECDSA_SIG, decltype(&ECDSA_SIG_free)> sig(
-					ECDSA_do_sign(reinterpret_cast<const unsigned char*>(hash.data()), static_cast<int>(hash.size()),
-								  pkey.get()),
-					ECDSA_SIG_free);
-				if (!sig) {
-					ec = error::signature_generation_error::ecdsa_do_sign_failed;
+#ifdef JWT_OPENSSL_1_0_0
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_destroy);
+#else
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_free);
+#endif
+				if (!ctx) {
+					ec = error::signature_generation_error::create_context_failed;
 					return {};
 				}
+				if (!EVP_DigestSignInit(ctx.get(), nullptr, md(), nullptr, pkey.get())) {
+					ec = error::signature_generation_error::signinit_failed;
+					return {};
+				}
+				if (!EVP_DigestUpdate(ctx.get(), data.data(), data.size())) {
+					ec = error::signature_generation_error::digestupdate_failed;
+					return {};
+				}
+
+				size_t len = 0;
+				if (!EVP_DigestSignFinal(ctx.get(), nullptr, &len)) {
+					ec = error::signature_generation_error::signfinal_failed;
+					return {};
+				}
+				std::string res(len, '\0');
+				if (!EVP_DigestSignFinal(ctx.get(), (unsigned char*)res.data(), &len)) {
+					ec = error::signature_generation_error::signfinal_failed;
+					return {};
+				}
+
+				res.resize(len);
+				return der_to_p1363_signature(res, ec);
+			}
+
+			/**
+			 * Check if signature is valid
+			 * \param data The data to check signature against
+			 * \param signature Signature provided by the jwt
+			 * \param ec Filled with details on error
+			 */
+			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
+				ec.clear();
+				std::string der_signature = p1363_to_der_signature(signature, ec);
+				if (ec) { return; }
+
+#ifdef JWT_OPENSSL_1_0_0
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_destroy);
+#else
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_free);
+#endif
+				if (!ctx) {
+					ec = error::signature_verification_error::create_context_failed;
+					return;
+				}
+				if (!EVP_DigestVerifyInit(ctx.get(), nullptr, md(), nullptr, pkey.get())) {
+					ec = error::signature_verification_error::verifyinit_failed;
+					return;
+				}
+				if (!EVP_DigestUpdate(ctx.get(), data.data(), data.size())) {
+					ec = error::signature_verification_error::verifyupdate_failed;
+					return;
+				}
+
+				auto res = EVP_DigestVerifyFinal(ctx.get(), reinterpret_cast<const unsigned char*>(der_signature.data()),
+												 static_cast<unsigned int>(der_signature.length()));
+				if (res == 0) {
+					ec = error::signature_verification_error::invalid_signature;
+					return;
+				}
+				if (res == -1) {
+					ec = error::signature_verification_error::verifyfinal_failed;
+					return;
+				}
+			}
+			/**
+			 * Returns the algorithm name provided to the constructor
+			 * \return algorithm's name
+			 */
+			std::string name() const { return alg_name; }
+
+		private:
+			std::string der_to_p1363_signature(const std::string& der_signature, std::error_code& ec) const {
+				const unsigned char* possl_signature = reinterpret_cast<const unsigned char*>(der_signature.data());
+				std::unique_ptr<ECDSA_SIG, decltype(&ECDSA_SIG_free)> sig(
+					d2i_ECDSA_SIG(nullptr, &possl_signature, der_signature.length()), ECDSA_SIG_free);
+				if (!sig) {
+					ec = error::signature_generation_error::signature_decoding_failed;
+					return {};
+				}
+
 #ifdef JWT_OPENSSL_1_0_0
 
 				auto rr = helper::bn2raw(sig->r);
@@ -1047,91 +1133,45 @@ namespace jwt {
 				return rr + rs;
 			}
 
-			/**
-			 * Check if signature is valid
-			 * \param data The data to check signature against
-			 * \param signature Signature provided by the jwt
-			 * \param ec Filled with details on error
-			 */
-			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
+			std::string p1363_to_der_signature(const std::string& signature, std::error_code& ec) const {
 				ec.clear();
-				const std::string hash = generate_hash(data, ec);
-				if (ec) return;
 				auto r = helper::raw2bn(signature.substr(0, signature.size() / 2));
 				auto s = helper::raw2bn(signature.substr(signature.size() / 2));
 
+				ECDSA_SIG* psig;
 #ifdef JWT_OPENSSL_1_0_0
 				ECDSA_SIG sig;
 				sig.r = r.get();
 				sig.s = s.get();
-
-				if (ECDSA_do_verify((const unsigned char*)hash.data(), static_cast<int>(hash.size()), &sig,
-									pkey.get()) != 1) {
-					ec = error::signature_verification_error::invalid_signature;
-					return;
-				}
+				psig = &sig;
 #else
 				std::unique_ptr<ECDSA_SIG, decltype(&ECDSA_SIG_free)> sig(ECDSA_SIG_new(), ECDSA_SIG_free);
 				if (!sig) {
 					ec = error::signature_verification_error::create_context_failed;
-					return;
+					return {};
 				}
-
 				ECDSA_SIG_set0(sig.get(), r.release(), s.release());
-
-				if (ECDSA_do_verify(reinterpret_cast<const unsigned char*>(hash.data()), static_cast<int>(hash.size()),
-									sig.get(), pkey.get()) != 1) {
-					ec = error::signature_verification_error::invalid_signature;
-					return;
-				}
+				psig = sig.get();
 #endif
-			}
-			/**
-			 * Returns the algorithm name provided to the constructor
-			 * \return algorithm's name
-			 */
-			std::string name() const { return alg_name; }
 
-		private:
-			/**
-			 * Hash the provided data using the hash function specified in constructor
-			 * \param data Data to hash
-			 * \return Hash of data
-			 */
-			std::string generate_hash(const std::string& data, std::error_code& ec) const {
-#ifdef JWT_OPENSSL_1_0_0
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(),
-																			   &EVP_MD_CTX_destroy);
-#else
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
-#endif
-				if (!ctx) {
-					ec = error::signature_generation_error::create_context_failed;
+				int length = i2d_ECDSA_SIG(psig, nullptr);
+				if (length < 0) {
+					ec = error::signature_verification_error::signature_encoding_failed;
 					return {};
 				}
-				if (EVP_DigestInit(ctx.get(), md()) == 0) {
-					ec = error::signature_generation_error::digestinit_failed;
+				std::string der_signature(length, '\0');
+				unsigned char* psbuffer = (unsigned char*)der_signature.data();
+				length = i2d_ECDSA_SIG(psig, &psbuffer);
+				if (length < 0) {
+					ec = error::signature_verification_error::signature_encoding_failed;
 					return {};
 				}
-				if (EVP_DigestUpdate(ctx.get(), data.data(), data.size()) == 0) {
-					ec = error::signature_generation_error::digestupdate_failed;
-					return {};
-				}
-				unsigned int len = 0;
-				std::string res(EVP_MD_CTX_size(ctx.get()), '\0');
-				if (EVP_DigestFinal(
-						ctx.get(),
-						(unsigned char*)res.data(), // NOLINT(google-readability-casting) requires `const_cast`
-						&len) == 0) {
-					ec = error::signature_generation_error::digestfinal_failed;
-					return {};
-				}
-				res.resize(len);
-				return res;
+				der_signature.resize(length);
+				return der_signature;
 			}
 
 			/// OpenSSL struct containing keys
-			std::shared_ptr<EC_KEY> pkey;
+			std::shared_ptr<EVP_PKEY> pkey;
 			/// Hash generator function
 			const EVP_MD* (*md)();
 			/// algorithm's name
