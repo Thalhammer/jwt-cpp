@@ -146,7 +146,8 @@ namespace jwt {
 			create_mem_bio_failed,
 			no_key_provided,
 			invalid_key_size,
-			invalid_key
+			invalid_key,
+			create_context_failed
 		};
 		/**
 		 * \brief Error category for ECDSA errors
@@ -165,6 +166,7 @@ namespace jwt {
 						return "at least one of public or private key need to be present";
 					case ecdsa_error::invalid_key_size: return "invalid key size";
 					case ecdsa_error::invalid_key: return "invalid key";
+					case ecdsa_error::create_context_failed: return "failed to create context";
 					default: return "unknown ECDSA error";
 					}
 				}
@@ -1002,8 +1004,10 @@ namespace jwt {
 				: md(md), alg_name(std::move(name)), signature_length(siglen) {
 				if (!private_key.empty()) {
 					pkey = helper::load_private_ec_key_from_string(private_key, private_key_password);
+					check_private_key(pkey.get());
 				} else if (!public_key.empty()) {
 					pkey = helper::load_public_ec_key_from_string(public_key, public_key_password);
+					check_public_key(pkey.get());
 				} else {
 					throw ecdsa_exception(error::ecdsa_error::no_key_provided);
 				}
@@ -1012,12 +1016,8 @@ namespace jwt {
 				size_t keysize = EVP_PKEY_bits(pkey.get());
 				if (keysize != signature_length * 4 && (signature_length != 132 || keysize != 521))
 					throw ecdsa_exception(error::ecdsa_error::invalid_key_size);
-
-				// TODO:mk somehow check pkey instead of eckey
-				std::shared_ptr<EC_KEY> eckey(EVP_PKEY_get1_EC_KEY(pkey.get()), EC_KEY_free);
-				if (!eckey) { throw ecdsa_exception(error::ecdsa_error::invalid_key); }
-				if (EC_KEY_check_key(eckey.get()) == 0) throw ecdsa_exception(error::ecdsa_error::invalid_key);
 			}
+
 			/**
 			 * Sign jwt data
 			 * \param data The data to sign
@@ -1088,8 +1088,9 @@ namespace jwt {
 					return;
 				}
 
-				auto res = EVP_DigestVerifyFinal(ctx.get(), reinterpret_cast<const unsigned char*>(der_signature.data()),
-												 static_cast<unsigned int>(der_signature.length()));
+				auto res =
+					EVP_DigestVerifyFinal(ctx.get(), reinterpret_cast<const unsigned char*>(der_signature.data()),
+										  static_cast<unsigned int>(der_signature.length()));
 				if (res == 0) {
 					ec = error::signature_verification_error::invalid_signature;
 					return;
@@ -1106,6 +1107,32 @@ namespace jwt {
 			std::string name() const { return alg_name; }
 
 		private:
+			static void check_public_key(EVP_PKEY* pkey) {
+#ifdef JWT_OPENSSL_3_0
+				std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)> ctx(
+					EVP_PKEY_CTX_new_from_pkey(nullptr, pkey, nullptr), EVP_PKEY_CTX_free);
+				if (!ctx) { throw ecdsa_exception(error::ecdsa_error::create_context_failed); }
+				if (EVP_PKEY_public_check(ctx.get()) != 1) { throw ecdsa_exception(error::ecdsa_error::invalid_key); }
+#else
+				std::unique_ptr<EC_KEY, decltype(&EC_KEY_free)> eckey(EVP_PKEY_get1_EC_KEY(pkey), EC_KEY_free);
+				if (!eckey) { throw ecdsa_exception(error::ecdsa_error::invalid_key); }
+				if (EC_KEY_check_key(eckey.get()) == 0) throw ecdsa_exception(error::ecdsa_error::invalid_key);
+#endif
+			}
+
+			static void check_private_key(EVP_PKEY* pkey) {
+#ifdef JWT_OPENSSL_3_0
+				std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)> ctx(
+					EVP_PKEY_CTX_new_from_pkey(nullptr, pkey, nullptr), EVP_PKEY_CTX_free);
+				if (!ctx) { throw ecdsa_exception(error::ecdsa_error::create_context_failed); }
+				if (EVP_PKEY_private_check(ctx.get()) != 1) { throw ecdsa_exception(error::ecdsa_error::invalid_key); }
+#else
+				std::unique_ptr<EC_KEY, decltype(&EC_KEY_free)> eckey(EVP_PKEY_get1_EC_KEY(pkey), EC_KEY_free);
+				if (!eckey) { throw ecdsa_exception(error::ecdsa_error::invalid_key); }
+				if (EC_KEY_check_key(eckey.get()) == 0) throw ecdsa_exception(error::ecdsa_error::invalid_key);
+#endif
+			}
+
 			std::string der_to_p1363_signature(const std::string& der_signature, std::error_code& ec) const {
 				const unsigned char* possl_signature = reinterpret_cast<const unsigned char*>(der_signature.data());
 				std::unique_ptr<ECDSA_SIG, decltype(&ECDSA_SIG_free)> sig(
