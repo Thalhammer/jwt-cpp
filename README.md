@@ -67,6 +67,7 @@ jwt::basic_claim<my_favorite_json_library_traits> claim(json::object({{"json", t
 This allows for complete freedom when picking which libraries you want to use. For more information, [see below](#providing-your-own-json-traits-your-traits).
 
 For your convience there are serval traits implementation which provide some popular JSON libraries. They are:
+
 [![picojson][picojson]](https://github.com/kazuho/picojson)
 [![nlohmann][nlohmann]](https://github.com/nlohmann/json)
 [![jsoncons][jsoncons]](https://github.com/danielaparker/jsoncons)
