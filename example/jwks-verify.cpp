@@ -2,7 +2,8 @@
 #include <jwt-cpp/jwt.h>
 
 int main() {
-	std::string raw_jwks = R"({"keys": [{
+	std::string raw_jwks =
+		R"({"keys": [{
 		"kid":"internal-gateway-jwt.api.sc.net",
 		"alg": "RS256",
     "kty": "RSA",

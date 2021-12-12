@@ -24,6 +24,8 @@ set(JWT_SSL_LIBRARY_OPTIONS OpenSSL LibreSSL wolfSSL)
 set(JWT_SSL_LIBRARY OpenSSL CACHE STRING "Determines which SSL library to build with")
 set_property(CACHE JWT_SSL_LIBRARY PROPERTY STRINGS ${JWT_SSL_LIBRARY_OPTIONS})
 
+set(JWT_JSON_TRAITS_OPTIONS boost-json danielaparker-jsoncons kazuho-picojson nlohmann-json)
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 if(NOT JWT_SSL_LIBRARY IN_LIST JWT_SSL_LIBRARY_OPTIONS)
@@ -62,6 +64,11 @@ endif()
 
 set(JWT_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(JWT_HEADER_FILES ${JWT_INCLUDE_PATH}/jwt-cpp/jwt.h)
+foreach(traits ${JWT_JSON_TRAITS_OPTIONS})
+  list(APPEND JWT_HEADER_FILES ${JWT_INCLUDE_PATH}/jwt-cpp/traits/${traits}/defaults.h
+       ${JWT_INCLUDE_PATH}/jwt-cpp/traits/${traits}/traits.h)
+endforeach()
+
 if(NOT JWT_DISABLE_BASE64)
   list(APPEND JWT_HEADER_FILES ${JWT_INCLUDE_PATH}/jwt-cpp/base.h)
 endif()
@@ -113,7 +120,7 @@ write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-vers
 install(TARGETS jwt-cpp EXPORT jwt-cpp-targets PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(EXPORT jwt-cpp-targets NAMESPACE jwt-cpp:: FILE jwt-cpp-targets.cmake
         DESTINATION ${JWT_CMAKE_FILES_INSTALL_DIR})
-install(FILES ${JWT_HEADER_FILES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/jwt-cpp)
+install(DIRECTORY ${JWT_INCLUDE_PATH}/jwt-cpp DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 if(NOT JWT_EXTERNAL_PICOJSON AND NOT JWT_DISABLE_PICOJSON)
   install(FILES ${JWT_INCLUDE_PATH}/picojson/picojson.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/picojson)
 endif()

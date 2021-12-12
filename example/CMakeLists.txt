@@ -5,6 +5,8 @@ if(NOT TARGET jwt-cpp)
   find_package(jwt-cpp CONFIG REQUIRED)
 endif()
 
+add_subdirectory(traits)
+
 if(JWT_DISABLE_PICOJSON)
   message(FATAL_ERROR "examples require picojson to be available!")
 endif()

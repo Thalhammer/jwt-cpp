@@ -25,8 +25,9 @@ K9EDZi0mZ7VUeeNKq476CU5X940yusahgneePQrDMF2nWFEtBCOiXQ==
 
 	std::cout << "token:\n" << token << std::endl;
 
-		auto verify =
-		jwt::verify().allow_algorithm(jwt::algorithm::es256k(es256k_pub_key, es256k_priv_key, "", "")).with_issuer("auth0");
+	auto verify = jwt::verify()
+					  .allow_algorithm(jwt::algorithm::es256k(es256k_pub_key, es256k_priv_key, "", ""))
+					  .with_issuer("auth0");
 
 	auto decoded = jwt::decode(token);
 

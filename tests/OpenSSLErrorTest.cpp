@@ -34,7 +34,14 @@ static uint64_t fail_EVP_DigestUpdate = 0;
 static uint64_t fail_EVP_DigestFinal = 0;
 static uint64_t fail_EVP_SignFinal = 0;
 static uint64_t fail_EVP_VerifyFinal = 0;
+#ifdef JWT_OPENSSL_3_0
+static uint64_t fail_EVP_PKEY_public_check = 0;
+static uint64_t fail_EVP_PKEY_private_check = 0;
+static uint64_t fail_EVP_PKEY_CTX_new_from_pkey = 0;
+#else
 static uint64_t fail_EC_KEY_check_key = 0;
+static uint64_t fail_EVP_PKEY_get1_EC_KEY = 0;
+#endif
 static uint64_t fail_ECDSA_SIG_new = 0;
 static uint64_t fail_ECDSA_do_sign = 0;
 static uint64_t fail_EVP_PKEY_get1_RSA = 0;
@@ -42,9 +49,10 @@ static uint64_t fail_EVP_DigestSignInit = 0;
 static uint64_t fail_EVP_DigestSign = 0;
 static uint64_t fail_EVP_DigestVerifyInit = 0;
 static uint64_t fail_EVP_DigestVerify = 0;
-static uint64_t fail_EVP_PKEY_get1_EC_KEY = 0;
 static uint64_t fail_EVP_DigestSignFinal = 0;
 static uint64_t fail_EVP_DigestVerifyFinal = 0;
+static uint64_t fail_d2i_ECDSA_SIG = 0;
+static uint64_t fail_i2d_ECDSA_SIG = 0;
 
 BIO* BIO_new(const BIO_METHOD* type) {
 	static BIO* (*origMethod)(const BIO_METHOD*) = nullptr;
@@ -264,6 +272,41 @@ int EVP_VerifyFinal(EVP_MD_CTX* ctx, const unsigned char* sigbuf, unsigned int s
 		return origMethod(ctx, sigbuf, siglen, pkey);
 }
 
+#ifdef JWT_OPENSSL_3_0
+int EVP_PKEY_public_check(EVP_PKEY_CTX* ctx) {
+	static int (*origMethod)(EVP_PKEY_CTX * ctx) = nullptr;
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_PKEY_public_check");
+	bool fail = fail_EVP_PKEY_public_check & 1;
+	fail_EVP_PKEY_public_check = fail_EVP_PKEY_public_check >> 1;
+	if (fail)
+		return 0;
+	else
+		return origMethod(ctx);
+}
+
+int EVP_PKEY_private_check(EVP_PKEY_CTX* ctx) {
+	static int (*origMethod)(EVP_PKEY_CTX * ctx) = nullptr;
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_PKEY_private_check");
+	bool fail = fail_EVP_PKEY_private_check & 1;
+	fail_EVP_PKEY_private_check = fail_EVP_PKEY_private_check >> 1;
+	if (fail)
+		return 0;
+	else
+		return origMethod(ctx);
+}
+
+EVP_PKEY_CTX* EVP_PKEY_CTX_new_from_pkey(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const char* propquery) {
+	static EVP_PKEY_CTX* (*origMethod)(OSSL_LIB_CTX * libctx, EVP_PKEY * pkey, const char* propquery) = nullptr;
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_PKEY_CTX_new_from_pkey");
+	bool fail = fail_EVP_PKEY_CTX_new_from_pkey & 1;
+	fail_EVP_PKEY_CTX_new_from_pkey = fail_EVP_PKEY_CTX_new_from_pkey >> 1;
+	if (fail)
+		return nullptr;
+	else
+		return origMethod(libctx, pkey, propquery);
+}
+
+#else
 int EC_KEY_check_key(const EC_KEY* key) {
 	static int (*origMethod)(const EC_KEY* key) = nullptr;
 	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EC_KEY_check_key");
@@ -274,6 +317,18 @@ int EC_KEY_check_key(const EC_KEY* key) {
 	else
 		return origMethod(key);
 }
+
+EC_KEY* EVP_PKEY_get1_EC_KEY(EVP_PKEY* pkey) {
+	static EC_KEY* (*origMethod)(EVP_PKEY * pkey) = nullptr;
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_PKEY_get1_EC_KEY");
+	bool fail = fail_EVP_PKEY_get1_EC_KEY & 1;
+	fail_EVP_PKEY_get1_EC_KEY = fail_EVP_PKEY_get1_EC_KEY >> 1;
+	if (fail)
+		return nullptr;
+	else
+		return origMethod(pkey);
+}
+#endif
 
 ECDSA_SIG* ECDSA_SIG_new(void) {
 	static ECDSA_SIG* (*origMethod)() = nullptr;
@@ -356,17 +411,6 @@ int EVP_DigestVerify(EVP_MD_CTX* ctx, unsigned char* sigret, size_t* siglen, con
 		return origMethod(ctx, sigret, siglen, tbs, tbslen);
 }
 
-EC_KEY* EVP_PKEY_get1_EC_KEY(EVP_PKEY* pkey) {
-	static EC_KEY* (*origMethod)(EVP_PKEY * pkey) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_PKEY_get1_EC_KEY");
-	bool fail = fail_EVP_PKEY_get1_EC_KEY & 1;
-	fail_EVP_PKEY_get1_EC_KEY = fail_EVP_PKEY_get1_EC_KEY >> 1;
-	if (fail)
-		return nullptr;
-	else
-		return origMethod(pkey);
-}
-
 int EVP_DigestVerifyFinal(EVP_MD_CTX* ctx, const unsigned char* sigret, size_t siglen) {
 	static int (*origMethod)(EVP_MD_CTX * ctx, const unsigned char* sigret, size_t siglen) = nullptr;
 	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_DigestVerifyFinal");
@@ -376,6 +420,28 @@ int EVP_DigestVerifyFinal(EVP_MD_CTX* ctx, const unsigned char* sigret, size_t s
 		return 0;
 	else
 		return origMethod(ctx, sigret, siglen);
+}
+
+int i2d_ECDSA_SIG(const ECDSA_SIG* sig, unsigned char** ppout) {
+	static int (*origMethod)(const ECDSA_SIG* sig, unsigned char** ppout) = nullptr;
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "i2d_ECDSA_SIG");
+	bool fail = fail_i2d_ECDSA_SIG & 1;
+	fail_i2d_ECDSA_SIG = fail_i2d_ECDSA_SIG >> 1;
+	if (fail)
+		return -1;
+	else
+		return origMethod(sig, ppout);
+}
+
+ECDSA_SIG* d2i_ECDSA_SIG(ECDSA_SIG** psig, const unsigned char** ppin, long len) {
+	static ECDSA_SIG* (*origMethod)(ECDSA_SIG * *psig, const unsigned char** ppin, long len) = nullptr;
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "d2i_ECDSA_SIG");
+	bool fail = fail_d2i_ECDSA_SIG & 1;
+	fail_d2i_ECDSA_SIG = fail_d2i_ECDSA_SIG >> 1;
+	if (fail)
+		return nullptr;
+	else
+		return origMethod(psig, ppin, len);
 }
 
 /**
@@ -650,8 +716,13 @@ TEST(OpenSSLErrorTest, LoadECDSAPrivateKeyFromString) {
 		{&fail_BIO_new, 1, jwt::error::ecdsa_error::create_mem_bio_failed},
 		{&fail_BIO_write, 1, jwt::error::ecdsa_error::load_key_bio_write},
 		{&fail_PEM_read_bio_PrivateKey, 1, jwt::error::ecdsa_error::load_key_bio_read},
+#ifdef JWT_OPENSSL_3_0
+		{&fail_EVP_PKEY_private_check, 1, jwt::error::ecdsa_error::invalid_key},
+		{&fail_EVP_PKEY_CTX_new_from_pkey, 1, jwt::error::ecdsa_error::create_context_failed},
+#else
 		{&fail_EC_KEY_check_key, 1, jwt::error::ecdsa_error::invalid_key},
 		{&fail_EVP_PKEY_get1_EC_KEY, 1, jwt::error::ecdsa_error::invalid_key},
+#endif
 	};
 
 	run_multitest(mapping, [](std::error_code& ec) {
@@ -667,8 +738,13 @@ TEST(OpenSSLErrorTest, LoadECDSAPublicKeyFromString) {
 		{&fail_BIO_new, 1, jwt::error::ecdsa_error::create_mem_bio_failed},
 		{&fail_BIO_write, 1, jwt::error::ecdsa_error::load_key_bio_write},
 		{&fail_PEM_read_bio_PUBKEY, 1, jwt::error::ecdsa_error::load_key_bio_read},
+#ifdef JWT_OPENSSL_3_0
+		{&fail_EVP_PKEY_public_check, 1, jwt::error::ecdsa_error::invalid_key},
+		{&fail_EVP_PKEY_CTX_new_from_pkey, 1, jwt::error::ecdsa_error::create_context_failed},
+#else
 		{&fail_EC_KEY_check_key, 1, jwt::error::ecdsa_error::invalid_key},
 		{&fail_EVP_PKEY_get1_EC_KEY, 1, jwt::error::ecdsa_error::invalid_key},
+#endif
 	};
 
 	run_multitest(mapping, [](std::error_code& ec) {
@@ -712,10 +788,12 @@ TEST(OpenSSLErrorTest, ES256SignErrorCode) {
 	jwt::algorithm::es256 alg{ecdsa256_pub_key, ecdsa256_priv_key};
 	std::vector<multitest_entry> mapping{
 		{&fail_EVP_MD_CTX_new, 1, jwt::error::signature_generation_error::create_context_failed},
-		{&fail_EVP_DigestInit, 1, jwt::error::signature_generation_error::digestinit_failed},
+		{&fail_EVP_DigestSignInit, 1, jwt::error::signature_generation_error::signinit_failed},
 		{&fail_EVP_DigestUpdate, 1, jwt::error::signature_generation_error::digestupdate_failed},
-		{&fail_EVP_DigestFinal, 1, jwt::error::signature_generation_error::digestfinal_failed},
-		{&fail_ECDSA_do_sign, 1, jwt::error::signature_generation_error::ecdsa_do_sign_failed}};
+		{&fail_EVP_DigestSignFinal, 1, jwt::error::signature_generation_error::signfinal_failed},
+		{&fail_EVP_DigestSignFinal, 2, jwt::error::signature_generation_error::signfinal_failed},
+		{&fail_d2i_ECDSA_SIG, 1, jwt::error::signature_generation_error::signature_decoding_failed},
+	};
 
 	run_multitest(mapping, [&alg](std::error_code& ec) {
 		auto res = alg.sign("testdata", ec);
@@ -728,11 +806,13 @@ TEST(OpenSSLErrorTest, ES256VerifyErrorCode) {
 	auto signature = jwt::base::decode<jwt::alphabet::base64>(
 		"aC/NqyHfPw5FDA0yRAnrbkrAlXjsr0obRkCg/HgP+77QYJrAg6YKkKoJwMXjUX8fQrxXKTN7em5L9dtmOep37Q==");
 	std::vector<multitest_entry> mapping{
-		{&fail_EVP_MD_CTX_new, 1, jwt::error::signature_generation_error::create_context_failed},
-		{&fail_EVP_DigestInit, 1, jwt::error::signature_generation_error::digestinit_failed},
-		{&fail_EVP_DigestUpdate, 1, jwt::error::signature_generation_error::digestupdate_failed},
-		{&fail_EVP_DigestFinal, 1, jwt::error::signature_generation_error::digestfinal_failed},
+		{&fail_EVP_MD_CTX_new, 1, jwt::error::signature_verification_error::create_context_failed},
+		{&fail_EVP_DigestVerifyInit, 1, jwt::error::signature_verification_error::verifyinit_failed},
+		{&fail_EVP_DigestUpdate, 1, jwt::error::signature_verification_error::verifyupdate_failed},
+		{&fail_EVP_DigestVerifyFinal, 1, jwt::error::signature_verification_error::invalid_signature},
 		{&fail_ECDSA_SIG_new, 1, jwt::error::signature_verification_error::create_context_failed},
+		{&fail_i2d_ECDSA_SIG, 1, jwt::error::signature_verification_error::signature_encoding_failed},
+		{&fail_i2d_ECDSA_SIG, 2, jwt::error::signature_verification_error::signature_encoding_failed},
 	};
 
 	run_multitest(mapping, [&alg, &signature](std::error_code& ec) { alg.verify("testdata", signature, ec); });

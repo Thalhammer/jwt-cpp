@@ -21,8 +21,7 @@ YwIDAQAB
 						"sGQxiVqtRHKXZR9RbfvjrErY1KGiCp9M5i2bsUHadZEY44FE2jiOmx-"
 						"uc2z5c05CCXqVSpfCjWbh9gQ";
 
-	auto verify =
-		jwt::verify().allow_algorithm(jwt::algorithm::rs256(rsa_pub_key, "", "", "")).with_issuer("auth0");
+	auto verify = jwt::verify().allow_algorithm(jwt::algorithm::rs256(rsa_pub_key, "", "", "")).with_issuer("auth0");
 
 	auto decoded = jwt::decode(token);
 

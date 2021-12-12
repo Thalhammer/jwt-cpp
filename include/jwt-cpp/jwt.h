@@ -146,7 +146,8 @@ namespace jwt {
 			create_mem_bio_failed,
 			no_key_provided,
 			invalid_key_size,
-			invalid_key
+			invalid_key,
+			create_context_failed
 		};
 		/**
 		 * \brief Error category for ECDSA errors
@@ -165,6 +166,7 @@ namespace jwt {
 						return "at least one of public or private key need to be present";
 					case ecdsa_error::invalid_key_size: return "invalid key size";
 					case ecdsa_error::invalid_key: return "invalid key";
+					case ecdsa_error::create_context_failed: return "failed to create context";
 					default: return "unknown ECDSA error";
 					}
 				}
@@ -186,7 +188,8 @@ namespace jwt {
 			verifyupdate_failed,
 			verifyfinal_failed,
 			get_key_failed,
-			set_rsa_pss_saltlen_failed
+			set_rsa_pss_saltlen_failed,
+			signature_encoding_failed
 		};
 		/**
 		 * \brief Error category for verification errors
@@ -211,6 +214,8 @@ namespace jwt {
 						return "failed to verify signature: Could not get key";
 					case signature_verification_error::set_rsa_pss_saltlen_failed:
 						return "failed to verify signature: EVP_PKEY_CTX_set_rsa_pss_saltlen failed";
+					case signature_verification_error::signature_encoding_failed:
+						return "failed to verify signature: i2d_ECDSA_SIG failed";
 					default: return "unknown signature verification error";
 					}
 				}
@@ -241,6 +246,7 @@ namespace jwt {
 			rsa_private_encrypt_failed,
 			get_key_failed,
 			set_rsa_pss_saltlen_failed,
+			signature_decoding_failed
 		};
 		/**
 		 * \brief Error category for signature generation errors
@@ -276,6 +282,8 @@ namespace jwt {
 						return "failed to generate signature: Could not get key";
 					case signature_generation_error::set_rsa_pss_saltlen_failed:
 						return "failed to create signature: EVP_PKEY_CTX_set_rsa_pss_saltlen failed";
+					case signature_generation_error::signature_decoding_failed:
+						return "failed to create signature: d2i_ECDSA_SIG failed";
 					default: return "unknown signature generation error";
 					}
 				}
@@ -995,21 +1003,21 @@ namespace jwt {
 				  const std::string& private_key_password, const EVP_MD* (*md)(), std::string name, size_t siglen)
 				: md(md), alg_name(std::move(name)), signature_length(siglen) {
 				if (!private_key.empty()) {
-					auto epkey = helper::load_private_ec_key_from_string(private_key, private_key_password);
-					pkey.reset(EVP_PKEY_get1_EC_KEY(epkey.get()), EC_KEY_free);
+					pkey = helper::load_private_ec_key_from_string(private_key, private_key_password);
+					check_private_key(pkey.get());
 				} else if (!public_key.empty()) {
-					auto epkey = helper::load_public_ec_key_from_string(public_key, public_key_password);
-					pkey.reset(EVP_PKEY_get1_EC_KEY(epkey.get()), EC_KEY_free);
+					pkey = helper::load_public_ec_key_from_string(public_key, public_key_password);
+					check_public_key(pkey.get());
 				} else {
 					throw ecdsa_exception(error::ecdsa_error::no_key_provided);
 				}
 				if (!pkey) throw ecdsa_exception(error::ecdsa_error::invalid_key);
-				size_t keysize = EC_GROUP_get_degree(EC_KEY_get0_group(pkey.get()));
+
+				size_t keysize = EVP_PKEY_bits(pkey.get());
 				if (keysize != signature_length * 4 && (signature_length != 132 || keysize != 521))
 					throw ecdsa_exception(error::ecdsa_error::invalid_key_size);
-
-				if (EC_KEY_check_key(pkey.get()) == 0) throw ecdsa_exception(error::ecdsa_error::invalid_key);
 			}
+
 			/**
 			 * Sign jwt data
 			 * \param data The data to sign
@@ -1018,17 +1026,122 @@ namespace jwt {
 			 */
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
-				const std::string hash = generate_hash(data, ec);
-				if (ec) return {};
-
-				std::unique_ptr<ECDSA_SIG, decltype(&ECDSA_SIG_free)> sig(
-					ECDSA_do_sign(reinterpret_cast<const unsigned char*>(hash.data()), static_cast<int>(hash.size()),
-								  pkey.get()),
-					ECDSA_SIG_free);
-				if (!sig) {
-					ec = error::signature_generation_error::ecdsa_do_sign_failed;
+#ifdef JWT_OPENSSL_1_0_0
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_destroy);
+#else
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_free);
+#endif
+				if (!ctx) {
+					ec = error::signature_generation_error::create_context_failed;
 					return {};
 				}
+				if (!EVP_DigestSignInit(ctx.get(), nullptr, md(), nullptr, pkey.get())) {
+					ec = error::signature_generation_error::signinit_failed;
+					return {};
+				}
+				if (!EVP_DigestUpdate(ctx.get(), data.data(), data.size())) {
+					ec = error::signature_generation_error::digestupdate_failed;
+					return {};
+				}
+
+				size_t len = 0;
+				if (!EVP_DigestSignFinal(ctx.get(), nullptr, &len)) {
+					ec = error::signature_generation_error::signfinal_failed;
+					return {};
+				}
+				std::string res(len, '\0');
+				if (!EVP_DigestSignFinal(ctx.get(), (unsigned char*)res.data(), &len)) {
+					ec = error::signature_generation_error::signfinal_failed;
+					return {};
+				}
+
+				res.resize(len);
+				return der_to_p1363_signature(res, ec);
+			}
+
+			/**
+			 * Check if signature is valid
+			 * \param data The data to check signature against
+			 * \param signature Signature provided by the jwt
+			 * \param ec Filled with details on error
+			 */
+			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
+				ec.clear();
+				std::string der_signature = p1363_to_der_signature(signature, ec);
+				if (ec) { return; }
+
+#ifdef JWT_OPENSSL_1_0_0
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_destroy);
+#else
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_free);
+#endif
+				if (!ctx) {
+					ec = error::signature_verification_error::create_context_failed;
+					return;
+				}
+				if (!EVP_DigestVerifyInit(ctx.get(), nullptr, md(), nullptr, pkey.get())) {
+					ec = error::signature_verification_error::verifyinit_failed;
+					return;
+				}
+				if (!EVP_DigestUpdate(ctx.get(), data.data(), data.size())) {
+					ec = error::signature_verification_error::verifyupdate_failed;
+					return;
+				}
+
+				auto res =
+					EVP_DigestVerifyFinal(ctx.get(), reinterpret_cast<const unsigned char*>(der_signature.data()),
+										  static_cast<unsigned int>(der_signature.length()));
+				if (res == 0) {
+					ec = error::signature_verification_error::invalid_signature;
+					return;
+				}
+				if (res == -1) {
+					ec = error::signature_verification_error::verifyfinal_failed;
+					return;
+				}
+			}
+			/**
+			 * Returns the algorithm name provided to the constructor
+			 * \return algorithm's name
+			 */
+			std::string name() const { return alg_name; }
+
+		private:
+			static void check_public_key(EVP_PKEY* pkey) {
+#ifdef JWT_OPENSSL_3_0
+				std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)> ctx(
+					EVP_PKEY_CTX_new_from_pkey(nullptr, pkey, nullptr), EVP_PKEY_CTX_free);
+				if (!ctx) { throw ecdsa_exception(error::ecdsa_error::create_context_failed); }
+				if (EVP_PKEY_public_check(ctx.get()) != 1) { throw ecdsa_exception(error::ecdsa_error::invalid_key); }
+#else
+				std::unique_ptr<EC_KEY, decltype(&EC_KEY_free)> eckey(EVP_PKEY_get1_EC_KEY(pkey), EC_KEY_free);
+				if (!eckey) { throw ecdsa_exception(error::ecdsa_error::invalid_key); }
+				if (EC_KEY_check_key(eckey.get()) == 0) throw ecdsa_exception(error::ecdsa_error::invalid_key);
+#endif
+			}
+
+			static void check_private_key(EVP_PKEY* pkey) {
+#ifdef JWT_OPENSSL_3_0
+				std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)> ctx(
+					EVP_PKEY_CTX_new_from_pkey(nullptr, pkey, nullptr), EVP_PKEY_CTX_free);
+				if (!ctx) { throw ecdsa_exception(error::ecdsa_error::create_context_failed); }
+				if (EVP_PKEY_private_check(ctx.get()) != 1) { throw ecdsa_exception(error::ecdsa_error::invalid_key); }
+#else
+				std::unique_ptr<EC_KEY, decltype(&EC_KEY_free)> eckey(EVP_PKEY_get1_EC_KEY(pkey), EC_KEY_free);
+				if (!eckey) { throw ecdsa_exception(error::ecdsa_error::invalid_key); }
+				if (EC_KEY_check_key(eckey.get()) == 0) throw ecdsa_exception(error::ecdsa_error::invalid_key);
+#endif
+			}
+
+			std::string der_to_p1363_signature(const std::string& der_signature, std::error_code& ec) const {
+				const unsigned char* possl_signature = reinterpret_cast<const unsigned char*>(der_signature.data());
+				std::unique_ptr<ECDSA_SIG, decltype(&ECDSA_SIG_free)> sig(
+					d2i_ECDSA_SIG(nullptr, &possl_signature, der_signature.length()), ECDSA_SIG_free);
+				if (!sig) {
+					ec = error::signature_generation_error::signature_decoding_failed;
+					return {};
+				}
+
 #ifdef JWT_OPENSSL_1_0_0
 
 				auto rr = helper::bn2raw(sig->r);
@@ -1047,91 +1160,45 @@ namespace jwt {
 				return rr + rs;
 			}
 
-			/**
-			 * Check if signature is valid
-			 * \param data The data to check signature against
-			 * \param signature Signature provided by the jwt
-			 * \param ec Filled with details on error
-			 */
-			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
+			std::string p1363_to_der_signature(const std::string& signature, std::error_code& ec) const {
 				ec.clear();
-				const std::string hash = generate_hash(data, ec);
-				if (ec) return;
 				auto r = helper::raw2bn(signature.substr(0, signature.size() / 2));
 				auto s = helper::raw2bn(signature.substr(signature.size() / 2));
 
+				ECDSA_SIG* psig;
 #ifdef JWT_OPENSSL_1_0_0
 				ECDSA_SIG sig;
 				sig.r = r.get();
 				sig.s = s.get();
-
-				if (ECDSA_do_verify((const unsigned char*)hash.data(), static_cast<int>(hash.size()), &sig,
-									pkey.get()) != 1) {
-					ec = error::signature_verification_error::invalid_signature;
-					return;
-				}
+				psig = &sig;
 #else
 				std::unique_ptr<ECDSA_SIG, decltype(&ECDSA_SIG_free)> sig(ECDSA_SIG_new(), ECDSA_SIG_free);
 				if (!sig) {
 					ec = error::signature_verification_error::create_context_failed;
-					return;
+					return {};
 				}
-
 				ECDSA_SIG_set0(sig.get(), r.release(), s.release());
-
-				if (ECDSA_do_verify(reinterpret_cast<const unsigned char*>(hash.data()), static_cast<int>(hash.size()),
-									sig.get(), pkey.get()) != 1) {
-					ec = error::signature_verification_error::invalid_signature;
-					return;
-				}
+				psig = sig.get();
 #endif
-			}
-			/**
-			 * Returns the algorithm name provided to the constructor
-			 * \return algorithm's name
-			 */
-			std::string name() const { return alg_name; }
 
-		private:
-			/**
-			 * Hash the provided data using the hash function specified in constructor
-			 * \param data Data to hash
-			 * \return Hash of data
-			 */
-			std::string generate_hash(const std::string& data, std::error_code& ec) const {
-#ifdef JWT_OPENSSL_1_0_0
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(),
-																			   &EVP_MD_CTX_destroy);
-#else
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
-#endif
-				if (!ctx) {
-					ec = error::signature_generation_error::create_context_failed;
+				int length = i2d_ECDSA_SIG(psig, nullptr);
+				if (length < 0) {
+					ec = error::signature_verification_error::signature_encoding_failed;
 					return {};
 				}
-				if (EVP_DigestInit(ctx.get(), md()) == 0) {
-					ec = error::signature_generation_error::digestinit_failed;
+				std::string der_signature(length, '\0');
+				unsigned char* psbuffer = (unsigned char*)der_signature.data();
+				length = i2d_ECDSA_SIG(psig, &psbuffer);
+				if (length < 0) {
+					ec = error::signature_verification_error::signature_encoding_failed;
 					return {};
 				}
-				if (EVP_DigestUpdate(ctx.get(), data.data(), data.size()) == 0) {
-					ec = error::signature_generation_error::digestupdate_failed;
-					return {};
-				}
-				unsigned int len = 0;
-				std::string res(EVP_MD_CTX_size(ctx.get()), '\0');
-				if (EVP_DigestFinal(
-						ctx.get(),
-						(unsigned char*)res.data(), // NOLINT(google-readability-casting) requires `const_cast`
-						&len) == 0) {
-					ec = error::signature_generation_error::digestfinal_failed;
-					return {};
-				}
-				res.resize(len);
-				return res;
+				der_signature.resize(length);
+				return der_signature;
 			}
 
 			/// OpenSSL struct containing keys
-			std::shared_ptr<EC_KEY> pkey;
+			std::shared_ptr<EVP_PKEY> pkey;
 			/// Hash generator function
 			const EVP_MD* (*md)();
 			/// algorithm's name
@@ -2033,8 +2100,6 @@ namespace jwt {
 	/**
 	 * \brief a class to store a generic JSON value as claim
 	 *
-	 * The default template parameters use [picojson](https://github.com/kazuho/picojson)
-	 *
 	 * \tparam json_traits : JSON implementation traits
 	 *
 	 * \see [RFC 7519: JSON Web Token (JWT)](https://tools.ietf.org/html/rfc7519)
@@ -2556,6 +2621,26 @@ namespace jwt {
 		 */
 		std::unordered_map<typename json_traits::string_type, basic_claim_t> get_header_claims() const {
 			return this->header_claims.get_claims();
+		}
+		/**
+		 * Get a payload claim by name
+		 *
+		 * \param name the name of the desired claim
+		 * \return Requested claim
+		 * \throw jwt::error::claim_not_present_exception if the claim was not present
+		 */
+		basic_claim_t get_payload_claim(const typename json_traits::string_type& name) const {
+			return this->payload_claims.get_claim(name);
+		}
+		/**
+		 * Get a header claim by name
+		 *
+		 * \param name the name of the desired claim
+		 * \return Requested claim
+		 * \throw jwt::error::claim_not_present_exception if the claim was not present
+		 */
+		basic_claim_t get_header_claim(const typename json_traits::string_type& name) const {
+			return this->header_claims.get_claim(name);
 		}
 	};
 
@@ -3478,6 +3563,16 @@ namespace jwt {
 	};
 
 	/**
+	 * Create a verifier using the given clock
+	 * \param c Clock instance to use
+	 * \return verifier instance
+	 */
+	template<typename json_traits>
+	verifier<default_clock, json_traits> verify(default_clock c = {}) {
+		return verifier<default_clock, json_traits>(c);
+	}
+
+	/**
 	 * Return a builder instance to create a new token
 	 */
 	template<typename json_traits>
@@ -3519,128 +3614,6 @@ namespace jwt {
 	jwks<json_traits> parse_jwks(const typename json_traits::string_type& token) {
 		return jwks<json_traits>(token);
 	}
-
-#ifndef JWT_DISABLE_PICOJSON
-	struct picojson_traits {
-		using value_type = picojson::value;
-		using object_type = picojson::object;
-		using array_type = picojson::array;
-		using string_type = std::string;
-		using number_type = double;
-		using integer_type = int64_t;
-		using boolean_type = bool;
-
-		static json::type get_type(const picojson::value& val) {
-			using json::type;
-			if (val.is<bool>()) return type::boolean;
-			if (val.is<int64_t>()) return type::integer;
-			if (val.is<double>()) return type::number;
-			if (val.is<std::string>()) return type::string;
-			if (val.is<picojson::array>()) return type::array;
-			if (val.is<picojson::object>()) return type::object;
-
-			throw std::logic_error("invalid type");
-		}
-
-		static picojson::object as_object(const picojson::value& val) {
-			if (!val.is<picojson::object>()) throw std::bad_cast();
-			return val.get<picojson::object>();
-		}
-
-		static std::string as_string(const picojson::value& val) {
-			if (!val.is<std::string>()) throw std::bad_cast();
-			return val.get<std::string>();
-		}
-
-		static picojson::array as_array(const picojson::value& val) {
-			if (!val.is<picojson::array>()) throw std::bad_cast();
-			return val.get<picojson::array>();
-		}
-
-		static int64_t as_int(const picojson::value& val) {
-			if (!val.is<int64_t>()) throw std::bad_cast();
-			return val.get<int64_t>();
-		}
-
-		static bool as_bool(const picojson::value& val) {
-			if (!val.is<bool>()) throw std::bad_cast();
-			return val.get<bool>();
-		}
-
-		static double as_number(const picojson::value& val) {
-			if (!val.is<double>()) throw std::bad_cast();
-			return val.get<double>();
-		}
-
-		static bool parse(picojson::value& val, const std::string& str) { return picojson::parse(val, str).empty(); }
-
-		static std::string serialize(const picojson::value& val) { return val.serialize(); }
-	};
-
-	/**
-	 * Default JSON claim
-	 *
-	 * This type is the default specialization of the \ref basic_claim class which
-	 * uses the standard template types.
-	 */
-	using claim = basic_claim<picojson_traits>;
-
-	/**
-	 * Create a verifier using the default clock
-	 * \return verifier instance
-	 */
-	inline verifier<default_clock, picojson_traits> verify() {
-		return verify<default_clock, picojson_traits>(default_clock{});
-	}
-	/**
-	 * Return a picojson builder instance to create a new token
-	 */
-	inline builder<picojson_traits> create() { return builder<picojson_traits>(); }
-#ifndef JWT_DISABLE_BASE64
-	/**
-	 * Decode a token
-	 * \param token Token to decode
-	 * \return Decoded token
-	 * \throw std::invalid_argument Token is not in correct format
-	 * \throw std::runtime_error Base64 decoding failed or invalid json
-	 */
-	inline decoded_jwt<picojson_traits> decode(const std::string& token) { return decoded_jwt<picojson_traits>(token); }
-#endif
-	/**
-	 * Decode a token
-	 * \tparam Decode is callabled, taking a string_type and returns a string_type.
-	 * It should ensure the padding of the input and then base64url decode and
-	 * return the results.
-	 * \param token Token to decode
-	 * \param decode The token to parse
-	 * \return Decoded token
-	 * \throw std::invalid_argument Token is not in correct format
-	 * \throw std::runtime_error Base64 decoding failed or invalid json
-	 */
-	template<typename Decode>
-	decoded_jwt<picojson_traits> decode(const std::string& token, Decode decode) {
-		return decoded_jwt<picojson_traits>(token, decode);
-	}
-	/**
-	 * Parse a jwk
-	 * \param token JWK Token to parse
-	 * \return Parsed JWK
-	 * \throw std::runtime_error Token is not in correct format
-	 */
-	inline jwk<picojson_traits> parse_jwk(const picojson_traits::string_type& token) {
-		return jwk<picojson_traits>(token);
-	}
-
-	/**
-	 * Parse a jwks
-	 * \param token JWKs Token to parse
-	 * \return Parsed JWKs
-	 * \throw std::runtime_error Token is not in correct format
-	 */
-	inline jwks<picojson_traits> parse_jwks(const picojson_traits::string_type& token) {
-		return jwks<picojson_traits>(token);
-	}
-#endif
 } // namespace jwt
 
 template<typename json_traits>
@@ -3652,5 +3625,9 @@ template<typename json_traits>
 std::ostream& operator<<(std::ostream& os, const jwt::basic_claim<json_traits>& c) {
 	return os << c.to_json();
 }
+
+#ifndef JWT_DISABLE_PICOJSON
+#include "traits/kazuho-picojson/defaults.h"
+#endif
 
 #endif
