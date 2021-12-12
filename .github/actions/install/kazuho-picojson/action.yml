@@ -12,6 +12,6 @@ runs:
         cd /tmp
         wget https://github.com/kazuho/picojson/archive/${{ inputs.version }}.tar.gz
         tar -zxf /tmp/${{ inputs.version }}.tar.gz
-        cd ${{ inputs.version }}
+        cd picojson-${{ inputs.version }}
         sudo cp -v picojson.h /usr/local/include/picojson
       shell: bash
