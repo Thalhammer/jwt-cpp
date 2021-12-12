@@ -47,6 +47,7 @@ jobs:
 
       - if: matrix.target.name == 'kazuho-picojson'
         run: rm -rf include/picojson
+      - if: matrix.target.name == 'kazuho-picojson'
         uses: ./.github/actions/install/kazuho-picojson
         with:
           version: ${{matrix.target.tag}}
