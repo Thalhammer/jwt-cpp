@@ -59,7 +59,7 @@ jobs:
           version: "openssl-3.0.0"
 
       - name: configure
-        run: cmake . -DJWT_BUILD_TESTS=ON -DOPENSSL_ROOT_DIR=/tmp -DCMAKE_CXX_FLAGS="OPENSSL_NO_DEPRECATED_3_0=1" -DCMAKE_C_FLAGS="OPENSSL_NO_DEPRECATED_3_0=1"
+        run: cmake . -DJWT_BUILD_TESTS=ON -DOPENSSL_ROOT_DIR=/tmp -DCMAKE_CXX_FLAGS="-DOPENSSL_NO_DEPRECATED_3_0=1" -DCMAKE_C_FLAGS="-DOPENSSL_NO_DEPRECATED_3_0=1"
       - run: make
 
   libressl:
