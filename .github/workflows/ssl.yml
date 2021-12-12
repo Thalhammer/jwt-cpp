@@ -47,6 +47,21 @@ jobs:
           label: ${{ matrix.openssl.name }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
+  openssl-no-deprecated:
+    runs-on: ubuntu-latest
+    name: OpenSSL 3.0 No Deprecated
+    steps:
+      - uses: actions/checkout@v2
+      - uses: lukka/get-cmake@latest
+      - uses: ./.github/actions/install/gtest
+      - uses: ./.github/actions/install/openssl
+        with:
+          version: "openssl-3.0.0"
+
+      - name: configure
+        run: cmake . -DJWT_BUILD_TESTS=ON -DOPENSSL_ROOT_DIR=/tmp -DCMAKE_CXX_FLAGS=OPENSSL_NO_DEPRECATED_3_0 -DCMAKE_C_FLAGS=OPENSSL_NO_DEPRECATED_3_0
+      - run: make
+
   libressl:
     runs-on: ubuntu-latest
     strategy:
