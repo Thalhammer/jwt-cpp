@@ -37,6 +37,8 @@ jobs:
           version: ${{matrix.target.tag}}
 
       - if: matrix.target.name == 'nlohmann-json'
+        run: rm -rf include/nlohmann
+      - if: matrix.target.name == 'nlohmann-json'
         uses: ./.github/actions/install/nlohmannjson
         with:
           version: ${{matrix.target.tag}}
