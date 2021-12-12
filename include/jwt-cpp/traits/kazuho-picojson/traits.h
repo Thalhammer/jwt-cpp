@@ -6,6 +6,9 @@
 #endif
 #include "picojson/picojson.h"
 
+#ifndef JWT_DISABLE_PICOJSON
+#define JWT_DISABLE_PICOJSON
+#endif
 #include "jwt-cpp/jwt.h"
 
 namespace jwt {
