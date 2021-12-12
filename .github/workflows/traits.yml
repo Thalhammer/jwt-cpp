@@ -8,7 +8,7 @@ on:
 
 jobs:
   traits:
-    name: Traits (${{matrix.target.name}})
+    name: Traits (${{ matrix.target.name }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -26,37 +26,28 @@ jobs:
           cmake .. -DJWT_BUILD_EXAMPLES=OFF
           sudo cmake --install .
 
-      - if: matrix.target.name == 'danielaparker-jsoncons'
-        uses: ./.github/actions/install/jsoncons
-        with:
-          version: ${{matrix.target.tag}}
-
-      - if: matrix.target.name == 'boost-json'
-        uses: ./.github/actions/install/boostjson
-        with:
-          version: ${{matrix.target.tag}}
-
-      - if: matrix.target.name == 'nlohmann-json'
+      - if: matrix.target.name == 'nlohmann-json' # Make to to use installed version
         run: rm -rf include/nlohmann
-      - if: matrix.target.name == 'nlohmann-json'
-        uses: ./.github/actions/install/nlohmannjson
+
+      - name: install (${{ matrix.target.name }})
+        uses: ./.github/actions/install/${{ matrix.target.name }}
         with:
-          version: ${{matrix.target.tag}}
+          version: ${{ matrix.target.tag }}
 
       - name: test
         working-directory: example/traits
         run: |
           cmake . -DCMAKE_FIND_DEBUG_MODE=1
-          cmake --build . --target ${{matrix.target.name}}
-          ./${{matrix.target.name}}
+          cmake --build . --target ${{ matrix.target.name }}
+          ./${{ matrix.target.name }}
 
       - name: badge success
         if: github.event_name == 'push' && success()
         uses: ./.github/actions/badge
         with:
-          category: traits
-          label: ${{matrix.target.name}}
-          message: ${{matrix.target.version}}
+          category: ${{ matrix.target.name }}
+          label: ${{ matrix.target.name }}
+          message: ${{ matrix.target.version }}
           color: lightblue # turquoise
       - if: github.event_name == 'push' && success()
         uses: ./.github/actions/badge/publish
@@ -67,6 +58,6 @@ jobs:
         if: github.event_name == 'push' && !success()
         uses: ./.github/actions/badge/failure
         with:
-          category: traits
-          label: ${{matrix.target.name}}
+          category: ${{ matrix.target.name }}
+          label: ${{ matrix.target.name }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
