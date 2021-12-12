@@ -31,8 +31,7 @@ int main() {
 						   .set_payload_claim("array", claim(big_numbers.begin(), big_numbers.end()))
 						   .set_payload_claim("object", from_raw_json)
 						   .sign(jwt::algorithm::none{});
-
-	const auto decoded = jwt::decode(token);
+	const auto decoded = jwt::decode<traits>(token);
 
 	const auto api_array = decoded.get_payload_claims()["object"].to_json().get("api").get("array");
 	std::cout << "api array = " << api_array << std::endl;
