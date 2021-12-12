@@ -27,17 +27,29 @@ jobs:
           cmake .. -DJWT_BUILD_EXAMPLES=OFF
           sudo cmake --install .
 
-       # Make sure to use the installed version
+      # Install the JSON library
+      - if: matrix.target.name == 'danielaparker-jsoncons'
+        uses: ./.github/actions/install/danielaparker-jsoncons
+        with:
+          version: ${{matrix.target.tag}}
+
+      - if: matrix.target.name == 'boost-json'
+        uses: ./.github/actions/install/boost-json
+        with:
+          version: ${{matrix.target.tag}}
+
       - if: matrix.target.name == 'nlohmann-json'
         run: rm -rf include/nlohmann
+      - if: matrix.target.name == 'nlohmann-json'
+        uses: ./.github/actions/install/nlohmann-json
+        with:
+          version: ${{matrix.target.tag}}
+
       - if: matrix.target.name == 'kazuho-picojson'
         run: rm -rf include/picojson
-
-      # Install the JSON library
-      - name: install (${{ matrix.target.name }})
-        uses: ./.github/actions/install/${{ matrix.target.name }}
+        uses: ./.github/actions/install/kazuho-picojson
         with:
-          version: ${{ matrix.target.tag }}
+          version: ${{matrix.target.tag}}
 
       - name: test
         working-directory: example/traits
