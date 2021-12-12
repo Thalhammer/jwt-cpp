@@ -16,6 +16,7 @@ jobs:
           - { name: "danielaparker-jsoncons", tag: "0.167.1", version: "v0.167.1" }
           - { name: "boost-json", tag: "1.77.0", version: "v1.77.0" }
           - { name: "nlohmann-json", tag: "3.10.4", version: "v3.10.4" }
+          - { name: "kazuho-picojson", tag: "111c9be5188f7350c2eac9ddaedd8cca3d7bf394", version: "111c9be" }
     steps:
       - uses: actions/checkout@v2
       - uses: lukka/get-cmake@latest
@@ -26,9 +27,13 @@ jobs:
           cmake .. -DJWT_BUILD_EXAMPLES=OFF
           sudo cmake --install .
 
-      - if: matrix.target.name == 'nlohmann-json' # Make to to use installed version
+       # Make sure to use the installed version
+      - if: matrix.target.name == 'nlohmann-json'
         run: rm -rf include/nlohmann
+      - if: matrix.target.name == 'kazuho-picojson'
+        run: rm -rf include/picojson
 
+      # Install the JSON library
       - name: install (${{ matrix.target.name }})
         uses: ./.github/actions/install/${{ matrix.target.name }}
         with:
@@ -45,7 +50,7 @@ jobs:
         if: github.event_name == 'push' && success()
         uses: ./.github/actions/badge
         with:
-          category: ${{ matrix.target.name }}
+          category: traits
           label: ${{ matrix.target.name }}
           message: ${{ matrix.target.version }}
           color: lightblue # turquoise
@@ -58,6 +63,6 @@ jobs:
         if: github.event_name == 'push' && !success()
         uses: ./.github/actions/badge/failure
         with:
-          category: ${{ matrix.target.name }}
+          category: traits
           label: ${{ matrix.target.name }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
