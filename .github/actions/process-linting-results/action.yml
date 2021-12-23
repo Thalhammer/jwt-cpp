@@ -8,8 +8,8 @@ runs:
   using: "composite"
   steps:
     - run: git add --update
+      shell: bash
     - id: stage
-      continue-on-error: true
       uses: dtinth/patch-generator-action@v1
     - if: steps.stage.outputs.result == 'dirty'
       uses: actions-ecosystem/action-create-comment@v1
