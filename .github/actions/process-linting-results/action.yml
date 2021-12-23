@@ -14,7 +14,7 @@ runs:
     - if: steps.stage.outputs.result == 'dirty'
       uses: actions-ecosystem/action-create-comment@v1
       with:
-        github_token: ${{ secrets.github_token }}
+        github_token: ${{ github.token }}
         body: |
           Hello, @${{ github.actor }}! `${{ inputs.linter_name }}` had some concerns :scream:
     - run: exit $(git status -uno -s | wc -l)
