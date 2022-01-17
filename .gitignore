@@ -311,3 +311,4 @@ test
 docs
 
 build/*
+package-lock.json

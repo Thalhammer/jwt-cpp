@@ -99,30 +99,30 @@ TEST(ClaimTest, AsDate) {
 }
 
 TEST(ClaimTest, PicoJSONTraitsAccessorsThrow) {
-	jwt::picojson_traits::value_type val;
-	ASSERT_THROW(jwt::picojson_traits::as_array(val), std::bad_cast);
-	ASSERT_THROW(jwt::picojson_traits::as_bool(val), std::bad_cast);
-	ASSERT_THROW(jwt::picojson_traits::as_int(val), std::bad_cast);
-	ASSERT_THROW(jwt::picojson_traits::as_number(val), std::bad_cast);
-	ASSERT_THROW(jwt::picojson_traits::as_object(val), std::bad_cast);
-	ASSERT_THROW(jwt::picojson_traits::as_string(val), std::bad_cast);
-	ASSERT_THROW(jwt::picojson_traits::get_type(val), std::logic_error);
+	jwt::traits::kazuho_picojson::value_type val;
+	ASSERT_THROW(jwt::traits::kazuho_picojson::as_array(val), std::bad_cast);
+	ASSERT_THROW(jwt::traits::kazuho_picojson::as_bool(val), std::bad_cast);
+	ASSERT_THROW(jwt::traits::kazuho_picojson::as_int(val), std::bad_cast);
+	ASSERT_THROW(jwt::traits::kazuho_picojson::as_number(val), std::bad_cast);
+	ASSERT_THROW(jwt::traits::kazuho_picojson::as_object(val), std::bad_cast);
+	ASSERT_THROW(jwt::traits::kazuho_picojson::as_string(val), std::bad_cast);
+	ASSERT_THROW(jwt::traits::kazuho_picojson::get_type(val), std::logic_error);
 }
 
 TEST(ClaimTest, PicoJSONTraitsAsBool) {
-	jwt::picojson_traits::value_type val(true);
-	ASSERT_EQ(jwt::picojson_traits::as_bool(val), true);
-	ASSERT_EQ(jwt::picojson_traits::get_type(val), jwt::json::type::boolean);
+	jwt::traits::kazuho_picojson::value_type val(true);
+	ASSERT_EQ(jwt::traits::kazuho_picojson::as_bool(val), true);
+	ASSERT_EQ(jwt::traits::kazuho_picojson::get_type(val), jwt::json::type::boolean);
 }
 
 TEST(ClaimTest, PicoJSONTraitsAsDouble) {
-	jwt::picojson_traits::value_type val(10.0);
-	ASSERT_EQ(jwt::picojson_traits::as_number(val), (int)10);
-	ASSERT_EQ(jwt::picojson_traits::get_type(val), jwt::json::type::number);
+	jwt::traits::kazuho_picojson::value_type val(10.0);
+	ASSERT_EQ(jwt::traits::kazuho_picojson::as_number(val), (int)10);
+	ASSERT_EQ(jwt::traits::kazuho_picojson::get_type(val), jwt::json::type::number);
 }
 
 TEST(ClaimTest, MapOfClaim) {
-	using map = jwt::details::map_of_claims<jwt::picojson_traits>;
+	using map = jwt::details::map_of_claims<jwt::traits::kazuho_picojson>;
 	ASSERT_THROW(map::parse_claims(R"##(__ not json __)##"), jwt::error::invalid_json_exception);
 	const map claims{
 		map::parse_claims(R"##({ "array": [1], "string" : "hello world", "number": 9.9, "bool": true})##")};

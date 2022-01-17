@@ -2100,8 +2100,6 @@ namespace jwt {
 	/**
 	 * \brief a class to store a generic JSON value as claim
 	 *
-	 * The default template parameters use [picojson](https://github.com/kazuho/picojson)
-	 *
 	 * \tparam json_traits : JSON implementation traits
 	 *
 	 * \see [RFC 7519: JSON Web Token (JWT)](https://tools.ietf.org/html/rfc7519)
@@ -2623,6 +2621,26 @@ namespace jwt {
 		 */
 		std::unordered_map<typename json_traits::string_type, basic_claim_t> get_header_claims() const {
 			return this->header_claims.get_claims();
+		}
+		/**
+		 * Get a payload claim by name
+		 *
+		 * \param name the name of the desired claim
+		 * \return Requested claim
+		 * \throw jwt::error::claim_not_present_exception if the claim was not present
+		 */
+		basic_claim_t get_payload_claim(const typename json_traits::string_type& name) const {
+			return this->payload_claims.get_claim(name);
+		}
+		/**
+		 * Get a header claim by name
+		 *
+		 * \param name the name of the desired claim
+		 * \return Requested claim
+		 * \throw jwt::error::claim_not_present_exception if the claim was not present
+		 */
+		basic_claim_t get_header_claim(const typename json_traits::string_type& name) const {
+			return this->header_claims.get_claim(name);
 		}
 	};
 
@@ -3545,6 +3563,16 @@ namespace jwt {
 	};
 
 	/**
+	 * Create a verifier using the given clock
+	 * \param c Clock instance to use
+	 * \return verifier instance
+	 */
+	template<typename json_traits>
+	verifier<default_clock, json_traits> verify(default_clock c = {}) {
+		return verifier<default_clock, json_traits>(c);
+	}
+
+	/**
 	 * Return a builder instance to create a new token
 	 */
 	template<typename json_traits>
@@ -3586,128 +3614,6 @@ namespace jwt {
 	jwks<json_traits> parse_jwks(const typename json_traits::string_type& token) {
 		return jwks<json_traits>(token);
 	}
-
-#ifndef JWT_DISABLE_PICOJSON
-	struct picojson_traits {
-		using value_type = picojson::value;
-		using object_type = picojson::object;
-		using array_type = picojson::array;
-		using string_type = std::string;
-		using number_type = double;
-		using integer_type = int64_t;
-		using boolean_type = bool;
-
-		static json::type get_type(const picojson::value& val) {
-			using json::type;
-			if (val.is<bool>()) return type::boolean;
-			if (val.is<int64_t>()) return type::integer;
-			if (val.is<double>()) return type::number;
-			if (val.is<std::string>()) return type::string;
-			if (val.is<picojson::array>()) return type::array;
-			if (val.is<picojson::object>()) return type::object;
-
-			throw std::logic_error("invalid type");
-		}
-
-		static picojson::object as_object(const picojson::value& val) {
-			if (!val.is<picojson::object>()) throw std::bad_cast();
-			return val.get<picojson::object>();
-		}
-
-		static std::string as_string(const picojson::value& val) {
-			if (!val.is<std::string>()) throw std::bad_cast();
-			return val.get<std::string>();
-		}
-
-		static picojson::array as_array(const picojson::value& val) {
-			if (!val.is<picojson::array>()) throw std::bad_cast();
-			return val.get<picojson::array>();
-		}
-
-		static int64_t as_int(const picojson::value& val) {
-			if (!val.is<int64_t>()) throw std::bad_cast();
-			return val.get<int64_t>();
-		}
-
-		static bool as_bool(const picojson::value& val) {
-			if (!val.is<bool>()) throw std::bad_cast();
-			return val.get<bool>();
-		}
-
-		static double as_number(const picojson::value& val) {
-			if (!val.is<double>()) throw std::bad_cast();
-			return val.get<double>();
-		}
-
-		static bool parse(picojson::value& val, const std::string& str) { return picojson::parse(val, str).empty(); }
-
-		static std::string serialize(const picojson::value& val) { return val.serialize(); }
-	};
-
-	/**
-	 * Default JSON claim
-	 *
-	 * This type is the default specialization of the \ref basic_claim class which
-	 * uses the standard template types.
-	 */
-	using claim = basic_claim<picojson_traits>;
-
-	/**
-	 * Create a verifier using the default clock
-	 * \return verifier instance
-	 */
-	inline verifier<default_clock, picojson_traits> verify() {
-		return verify<default_clock, picojson_traits>(default_clock{});
-	}
-	/**
-	 * Return a picojson builder instance to create a new token
-	 */
-	inline builder<picojson_traits> create() { return builder<picojson_traits>(); }
-#ifndef JWT_DISABLE_BASE64
-	/**
-	 * Decode a token
-	 * \param token Token to decode
-	 * \return Decoded token
-	 * \throw std::invalid_argument Token is not in correct format
-	 * \throw std::runtime_error Base64 decoding failed or invalid json
-	 */
-	inline decoded_jwt<picojson_traits> decode(const std::string& token) { return decoded_jwt<picojson_traits>(token); }
-#endif
-	/**
-	 * Decode a token
-	 * \tparam Decode is callabled, taking a string_type and returns a string_type.
-	 * It should ensure the padding of the input and then base64url decode and
-	 * return the results.
-	 * \param token Token to decode
-	 * \param decode The token to parse
-	 * \return Decoded token
-	 * \throw std::invalid_argument Token is not in correct format
-	 * \throw std::runtime_error Base64 decoding failed or invalid json
-	 */
-	template<typename Decode>
-	decoded_jwt<picojson_traits> decode(const std::string& token, Decode decode) {
-		return decoded_jwt<picojson_traits>(token, decode);
-	}
-	/**
-	 * Parse a jwk
-	 * \param token JWK Token to parse
-	 * \return Parsed JWK
-	 * \throw std::runtime_error Token is not in correct format
-	 */
-	inline jwk<picojson_traits> parse_jwk(const picojson_traits::string_type& token) {
-		return jwk<picojson_traits>(token);
-	}
-
-	/**
-	 * Parse a jwks
-	 * \param token JWKs Token to parse
-	 * \return Parsed JWKs
-	 * \throw std::runtime_error Token is not in correct format
-	 */
-	inline jwks<picojson_traits> parse_jwks(const picojson_traits::string_type& token) {
-		return jwks<picojson_traits>(token);
-	}
-#endif
 } // namespace jwt
 
 template<typename json_traits>
@@ -3719,5 +3625,9 @@ template<typename json_traits>
 std::ostream& operator<<(std::ostream& os, const jwt::basic_claim<json_traits>& c) {
 	return os << c.to_json();
 }
+
+#ifndef JWT_DISABLE_PICOJSON
+#include "traits/kazuho-picojson/defaults.h"
+#endif
 
 #endif

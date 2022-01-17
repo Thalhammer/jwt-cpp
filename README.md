@@ -66,7 +66,19 @@ jwt::basic_claim<my_favorite_json_library_traits> claim(json::object({{"json", t
 
 This allows for complete freedom when picking which libraries you want to use. For more information, [see below](#providing-your-own-json-traits-your-traits).
 
-In order to maintain compatibility, [picojson](https://github.com/kazuho/picojson) is still used to provide a specialized `jwt::claim` along with all helpers. Defining `JWT_DISABLE_PICOJSON` will remove this optional dependency.
+For your convience there are serval traits implementation which provide some popular JSON libraries. They are:
+
+[![picojson][picojson]](https://github.com/kazuho/picojson)
+[![nlohmann][nlohmann]](https://github.com/nlohmann/json)
+[![jsoncons][jsoncons]](https://github.com/danielaparker/jsoncons)
+[![boostjson][boostjson]](https://github.com/boostorg/json)
+
+[picojson]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/traits/kazuho-picojson/shields.json
+[nlohmann]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/traits/nlohmann-json/shields.json
+[jsoncons]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/traits/danielaparker-jsoncons/shields.json
+[boostjson]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/traits/boost-json/shields.json
+
+In order to maintain compatibility, [picojson](https://github.com/kazuho/picojson) is still used to provide a specialized `jwt::claim` along with all helpers. Defining `JWT_DISABLE_PICOJSON` will remove this optional dependency. It's possible to directly include the traits defaults for the other JSON libraries. See the [traits examples](example/traits) for details.
 
 As for the base64 requirements of JWTs, this libary provides `base.h` with all the required implentation; However base64 implementations are very common, with varying degrees of performance. When providing your own base64 implementation, you can define `JWT_DISABLE_BASE64` to remove the jwt-cpp implementation.
 

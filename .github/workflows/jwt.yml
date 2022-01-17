@@ -13,6 +13,8 @@ jobs:
       - uses: actions/checkout@v2
       - uses: lukka/get-cmake@latest
       - uses: ./.github/actions/install/gtest
+      - uses: ./.github/actions/install/danielaparker-jsoncons
+      - uses: ./.github/actions/install/boost-json
 
       - name: configure
         run: |
