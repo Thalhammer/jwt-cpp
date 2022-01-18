@@ -47,7 +47,7 @@ jobs:
           example\Debug\rsa-create.exe
           example\Debug\rsa-verify.exe
 
-      - if: always()
+      - if: github.event_name == 'push' && always()
         uses: ./.github/actions/badge/regular
         with:
           category: cross-platform
