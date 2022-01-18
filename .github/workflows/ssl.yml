@@ -32,7 +32,7 @@ jobs:
         run: ./tests/jwt-cpp-test
 
       - if: github.event_name == 'push' && always()
-        uses: ./.github/actions/badge/regular
+        uses: ./.github/actions/badge
         with:
           category: openssl
           label: ${{ matrix.openssl.name }}
@@ -73,7 +73,7 @@ jobs:
         run: ./tests/jwt-cpp-test
 
       - if: github.event_name == 'push' && always()
-        uses: ./.github/actions/badge/regular
+        uses: ./.github/actions/badge
         with:
           category: libressl
           label: ${{ matrix.libressl }}
@@ -100,7 +100,7 @@ jobs:
         run: ./tests/jwt-cpp-test
 
       - if: github.event_name == 'push' && always()
-        uses: ./.github/actions/badge/regular
+        uses: ./.github/actions/badge
         with:
           category: wolfssl
           label: ${{ matrix.wolfssl.name }}

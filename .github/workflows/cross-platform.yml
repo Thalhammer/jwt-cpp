@@ -48,7 +48,7 @@ jobs:
           example\Debug\rsa-verify.exe
 
       - if: github.event_name == 'push' && always()
-        uses: ./.github/actions/badge/regular
+        uses: ./.github/actions/badge
         with:
           category: cross-platform
           label: ${{ matrix.os }}
