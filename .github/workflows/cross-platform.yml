@@ -20,21 +20,21 @@ jobs:
         run: cp /usr/local/opt/openssl@1.1/lib/pkgconfig/*.pc /usr/local/lib/pkgconfig/
 
       - uses: actions/checkout@v2
-      - run: cmake -E make_directory ${{github.workspace}}/build
+      - run: cmake -E make_directory ${{ github.workspace }}/build
 
       - name: configure
         shell: bash # access regardless of the host operating system
-        working-directory: ${{github.workspace}}/build
+        working-directory: ${{ github.workspace }}/build
         run: cmake $GITHUB_WORKSPACE -DJWT_BUILD_EXAMPLES=ON
 
       - name: build
-        working-directory: ${{github.workspace}}/build
+        working-directory: ${{ github.workspace }}/build
         shell: bash
         run: cmake --build .
 
       - if: matrix.os != 'windows-latest'
         name: test
-        working-directory: ${{github.workspace}}/build
+        working-directory: ${{ github.workspace }}/build
         shell: bash
         run: |
           ./example/rsa-create
@@ -42,23 +42,13 @@ jobs:
 
       - if: matrix.os == 'windows-latest'
         name: test
-        working-directory: ${{github.workspace}}/build
+        working-directory: ${{ github.workspace }}/build
         run: |
           example\Debug\rsa-create.exe
           example\Debug\rsa-verify.exe
 
-      - name: badge success
-        if: github.event_name == 'push' && success()
-        uses: ./.github/actions/badge/success
+      - if: always()
+        uses: ./.github/actions/badge/regular
         with:
           category: cross-platform
           label: ${{ matrix.os }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: badge failure
-        if: github.event_name == 'push' && !success()
-        uses: ./.github/actions/badge/failure
-        with:
-          category: cross-platform
-          label: ${{ matrix.os }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}

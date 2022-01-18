@@ -3,13 +3,14 @@ description: Publishes all badges
 inputs:
   github_token:
     description: The token to use to publish the changes
-    required: true
+    required: false
+    default: ${{ github.token }}
 runs:
   using: composite
   steps:
     - uses: peaceiris/actions-gh-pages@v3
       with:
-        github_token: ${{ inputs.GITHUB_TOKEN }}
+        github_token: ${{ inputs.github_token }}
         publish_branch: badges
         publish_dir: ./badges
         keep_files: true
