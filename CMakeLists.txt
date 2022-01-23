@@ -49,7 +49,7 @@ endif()
 
 # Lookup dependencies
 if(${JWT_SSL_LIBRARY} MATCHES "OpenSSL")
-  find_package(OpenSSL 1.0.2 REQUIRED)
+  find_package(OpenSSL 1.0.1 REQUIRED)
 elseif(${JWT_SSL_LIBRARY} MATCHES "LibreSSL")
   find_package(LibreSSL 3.0.0 REQUIRED)
 elseif(${JWT_SSL_LIBRARY} MATCHES "wolfSSL")
