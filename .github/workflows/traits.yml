@@ -61,21 +61,21 @@ jobs:
 
       - name: badge success
         if: github.event_name == 'push' && success()
-        uses: ./.github/actions/badge
+        uses: ./.github/actions/badge/write
         with:
           category: traits
           label: ${{ matrix.target.name }}
           message: ${{ matrix.target.version }}
           color: lightblue # turquoise
-      - if: github.event_name == 'push' && success()
-        uses: ./.github/actions/badge/publish
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: badge failure
         if: github.event_name == 'push' && !success()
-        uses: ./.github/actions/badge/failure
+        uses: ./.github/actions/badge/write
         with:
           category: traits
           label: ${{ matrix.target.name }}
+          message: ${{ matrix.target.version }}
+          color: orange
+      - if: github.event_name == 'push' && always()
+        uses: ./.github/actions/badge/publish
+        with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
