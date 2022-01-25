@@ -64,7 +64,7 @@ There is no hard dependency on a JSON library. Instead, there's a generic `jwt::
 jwt::basic_claim<my_favorite_json_library_traits> claim(json::object({{"json", true},{"example", 0}}));
 ```
 
-This allows for complete freedom when picking which libraries you want to use. For more information, [see below](#providing-your-own-json-traits-your-traits).
+This allows for complete freedom when picking which libraries you want to use. For more information, [read this page](docs/traits.md)).
 
 For your convience there are serval traits implementation which provide some popular JSON libraries. They are:
 
