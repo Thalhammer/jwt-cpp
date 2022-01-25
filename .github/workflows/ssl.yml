@@ -16,6 +16,7 @@ jobs:
           - { tag: "OpenSSL_1_1_1l", name: "1.1.1l" }
           - { tag: "OpenSSL_1_1_0i", name: "1.1.0i" }
           - { tag: "OpenSSL_1_0_2u", name: "1.0.2u" }
+          - { tag: "OpenSSL_1_0_1u", name: "1.0.1u" }
     name: OpenSSL ${{ matrix.openssl.name }}
     steps:
       - uses: actions/checkout@v2
