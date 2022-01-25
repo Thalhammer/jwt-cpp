@@ -112,3 +112,12 @@ jobs:
       - uses: ./.github/actions/process-linting-results
         with:
           linter_name: render-tests
+
+  line-ending:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - run: git add --renormalize .
+      - uses: ./.github/actions/process-linting-results
+        with:
+          linter_name: line-ending
