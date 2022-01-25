@@ -308,7 +308,7 @@ test
 *.o.d
 .vscode
 
-docs
+doxy/
 
 build/*
 package-lock.json
