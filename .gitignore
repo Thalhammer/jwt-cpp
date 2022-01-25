@@ -309,6 +309,7 @@ test
 .vscode
 
 doxy/
+doxygen-awesome*.css
 
 build/*
 package-lock.json
