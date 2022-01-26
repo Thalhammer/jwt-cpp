@@ -1088,9 +1088,13 @@ namespace jwt {
 					return;
 				}
 
+#if OPENSSL_VERSION_NUMBER < 0x10002000L
+				unsigned char* der_sig_data = reinterpret_cast<unsigned char*>(const_cast<char*>(der_signature.data()));
+#else
+				const unsigned char* der_sig_data = reinterpret_cast<const unsigned char*>(der_signature.data());
+#endif
 				auto res =
-					EVP_DigestVerifyFinal(ctx.get(), reinterpret_cast<const unsigned char*>(der_signature.data()),
-										  static_cast<unsigned int>(der_signature.length()));
+					EVP_DigestVerifyFinal(ctx.get(), der_sig_data, static_cast<unsigned int>(der_signature.length()));
 				if (res == 0) {
 					ec = error::signature_verification_error::invalid_signature;
 					return;
