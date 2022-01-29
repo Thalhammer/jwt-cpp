@@ -1,6 +1,6 @@
 # Frequently Asked Questions
 
-## The generated JWT token can be decode, is this correct and secure?
+## The generated JWT token can be decoded, is this correct and secure?
 
 Yes it is correct, in [RFC 7519](https://datatracker.ietf.org/doc/html/rfc7519) the tokens are defined as being base64 encoded.
 This is not a cryptographic hash and can easily be reversed.
