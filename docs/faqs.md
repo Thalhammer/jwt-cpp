@@ -2,10 +2,13 @@
 
 ## The generated JWT token can be decoded, is this correct and secure?
 
-Yes it is correct, in [RFC 7519](https://datatracker.ietf.org/doc/html/rfc7519) the tokens are defined as being base64 encoded.
-This is not a cryptographic hash and can easily be reversed.
-
-This is **not** secure, you should not have any sensitive information in your tokens without extra application logic.
+This is the expected behaviour. While the integrity of tokens is ensured by the generated/verified hash,
+the contents of the token are only **encoded and not encrypted**. This means you can be sure the token
+has not been modified by an unauthorized party, but you should not store confidential information in it. 
+Anyone with access to the token can read all the claims you put into it. They can however not modify
+them unless they have the (private or symetric) key used to generate the token. If you need to put
+confidential information into it, current industry recommends generating a random id and store the data on your
+server, using the id to look it up whenever you need.
 
 ## Can this library encrypt/decrypt claims?
 
