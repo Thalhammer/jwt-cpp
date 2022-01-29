@@ -121,16 +121,6 @@ auto token = jwt::create()
     .sign(jwt::algorithm::hs256{"secret"});
 ```
 
-Here is a simple example of creating a token that will expire in one hour:
-
-```cpp
-auto token = jwt::create()
-    .set_issuer("auth0")
-    .set_issued_at(std::chrono::system_clock::now())
-    .set_expires_at(std::chrono::system_clock::now() + std::chrono::seconds{3600})
-    .sign(jwt::algorithm::hs256{"secret"});
-```
-
 > To see more examples working with RSA public and private keys, visit our [examples](https://github.com/Thalhammer/jwt-cpp/tree/master/example)!
 
 ### Providing your own JSON Traits
