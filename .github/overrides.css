@@ -15,4 +15,10 @@
     html:not(.light-mode) div.contents table iframe {
         filter: none;
     }
+
+    html:not(.light-mode) div.qindex,
+    html:not(.light-mode) div.navtab {
+        background-color: var(--side-nav-background);
+        border: 1px solid var(--separator-color);
+    }
 }
