@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - run: sudo apt install graphviz
       - run: wget https://raw.githubusercontent.com/jothepro/doxygen-awesome-css/v1.6.1/doxygen-awesome.css
       - run: wget https://raw.githubusercontent.com/jothepro/doxygen-awesome-css/v1.6.1/doxygen-awesome-sidebar-only.css
       - uses: mattnotmitt/doxygen-action@v1
