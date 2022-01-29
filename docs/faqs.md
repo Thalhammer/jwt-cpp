@@ -18,9 +18,17 @@ for more.
 
 ## Why are my tokens immediately expired?
 
-If you are generating tokens that seem to immediately expire, you are likely not using UTC. Specifically,
-if you use `get_time` to get the current time, it likely uses localtime, while this library uses UTC,
-which may be why your token is immediately expiring. Please see example above on the right way to use current time.
+If you are generating tokens that seem to immediately expire, you are likely mixing local time where it is not required. The JWT specification
+requires using UTC which this library does.
+
+Here is a simple example of creating a token that will expire in one hour:
+
+```cpp
+auto token = jwt::create()
+    .set_issued_at(std::chrono::system_clock::now())
+    .set_expires_at(std::chrono::system_clock::now() + std::chrono::seconds{3600})
+    .sign(jwt::algorithm::hs256{"secret"});
+```
 
 ## Missing \_HMAC and \_EVP_sha256 symbols on Mac
 
