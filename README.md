@@ -147,4 +147,4 @@ In order to build the test cases you also need
 
 ## Troubleshooting
 
-See the [FAQs](doccs/faqs.md) for tips.
+See the [FAQs](docs/faqs.md) for tips.
