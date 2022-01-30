@@ -12,9 +12,9 @@ jobs:
     strategy:
       matrix:
         openssl:
-          - { tag: "openssl-3.0.0", name: "3.0.0" }
-          - { tag: "OpenSSL_1_1_1l", name: "1.1.1l" }
-          - { tag: "OpenSSL_1_1_0i", name: "1.1.0i" }
+          - { tag: "openssl-3.0.1", name: "3.0.1" }
+          - { tag: "OpenSSL_1_1_1m", name: "1.1.1m" }
+          - { tag: "OpenSSL_1_1_0l", name: "1.1.0l" }
           - { tag: "OpenSSL_1_0_2u", name: "1.0.2u" }
           - { tag: "OpenSSL_1_0_1u", name: "1.0.1u" }
     name: OpenSSL ${{ matrix.openssl.name }}
@@ -47,7 +47,7 @@ jobs:
       - uses: ./.github/actions/install/gtest
       - uses: ./.github/actions/install/openssl
         with:
-          version: "openssl-3.0.0"
+          version: "openssl-3.0.1"
 
       - name: configure
         run: cmake . -DJWT_BUILD_TESTS=ON -DOPENSSL_ROOT_DIR=/tmp -DCMAKE_CXX_FLAGS="-DOPENSSL_NO_DEPRECATED_3_0=1" -DCMAKE_C_FLAGS="-DOPENSSL_NO_DEPRECATED_3_0=1"
@@ -57,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        libressl: ["3.4.0", "3.3.4", "3.2.6"]
+        libressl: ["3.4.2", "3.3.5", "3.2.7"]
     name: LibreSSL ${{ matrix.libressl }}
     steps:
       - uses: actions/checkout@v2
@@ -85,6 +85,7 @@ jobs:
       matrix:
         wolfssl:
           - { ref: "v5.0.0-stable", name: "5.0.0" }
+          - { ref: "v5.1.1-stable", name: "5.1.1"}
     name: wolfSSL ${{ matrix.wolfssl.name }}
     steps:
       - uses: actions/checkout@v2
