@@ -14,7 +14,7 @@ jobs:
         openssl:
           - { tag: "openssl-3.0.1", name: "3.0.1" }
           - { tag: "OpenSSL_1_1_1m", name: "1.1.1m" }
-          - { tag: "OpenSSL_1_1_0l", name: "1.1.0l" }
+          - { tag: "OpenSSL_1_1_0i", name: "1.1.0i" } # Do not bump, there's a broken in the autoconfig script and it's not maintained
           - { tag: "OpenSSL_1_0_2u", name: "1.0.2u" }
           - { tag: "OpenSSL_1_0_1u", name: "1.0.1u" }
     name: OpenSSL ${{ matrix.openssl.name }}
