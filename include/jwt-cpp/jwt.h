@@ -72,6 +72,9 @@
  * JWS (JSON Web Signature) from [RFC7515](https://tools.ietf.org/html/rfc7515)
  */
 namespace jwt {
+	/**
+	 * Default system time point in UTC
+	 */
 	using date = std::chrono::system_clock::time_point;
 
 	/**
@@ -544,8 +547,8 @@ namespace jwt {
 		 *
 		 * The string should contain a pem encoded certificate or public key
 		 *
-		 * \param certstr	String containing the certificate encoded as pem
-		 * \param pw		Password used to decrypt certificate (leave empty if not encrypted)
+		 * \param key		String containing the certificate encoded as pem
+		 * \param password	Password used to decrypt certificate (leave empty if not encrypted)
 		 * \param ec		error_code for error_detection (gets cleared if no error occures)
 		 */
 		inline std::shared_ptr<EVP_PKEY> load_public_key_from_string(const std::string& key,
@@ -588,8 +591,8 @@ namespace jwt {
 		 *
 		 * The string should contain a pem encoded certificate or public key
 		 *
-		 * \param certstr	String containing the certificate or key encoded as pem
-		 * \param pw		Password used to decrypt certificate or key (leave empty if not encrypted)
+		 * \param key		String containing the certificate or key encoded as pem
+		 * \param password	Password used to decrypt certificate or key (leave empty if not encrypted)
 		 * \throw			rsa_exception if an error occurred
 		 */
 		inline std::shared_ptr<EVP_PKEY> load_public_key_from_string(const std::string& key,
@@ -604,7 +607,7 @@ namespace jwt {
 		 * \brief Load a private key from a string.
 		 *
 		 * \param key		String containing a private key as pem
-		 * \param pw		Password used to decrypt key (leave empty if not encrypted)
+		 * \param password	Password used to decrypt key (leave empty if not encrypted)
 		 * \param ec		error_code for error_detection (gets cleared if no error occures)
 		 */
 		inline std::shared_ptr<EVP_PKEY>
@@ -633,7 +636,7 @@ namespace jwt {
 		 * \brief Load a private key from a string.
 		 *
 		 * \param key		String containing a private key as pem
-		 * \param pw		Password used to decrypt key (leave empty if not encrypted)
+		 * \param password	Password used to decrypt key (leave empty if not encrypted)
 		 * \throw			rsa_exception if an error occurred
 		 */
 		inline std::shared_ptr<EVP_PKEY> load_private_key_from_string(const std::string& key,
@@ -649,8 +652,8 @@ namespace jwt {
 		 *
 		 * The string should contain a pem encoded certificate or public key
 		 *
-		 * \param certstr	String containing the certificate encoded as pem
-		 * \param pw		Password used to decrypt certificate (leave empty if not encrypted)
+		 * \param key		String containing the certificate encoded as pem
+		 * \param password	Password used to decrypt certificate (leave empty if not encrypted)
 		 * \param ec		error_code for error_detection (gets cleared if no error occures)
 		 */
 		inline std::shared_ptr<EVP_PKEY>
@@ -693,8 +696,8 @@ namespace jwt {
 		 *
 		 * The string should contain a pem encoded certificate or public key
 		 *
-		 * \param certstr	String containing the certificate or key encoded as pem
-		 * \param pw		Password used to decrypt certificate or key (leave empty if not encrypted)
+		 * \param key		String containing the certificate or key encoded as pem
+		 * \param password	Password used to decrypt certificate or key (leave empty if not encrypted)
 		 * \throw			ecdsa_exception if an error occurred
 		 */
 		inline std::shared_ptr<EVP_PKEY> load_public_ec_key_from_string(const std::string& key,
@@ -709,7 +712,7 @@ namespace jwt {
 		 * \brief Load a private key from a string.
 		 *
 		 * \param key		String containing a private key as pem
-		 * \param pw		Password used to decrypt key (leave empty if not encrypted)
+		 * \param password	Password used to decrypt key (leave empty if not encrypted)
 		 * \param ec		error_code for error_detection (gets cleared if no error occures)
 		 */
 		inline std::shared_ptr<EVP_PKEY>
@@ -738,7 +741,7 @@ namespace jwt {
 		 * \brief Load a private key from a string.
 		 *
 		 * \param key		String containing a private key as pem
-		 * \param pw		Password used to decrypt key (leave empty if not encrypted)
+		 * \param password	Password used to decrypt key (leave empty if not encrypted)
 		 * \throw			ecdsa_exception if an error occurred
 		 */
 		inline std::shared_ptr<EVP_PKEY> load_private_ec_key_from_string(const std::string& key,
@@ -756,10 +759,10 @@ namespace jwt {
 		 */
 		inline
 #ifdef JWT_OPENSSL_1_0_0
-			static std::string
+			std::string
 			bn2raw(BIGNUM* bn)
 #else
-			static std::string
+			std::string
 			bn2raw(const BIGNUM* bn)
 #endif
 		{
@@ -772,7 +775,7 @@ namespace jwt {
 		 * \param raw String to convert
 		 * \return BIGNUM representation
 		 */
-		inline static std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw) {
+		inline std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw) {
 			return std::unique_ptr<BIGNUM, decltype(&BN_free)>(
 				BN_bin2bn(reinterpret_cast<const unsigned char*>(raw.data()), static_cast<int>(raw.size()), nullptr),
 				BN_free);
@@ -994,10 +997,14 @@ namespace jwt {
 		struct ecdsa {
 			/**
 			 * Construct new ecdsa algorithm
+			 *
 			 * \param public_key ECDSA public key in PEM format
-			 * \param private_key ECDSA private key or empty string if not available. If empty, signing will always
-			 * fail. \param public_key_password Password to decrypt public key pem. \param private_key_password Password
-			 * to decrypt private key pem. \param md Pointer to hash function \param name Name of the algorithm
+			 * \param private_key ECDSA private key or empty string if not available. If empty, signing will always fail
+			 * \param public_key_password Password to decrypt public key pem
+			 * \param private_key_password Password to decrypt private key pem
+			 * \param md Pointer to hash function
+			 * \param name Name of the algorithm
+			 * \param siglen The bit length of the signature
 			 */
 			ecdsa(const std::string& public_key, const std::string& private_key, const std::string& public_key_password,
 				  const std::string& private_key_password, const EVP_MD* (*md)(), std::string name, size_t siglen)
@@ -2231,9 +2238,15 @@ namespace jwt {
 	};
 
 	namespace error {
+		/**
+		 * Attempt to parse JSON was unsuccessful
+		 */
 		struct invalid_json_exception : public std::runtime_error {
 			invalid_json_exception() : runtime_error("invalid json") {}
 		};
+		/**
+		 * Attempt to access claim was unsuccessful
+		 */
 		struct claim_not_present_exception : public std::out_of_range {
 			claim_not_present_exception() : out_of_range("claim not found") {}
 		};
@@ -2880,6 +2893,9 @@ namespace jwt {
 	};
 
 	namespace verify_ops {
+		/**
+		 * This is the base container which holds the token that need to be verified
+		 */
 		template<typename json_traits>
 		struct verify_context {
 			verify_context(date ctime, const decoded_jwt<json_traits>& j, size_t l)
@@ -3159,8 +3175,13 @@ namespace jwt {
 
 		/**
 		 * Set an type to check for.
+		 *
+		 * According to [RFC 7519 Section 5.1](https://datatracker.ietf.org/doc/html/rfc7519#section-5.1),
+		 * This parameter is ignored by JWT implementations; any processing of this parameter is performed by the JWT application.
 		 * Check is casesensitive.
-		 * \param iss Issuer to check for.
+		 *
+		 * \param type Type Header Parameter to check for.
+		 * \param locale Localization functionality to use when comapring
 		 * \return *this to allow chaining
 		 */
 		verifier& with_type(const typename json_traits::string_type& type, std::locale locale = std::locale{}) {

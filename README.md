@@ -1,4 +1,4 @@
-# ![logo](https://raw.githubusercontent.com/Thalhammer/jwt-cpp/master/.github/logo.svg)
+<img src="https://raw.githubusercontent.com/Thalhammer/jwt-cpp/master/.github/logo.svg" alt="logo" width="100%">
 
 [![License Badge](https://img.shields.io/github/license/Thalhammer/jwt-cpp)](https://github.com/Thalhammer/jwt-cpp/blob/master/LICENSE)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/5f7055e294744901991fd0a1620b231d)](https://app.codacy.com/app/Thalhammer/jwt-cpp?utm_source=github.com&utm_medium=referral&utm_content=Thalhammer/jwt-cpp&utm_campaign=Badge_Grade_Settings)
@@ -36,7 +36,7 @@ For completeness, here is a list of all supported algorithms:
 
 ## SSL Compatibility
 
-In the name of flexibility and extensibility, jwt-cpp supports [OpenSSL](https://github.com/openssl/openssl), [LibreSSL](https://github.com/libressl-portable/portable), and [wolfSSL](https://github.com/wolfSSL/wolfssl). These are the version which are currently being tested:
+In the name of flexibility and extensibility, jwt-cpp supports [OpenSSL](https://github.com/openssl/openssl), [LibreSSL](https://github.com/libressl-portable/portable), and [wolfSSL](https://github.com/wolfSSL/wolfssl). Read [this page](docs/ssl.md) for more details. These are the version which are currently being tested:
 
 | OpenSSL           | LibreSSL       | wolfSSL        |
 |-------------------|----------------|----------------|
@@ -65,7 +65,7 @@ There is no hard dependency on a JSON library. Instead, there's a generic `jwt::
 jwt::basic_claim<my_favorite_json_library_traits> claim(json::object({{"json", true},{"example", 0}}));
 ```
 
-This allows for complete freedom when picking which libraries you want to use. For more information, [see below](#providing-your-own-json-traits-your-traits).
+This allows for complete freedom when picking which libraries you want to use. For more information, [read this page](docs/traits.md)).
 
 For your convience there are serval traits implementation which provide some popular JSON libraries. They are:
 
@@ -79,7 +79,7 @@ For your convience there are serval traits implementation which provide some pop
 [jsoncons]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/traits/danielaparker-jsoncons/shields.json
 [boostjson]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/traits/boost-json/shields.json
 
-In order to maintain compatibility, [picojson](https://github.com/kazuho/picojson) is still used to provide a specialized `jwt::claim` along with all helpers. Defining `JWT_DISABLE_PICOJSON` will remove this optional dependency. It's possible to directly include the traits defaults for the other JSON libraries. See the [traits examples](example/traits) for details.
+In order to maintain compatibility, [picojson](https://github.com/kazuho/picojson) is still used to provide a specialized `jwt::claim` along with all helpers. Defining `JWT_DISABLE_PICOJSON` will remove this optional dependency. It's possible to directly include the traits defaults for the other JSON libraries. See the [traits examples](https://github.com/prince-chrismc/jwt-cpp/tree/master/example/traits) for details.
 
 As for the base64 requirements of JWTs, this libary provides `base.h` with all the required implentation; However base64 implementations are very common, with varying degrees of performance. When providing your own base64 implementation, you can define `JWT_DISABLE_BASE64` to remove the jwt-cpp implementation.
 
@@ -122,74 +122,11 @@ auto token = jwt::create()
     .sign(jwt::algorithm::hs256{"secret"});
 ```
 
-Here is a simple example of creating a token that will expire in one hour:
-
-```cpp
-auto token = jwt::create()
-    .set_issuer("auth0")
-    .set_issued_at(std::chrono::system_clock::now())
-    .set_expires_at(std::chrono::system_clock::now() + std::chrono::seconds{3600})
-    .sign(jwt::algorithm::hs256{"secret"});
-```
-
 > To see more examples working with RSA public and private keys, visit our [examples](https://github.com/Thalhammer/jwt-cpp/tree/master/example)!
 
 ### Providing your own JSON Traits
 
-There are several key items that need to be provided to a `jwt::basic_claim` in order for it to be interoptable with you JSON library of choice.
-
-* type specifications
-* conversion from generic "value type" to a specific type
-* serialization and parsing
-
-If ever you are not sure, the traits are heavily checked against static asserts to make sure you provide everything that's required.
-
-> :warning: Not all JSON libraries are a like, you may need to extent certain types such that it can be used by jwt-cpp. See this [example](https://github.com/Thalhammer/jwt-cpp/blob/ac3de9e69bc698a464dacb256a1b50512843f092/tests/jsoncons/JsonconsTest.cpp).
-
-```cpp
-struct my_favorite_json_library_traits {
-    // Type Specifications
-    using value_type = json; // The generic "value type" implementation, most libraries have one
-    using object_type = json::object_t; // The "map type" string to value
-    using array_type = json::array_t; // The "list type" array of values
-    using string_type = std::string; // The "list of chars", must be a narrow char
-    using number_type = double; // The "percision type"
-    using integer_type = int64_t; // The "integral type"
-    using boolean_type = bool; // The "boolean type"
-
-    // Translation between the implementation notion of type, to the jwt::json::type equivilant
-    static jwt::json::type get_type(const value_type &val) {
-        using jwt::json::type;
-
-        if (val.type() == json::value_t::object)
-            return type::object;
-        if (val.type() == json::value_t::array)
-            return type::array;
-        if (val.type() == json::value_t::string)
-            return type::string;
-        if (val.type() == json::value_t::number_float)
-            return type::number;
-        if (val.type() == json::value_t::number_integer)
-            return type::integer;
-        if (val.type() == json::value_t::boolean)
-            return type::boolean;
-
-        throw std::logic_error("invalid type");
-    }
-
-    // Conversion from generic value to specific type
-    static object_type as_object(const value_type &val);
-    static array_type as_array(const value_type &val);
-    static string_type as_string(const value_type &val);
-    static number_type as_number(const value_type &val);
-    static integer_type as_int(const value_type &val);
-    static boolean_type as_bool(const value_type &val);
-
-    // serilization and parsing
-    static bool parse(value_type &val, string_type str);
-    static string_type serialize(const value_type &val); // with no extra whitespace, padding or indentation
-};
-```
+To learn how to writes a trait's implementation, checkout the [these instructions](docs/traits.md)
 
 ## Contributing
 
@@ -211,22 +148,4 @@ In order to build the test cases you also need
 
 ## Troubleshooting
 
-### Expired tokens
-
-If you are generating tokens that seem to immediately expire, you are likely not using UTC. Specifically,
-if you use `get_time` to get the current time, it likely uses localtime, while this library uses UTC,
-which may be why your token is immediately expiring. Please see example above on the right way to use current time.
-
-### Missing \_HMAC and \_EVP_sha256 symbols on Mac
-
-There seems to exists a problem with the included openssl library of MacOS. Make sure you link to one provided by brew.
-See [here](https://github.com/Thalhammer/jwt-cpp/issues/6) for more details.
-
-### Building on windows fails with syntax errors
-
-The header `<Windows.h>`, which is often included in windowsprojects, defines macros for MIN and MAX which screw up std::numeric_limits.
-See [here](https://github.com/Thalhammer/jwt-cpp/issues/5) for more details. To fix this do one of the following things:
-
-* define NOMINMAX, which suppresses this behaviour
-* include this library before you include windows.h
-* place `#undef max` and `#undef min` before you include this library
+See the [FAQs](docs/faqs.md) for tips.
