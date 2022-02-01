@@ -73,6 +73,10 @@
 #define JWT_CLAIM_EXPLICIT explicit
 #endif
 
+#ifdef JWT_OPENSSL_3_0
+#include <openssl/param_build.h>
+#endif
+
 /**
  * \brief JSON Web Token
  *
@@ -976,6 +980,9 @@ namespace jwt {
 				} else
 					throw rsa_exception(error::rsa_error::no_key_provided);
 			}
+
+			rsa(helper::evp_pkey_handle pkey, const EVP_MD* (*md)(), std::string name)
+				: pkey(pkey), md(md), alg_name(std::move(name)) {}
 			/**
 			 * Sign jwt data
 			 * \param data The data to sign
@@ -3134,10 +3141,28 @@ namespace jwt {
 
 	public:
 		JWT_CLAIM_EXPLICIT jwk(const typename json_traits::string_type& str)
-			: jwk_claims(details::map_of_claims<json_traits>::parse_claims(str)) {}
+			: jwk(details::map_of_claims<json_traits>::parse_claims(str)) {}
 
-		JWT_CLAIM_EXPLICIT jwk(const typename json_traits::value_type& json)
-			: jwk_claims(json_traits::as_object(json)) {}
+		JWT_CLAIM_EXPLICIT jwk(const typename json_traits::value_type& json) : jwk(json_traits::as_object(json)) {}
+
+		JWT_CLAIM_EXPLICIT jwk(const typename json_traits::object_type& json)
+			: jwk_claims(json), key(build_key(jwk_claims)) {
+			// https://datatracker.ietf.org/doc/html/rfc7518#section-6.1
+			// * indicate required params
+			// "kty"* : "EC", "RSA", "oct"
+
+			// if "EC", then "crv"*, then "x"*. if "crv" is any of "P-256", "P-384", "P-521", then "y"*
+			// if "EC" and private key, then "d"*
+
+			// if "RSA", then "n"*, "e"*
+			// if "RSA" and private, then "d"*
+			// if "RSA" and any of the following is present, then all must be present
+			//   "p", "q", "dp", "dq", "qi"
+			// "oth" - array of objects consisting of "r"*, "d"*, "t"*
+
+			// if "oct", then "k"*
+			// if "oct", then SHOULD contain "alg"
+		}
 
 		/**
 		 * Get key type claim
@@ -3316,6 +3341,109 @@ namespace jwt {
 		}
 
 		bool empty() const noexcept { return jwk_claims.empty(); }
+
+		helper::evp_pkey_handle get_pkey() const { return key.get_asymmetric_key(); }
+
+		std::string get_oct_key() const { return key.get_symmetric_key(); }
+
+	private:
+		class key {
+		public:
+			static key symmetric(const std::string& bytes) { return key(bytes); }
+
+			static key asymmetric(helper::evp_pkey_handle pkey) { return key(pkey); }
+
+			std::string get_symmetric_key() const {
+				if (!is_symmetric) { throw std::logic_error("not a symmetric key"); }
+
+				return oct_key;
+			}
+
+			helper::evp_pkey_handle get_asymmetric_key() const {
+				if (is_symmetric) { throw std::logic_error("not an asymmetric key"); }
+
+				return pkey;
+			}
+
+		private:
+			key(const std::string& key) {
+				is_symmetric = true;
+				oct_key = key;
+			}
+
+			key(helper::evp_pkey_handle key) {
+				is_symmetric = false;
+				pkey = key;
+			}
+
+			bool is_symmetric;
+			helper::evp_pkey_handle pkey;
+			std::string oct_key;
+		};
+
+		static helper::evp_pkey_handle build_rsa_key(const details::map_of_claims<json_traits>& claims) {
+			EVP_PKEY* evp_key = nullptr;
+			auto n = jwt::helper::raw2bn(
+				base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(claims.get_claim("n").as_string())));
+			auto e = jwt::helper::raw2bn(
+				base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(claims.get_claim("e").as_string())));
+#ifdef JWT_OPENSSL_3_0
+			// https://www.openssl.org/docs/manmaster/man7/EVP_PKEY-RSA.html
+			// see https://www.openssl.org/docs/man3.0/man3/EVP_PKEY_fromdata.html
+			// and https://stackoverflow.com/questions/68465716/how-to-properly-create-an-rsa-key-from-raw-data-in-openssl-3-0-in-c-language
+			std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)> ctx(
+				EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL), EVP_PKEY_CTX_free);
+			if (!ctx) { throw std::runtime_error("EVP_PKEY_CTX_new_from_name failed"); }
+
+			std::unique_ptr<OSSL_PARAM_BLD, decltype(&OSSL_PARAM_BLD_free)> params_build(OSSL_PARAM_BLD_new(),
+																						 OSSL_PARAM_BLD_free);
+			OSSL_PARAM_BLD_push_BN(params_build.get(), "n", n.get());
+			OSSL_PARAM_BLD_push_BN(params_build.get(), "e", e.get());
+
+			std::unique_ptr<OSSL_PARAM, decltype(&OSSL_PARAM_free)> params(OSSL_PARAM_BLD_to_param(params_build.get()),
+																		   OSSL_PARAM_free);
+			EVP_PKEY_fromdata_init(ctx.get());
+			EVP_PKEY_fromdata(ctx.get(), &evp_key, EVP_PKEY_PUBLIC_KEY, params.get());
+			return helper::evp_pkey_handle(evp_key);
+#else
+			RSA* rsa = RSA_new();
+			evp_key = EVP_PKEY_new();
+#if defined(JWT_OPENSSL_1_0_0) && !defined(LIBWOLFSSL_VERSION_HEX)
+			rsa->e = e.release();
+			rsa->n = n.release();
+#else
+			RSA_set0_key(rsa, n.release(), e.release(), nullptr);
+#endif
+			EVP_PKEY_assign_RSA(evp_key, rsa);
+			return helper::evp_pkey_handle(evp_key);
+#endif
+		}
+
+		static key build_key(const details::map_of_claims<json_traits>& claims) {
+			if (!claims.has_claim("kty")) {
+				// TODO: custom exception or error code
+				throw std::runtime_error("missing required claim \"kty\"");
+			}
+
+			if (claims.get_claim("kty").get_type() != json::type::string) {
+				// TODO: custom exception or error code
+				throw std::runtime_error("\"kty\" claim must be of type 'string'");
+			}
+
+			if (claims.get_claim("kty").as_string() == "RSA") {
+				return key::asymmetric(build_rsa_key(claims));
+			} else if (claims.get_claim("kty").as_string() == "EC") {
+				// TODO: build EC key
+				throw std::runtime_error("not implemented");
+			} else if (claims.get_claim("kty").as_string() == "oct") {
+				return key::symmetric(base::decode<alphabet::base64url>(claims.get_claim("k").as_string()));
+			} else {
+				// TODO: do not build error messages like this
+				throw std::runtime_error("unknown key type (\"kty\"):" + claims.get_claim("kty").as_string());
+			}
+		}
+
+		key key;
 	};
 
 	/**
