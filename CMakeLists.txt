@@ -107,11 +107,9 @@ if(JWT_EXTERNAL_PICOJSON)
   target_link_libraries(jwt-cpp INTERFACE picojson::picojson>)
 endif()
 
-# If Hunter is enabled, we need to explicit set relative paths so the files are palced correctly
-if(HUNTER_ENABLED)
+# Hunter needs relative paths so the files are palced correctly
+if(NOT JWT_CMAKE_FILES_INSTALL_DIR)
   set(JWT_CMAKE_FILES_INSTALL_DIR cmake)
-elseif(NOT JWT_CMAKE_FILES_INSTALL_DIR)
-  set(JWT_CMAKE_FILES_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/cmake)
 endif()
 
 configure_package_config_file(
