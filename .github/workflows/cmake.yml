@@ -66,11 +66,13 @@ jobs:
           make -j $(nproc)
           sudo make install
 
+      - uses: ./.github/actions/install/gtest
+
       - name: setup
         run: |
           mkdir build
           cd build
-          cmake .. -DJWT_BUILD_EXAMPLES=OFF
+          cmake .. -DJWT_BUILD_EXAMPLES=ON -DJWT_BUILD_TESTS=ON
           sudo make install
 
       - name: test
