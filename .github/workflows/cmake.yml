@@ -66,6 +66,8 @@ jobs:
           make -j $(nproc)
           sudo make install
 
+      - uses: ./.github/actions/install/gtest
+
       - name: setup
         run: |
           mkdir build
