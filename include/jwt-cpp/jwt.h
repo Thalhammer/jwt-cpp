@@ -3360,6 +3360,15 @@ namespace jwt {
 		/// Supported algorithms
 		std::unordered_map<std::string, std::shared_ptr<algo_base>> algs;
 
+		void verify_claims(const decoded_jwt<json_traits>& jwt, std::error_code& ec) const {
+			verify_ops::verify_context<json_traits> ctx{clock.now(), jwt, default_leeway};
+			for (auto& c : claims) {
+				ctx.claim_key = c.first;
+				c.second(ctx, ec);
+				if (ec) return;
+			}
+		}
+
 	public:
 		/**
 		 * Constructor for building a new verifier instance
@@ -3551,12 +3560,7 @@ namespace jwt {
 			algs.at(algo)->verify(data, sig, ec);
 			if (ec) return;
 
-			verify_ops::verify_context<json_traits> ctx{clock.now(), jwt, default_leeway};
-			for (auto& c : claims) {
-				ctx.claim_key = c.first;
-				c.second(ctx, ec);
-				if (ec) return;
-			}
+			verify_claims(jwt, ec);
 		}
 	};
 
