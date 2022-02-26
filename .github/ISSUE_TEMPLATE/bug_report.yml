@@ -1,8 +1,7 @@
 name: Bug Report 🐛
 description: File a bug report
-title: "Short Description"
+
 labels: ["bug"]
-assignees:
 body:
   - type: markdown
     attributes:
@@ -53,6 +52,20 @@ body:
         - Linux
         - MacOS
         - Other (please let us know if the "What happened" box)
+    validations:
+      required: true
+  - type: dropdown
+    id: compiler
+    attributes:
+      label: What compiler are you seeing the problem on?
+      multiple: true
+      options:
+        - GCC
+        - Clang
+        - MSVC
+        - Other (please let us know if the "What happened" box)       
+    validations:
+      required: true 
   - type: textarea
     id: logs
     attributes:
