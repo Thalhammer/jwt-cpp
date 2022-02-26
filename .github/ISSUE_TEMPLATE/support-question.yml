@@ -6,12 +6,15 @@ body:
     attributes:
       value: |
         Don't hesitate to ask any question you might have!
+- type: input
+  id: question
+  attributes:
+    label: "What's your question?"
+  validations:
+    required: true
   - type: textarea
     id: question
     attributes:
-      label: What happened?
-      description: Also tell us, what did you expect to happen?
-      placeholder: Tell us what you see!
-      value: "A bug happened!"
+      label: Additional Context
     validations:
       required: true
