@@ -19,7 +19,7 @@ body:
     validations:
       required: true
   - type: textarea
-    id:  (Include if Applicable) 
+    id: reproduce
     attributes:
       label: How To Reproduce?
       description: Please provide a small snippet to reproduce the issue
