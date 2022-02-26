@@ -6,12 +6,12 @@ body:
     attributes:
       value: |
         Don't hesitate to ask any question you might have!
-- type: input
-  id: question
-  attributes:
-    label: "What's your question?"
-  validations:
-    required: true
+  - type: input
+    id: question
+    attributes:
+      label: "What's your question?"
+    validations:
+      required: true
   - type: textarea
     id: question
     attributes:
