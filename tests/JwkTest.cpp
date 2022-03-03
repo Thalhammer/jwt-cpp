@@ -40,7 +40,7 @@ vQIDAQAB
 -----END PUBLIC KEY-----
 */
 
-TEST(JwkTest, ParseKey) {
+TEST(JwkTest, RsaKey) {
 	std::string token =
 		"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.IzM0dgbhU1CsRbjmwyPHXkc8LagqFtsZD6p1ls_"
 		"WBugkEKNfFmZmhOM1YYiFg59xId_KtzNdp4puzGIafut15U06DL2ZGH_H4xE7ONy6WLA_i5z5H8gPxD3ui2W4nHEEf-mvqKSn-"
@@ -55,9 +55,24 @@ TEST(JwkTest, ParseKey) {
 
 	auto jwk = jwt::parse_jwk(public_key);
 	ASSERT_EQ("RSA", jwk.get_key_type());
-	auto alg = jwt::algorithm::rsa(jwk.get_pkey(), EVP_sha256, "RS256");
-	auto verify = jwt::verify();
+	auto verifier = jwt::verify();
+	verifier.allow_key(jwk);
 	auto decoded_token = jwt::decode(token);
+	ASSERT_NO_THROW(verifier.verify(decoded_token));
+}
 
-	ASSERT_NO_THROW(verify.do_verify(jwk, decoded_token));
+TEST(JwkTest, HmacKey) {
+	std::string token =
+		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
+	std::string secret_key = R"({
+		"kty": "oct",
+		"k": "c2VjcmV0"
+	})";
+
+	auto jwk = jwt::parse_jwk(secret_key);
+	ASSERT_EQ("oct", jwk.get_key_type());
+	auto verifier = jwt::verify();
+	verifier.allow_key(jwk);
+	auto decoded_token = jwt::decode(token);
+	ASSERT_NO_THROW(verifier.verify(decoded_token));
 }

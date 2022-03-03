@@ -1617,6 +1617,8 @@ namespace jwt {
 			explicit rs256(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: rsa(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "RS256") {}
+
+			explicit rs256(helper::evp_pkey_handle pkey) : rsa(pkey, EVP_sha256, "RS256") {}
 		};
 		/**
 		 * RS384 algorithm
@@ -1632,6 +1634,8 @@ namespace jwt {
 			explicit rs384(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: rsa(public_key, private_key, public_key_password, private_key_password, EVP_sha384, "RS384") {}
+
+			explicit rs384(helper::evp_pkey_handle pkey) : rsa(pkey, EVP_sha384, "RS384") {}
 		};
 		/**
 		 * RS512 algorithm
@@ -1647,6 +1651,8 @@ namespace jwt {
 			explicit rs512(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: rsa(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "RS512") {}
+
+			explicit rs512(helper::evp_pkey_handle pkey) : rsa(pkey, EVP_sha512, "RS512") {}
 		};
 		/**
 		 * ES256 algorithm
@@ -3126,6 +3132,12 @@ namespace jwt {
 		};
 	} // namespace verify_ops
 
+	using alg_name = std::string;
+	using alg_list = std::vector<alg_name>;
+	using algorithms = std::unordered_map<std::string, alg_list>;
+	static const algorithms supported_alg = {{"RSA", {"RS256", "RS384", "RS512", "PS256", "PS384", "PS512"}},
+											 {"EC", {"ES256", "ES384", "ES512", "ES256K"}},
+											 {"oct", {"HS256", "HS384", "HS512"}}};
 	/**
 	 * \brief JSON Web Key
 	 *
@@ -3346,6 +3358,11 @@ namespace jwt {
 
 		std::string get_oct_key() const { return key.get_symmetric_key(); }
 
+		bool supports(const std::string& alg_name) const {
+			const alg_list& x = supported_alg.find(get_key_type())->second;
+			return std::find(x.begin(), x.end(), alg_name) != x.end();
+		}
+
 	private:
 		class key {
 		public:
@@ -3488,6 +3505,11 @@ namespace jwt {
 		/// Supported algorithms
 		std::unordered_map<std::string, std::shared_ptr<algo_base>> algs;
 
+		typedef std::vector<jwt::jwk<json_traits>> key_list;
+		/// https://datatracker.ietf.org/doc/html/rfc7517#section-4.5 - kid to keys
+		typedef std::unordered_map<std::string, key_list> keysets;
+		keysets keys;
+
 		void verify_claims(const decoded_jwt<json_traits>& jwt, std::error_code& ec) const {
 			verify_ops::verify_context<json_traits> ctx{clock.now(), jwt, default_leeway};
 			for (auto& c : claims) {
@@ -3495,6 +3517,52 @@ namespace jwt {
 				c.second(ctx, ec);
 				if (ec) return;
 			}
+		}
+
+		static inline std::unique_ptr<algo_base> from_key_and_alg(const jwt::jwk<json_traits>& key,
+																  const std::string& alg_name, std::error_code& ec) {
+			ec.clear();
+			algorithms::const_iterator it = supported_alg.find(key.get_key_type());
+			if (it == supported_alg.end()) {
+				ec = error::token_verification_error::wrong_algorithm;
+				return nullptr;
+			}
+
+			const alg_list& supported_jwt_algorithms = it->second;
+			if (std::find(supported_jwt_algorithms.begin(), supported_jwt_algorithms.end(), alg_name) ==
+				supported_jwt_algorithms.end()) {
+				ec = error::token_verification_error::wrong_algorithm;
+				return nullptr;
+			}
+
+			if (alg_name == "RS256") {
+				return std::make_unique<algo<jwt::algorithm::rs256>>(jwt::algorithm::rs256(key.get_pkey()));
+			} else if (alg_name == "RS384") {
+				return std::make_unique<algo<jwt::algorithm::rs384>>(jwt::algorithm::rs384(key.get_pkey()));
+			} else if (alg_name == "RS512") {
+				return std::make_unique<algo<jwt::algorithm::rs512>>(jwt::algorithm::rs512(key.get_pkey()));
+			} else if (alg_name == "PS256") {
+				return std::make_unique<algo<jwt::algorithm::ps256>>(jwt::algorithm::ps256(key.get_pkey()));
+			} else if (alg_name == "PS384") {
+				return std::make_unique<algo<jwt::algorithm::ps384>>(jwt::algorithm::ps384(key.get_pkey()));
+			} else if (alg_name == "PS512") {
+				return std::make_unique<algo<jwt::algorithm::ps512>>(jwt::algorithm::ps512(key.get_pkey()));
+			} else if (alg_name == "ES256") {
+				return std::make_unique<algo<jwt::algorithm::es256>>(jwt::algorithm::es256(key.get_pkey()));
+			} else if (alg_name == "ES384") {
+				return std::make_unique<algo<jwt::algorithm::es384>>(jwt::algorithm::es384(key.get_pkey()));
+			} else if (alg_name == "ES512") {
+				return std::make_unique<algo<jwt::algorithm::es512>>(jwt::algorithm::es512(key.get_pkey()));
+			} else if (alg_name == "HS256") {
+				return std::make_unique<algo<jwt::algorithm::hs256>>(jwt::algorithm::hs256(key.get_oct_key()));
+			} else if (alg_name == "HS384") {
+				return std::make_unique<algo<jwt::algorithm::hs384>>(jwt::algorithm::hs384(key.get_oct_key()));
+			} else if (alg_name == "HS512") {
+				return std::make_unique<algo<jwt::algorithm::hs512>>(jwt::algorithm::hs512(key.get_oct_key()));
+			}
+
+			ec = error::token_verification_error::wrong_algorithm;
+			return nullptr;
 		}
 
 	public:
@@ -3661,6 +3729,18 @@ namespace jwt {
 			return *this;
 		}
 
+		verifier& allow_key(const jwt::jwk<json_traits>& key) {
+			std::string keyid = "";
+			if (key.has_key_id()) {
+				keyid = key.get_key_id();
+				auto it = keys.find(keyid);
+				if (it == keys.end()) { keys[keyid] = key_list(); }
+			}
+
+			keys[keyid].push_back(key);
+			return *this;
+		}
+
 		/**
 		 * Verify the given token.
 		 * \param jwt Token to check
@@ -3681,13 +3761,32 @@ namespace jwt {
 			const typename json_traits::string_type data = jwt.get_header_base64() + "." + jwt.get_payload_base64();
 			const typename json_traits::string_type sig = jwt.get_signature();
 			const std::string algo = jwt.get_algorithm();
-			if (algs.count(algo) == 0) {
-				ec = error::token_verification_error::wrong_algorithm;
-				return;
-			}
-			algs.at(algo)->verify(data, sig, ec);
-			if (ec) return;
+			std::string kid("");
+			if (jwt.has_header_claim("kid")) { kid = jwt.get_header_claim("kid").as_string(); }
 
+			typename keysets::const_iterator key_set_it = keys.find(kid);
+			bool key_found = false;
+			if (key_set_it != keys.end()) {
+				const key_list& keys = key_set_it->second;
+				for (const auto& key : keys) {
+					if (key.supports(algo)) {
+						key_found = true;
+						auto alg = from_key_and_alg(key, algo, ec);
+						alg->verify(data, sig, ec);
+						break;
+					}
+				}
+			}
+
+			if (!key_found) {
+				if (algs.count(algo) == 0) {
+					ec = error::token_verification_error::wrong_algorithm;
+					return;
+				}
+				algs.at(algo)->verify(data, sig, ec);
+			}
+
+			if (ec) return;
 			verify_claims(jwt, ec);
 		}
 	};
