@@ -1,6 +1,7 @@
 #ifndef JWT_CPP_BASE_H
 #define JWT_CPP_BASE_H
 
+#include <algorithm>
 #include <array>
 #include <stdexcept>
 #include <string>
@@ -21,15 +22,19 @@ namespace jwt {
 	 */
 	namespace alphabet {
 		/**
+		 * \brief Collection of characters making up the alphabet
+		 */
+		using soup = std::array<char, 64>;
+		/**
 		 * \brief valid list of characted when working with [Base64](https://tools.ietf.org/html/rfc3548)
 		 */
 		struct base64 {
-			static const std::array<char, 64>& data() {
-				static constexpr std::array<char, 64> data{
-					{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
-					 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
-					 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-					 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'}};
+			static const soup& data() {
+				static constexpr soup data{{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+											'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+											'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+											'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+											'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'}};
 				return data;
 			}
 			static const std::string& fill() {
@@ -41,12 +46,12 @@ namespace jwt {
 		 * \brief valid list of characted when working with [Base64URL](https://tools.ietf.org/html/rfc4648)
 		 */
 		struct base64url {
-			static const std::array<char, 64>& data() {
-				static constexpr std::array<char, 64> data{
-					{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
-					 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
-					 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-					 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'}};
+			static const soup& data() {
+				static constexpr soup data{{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+											'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+											'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+											'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+											'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'}};
 				return data;
 			}
 			static const std::string& fill() {
@@ -54,6 +59,13 @@ namespace jwt {
 				return fill;
 			}
 		};
+
+		inline uint32_t index(const soup& alphabet, char symbol) {
+			auto itr = std::find_if(alphabet.cbegin(), alphabet.cend(), [symbol](char c) { return c == symbol; });
+			if (itr == alphabet.cend()) { throw std::runtime_error("Invalid input: not within alphabet"); }
+
+			return std::distance(alphabet.cbegin(), itr);
+		}
 	} // namespace alphabet
 
 	/**
@@ -79,8 +91,7 @@ namespace jwt {
 		}
 
 	private:
-		static std::string encode(const std::string& bin, const std::array<char, 64>& alphabet,
-								  const std::string& fill) {
+		static std::string encode(const std::string& bin, const alphabet::soup& alphabet, const std::string& fill) {
 			size_t size = bin.size();
 			std::string res;
 
@@ -128,8 +139,7 @@ namespace jwt {
 			return res;
 		}
 
-		static std::string decode(const std::string& base, const std::array<char, 64>& alphabet,
-								  const std::string& fill) {
+		static std::string decode(const std::string& base, const alphabet::soup& alphabet, const std::string& fill) {
 			size_t size = base.size();
 
 			size_t fill_cnt = 0;
@@ -149,10 +159,7 @@ namespace jwt {
 			res.reserve(out_size);
 
 			auto get_sextet = [&](size_t offset) {
-				for (size_t i = 0; i < alphabet.size(); i++) {
-					if (alphabet[i] == base[offset]) return static_cast<uint32_t>(i);
-				}
-				throw std::runtime_error("Invalid input: not within alphabet");
+				return alphabet::index(alphabet, base[offset]);
 			};
 
 			size_t fast_size = size - size % 4;

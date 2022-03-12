@@ -1,6 +1,18 @@
 #include "jwt-cpp/base.h"
 #include <gtest/gtest.h>
 
+TEST(BaseTest, Base64Index) {
+	ASSERT_EQ(0, jwt::alphabet::index(jwt::alphabet::base64::data(), 'A'));
+	ASSERT_EQ(32, jwt::alphabet::index(jwt::alphabet::base64::data(), 'g'));
+	ASSERT_EQ(62, jwt::alphabet::index(jwt::alphabet::base64::data(), '+'));
+}
+
+TEST(BaseTest, Base64IndexURL) {
+	ASSERT_EQ(0, jwt::alphabet::index(jwt::alphabet::base64url::data(), 'A'));
+	ASSERT_EQ(32, jwt::alphabet::index(jwt::alphabet::base64url::data(), 'g'));
+	ASSERT_EQ(62, jwt::alphabet::index(jwt::alphabet::base64url::data(), '-'));
+}
+
 TEST(BaseTest, Base64Decode) {
 	ASSERT_EQ("1", jwt::base::decode<jwt::alphabet::base64>("MQ=="));
 	ASSERT_EQ("12", jwt::base::decode<jwt::alphabet::base64>("MTI="));
