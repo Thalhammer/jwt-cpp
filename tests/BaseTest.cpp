@@ -13,6 +13,24 @@ TEST(BaseTest, Base64IndexURL) {
 	ASSERT_EQ(62, jwt::alphabet::index(jwt::alphabet::base64url::data(), '-'));
 }
 
+TEST(BaseTest, BaseDetailsCountPadding) {
+	ASSERT_EQ(0, jwt::base::details::count_padding("ABC", {"~"}));
+	ASSERT_EQ(3, jwt::base::details::count_padding("ABC~~~", {"~"}));
+	ASSERT_EQ(5, jwt::base::details::count_padding("ABC~~~~~", {"~"}));
+
+	ASSERT_EQ(0, jwt::base::details::count_padding("ABC", {"~", "!"}));
+	ASSERT_EQ(1, jwt::base::details::count_padding("ABC!", {"~", "!"}));
+	ASSERT_EQ(1, jwt::base::details::count_padding("ABC~", {"~", "!"}));
+	ASSERT_EQ(3, jwt::base::details::count_padding("ABC~~!", {"~", "!"}));
+	ASSERT_EQ(3, jwt::base::details::count_padding("ABC!~~", {"~", "!"}));
+	ASSERT_EQ(5, jwt::base::details::count_padding("ABC~~!~~", {"~", "!"}));
+
+	ASSERT_EQ(2, jwt::base::details::count_padding("MTIzNA%3d%3d", {"%3d", "%3D"}));
+	ASSERT_EQ(2, jwt::base::details::count_padding("MTIzNA%3d%3D", {"%3d", "%3D"}));
+	ASSERT_EQ(2, jwt::base::details::count_padding("MTIzNA%3D%3d", {"%3d", "%3D"}));
+	ASSERT_EQ(2, jwt::base::details::count_padding("MTIzNA%3D%3D", {"%3d", "%3D"}));
+}
+
 TEST(BaseTest, Base64Decode) {
 	ASSERT_EQ("1", jwt::base::decode<jwt::alphabet::base64>("MQ=="));
 	ASSERT_EQ("12", jwt::base::decode<jwt::alphabet::base64>("MTI="));

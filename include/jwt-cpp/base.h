@@ -74,6 +74,16 @@ namespace jwt {
 	namespace base {
 
 		namespace details {
+			inline size_t count_padding(const std::string& base, const std::initializer_list<std::string>& fills) {
+				for (const auto& fill : fills) {
+					if (base.rfind(fill) != std::string::npos) {
+						return 1 + count_padding(base.substr(0, base.size() - fill.size()), fills);
+					}
+				}
+
+				return 0;
+			}
+
 			inline std::string encode(const std::string& bin, const alphabet::soup& alphabet, const std::string& fill) {
 				size_t size = bin.size();
 				std::string res;
@@ -124,18 +134,11 @@ namespace jwt {
 
 			inline std::string decode(const std::string& base, const alphabet::soup& alphabet,
 									  const std::string& fill) {
-				size_t size = base.size();
+				const size_t fill_cnt = count_padding(base, {fill});
 
-				size_t fill_cnt = 0;
-				while (size > fill.size()) {
-					if (base.substr(size - fill.size(), fill.size()) == fill) {
-						fill_cnt++;
-						size -= fill.size();
-						if (fill_cnt > 2) throw std::runtime_error("Invalid input: too much fill");
-					} else
-						break;
-				}
+				if (fill_cnt > 2) throw std::runtime_error("Invalid input: too much fill");
 
+				const size_t size = base.size() - (fill.size() * fill_cnt);
 				if ((size + fill_cnt) % 4 != 0) throw std::runtime_error("Invalid input: incorrect total size");
 
 				size_t out_size = size / 4 * 3;
