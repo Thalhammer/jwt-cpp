@@ -76,7 +76,9 @@ namespace jwt {
 		namespace details {
 			inline size_t count_padding(const std::string& base, const std::initializer_list<std::string>& fills) {
 				for (const auto& fill : fills) {
-					if (base.rfind(fill) != std::string::npos) {
+					if (base.size() < fill.size()) continue;
+					// Does the end of the input exactly match the fill pattern?
+					if (base.substr(base.size() - fill.size()) == fill) {
 						return 1 + count_padding(base.substr(0, base.size() - fill.size()), fills);
 					}
 				}
