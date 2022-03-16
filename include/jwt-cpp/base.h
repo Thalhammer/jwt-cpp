@@ -74,16 +74,28 @@ namespace jwt {
 	namespace base {
 
 		namespace details {
-			inline size_t count_padding(const std::string& base, const std::initializer_list<std::string>& fills) {
+			struct padding {
+				size_t count = 0;
+				size_t length = 0;
+
+				padding operator+(const padding& p) { return {count + p.count, length + p.length}; }
+
+				friend bool operator==(const padding& lhs, const padding& rhs) {
+					return lhs.count == rhs.count && lhs.length == rhs.length;
+				}
+			};
+
+			inline padding count_padding(const std::string& base, const std::initializer_list<std::string>& fills) {
 				for (const auto& fill : fills) {
 					if (base.size() < fill.size()) continue;
 					// Does the end of the input exactly match the fill pattern?
 					if (base.substr(base.size() - fill.size()) == fill) {
-						return 1 + count_padding(base.substr(0, base.size() - fill.size()), fills);
+						return padding{1, fill.length()} +
+							   count_padding(base.substr(0, base.size() - fill.size()), fills);
 					}
 				}
 
-				return 0;
+				return {};
 			}
 
 			inline std::string encode(const std::string& bin, const alphabet::soup& alphabet, const std::string& fill) {
@@ -136,12 +148,11 @@ namespace jwt {
 
 			inline std::string decode(const std::string& base, const alphabet::soup& alphabet,
 									  const std::string& fill) {
-				const size_t fill_cnt = count_padding(base, {fill});
+				const auto pad = count_padding(base, {fill});
+				if (pad.count > 2) throw std::runtime_error("Invalid input: too much fill");
 
-				if (fill_cnt > 2) throw std::runtime_error("Invalid input: too much fill");
-
-				const size_t size = base.size() - (fill.size() * fill_cnt);
-				if ((size + fill_cnt) % 4 != 0) throw std::runtime_error("Invalid input: incorrect total size");
+				const size_t size = base.size() - pad.length;
+				if ((size + pad.count) % 4 != 0) throw std::runtime_error("Invalid input: incorrect total size");
 
 				size_t out_size = size / 4 * 3;
 				std::string res;
@@ -164,11 +175,11 @@ namespace jwt {
 					res += static_cast<char>((triple >> 0 * 8) & 0xFFU);
 				}
 
-				if (fill_cnt == 0) return res;
+				if (pad.count == 0) return res;
 
 				uint32_t triple = (get_sextet(fast_size) << 3 * 6) + (get_sextet(fast_size + 1) << 2 * 6);
 
-				switch (fill_cnt) {
+				switch (pad.count) {
 				case 1:
 					triple |= (get_sextet(fast_size + 2) << 1 * 6);
 					res += static_cast<char>((triple >> 2 * 8) & 0xFFU);
