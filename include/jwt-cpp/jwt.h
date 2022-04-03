@@ -854,6 +854,40 @@ namespace jwt {
 		}
 	} // namespace helper
 
+	class key {
+	public:
+		static key symmetric(const std::string& bytes) { return key(bytes); }
+
+		static key asymmetric(helper::evp_pkey_handle pkey) { return key(pkey); }
+
+		std::string get_symmetric_key() const {
+			if (!is_symmetric) { throw std::logic_error("not a symmetric key"); }
+
+			return oct_key;
+		}
+
+		helper::evp_pkey_handle get_asymmetric_key() const {
+			if (is_symmetric) { throw std::logic_error("not an asymmetric key"); }
+
+			return pkey;
+		}
+
+	private:
+		key(const std::string& key) {
+			is_symmetric = true;
+			oct_key = key;
+		}
+
+		key(helper::evp_pkey_handle key) {
+			is_symmetric = false;
+			pkey = key;
+		}
+
+		bool is_symmetric;
+		helper::evp_pkey_handle pkey;
+		std::string oct_key;
+	};
+
 	/**
 	 * \brief Various cryptographic algorithms when working with JWT
 	 *
@@ -1099,6 +1133,9 @@ namespace jwt {
 				if (keysize != signature_length * 4 && (signature_length != 132 || keysize != 521))
 					throw ecdsa_exception(error::ecdsa_error::invalid_key_size);
 			}
+
+			ecdsa(helper::evp_pkey_handle pkey, const EVP_MD* (*md)(), std::string name, size_t siglen)
+				: pkey(pkey), md(md), alg_name(std::move(name)), signature_length(siglen) {}
 
 			/**
 			 * Sign jwt data
@@ -1459,6 +1496,9 @@ namespace jwt {
 					throw rsa_exception(error::rsa_error::no_key_provided);
 			}
 
+			pss(helper::evp_pkey_handle pkey, const EVP_MD* (*md)(), std::string name)
+				: pkey(pkey), md(md), alg_name(std::move(name)) {}
+
 			/**
 			 * Sign jwt data
 			 * \param data The data to sign
@@ -1670,6 +1710,8 @@ namespace jwt {
 			explicit es256(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "ES256", 64) {}
+
+			explicit es256(helper::evp_pkey_handle pkey) : ecdsa(pkey, EVP_sha256, "ES256", 64) {}
 		};
 		/**
 		 * ES384 algorithm
@@ -1687,6 +1729,8 @@ namespace jwt {
 			explicit es384(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha384, "ES384", 96) {}
+
+			explicit es384(helper::evp_pkey_handle pkey) : ecdsa(pkey, EVP_sha384, "ES384", 96) {}
 		};
 		/**
 		 * ES512 algorithm
@@ -1704,6 +1748,8 @@ namespace jwt {
 			explicit es512(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "ES512", 132) {}
+
+			explicit es512(helper::evp_pkey_handle pkey) : ecdsa(pkey, EVP_sha512, "ES512", 132) {}
 		};
 		/**
 		 * ES256K algorithm
@@ -1720,6 +1766,8 @@ namespace jwt {
 			explicit es256k(const std::string& public_key, const std::string& private_key = "",
 							const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "ES256K", 64) {}
+
+			explicit es256k(helper::evp_pkey_handle pkey) : ecdsa(pkey, EVP_sha256, "ES256K", 64) {}
 		};
 
 #if !defined(JWT_OPENSSL_1_0_0) && !defined(JWT_OPENSSL_1_1_0)
@@ -1782,6 +1830,8 @@ namespace jwt {
 			explicit ps256(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: pss(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "PS256") {}
+
+			explicit ps256(helper::evp_pkey_handle pkey) : pss(pkey, EVP_sha256, "PS256") {}
 		};
 		/**
 		 * PS384 algorithm
@@ -1797,6 +1847,8 @@ namespace jwt {
 			explicit ps384(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: pss(public_key, private_key, public_key_password, private_key_password, EVP_sha384, "PS384") {}
+
+			explicit ps384(helper::evp_pkey_handle pkey) : pss(pkey, EVP_sha384, "PS384") {}
 		};
 		/**
 		 * PS512 algorithm
@@ -1812,6 +1864,8 @@ namespace jwt {
 			explicit ps512(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: pss(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "PS512") {}
+
+			explicit ps512(helper::evp_pkey_handle pkey) : pss(pkey, EVP_sha512, "PS512") {}
 		};
 	} // namespace algorithm
 
@@ -3158,7 +3212,7 @@ namespace jwt {
 		JWT_CLAIM_EXPLICIT jwk(const typename json_traits::value_type& json) : jwk(json_traits::as_object(json)) {}
 
 		JWT_CLAIM_EXPLICIT jwk(const typename json_traits::object_type& json)
-			: jwk_claims(json), key(build_key(jwk_claims)) {
+			: jwk_claims(json), k(build_key(jwk_claims)) {
 			// https://datatracker.ietf.org/doc/html/rfc7518#section-6.1
 			// * indicate required params
 			// "kty"* : "EC", "RSA", "oct"
@@ -3354,9 +3408,9 @@ namespace jwt {
 
 		bool empty() const noexcept { return jwk_claims.empty(); }
 
-		helper::evp_pkey_handle get_pkey() const { return key.get_asymmetric_key(); }
+		helper::evp_pkey_handle get_pkey() const { return k.get_asymmetric_key(); }
 
-		std::string get_oct_key() const { return key.get_symmetric_key(); }
+		std::string get_oct_key() const { return k.get_symmetric_key(); }
 
 		bool supports(const std::string& alg_name) const {
 			const alg_list& x = supported_alg.find(get_key_type())->second;
@@ -3364,40 +3418,6 @@ namespace jwt {
 		}
 
 	private:
-		class key {
-		public:
-			static key symmetric(const std::string& bytes) { return key(bytes); }
-
-			static key asymmetric(helper::evp_pkey_handle pkey) { return key(pkey); }
-
-			std::string get_symmetric_key() const {
-				if (!is_symmetric) { throw std::logic_error("not a symmetric key"); }
-
-				return oct_key;
-			}
-
-			helper::evp_pkey_handle get_asymmetric_key() const {
-				if (is_symmetric) { throw std::logic_error("not an asymmetric key"); }
-
-				return pkey;
-			}
-
-		private:
-			key(const std::string& key) {
-				is_symmetric = true;
-				oct_key = key;
-			}
-
-			key(helper::evp_pkey_handle key) {
-				is_symmetric = false;
-				pkey = key;
-			}
-
-			bool is_symmetric;
-			helper::evp_pkey_handle pkey;
-			std::string oct_key;
-		};
-
 		static helper::evp_pkey_handle build_rsa_key(const details::map_of_claims<json_traits>& claims) {
 			EVP_PKEY* evp_key = nullptr;
 			auto n = jwt::helper::raw2bn(
@@ -3460,7 +3480,7 @@ namespace jwt {
 			}
 		}
 
-		key key;
+		key k;
 	};
 
 	/**
@@ -3553,6 +3573,8 @@ namespace jwt {
 				return std::make_unique<algo<jwt::algorithm::es384>>(jwt::algorithm::es384(key.get_pkey()));
 			} else if (alg_name == "ES512") {
 				return std::make_unique<algo<jwt::algorithm::es512>>(jwt::algorithm::es512(key.get_pkey()));
+			} else if (alg_name == "ES256K") {
+				return std::make_unique<algo<jwt::algorithm::es256k>>(jwt::algorithm::es256k(key.get_pkey()));
 			} else if (alg_name == "HS256") {
 				return std::make_unique<algo<jwt::algorithm::hs256>>(jwt::algorithm::hs256(key.get_oct_key()));
 			} else if (alg_name == "HS384") {
