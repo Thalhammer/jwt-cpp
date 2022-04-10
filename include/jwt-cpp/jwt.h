@@ -3801,11 +3801,12 @@ namespace jwt {
 			}
 
 			if (!key_found) {
-				if (algs.count(algo) == 0) {
+				auto alg = algs.find(algo);
+				if (alg == algs.end()) {
 					ec = error::token_verification_error::wrong_algorithm;
 					return;
 				}
-				algs.at(algo)->verify(data, sig, ec);
+				alg->second->verify(data, sig, ec);
 			}
 
 			if (ec) return;
