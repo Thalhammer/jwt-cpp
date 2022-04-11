@@ -3573,31 +3573,44 @@ namespace jwt {
 			}
 
 			if (alg_name == "RS256") {
-				return std::make_unique<algo<jwt::algorithm::rs256>>(jwt::algorithm::rs256(key.get_pkey()));
+				return std::unique_ptr<algo<jwt::algorithm::rs256>>(
+					new algo<jwt::algorithm::rs256>(jwt::algorithm::rs256(key.get_pkey())));
 			} else if (alg_name == "RS384") {
-				return std::make_unique<algo<jwt::algorithm::rs384>>(jwt::algorithm::rs384(key.get_pkey()));
+				return std::unique_ptr<algo<jwt::algorithm::rs384>>(
+					new algo<jwt::algorithm::rs384>(jwt::algorithm::rs384(key.get_pkey())));
 			} else if (alg_name == "RS512") {
-				return std::make_unique<algo<jwt::algorithm::rs512>>(jwt::algorithm::rs512(key.get_pkey()));
+				return std::unique_ptr<algo<jwt::algorithm::rs512>>(
+					new algo<jwt::algorithm::rs512>(jwt::algorithm::rs512(key.get_pkey())));
 			} else if (alg_name == "PS256") {
-				return std::make_unique<algo<jwt::algorithm::ps256>>(jwt::algorithm::ps256(key.get_pkey()));
+				return std::unique_ptr<algo<jwt::algorithm::ps256>>(
+					new algo<jwt::algorithm::ps256>(jwt::algorithm::ps256(key.get_pkey())));
 			} else if (alg_name == "PS384") {
-				return std::make_unique<algo<jwt::algorithm::ps384>>(jwt::algorithm::ps384(key.get_pkey()));
+				return std::unique_ptr<algo<jwt::algorithm::ps384>>(
+					new algo<jwt::algorithm::ps384>(jwt::algorithm::ps384(key.get_pkey())));
 			} else if (alg_name == "PS512") {
-				return std::make_unique<algo<jwt::algorithm::ps512>>(jwt::algorithm::ps512(key.get_pkey()));
+				return std::unique_ptr<algo<jwt::algorithm::ps512>>(
+					new algo<jwt::algorithm::ps512>(jwt::algorithm::ps512(key.get_pkey())));
 			} else if (alg_name == "ES256") {
-				return std::make_unique<algo<jwt::algorithm::es256>>(jwt::algorithm::es256(key.get_pkey()));
+				return std::unique_ptr<algo<jwt::algorithm::es256>>(
+					new algo<jwt::algorithm::es256>(jwt::algorithm::es256(key.get_pkey())));
 			} else if (alg_name == "ES384") {
-				return std::make_unique<algo<jwt::algorithm::es384>>(jwt::algorithm::es384(key.get_pkey()));
+				return std::unique_ptr<algo<jwt::algorithm::es384>>(
+					new algo<jwt::algorithm::es384>(jwt::algorithm::es384(key.get_pkey())));
 			} else if (alg_name == "ES512") {
-				return std::make_unique<algo<jwt::algorithm::es512>>(jwt::algorithm::es512(key.get_pkey()));
+				return std::unique_ptr<algo<jwt::algorithm::es512>>(
+					new algo<jwt::algorithm::es512>(jwt::algorithm::es512(key.get_pkey())));
 			} else if (alg_name == "ES256K") {
-				return std::make_unique<algo<jwt::algorithm::es256k>>(jwt::algorithm::es256k(key.get_pkey()));
+				return std::unique_ptr<algo<jwt::algorithm::es256k>>(
+					new algo<jwt::algorithm::es256k>(jwt::algorithm::es256k(key.get_pkey())));
 			} else if (alg_name == "HS256") {
-				return std::make_unique<algo<jwt::algorithm::hs256>>(jwt::algorithm::hs256(key.get_oct_key()));
+				return std::unique_ptr<algo<jwt::algorithm::hs256>>(
+					new algo<jwt::algorithm::hs256>(jwt::algorithm::hs256(key.get_oct_key())));
 			} else if (alg_name == "HS384") {
-				return std::make_unique<algo<jwt::algorithm::hs384>>(jwt::algorithm::hs384(key.get_oct_key()));
+				return std::unique_ptr<algo<jwt::algorithm::hs384>>(
+					new algo<jwt::algorithm::hs384>(jwt::algorithm::hs384(key.get_oct_key())));
 			} else if (alg_name == "HS512") {
-				return std::make_unique<algo<jwt::algorithm::hs512>>(jwt::algorithm::hs512(key.get_oct_key()));
+				return std::unique_ptr<algo<jwt::algorithm::hs512>>(
+					new algo<jwt::algorithm::hs512>(jwt::algorithm::hs512(key.get_oct_key())));
 			}
 
 			ec = error::token_verification_error::wrong_algorithm;
