@@ -3206,13 +3206,28 @@ namespace jwt {
 		const details::map_of_claims<json_traits> jwk_claims;
 
 	public:
+		template<typename Decode>
+		jwk(const typename json_traits::string_type& str, Decode&& decode)
+			: jwk(details::map_of_claims<json_traits>::parse_claims(str), decode) {}
+
+		template<typename Decode>
+		jwk(const typename json_traits::value_type& json, Decode&& decode)
+			: jwk(json_traits::as_object(json), decode) {}
+
+		template<typename Decode>
+		jwk(const typename json_traits::object_type& json, Decode&& decode)
+			: jwk_claims(json), k(build_key(jwk_claims, decode)) {}
+
+#ifndef JWT_DISABLE_BASE64
 		JWT_CLAIM_EXPLICIT jwk(const typename json_traits::string_type& str)
 			: jwk(details::map_of_claims<json_traits>::parse_claims(str)) {}
 
 		JWT_CLAIM_EXPLICIT jwk(const typename json_traits::value_type& json) : jwk(json_traits::as_object(json)) {}
 
 		JWT_CLAIM_EXPLICIT jwk(const typename json_traits::object_type& json)
-			: jwk_claims(json), k(build_key(jwk_claims)) {
+			: jwk(json, [](const typename json_traits::string_type& str) {
+				  return base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(str));
+			  }) {
 			// https://datatracker.ietf.org/doc/html/rfc7518#section-6.1
 			// * indicate required params
 			// "kty"* : "EC", "RSA", "oct"
@@ -3229,6 +3244,7 @@ namespace jwt {
 			// if "oct", then "k"*
 			// if "oct", then SHOULD contain "alg"
 		}
+#endif
 
 		/**
 		 * Get key type claim
@@ -3418,12 +3434,12 @@ namespace jwt {
 		}
 
 	private:
-		static helper::evp_pkey_handle build_rsa_key(const details::map_of_claims<json_traits>& claims) {
+		template<typename Decode>
+		static helper::evp_pkey_handle build_rsa_key(const details::map_of_claims<json_traits>& claims,
+													 Decode&& decode) {
 			EVP_PKEY* evp_key = nullptr;
-			auto n = jwt::helper::raw2bn(
-				base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(claims.get_claim("n").as_string())));
-			auto e = jwt::helper::raw2bn(
-				base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(claims.get_claim("e").as_string())));
+			auto n = jwt::helper::raw2bn(decode(claims.get_claim("n").as_string()));
+			auto e = jwt::helper::raw2bn(decode(claims.get_claim("e").as_string()));
 #ifdef JWT_OPENSSL_3_0
 			// https://www.openssl.org/docs/manmaster/man7/EVP_PKEY-RSA.html
 			// see https://www.openssl.org/docs/man3.0/man3/EVP_PKEY_fromdata.html
@@ -3456,7 +3472,8 @@ namespace jwt {
 #endif
 		}
 
-		static key build_key(const details::map_of_claims<json_traits>& claims) {
+		template<typename Decode>
+		static key build_key(const details::map_of_claims<json_traits>& claims, Decode&& decode) {
 			if (!claims.has_claim("kty")) {
 				// TODO: custom exception or error code
 				throw std::runtime_error("missing required claim \"kty\"");
@@ -3468,12 +3485,12 @@ namespace jwt {
 			}
 
 			if (claims.get_claim("kty").as_string() == "RSA") {
-				return key::asymmetric(build_rsa_key(claims));
+				return key::asymmetric(build_rsa_key(claims, decode));
 			} else if (claims.get_claim("kty").as_string() == "EC") {
 				// TODO: build EC key
 				throw std::runtime_error("not implemented");
 			} else if (claims.get_claim("kty").as_string() == "oct") {
-				return key::symmetric(base::decode<alphabet::base64url>(claims.get_claim("k").as_string()));
+				return key::symmetric(decode(claims.get_claim("k").as_string()));
 			} else {
 				// TODO: do not build error messages like this
 				throw std::runtime_error("unknown key type (\"kty\"):" + claims.get_claim("kty").as_string());
