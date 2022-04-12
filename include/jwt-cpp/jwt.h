@@ -2530,7 +2530,7 @@ namespace jwt {
 	class decoded_jwt : public header<json_traits>, public payload<json_traits> {
 	protected:
 		/// Unmodifed token, as passed to constructor
-		const typename json_traits::string_type token;
+		typename json_traits::string_type token;
 		/// Header part decoded from base64
 		typename json_traits::string_type header;
 		/// Unmodified header part in base64
