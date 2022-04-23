@@ -3862,7 +3862,8 @@ namespace jwt {
 		using iterator = typename jwt_vector_t::iterator;
 		using const_iterator = typename jwt_vector_t::const_iterator;
 
-		JWT_CLAIM_EXPLICIT jwks(const typename json_traits::string_type& str) {
+		template<typename Decode>
+		jwks(const typename json_traits::string_type& str, Decode decode) {
 			typename json_traits::value_type parsed_val;
 			if (!json_traits::parse(parsed_val, str)) throw error::invalid_json_exception();
 
@@ -3871,8 +3872,15 @@ namespace jwt {
 
 			auto jwk_list = jwks_json.get_claim("keys").as_array();
 			std::transform(jwk_list.begin(), jwk_list.end(), std::back_inserter(jwk_claims),
-						   [](const typename json_traits::value_type& val) { return jwk_t{val}; });
+						   [&](const typename json_traits::value_type& val) { return jwk_t(val, decode); });
 		}
+
+#ifndef JWT_DISABLE_BASE64
+		JWT_CLAIM_EXPLICIT jwks(const typename json_traits::string_type& str)
+			: jwks(str, [](const typename json_traits::string_type& str) {
+				  return base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(str));
+			  }) {}
+#endif
 
 		iterator begin() { return jwk_claims.begin(); }
 		iterator end() { return jwk_claims.end(); }
