@@ -3186,12 +3186,6 @@ namespace jwt {
 		};
 	} // namespace verify_ops
 
-	using alg_name = std::string;
-	using alg_list = std::vector<alg_name>;
-	using algorithms = std::unordered_map<std::string, alg_list>;
-	static const algorithms supported_alg = {{"RSA", {"RS256", "RS384", "RS512", "PS256", "PS384", "PS512"}},
-											 {"EC", {"ES256", "ES384", "ES512", "ES256K"}},
-											 {"oct", {"HS256", "HS384", "HS512"}}};
 	/**
 	 * \brief JSON Web Key
 	 *
@@ -3428,11 +3422,6 @@ namespace jwt {
 
 		std::string get_oct_key() const { return k.get_symmetric_key(); }
 
-		bool supports(const std::string& alg_name) const {
-			const alg_list& x = supported_alg.find(get_key_type())->second;
-			return std::find(x.begin(), x.end(), alg_name) != x.end();
-		}
-
 	private:
 		template<typename Decode>
 		static helper::evp_pkey_handle build_rsa_key(const details::map_of_claims<json_traits>& claims,
@@ -3541,6 +3530,12 @@ namespace jwt {
 		Clock clock;
 		/// Supported algorithms
 		std::unordered_map<std::string, std::shared_ptr<algo_base>> algs;
+		using alg_name = std::string;
+		using alg_list = std::vector<alg_name>;
+		using algorithms = std::unordered_map<std::string, alg_list>;
+		algorithms supported_alg = {{"RSA", {"RS256", "RS384", "RS512", "PS256", "PS384", "PS512"}},
+									{"EC", {"ES256", "ES384", "ES512", "ES256K"}},
+									{"oct", {"HS256", "HS384", "HS512"}}};
 
 		typedef std::vector<jwt::jwk<json_traits>> key_list;
 		/// https://datatracker.ietf.org/doc/html/rfc7517#section-4.5 - kid to keys
@@ -3556,8 +3551,13 @@ namespace jwt {
 			}
 		}
 
-		static inline std::unique_ptr<algo_base> from_key_and_alg(const jwt::jwk<json_traits>& key,
-																  const std::string& alg_name, std::error_code& ec) {
+		bool is_valid_combination(const jwt::jwk<json_traits>& key, const std::string& alg_name) const {
+			const alg_list& x = supported_alg.find(key.get_key_type())->second;
+			return std::find(x.cbegin(), x.cend(), alg_name) != x.cend();
+		}
+
+		inline std::unique_ptr<algo_base> from_key_and_alg(const jwt::jwk<json_traits>& key,
+														   const std::string& alg_name, std::error_code& ec) const {
 			ec.clear();
 			algorithms::const_iterator it = supported_alg.find(key.get_key_type());
 			if (it == supported_alg.end()) {
@@ -3821,7 +3821,7 @@ namespace jwt {
 			if (key_set_it != keys.end()) {
 				const key_list& keys = key_set_it->second;
 				for (const auto& key : keys) {
-					if (key.supports(algo)) {
+					if (is_valid_combination(key, algo)) {
 						key_found = true;
 						auto alg = from_key_and_alg(key, algo, ec);
 						alg->verify(data, sig, ec);
