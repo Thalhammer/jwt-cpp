@@ -33,6 +33,25 @@ jobs:
           cmake . -DTEST:STRING="defaults-enabled" -DCMAKE_FIND_DEBUG_MODE=1
           cmake --build .
 
+  default-linux-with-examples:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: lukka/get-cmake@latest
+
+      - name: setup
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          sudo cmake --install .
+
+      - name: test
+        run: |
+          cd tests/cmake
+          cmake . -DTEST:STRING="defaults-enabled" -DCMAKE_FIND_DEBUG_MODE=1
+          cmake --build .
+
   default-win:
     runs-on: windows-latest
     steps:
