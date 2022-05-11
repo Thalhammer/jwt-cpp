@@ -49,7 +49,7 @@ jobs:
       - name: test
         run: |
           cd tests/cmake
-          cmake . -DTEST:STRING="defaults-enabled" -DCMAKE_FIND_DEBUG_MODE=1
+          cmake . -DTEST:STRING="defaults-enabled"
           cmake --build .
 
   default-win:
