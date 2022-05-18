@@ -28,3 +28,6 @@ target_link_libraries(jwks-verify jwt-cpp::jwt-cpp)
 
 add_executable(es256k es256k.cpp)
 target_link_libraries(es256k jwt-cpp::jwt-cpp)
+
+add_executable(partial-claim-verifier partial-claim-verifier.cpp)
+target_link_libraries(partial-claim-verifier jwt-cpp::jwt-cpp)
