@@ -77,6 +77,8 @@ namespace jwt {
 	inline jwks<traits::nlohmann_json> parse_jwks(const traits::nlohmann_json::string_type& token) {
 		return jwks<traits::nlohmann_json>(token);
 	}
+
+	using verify_context = verify_ops::verify_context<traits::nlohmann_json>;
 } // namespace jwt
 
 #endif // JWT_CPP_NLOHMANN_JSON_DEFAULTS_H
