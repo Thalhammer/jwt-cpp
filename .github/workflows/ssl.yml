@@ -57,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        libressl: ["3.5.2 ", "3.4.3", "3.3.6"]
+        libressl: ["3.5.2", "3.4.3", "3.3.6"]
     name: LibreSSL ${{ matrix.libressl }}
     steps:
       - uses: actions/checkout@v2
@@ -86,7 +86,7 @@ jobs:
         wolfssl:
           - { ref: "v5.1.1-stable", name: "5.1.1"}
           - { ref: "v5.2.0-stable", name: "5.2.0" }
-          - { ref: "v5.3.0-stable ", name: "5.3.0"}
+          - { ref: "v5.3.0-stable", name: "5.3.0"}
     name: wolfSSL ${{ matrix.wolfssl.name }}
     steps:
       - uses: actions/checkout@v2
