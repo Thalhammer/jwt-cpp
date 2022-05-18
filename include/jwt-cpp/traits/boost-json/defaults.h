@@ -77,6 +77,12 @@ namespace jwt {
 	inline jwks<traits::boost_json> parse_jwks(const traits::boost_json::string_type& token) {
 		return jwks<traits::boost_json>(token);
 	}
+
+	/**
+	 * This type is the specialization of the \ref verify_ops::verify_context class which
+	 * uses the standard template types.
+	 */
+	using verify_context = verify_ops::verify_context<traits::boost_json>;
 } // namespace jwt
 
 #endif // JWT_CPP_BOOST_JSON_DEFAULTS_H
