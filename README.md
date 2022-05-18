@@ -42,7 +42,7 @@ In the name of flexibility and extensibility, jwt-cpp supports [OpenSSL](https:/
 |-------------------|----------------|----------------|
 | ![1.0.2u][o1.0.2] | ![3.3.6][l3.3] | ![5.1.1][w5.1] |
 | ![1.1.0i][o1.1.0] | ![3.4.3][l3.4] | ![5.2.0][w5.2] |
-| ![1.1.1o][o1.1.1] | ![3.5.2][l3.5] | ![5.3.0][w5.1] |
+| ![1.1.1o][o1.1.1] | ![3.5.2][l3.5] | ![5.3.0][w5.3] |
 | ![3.0.3][o3.0]    |                |                |
 
 > ℹ️ Note: A complete list of versions tested in the past can be found [here](https://github.com/Thalhammer/jwt-cpp/tree/badges).
