@@ -73,6 +73,12 @@ namespace jwt {
 	inline jwks<traits::kazuho_picojson> parse_jwks(const traits::kazuho_picojson::string_type& token) {
 		return jwks<traits::kazuho_picojson>(token);
 	}
+
+	/**
+	 * This type is the specialization of the \ref verify_ops::verify_context class which
+	 * uses the standard template types.
+	 */
+	using verify_context = verify_ops::verify_context<traits::kazuho_picojson>;
 } // namespace jwt
 
 #endif // JWT_CPP_KAZUHO_PICOJSON_DEFAULTS_H

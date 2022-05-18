@@ -78,6 +78,10 @@ namespace jwt {
 		return jwks<traits::nlohmann_json>(token);
 	}
 
+	/**
+	 * This type is the specialization of the \ref verify_ops::verify_context class which
+	 * uses the standard template types.
+	 */
 	using verify_context = verify_ops::verify_context<traits::nlohmann_json>;
 } // namespace jwt
 
