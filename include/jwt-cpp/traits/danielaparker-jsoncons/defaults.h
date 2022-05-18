@@ -77,6 +77,12 @@ namespace jwt {
 	inline jwks<traits::danielaparker_jsoncons> parse_jwks(const traits::danielaparker_jsoncons::string_type& token) {
 		return jwks<traits::danielaparker_jsoncons>(token);
 	}
+
+	/**
+	 * This type is the specialization of the \ref verify_ops::verify_context class which
+	 * uses the standard template types.
+	 */
+	using verify_context = verify_ops::verify_context<traits::danielaparker_jsoncons>;
 } // namespace jwt
 
 #endif // JWT_CPP_DANIELAPARKER_JSONCONS_DEFAULTS_H
