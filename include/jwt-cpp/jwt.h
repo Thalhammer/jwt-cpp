@@ -3502,6 +3502,14 @@ namespace jwt {
 		}
 
 		bool empty() const noexcept { return jwk_claims.empty(); }
+
+		/**
+		 * Get all jwk claims
+		 * \return Map of claims
+		 */
+		std::unordered_map<typename json_traits::string_type, basic_claim_t> get_claims() const {
+			return this->jwk_claims.get_claims();
+		}
 	};
 
 	/**
