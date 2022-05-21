@@ -57,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        libressl: ["3.5.2", "3.4.3", "3.3.6"]
+        libressl: ["3.5.3", "3.4.3", "3.3.6"]
     name: LibreSSL ${{ matrix.libressl }}
     steps:
       - uses: actions/checkout@v2
