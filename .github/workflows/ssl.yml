@@ -32,7 +32,7 @@ jobs:
       - name: test
         run: ./tests/jwt-cpp-test
 
-      - if: github.event_name == 'push' && always()
+      - if: always()
         uses: ./.github/actions/badge
         with:
           category: openssl
@@ -73,7 +73,7 @@ jobs:
       - name: test
         run: ./tests/jwt-cpp-test
 
-      - if: github.event_name == 'push' && always()
+      - if: always()
         uses: ./.github/actions/badge
         with:
           category: libressl
@@ -102,7 +102,7 @@ jobs:
       - name: test
         run: ./tests/jwt-cpp-test
 
-      - if: github.event_name == 'push' && always()
+      - if: always()
         uses: ./.github/actions/badge
         with:
           category: wolfssl
