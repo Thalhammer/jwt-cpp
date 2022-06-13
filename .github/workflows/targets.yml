@@ -15,6 +15,7 @@ on:
 
 jobs:
   centos7:
+    runs-on: ubuntu-latest
     container:
       image: centos:centos7
     steps:
@@ -29,7 +30,7 @@ jobs:
           cmake ..
           sudo cmake --install .
       - name: test
+        working-directory: tests/cmake
         run: |
-          cd tests/cmake
           cmake . -DTEST:STRING="defaults-enabled"
           cmake --build .
