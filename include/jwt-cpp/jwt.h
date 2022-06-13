@@ -54,7 +54,11 @@
 #endif
 
 #if defined(LIBRESSL_VERSION_NUMBER)
+#if LIBRESSL_VERSION_NUMBER >= 0x3050300fL
 #define JWT_OPENSSL_1_1_0
+#else
+#define JWT_OPENSSL_1_0_0
+#endif
 #endif
 
 #if defined(LIBWOLFSSL_VERSION_HEX)
