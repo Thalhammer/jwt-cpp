@@ -47,16 +47,16 @@ In the name of flexibility and extensibility, jwt-cpp supports [OpenSSL](https:/
 
 > ℹ️ Note: A complete list of versions tested in the past can be found [here](https://github.com/Thalhammer/jwt-cpp/tree/badges).
 
-[o1.0.2]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/prince-chrismc/jwt-cpp/badges/openssl/1.0.2u/shields.json
-[o1.1.0]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/prince-chrismc/jwt-cpp/badges/openssl/1.1.0i/shields.json
-[o1.1.1]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/prince-chrismc/jwt-cpp/badges/openssl/1.1.1o/shields.json
-[o3.0]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/prince-chrismc/jwt-cpp/badges/openssl/3.0.3/shields.json
-[l3.3]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/prince-chrismc/jwt-cpp/badges/libressl/3.3.6/shields.json
-[l3.4]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/prince-chrismc/jwt-cpp/badges/libressl/3.4.3/shields.json
-[l3.5]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/prince-chrismc/jwt-cpp/badges/libressl/3.5.3/shields.json
-[w5.1]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/prince-chrismc/jwt-cpp/badges/wolfssl/5.1.1/shields.json
-[w5.2]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/prince-chrismc/jwt-cpp/badges/wolfssl/5.2.0/shields.json
-[w5.3]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/prince-chrismc/jwt-cpp/badges/wolfssl/5.3.0/shields.json
+[o1.0.2]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/openssl/1.0.2u/shields.json
+[o1.1.0]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/openssl/1.1.0i/shields.json
+[o1.1.1]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/openssl/1.1.1o/shields.json
+[o3.0]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/openssl/3.0.3/shields.json
+[l3.3]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/libressl/3.3.6/shields.json
+[l3.4]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/libressl/3.4.3/shields.json
+[l3.5]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/libressl/3.5.3/shields.json
+[w5.1]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/wolfssl/5.1.1/shields.json
+[w5.2]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/wolfssl/5.2.0/shields.json
+[w5.3]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/wolfssl/5.3.0/shields.json
 
 ## Overview
 
@@ -80,7 +80,7 @@ For your convience there are serval traits implementation which provide some pop
 [jsoncons]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/traits/danielaparker-jsoncons/shields.json
 [boostjson]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/traits/boost-json/shields.json
 
-In order to maintain compatibility, [picojson](https://github.com/kazuho/picojson) is still used to provide a specialized `jwt::claim` along with all helpers. Defining `JWT_DISABLE_PICOJSON` will remove this optional dependency. It's possible to directly include the traits defaults for the other JSON libraries. See the [traits examples](https://github.com/prince-chrismc/jwt-cpp/tree/master/example/traits) for details.
+In order to maintain compatibility, [picojson](https://github.com/kazuho/picojson) is still used to provide a specialized `jwt::claim` along with all helpers. Defining `JWT_DISABLE_PICOJSON` will remove this optional dependency. It's possible to directly include the traits defaults for the other JSON libraries. See the [traits examples](https://github.com/Thalhammer/jwt-cpp/tree/master/example/traits) for details.
 
 As for the base64 requirements of JWTs, this libary provides `base.h` with all the required implentation; However base64 implementations are very common, with varying degrees of performance. When providing your own base64 implementation, you can define `JWT_DISABLE_BASE64` to remove the jwt-cpp implementation.
 
