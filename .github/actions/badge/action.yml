@@ -5,7 +5,7 @@ inputs:
     description: The subfolder where to group the badges
     required: true
   label:
-    description: The label to you in the badge (this should be unqie for each badge in a category)
+    description: The label to you in the badge (this should be unique for each badge in a category)
     required: true
   github_token:
     description: The token to use to publish the changes
@@ -14,13 +14,12 @@ inputs:
 runs:
   using: composite
   steps:
-    - if: success()
+    - if: job.status == 'success'
       uses: ./.github/actions/badge/write
       with:
         category: ${{ inputs.category }}
         label: ${{ inputs.label }}
-    - if: |
-        !success()
+    - if: job.status == 'failure'
       uses: ./.github/actions/badge/write
       with:
         category: ${{ inputs.category }}
