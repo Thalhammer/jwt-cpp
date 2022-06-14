@@ -12,8 +12,8 @@ jobs:
     strategy:
       matrix:
         openssl:
-          - { tag: "openssl-3.0.1", name: "3.0.1" }
-          - { tag: "OpenSSL_1_1_1m", name: "1.1.1m" }
+          - { tag: "openssl-3.0.3", name: "3.0.3" }
+          - { tag: "OpenSSL_1_1_1o", name: "1.1.1o" }
           - { tag: "OpenSSL_1_1_0i", name: "1.1.0i" } # Do not bump, there's a broken in the autoconfig script and it's not maintained
           - { tag: "OpenSSL_1_0_2u", name: "1.0.2u" }
           - { tag: "OpenSSL_1_0_1u", name: "1.0.1u" }
@@ -47,17 +47,18 @@ jobs:
       - uses: ./.github/actions/install/gtest
       - uses: ./.github/actions/install/openssl
         with:
-          version: "openssl-3.0.1"
+          version: "openssl-3.0.3"
 
       - name: configure
-        run: cmake . -DJWT_BUILD_TESTS=ON -DOPENSSL_ROOT_DIR=/tmp -DCMAKE_CXX_FLAGS="-DOPENSSL_NO_DEPRECATED_3_0=1" -DCMAKE_C_FLAGS="-DOPENSSL_NO_DEPRECATED_3_0=1"
+        run: cmake . -DJWT_BUILD_TESTS=ON -DOPENSSL_ROOT_DIR=/tmp -DCMAKE_CXX_FLAGS="-DOPENSSL_NO_DEPRECATED=1" -DCMAKE_C_FLAGS="-DOPENSSL_NO_DEPRECATED=1"
       - run: make
 
   libressl:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        libressl: ["3.4.2", "3.3.5", "3.2.7"]
+        libressl: ["3.5.3", "3.4.3", "3.3.6"]
     name: LibreSSL ${{ matrix.libressl }}
     steps:
       - uses: actions/checkout@v2
@@ -84,8 +85,9 @@ jobs:
     strategy:
       matrix:
         wolfssl:
-          - { ref: "v5.0.0-stable", name: "5.0.0" }
           - { ref: "v5.1.1-stable", name: "5.1.1"}
+          - { ref: "v5.2.0-stable", name: "5.2.0" }
+          - { ref: "v5.3.0-stable", name: "5.3.0"}
     name: wolfSSL ${{ matrix.wolfssl.name }}
     steps:
       - uses: actions/checkout@v2

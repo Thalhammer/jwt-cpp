@@ -18,6 +18,7 @@
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 #include <openssl/pem.h>
+#include <openssl/rsa.h>
 #include <openssl/ssl.h>
 
 #include <algorithm>
@@ -53,7 +54,11 @@
 #endif
 
 #if defined(LIBRESSL_VERSION_NUMBER)
+#if LIBRESSL_VERSION_NUMBER >= 0x3050300fL
+#define JWT_OPENSSL_1_1_0
+#else
 #define JWT_OPENSSL_1_0_0
+#endif
 #endif
 
 #if defined(LIBWOLFSSL_VERSION_HEX)
@@ -2530,7 +2535,7 @@ namespace jwt {
 	class decoded_jwt : public header<json_traits>, public payload<json_traits> {
 	protected:
 		/// Unmodifed token, as passed to constructor
-		const typename json_traits::string_type token;
+		typename json_traits::string_type token;
 		/// Header part decoded from base64
 		typename json_traits::string_type header;
 		/// Unmodified header part in base64
@@ -3501,6 +3506,14 @@ namespace jwt {
 		}
 
 		bool empty() const noexcept { return jwk_claims.empty(); }
+
+		/**
+		 * Get all jwk claims
+		 * \return Map of claims
+		 */
+		std::unordered_map<typename json_traits::string_type, basic_claim_t> get_claims() const {
+			return this->jwk_claims.get_claims();
+		}
 	};
 
 	/**

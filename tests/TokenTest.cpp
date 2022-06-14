@@ -774,3 +774,29 @@ TEST(TokenTest, ThrowInvalidKeyLength) {
 	ASSERT_NO_THROW(jwt::algorithm::es384(ecdsa384_pub_key, ecdsa384_priv_key));
 	ASSERT_NO_THROW(jwt::algorithm::es512(ecdsa521_pub_key, ecdsa521_priv_key));
 }
+
+TEST(TokenTest, MoveDecodedToken) {
+	std::string token0 = "eyJhbGciOiJub25lIiwidHlwIjoiSldTIn0.eyJpc3MiOiJhdXRoMCJ9.";
+	std::string token1 =
+		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
+	auto decoded_token0 = jwt::decode(token0);
+	auto decoded_token1 = jwt::decode(token1);
+	decoded_token0 = std::move(decoded_token1);
+	ASSERT_EQ(token1, decoded_token0.get_token());
+
+	ASSERT_TRUE(decoded_token0.has_algorithm());
+	ASSERT_TRUE(decoded_token0.has_type());
+	ASSERT_FALSE(decoded_token0.has_content_type());
+	ASSERT_FALSE(decoded_token0.has_key_id());
+	ASSERT_TRUE(decoded_token0.has_issuer());
+	ASSERT_FALSE(decoded_token0.has_subject());
+	ASSERT_FALSE(decoded_token0.has_audience());
+	ASSERT_FALSE(decoded_token0.has_expires_at());
+	ASSERT_FALSE(decoded_token0.has_not_before());
+	ASSERT_FALSE(decoded_token0.has_issued_at());
+	ASSERT_FALSE(decoded_token0.has_id());
+
+	ASSERT_EQ("HS256", decoded_token0.get_algorithm());
+	ASSERT_EQ("JWS", decoded_token0.get_type());
+	ASSERT_EQ("auth0", decoded_token0.get_issuer());
+}
