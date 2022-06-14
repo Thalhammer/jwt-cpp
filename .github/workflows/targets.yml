@@ -19,7 +19,7 @@ jobs:
     container:
       image: centos:centos7
     steps:
-      - run: sudo yum group install "Development Tools"
+      - run: yum group install "Development Tools"
       - uses: actions/checkout@v2
       - uses: lukka/get-cmake@latest
 
