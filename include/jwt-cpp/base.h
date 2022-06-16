@@ -22,19 +22,18 @@ namespace jwt {
 	 */
 	namespace alphabet {
 		/**
-		 * \brief Collection of characters making up the alphabet
-		 */
-		using soup = std::array<char, 64>;
-		/**
-		 * \brief valid list of characted when working with [Base64](https://tools.ietf.org/html/rfc3548)
+		 * \brief valid list of characted when working with [Base64](https://datatracker.ietf.org/doc/html/rfc4648#section-4)
+		 *
+		 * As directed in [X.509 Parameter](https://datatracker.ietf.org/doc/html/rfc7517#section-4.7) certificate chains are
+		 * base64-encoded as per [Section 4 of RFC4648](https://datatracker.ietf.org/doc/html/rfc4648#section-4)
 		 */
 		struct base64 {
-			static const soup& data() {
-				static constexpr soup data{{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-											'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-											'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-											'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-											'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'}};
+			static const std::array<char, 64>& data() {
+				static constexpr std::array<char, 64> data{
+					{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+					 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+					 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+					 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'}};
 				return data;
 			}
 			static const std::string& fill() {
@@ -43,15 +42,21 @@ namespace jwt {
 			}
 		};
 		/**
-		 * \brief valid list of characted when working with [Base64URL](https://tools.ietf.org/html/rfc4648)
+		 * \brief valid list of characted when working with [Base64URL](https://tools.ietf.org/html/rfc4648#section-5)
+		 *
+		 * As directed by [RFC 7519 Terminology](https://datatracker.ietf.org/doc/html/rfc7519#section-2) set the definition of Base64URL
+		 * enconding as that in [RFC 7515](https://datatracker.ietf.org/doc/html/rfc7515#section-2) that states:
+		 *
+		 * > Base64 encoding using the URL- and filename-safe character set defined in
+		 * > [Section 5 of RFC 4648 RFC4648](https://tools.ietf.org/html/rfc4648#section-5), with all trailing '=' characters omitted
 		 */
 		struct base64url {
-			static const soup& data() {
-				static constexpr soup data{{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-											'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-											'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-											'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-											'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'}};
+			static const std::array<char, 64>& data() {
+				static constexpr std::array<char, 64> data{
+					{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+					 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+					 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+					 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'}};
 				return data;
 			}
 			static const std::string& fill() {
@@ -59,8 +64,30 @@ namespace jwt {
 				return fill;
 			}
 		};
+		namespace helper {
+			/**
+		 * @brief A General purpose base64url alphabet respectcing the
+		 * [URI Case Normalization](https://datatracker.ietf.org/doc/html/rfc3986#section-6.2.2.1)
+		 *
+		 * This is useful in situations outside of JWT encoding/decoding and is provided as a helper
+		 */
+			struct base64url_percentendcoded {
+				static const std::array<char, 64>& data() {
+					static constexpr std::array<char, 64> data{
+						{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+						 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+						 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+						 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'}};
+					return data;
+				}
+				static const std::initializer_list<std::string>& fill() {
+					static std::initializer_list<std::string> fill{"%3D", "%3d"};
+					return fill;
+				}
+			};
+		} // namespace helper
 
-		inline uint32_t index(const soup& alphabet, char symbol) {
+		inline uint32_t index(const std::array<char, 64>& alphabet, char symbol) {
 			auto itr = std::find_if(alphabet.cbegin(), alphabet.cend(), [symbol](char c) { return c == symbol; });
 			if (itr == alphabet.cend()) { throw std::runtime_error("Invalid input: not within alphabet"); }
 
@@ -98,7 +125,8 @@ namespace jwt {
 				return {};
 			}
 
-			inline std::string encode(const std::string& bin, const alphabet::soup& alphabet, const std::string& fill) {
+			inline std::string encode(const std::string& bin, const std::array<char, 64>& alphabet,
+									  const std::string& fill) {
 				size_t size = bin.size();
 				std::string res;
 
@@ -146,9 +174,14 @@ namespace jwt {
 				return res;
 			}
 
-			inline std::string decode(const std::string& base, const alphabet::soup& alphabet,
+			inline std::string decode(const std::string& base, const std::array<char, 64>& alphabet,
 									  const std::string& fill) {
-				const auto pad = count_padding(base, {fill});
+				return decode(base, alphabet, {fill});
+			}
+
+			inline std::string decode(const std::string& base, const std::array<char, 64>& alphabet,
+									  const std::initializer_list<std::string>& fill) {
+				const auto pad = count_padding(base, fill);
 				if (pad.count > 2) throw std::runtime_error("Invalid input: too much fill");
 
 				const size_t size = base.size() - pad.length;
