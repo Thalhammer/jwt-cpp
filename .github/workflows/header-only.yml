@@ -1,0 +1,26 @@
+name: Header-Only CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+    paths:
+      - "include/jwt-cpp/**"
+      - ".github/workflows/header-only.yml"
+
+jobs:
+  include-folder:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - run: mkdir -p example/header-only/
+    - run: cp -r include example/header-only/
+    - run: cp example/traits/nlohmann-json.cpp example/header-only/
+    - working_directory: example/header-only/
+      run: g++ -o nlohmann-json.cpp -Iinclude
+
+  only-jwt-h:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
