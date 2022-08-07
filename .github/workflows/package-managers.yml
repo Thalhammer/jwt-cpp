@@ -13,12 +13,17 @@ on:
       - ".github/workflows/package-managers.yml"
 
 jobs:
-  include-folder:
+  conan:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
 
-  only-jwt-h:
+  hunter:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+  vcpkg:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
