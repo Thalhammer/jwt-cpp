@@ -15,7 +15,7 @@ Simply downloading the `include/` directory is possible.
 Make sure the `jwt-cpp/` is visible.
 This does require correctly linking to OpenSSL or alternative.
 
-:information_source: The minimum is `jwt.h` but you will need to disable Base64 and the default Picojso trait.
+:information_source: The minimum is `jwt.h` but you will need to add the deinfes [`JWT_DISABLE_BASE64`](https://github.com/Thalhammer/jwt-cpp/blob/c9a511f436eaa13857336ebeb44dbc5b7860fe01/include/jwt-cpp/jwt.h#L11) and [`JWT_DISABLE_PICOJSON`](https://github.com/Thalhammer/jwt-cpp/blob/c9a511f436eaa13857336ebeb44dbc5b7860fe01/include/jwt-cpp/jwt.h#L4).
 
 ## CMake
 
