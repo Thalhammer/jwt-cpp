@@ -1,0 +1,24 @@
+name: Package Manager CD
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+    paths:
+      - "example/conan/**"
+      - "example/hunter/**"
+      - "example/vcpkg/**"
+      - ".github/actions/**"
+      - ".github/workflows/package-managers.yml"
+
+jobs:
+  include-folder:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+  only-jwt-h:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
