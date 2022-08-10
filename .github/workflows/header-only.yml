@@ -23,7 +23,7 @@ jobs:
       run: g++ -Iinclude -c nlohmann-json.cpp
     - name: link
       working-directory: example/header-only/
-      run: g++ -o nlohmann-json -Iinclude nlohmann-json.o
+      run: g++ -o nlohmann-json -Iinclude -lcrypto nlohmann-json.o
     - name: run
       working-directory: example/header-only/
       run: ./nlohmann-json
