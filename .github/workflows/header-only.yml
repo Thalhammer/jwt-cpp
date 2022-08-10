@@ -14,11 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - run: sudo apt-get install libssl-dev
     - run: mkdir -p example/header-only/
     - run: cp -r include example/header-only/
     - run: cp example/traits/nlohmann-json.cpp example/header-only/
     - working-directory: example/header-only/
-      run: g++ -o nlohmann-json.cpp -Iinclude
+      run: g++ -o nlohmann-json.o -Iinclude nlohmann-json.cpp
 
   only-jwt-h:
     runs-on: ubuntu-latest
