@@ -24,6 +24,9 @@ jobs:
     - name: link
       working-directory: example/header-only/
       run: g++ -o nlohmann-json -Iinclude nlohmann-json.o
+    - name: run
+      working-directory: example/header-only/
+      run: ./nlohmann-json
 
   only-jwt-h:
     runs-on: ubuntu-latest
