@@ -31,10 +31,12 @@ cmake --install .
 
 Using `add_subdirectory` is untested but should work.
 
-## External JSON dependencies 
+## External JSON dependencies
+
+### System Package 
 
 The `include/` currently include both PicoJSON and NLohmann JSON.
-When importing these from other sources you may see known bugs (add link)
+When importing these from other sources (e.g `apt` on Ubuntu) you may see known bugs (add link)
 
 ### Conan
 
