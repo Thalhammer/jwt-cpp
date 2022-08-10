@@ -19,7 +19,7 @@ jobs:
     container:
       image: centos:centos7
     steps:
-      - run: yum -y groupinstall "Development Tools"
+      - run: yum -y install gcc-c++
       - uses: actions/checkout@v3
       - uses: lukka/get-cmake@latest
 
