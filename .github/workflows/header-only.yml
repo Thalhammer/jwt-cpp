@@ -18,8 +18,12 @@ jobs:
     - run: mkdir -p example/header-only/
     - run: cp -r include example/header-only/
     - run: cp example/traits/nlohmann-json.cpp example/header-only/
-    - working-directory: example/header-only/
-      run: g++ -o nlohmann-json.o -Iinclude nlohmann-json.cpp
+    - name: compile
+      working-directory: example/header-only/
+      run: g++ -Iinclude -c nlohmann-json.cpp
+    - name: link
+      working-directory: example/header-only/
+      run: g++ -o nlohmann-json -Iinclude nlohmann-json.o
 
   only-jwt-h:
     runs-on: ubuntu-latest
