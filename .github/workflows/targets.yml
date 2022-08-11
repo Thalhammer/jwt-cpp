@@ -19,9 +19,9 @@ jobs:
     container:
       image: centos:centos7
     steps:
-      - run: yum -y install gcc-c++
+      - run: yum -y install git gcc-c++
       - uses: actions/checkout@v3
-      - uses: lukka/get-cmake@latest
+      - uses: ./.github/actions/install/cmake
 
       - name: setup
         run: |
