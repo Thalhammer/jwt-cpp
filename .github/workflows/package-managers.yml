@@ -14,9 +14,16 @@ on:
 
 jobs:
   conan:
+    defaults:
+      run:
+        working-directory: example/conan
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - uses: lukka/get-cmake@latest
+    - uses: actions/setup-python@v4
+    - run: python3 -m pip install conan --upgrade
+    - run: conan config init --force
 
   hunter:
     runs-on: ubuntu-latest
