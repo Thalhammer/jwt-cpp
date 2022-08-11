@@ -12,8 +12,8 @@ When manually adding this dependecy, check the examples or automated tests.
 ### Header Only
 
 Simply downloading the `include/` directory is possible.
-Make sure the `jwt-cpp/` is visible.
-This does require correctly linking to OpenSSL or alternative.
+Make sure the `jwt-cpp/` subdirectories is visible during compilation.
+This **does require** correctly linking to OpenSSL or alternative cryptography library.
 
 :information_source: The minimum is `jwt.h` but you will need to add the deinfes [`JWT_DISABLE_BASE64`](https://github.com/Thalhammer/jwt-cpp/blob/c9a511f436eaa13857336ebeb44dbc5b7860fe01/include/jwt-cpp/jwt.h#L11) and [`JWT_DISABLE_PICOJSON`](https://github.com/Thalhammer/jwt-cpp/blob/c9a511f436eaa13857336ebeb44dbc5b7860fe01/include/jwt-cpp/jwt.h#L4).
 
@@ -33,7 +33,7 @@ Using `add_subdirectory` is untested but should work.
 
 ## External JSON dependencies
 
-### System Package 
+### System Package
 
 The `include/` currently include both PicoJSON and NLohmann JSON.
 When importing these from other sources (e.g `apt` on Ubuntu) you may see known bugs (add link)
@@ -49,4 +49,3 @@ Add example?
 ### Vcpk
 
 Add example?
-
