@@ -802,7 +802,7 @@ namespace jwt {
 		 * \throw			ecdsa_exception if an error occurred
 		 */
 		inline evp_pkey_handle load_private_ec_key_from_string(const std::string& key,
-																		 const std::string& password = "") {
+															   const std::string& password = "") {
 			std::error_code ec;
 			auto res = load_private_ec_key_from_string(key, password, ec);
 			error::throw_if_error(ec);
@@ -2048,8 +2048,8 @@ namespace jwt {
 		};
 
 		template<typename object_type, typename string_type>
-		using is_count_signature = typename std::is_integral<decltype(std::declval<const object_type>().count(
-			std::declval<const string_type>()))>;
+		using is_count_signature = typename std::is_integral<decltype(
+			std::declval<const object_type>().count(std::declval<const string_type>()))>;
 
 		template<typename object_type, typename string_type>
 		struct has_subcription_operator {
