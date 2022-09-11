@@ -2055,8 +2055,8 @@ namespace jwt {
 		};
 
 		template<typename object_type, typename string_type>
-		using is_count_signature = typename std::is_integral<decltype(std::declval<const object_type>().count(
-			std::declval<const string_type>()))>;
+		using is_count_signature = typename std::is_integral<decltype(
+			std::declval<const object_type>().count(std::declval<const string_type>()))>;
 
 		template<typename object_type, typename string_type>
 		struct has_subcription_operator {
