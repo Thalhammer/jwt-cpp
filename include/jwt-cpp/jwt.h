@@ -420,7 +420,14 @@ namespace jwt {
 			evp_pkey_handle(const evp_pkey_handle& other) : m_key{other.m_key} {
 				if (m_key != nullptr && EVP_PKEY_up_ref(m_key) != 1) throw std::runtime_error("EVP_PKEY_up_ref failed");
 			}
-			constexpr evp_pkey_handle(evp_pkey_handle&& other) noexcept : m_key{other.m_key} { other.m_key = nullptr; }
+// C++11 requires the body of a constexpr constructor to be empty
+#if __cpp_constexpr >= 201304L
+			constexpr
+#endif
+				evp_pkey_handle(evp_pkey_handle&& other) noexcept
+				: m_key{other.m_key} {
+				other.m_key = nullptr;
+			}
 			evp_pkey_handle& operator=(const evp_pkey_handle& other) {
 				if (&other == this) return *this;
 				decrement_ref_count(m_key);
@@ -2048,8 +2055,8 @@ namespace jwt {
 		};
 
 		template<typename object_type, typename string_type>
-		using is_count_signature = typename std::is_integral<decltype(
-			std::declval<const object_type>().count(std::declval<const string_type>()))>;
+		using is_count_signature = typename std::is_integral<decltype(std::declval<const object_type>().count(
+			std::declval<const string_type>()))>;
 
 		template<typename object_type, typename string_type>
 		struct has_subcription_operator {
