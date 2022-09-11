@@ -421,7 +421,7 @@ namespace jwt {
 				if (m_key != nullptr && EVP_PKEY_up_ref(m_key) != 1) throw std::runtime_error("EVP_PKEY_up_ref failed");
 			}
 // C++11 requires the body of a constexpr constructor to be empty
-#if __cpp_constexpr >= 201304L
+#if __cplusplus >= 201402L
 			constexpr
 #endif
 				evp_pkey_handle(evp_pkey_handle&& other) noexcept
