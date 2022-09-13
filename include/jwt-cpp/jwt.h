@@ -2252,7 +2252,7 @@ namespace jwt {
 		 */
 		typename json_traits::string_type as_string() const { return json_traits::as_string(val); }
 
-	    /**
+		/**
 		 * \brief Get the contained JSON value as a date
 		 *
 		 * If the value is a decimal, it is rounded up to the closest integer
