@@ -307,6 +307,8 @@ test
 *.o
 *.o.d
 .vscode
+# ClangD cache files
+.cache
 
 doxy/
 doxygen-awesome*.css

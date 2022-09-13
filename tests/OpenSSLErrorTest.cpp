@@ -533,7 +533,7 @@ TEST(OpenSSLErrorTest, ConvertCertBase64DerToPemErrorCode) {
 
 TEST(OpenSSLErrorTest, LoadPublicKeyFromStringReference) {
 	auto res = jwt::helper::load_public_key_from_string(rsa_pub_key, "");
-	ASSERT_NE(res, nullptr);
+	ASSERT_TRUE(res);
 }
 
 TEST(OpenSSLErrorTest, LoadPublicKeyFromString) {
@@ -556,13 +556,13 @@ TEST(OpenSSLErrorTest, LoadPublicKeyFromStringErrorCode) {
 
 	run_multitest(mapping, [](std::error_code& ec) {
 		auto res = jwt::helper::load_public_key_from_string(rsa_pub_key, "", ec);
-		ASSERT_EQ(res, nullptr);
+		ASSERT_FALSE(res);
 	});
 }
 
 TEST(OpenSSLErrorTest, LoadPublicKeyCertFromStringReference) {
 	auto res = jwt::helper::load_public_key_from_string(sample_cert, "");
-	ASSERT_NE(res, nullptr);
+	ASSERT_TRUE(res);
 }
 
 TEST(OpenSSLErrorTest, LoadPublicKeyCertFromString) {
@@ -601,13 +601,13 @@ TEST(OpenSSLErrorTest, LoadPublicKeyCertFromStringErrorCode) {
 
 	run_multitest(mapping, [](std::error_code& ec) {
 		auto res = jwt::helper::load_public_key_from_string(sample_cert, "", ec);
-		ASSERT_EQ(res, nullptr);
+		ASSERT_FALSE(res);
 	});
 }
 
 TEST(OpenSSLErrorTest, LoadPrivateKeyFromStringReference) {
 	auto res = jwt::helper::load_private_key_from_string(rsa_priv_key, "");
-	ASSERT_NE(res, nullptr);
+	ASSERT_TRUE(res);
 }
 
 TEST(OpenSSLErrorTest, LoadPrivateKeyFromString) {
@@ -630,7 +630,7 @@ TEST(OpenSSLErrorTest, LoadPrivateKeyFromStringErrorCode) {
 
 	run_multitest(mapping, [](std::error_code& ec) {
 		auto res = jwt::helper::load_private_key_from_string(rsa_priv_key, "", ec);
-		ASSERT_EQ(res, nullptr);
+		ASSERT_FALSE(res);
 	});
 }
 
