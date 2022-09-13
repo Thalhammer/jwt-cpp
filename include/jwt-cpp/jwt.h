@@ -2252,12 +2252,26 @@ namespace jwt {
 		 */
 		typename json_traits::string_type as_string() const { return json_traits::as_string(val); }
 
-		/**
-		 * Get the contained JSON value as a date
+	    /**
+		 * \brief Get the contained JSON value as a date
+		 *
+		 * If the value is a decimal, it is rounded up to the closest integer
+		 *
 		 * \return content as date
 		 * \throw std::bad_cast Content was not a date
 		 */
-		date as_date() const { return std::chrono::system_clock::from_time_t(as_int()); }
+		date as_date() const {
+			std::time_t timestamp;
+			if (get_type() == json::type::number)
+			{
+				timestamp = std::round(as_number());
+			}
+			else
+			{
+				timestamp = as_int();
+			}
+			return std::chrono::system_clock::from_time_t(timestamp);
+		}
 
 		/**
 		 * Get the contained JSON value as an array
