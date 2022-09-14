@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <codecvt>
 #include <functional>
 #include <iterator>
@@ -2260,7 +2261,12 @@ namespace jwt {
 		 * \return content as date
 		 * \throw std::bad_cast Content was not a date
 		 */
-		date as_date() const { return std::chrono::system_clock::from_time_t(get_type() == json::type::number ? std::round(as_number()) : as_int()); }
+		date as_date() const {
+			using std::chrono::system_clock;
+			if (get_type() == json::type::number)
+				return system_clock::from_time_t(std::round(as_number()));
+			return system_clock::from_time_t(as_int());
+		}
 
 		/**
 		 * Get the contained JSON value as an array
