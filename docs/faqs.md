@@ -14,10 +14,10 @@ server, using the id to look it up whenever you need.
 
 ### How can new keys be generated for my application?
 
-The algorithms provide are all based on OpenSSL, mixing other
+The algorithms provided are all based on OpenSSL, mixing other
 cryptographic tools might not work.
 
-Here are a few links for your convience:
+Here are a few links for your convenience:
 
 - [RSA](https://stackoverflow.com/a/44474607)
 - [ED25519](https://stackoverflow.com/a/73118582)
