@@ -12,6 +12,17 @@ them unless they have the (private or symetric) key used to generate the token. 
 confidential information into it, current industry recommends generating a random id and store the data on your
 server, using the id to look it up whenever you need.
 
+### How can new keys be generated for my application?
+
+The algorithms provide are all based on OpenSSL, mixing other
+cryptographic tools might not work.
+
+Here are a few links for your convience:
+
+- [RSA](https://stackoverflow.com/a/44474607)
+- [ED25519](https://stackoverflow.com/a/73118582)
+- [ES256](https://github.com/Thalhammer/jwt-cpp/blob/68309438cf30679d6581d6cfbfeea0c028d9ed04/example/es256k.cpp#L5)
+
 ### Can this library encrypt/decrypt claims?
 
 No it does not, see [#115](https://github.com/Thalhammer/jwt-cpp/issues/115) for more details.
