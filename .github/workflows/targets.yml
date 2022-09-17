@@ -20,7 +20,9 @@ jobs:
     container:
       image: ubuntu:18.04
     steps:
-      - run: apt-get install g++-4.8
+      - run: |
+          apt-get update
+          apt-get install g++-4.8
       - uses: lukka/get-cmake@latest
       - uses: actions/checkout@v3
 
