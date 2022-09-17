@@ -22,7 +22,7 @@ jobs:
     steps:
       - run: |
           apt-get update
-          apt-get install g++-4.8
+          apt-get install -y g++-4.8
       - uses: lukka/get-cmake@latest
       - uses: actions/checkout@v3
 
