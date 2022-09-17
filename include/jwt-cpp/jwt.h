@@ -24,7 +24,6 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
-#include <codecvt>
 #include <functional>
 #include <iterator>
 #include <locale>
@@ -35,6 +34,10 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+#if __cplusplus > 201103L
+#include <codecvt>
+#endif
 
 #if __cplusplus >= 201402L
 #ifdef __has_include
@@ -3125,11 +3128,18 @@ namespace jwt {
 			}
 
 			static std::string to_lower_unicode(const std::string& str, const std::locale& loc) {
+#if __cplusplus > 201103L
 				std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> conv;
 				auto wide = conv.from_bytes(str);
 				auto& f = std::use_facet<std::ctype<wchar_t>>(loc);
 				f.tolower(&wide[0], &wide[0] + wide.size());
 				return conv.to_bytes(wide);
+#else
+				std::string result;
+				std::transform(str.begin(), str.end(), std::back_inserter(result),
+    				[](unsigned char c){ return std::tolower(c, loc); });
+				return result;
+#endif
 			}
 		};
 	} // namespace verify_ops
