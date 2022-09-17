@@ -16,13 +16,9 @@ on:
 jobs:
   gcc-4-8:
     name: GCC 4.8
-    runs-on: ubuntu-latest
-    container:
-      image: ubuntu:18.04
+    runs-on: ubuntu-18.04
     steps:
-      - run: |
-          apt-get update
-          apt-get install -y g++-4.8
+      - run: sudo apt-get install g++-4.8
       - uses: lukka/get-cmake@latest
       - uses: actions/checkout@v3
 
