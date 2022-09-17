@@ -18,7 +18,7 @@ jobs:
           - { name: "nlohmann-json", tag: "3.10.4", version: "v3.10.4" }
           - { name: "kazuho-picojson", tag: "111c9be5188f7350c2eac9ddaedd8cca3d7bf394", version: "111c9be" }
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
       - uses: lukka/get-cmake@latest
       - name: setup
         run: |

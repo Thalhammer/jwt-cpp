@@ -23,7 +23,7 @@ jobs:
       - run: |
           sudo apt-get install clang-format
           shopt -s globstar
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
       - run: clang-format -i ${{ matrix.files }}
       - uses: ./.github/actions/process-linting-results
         with:
@@ -41,7 +41,7 @@ jobs:
           python-version: "3.x"
       - run: pip install cmakelang
       - run: shopt -s globstar
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
       - run: cmake-format -i ${{ matrix.files }}
       - uses: ./.github/actions/process-linting-results
         with:
@@ -52,7 +52,7 @@ jobs:
     steps:
       - run: sudo apt-get install clang-tidy
       - uses: lukka/get-cmake@latest
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
       - name: configure
         run: |
           mkdir build
@@ -77,7 +77,7 @@ jobs:
           - { name: "nlohmann_json", library: "JSON for Modern C++", url: "https://github.com/nlohmann/json", disable_pico: true }
     name: render-defaults (${{ matrix.traits.name }})
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
       - uses: ./.github/actions/render/defaults
         with:
           traits_name: ${{ matrix.traits.name }}
@@ -101,7 +101,7 @@ jobs:
           - { name: "nlohmann_json", suite: "NlohmannTest" }
     name: render-tests (${{ matrix.traits.name }})
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
       - run: shopt -s globstar
       - uses: ./.github/actions/render/tests
         with:
@@ -116,7 +116,7 @@ jobs:
   line-ending:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
       - run: git add --renormalize .
       - uses: ./.github/actions/process-linting-results
         with:
