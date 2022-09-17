@@ -19,17 +19,17 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - run: sudo apt-get install gcc-4.8
+      - uses: lukka/get-cmake@latest
       - uses: actions/checkout@v3
-      - uses: ./.github/actions/install/cmake
 
       - name: setup
         run: |
           mkdir build
           cd build
-          cmake ..
+          CC=gcc-4.8 CXX=g++4.8 cmake ..
           sudo cmake --install .
       - name: test
         working-directory: tests/cmake
         run: |
-          cmake . -DTEST:STRING="defaults-enabled"
+          CC=gcc-4.8 CXX=g++4.8 cmake . -DTEST:STRING="defaults-enabled"
           cmake --build .
