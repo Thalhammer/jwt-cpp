@@ -533,7 +533,7 @@ TEST(OpenSSLErrorTest, ConvertCertBase64DerToPemErrorCode) {
 
 TEST(OpenSSLErrorTest, LoadPublicKeyFromStringReference) {
 	auto res = jwt::helper::load_public_key_from_string(rsa_pub_key, "");
-	ASSERT_NE(res, nullptr);
+	ASSERT_TRUE(res);
 }
 
 TEST(OpenSSLErrorTest, LoadPublicKeyFromString) {
@@ -556,19 +556,27 @@ TEST(OpenSSLErrorTest, LoadPublicKeyFromStringErrorCode) {
 
 	run_multitest(mapping, [](std::error_code& ec) {
 		auto res = jwt::helper::load_public_key_from_string(rsa_pub_key, "", ec);
-		ASSERT_EQ(res, nullptr);
+		ASSERT_FALSE(res);
 	});
 }
 
 TEST(OpenSSLErrorTest, LoadPublicKeyCertFromStringReference) {
 	auto res = jwt::helper::load_public_key_from_string(sample_cert, "");
-	ASSERT_NE(res, nullptr);
+	ASSERT_TRUE(res);
 }
 
 TEST(OpenSSLErrorTest, LoadPublicKeyCertFromString) {
-	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
-										 {&fail_BIO_write, 1, jwt::error::rsa_error::load_key_bio_write},
-										 {&fail_PEM_read_bio_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_read}};
+	std::vector<multitest_entry> mapping {
+		{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
+#if !defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER < 0x3050300fL
+			{&fail_BIO_write, 1, jwt::error::rsa_error::load_key_bio_write},
+#else
+			{&fail_BIO_write, 1, jwt::error::rsa_error::write_key_failed},
+#endif
+		{
+			&fail_PEM_read_bio_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_read
+		}
+	};
 
 	run_multitest(mapping, [](std::error_code& ec) {
 		try {
@@ -579,19 +587,27 @@ TEST(OpenSSLErrorTest, LoadPublicKeyCertFromString) {
 }
 
 TEST(OpenSSLErrorTest, LoadPublicKeyCertFromStringErrorCode) {
-	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
-										 {&fail_BIO_write, 1, jwt::error::rsa_error::load_key_bio_write},
-										 {&fail_PEM_read_bio_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_read}};
+	std::vector<multitest_entry> mapping {
+		{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
+#if !defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER < 0x3050300fL
+			{&fail_BIO_write, 1, jwt::error::rsa_error::load_key_bio_write},
+#else
+			{&fail_BIO_write, 1, jwt::error::rsa_error::write_key_failed},
+#endif
+		{
+			&fail_PEM_read_bio_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_read
+		}
+	};
 
 	run_multitest(mapping, [](std::error_code& ec) {
 		auto res = jwt::helper::load_public_key_from_string(sample_cert, "", ec);
-		ASSERT_EQ(res, nullptr);
+		ASSERT_FALSE(res);
 	});
 }
 
 TEST(OpenSSLErrorTest, LoadPrivateKeyFromStringReference) {
 	auto res = jwt::helper::load_private_key_from_string(rsa_priv_key, "");
-	ASSERT_NE(res, nullptr);
+	ASSERT_TRUE(res);
 }
 
 TEST(OpenSSLErrorTest, LoadPrivateKeyFromString) {
@@ -614,7 +630,7 @@ TEST(OpenSSLErrorTest, LoadPrivateKeyFromStringErrorCode) {
 
 	run_multitest(mapping, [](std::error_code& ec) {
 		auto res = jwt::helper::load_private_key_from_string(rsa_priv_key, "", ec);
-		ASSERT_EQ(res, nullptr);
+		ASSERT_FALSE(res);
 	});
 }
 
@@ -720,15 +736,22 @@ TEST(OpenSSLErrorTest, LoadECDSAPublicKeyFromString) {
 }
 
 TEST(OpenSSLErrorTest, ECDSACertificate) {
-	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::ecdsa_error::create_mem_bio_failed},
-										 {&fail_BIO_write, 1, jwt::error::ecdsa_error::load_key_bio_write},
-										 {&fail_PEM_read_bio_PUBKEY, 1, jwt::error::ecdsa_error::load_key_bio_read},
-										 // extract_pubkey_from_cert
-										 {&fail_BIO_new, 2, jwt::error::rsa_error::create_mem_bio_failed},
-										 {&fail_PEM_read_bio_X509, 1, jwt::error::rsa_error::cert_load_failed},
-										 {&fail_X509_get_pubkey, 1, jwt::error::rsa_error::get_key_failed},
-										 {&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::write_key_failed},
-										 {&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed}};
+	std::vector<multitest_entry> mapping {
+		{&fail_BIO_new, 1, jwt::error::ecdsa_error::create_mem_bio_failed},
+#if !defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER < 0x3050300fL
+			{&fail_BIO_write, 1, jwt::error::ecdsa_error::load_key_bio_write},
+#else
+			{&fail_BIO_write, 1, jwt::error::rsa_error::write_key_failed},
+#endif
+			{&fail_PEM_read_bio_PUBKEY, 1, jwt::error::ecdsa_error::load_key_bio_read},
+			// extract_pubkey_from_cert
+			{&fail_BIO_new, 2, jwt::error::rsa_error::create_mem_bio_failed},
+			{&fail_PEM_read_bio_X509, 1, jwt::error::rsa_error::cert_load_failed},
+			{&fail_X509_get_pubkey, 1, jwt::error::rsa_error::get_key_failed},
+			{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::write_key_failed}, {
+			&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed
+		}
+	};
 
 	run_multitest(mapping, [](std::error_code& ec) {
 		try {

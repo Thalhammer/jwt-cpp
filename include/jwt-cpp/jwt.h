@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <codecvt>
 #include <functional>
 #include <iterator>
@@ -54,7 +55,11 @@
 #endif
 
 #if defined(LIBRESSL_VERSION_NUMBER)
+#if LIBRESSL_VERSION_NUMBER >= 0x3050300fL
+#define JWT_OPENSSL_1_1_0
+#else
 #define JWT_OPENSSL_1_0_0
+#endif
 #endif
 
 #if defined(LIBWOLFSSL_VERSION_HEX)
@@ -385,6 +390,83 @@ namespace jwt {
 	 */
 	namespace helper {
 		/**
+		 * \brief Handle class for EVP_PKEY structures
+		 *
+		 * Starting from OpenSSL 1.1.0, EVP_PKEY has internal reference counting. This handle class allows
+		 * jwt-cpp to leverage that and thus safe an allocation for the control block in std::shared_ptr.
+		 * The handle uses shared_ptr as a fallback on older versions. The behaviour should be identical between both.
+		 */
+		class evp_pkey_handle {
+		public:
+			constexpr evp_pkey_handle() noexcept = default;
+#ifdef JWT_OPENSSL_1_0_0
+			/**
+			 * \brief Contruct a new handle. The handle takes ownership of the key.
+			 * \param key The key to store
+			 */
+			explicit evp_pkey_handle(EVP_PKEY* key) { m_key = std::shared_ptr<EVP_PKEY>(key, EVP_PKEY_free); }
+
+			EVP_PKEY* get() const noexcept { return m_key.get(); }
+			bool operator!() const noexcept { return m_key == nullptr; }
+			explicit operator bool() const noexcept { return m_key != nullptr; }
+
+		private:
+			std::shared_ptr<EVP_PKEY> m_key{nullptr};
+#else
+			/**
+			 * \brief Contruct a new handle. The handle takes ownership of the key.
+			 * \param key The key to store
+			 */
+			explicit constexpr evp_pkey_handle(EVP_PKEY* key) noexcept : m_key{key} {}
+			evp_pkey_handle(const evp_pkey_handle& other) : m_key{other.m_key} {
+				if (m_key != nullptr && EVP_PKEY_up_ref(m_key) != 1) throw std::runtime_error("EVP_PKEY_up_ref failed");
+			}
+// C++11 requires the body of a constexpr constructor to be empty
+#if __cplusplus >= 201402L
+			constexpr
+#endif
+				evp_pkey_handle(evp_pkey_handle&& other) noexcept
+				: m_key{other.m_key} {
+				other.m_key = nullptr;
+			}
+			evp_pkey_handle& operator=(const evp_pkey_handle& other) {
+				if (&other == this) return *this;
+				decrement_ref_count(m_key);
+				m_key = other.m_key;
+				increment_ref_count(m_key);
+				return *this;
+			}
+			evp_pkey_handle& operator=(evp_pkey_handle&& other) noexcept {
+				if (&other == this) return *this;
+				decrement_ref_count(m_key);
+				m_key = other.m_key;
+				other.m_key = nullptr;
+				return *this;
+			}
+			evp_pkey_handle& operator=(EVP_PKEY* key) {
+				decrement_ref_count(m_key);
+				m_key = key;
+				increment_ref_count(m_key);
+				return *this;
+			}
+			~evp_pkey_handle() noexcept { decrement_ref_count(m_key); }
+
+			EVP_PKEY* get() const noexcept { return m_key; }
+			bool operator!() const noexcept { return m_key == nullptr; }
+			explicit operator bool() const noexcept { return m_key != nullptr; }
+
+		private:
+			EVP_PKEY* m_key{nullptr};
+
+			static void increment_ref_count(EVP_PKEY* key) {
+				if (key != nullptr && EVP_PKEY_up_ref(key) != 1) throw std::runtime_error("EVP_PKEY_up_ref failed");
+			}
+			static void decrement_ref_count(EVP_PKEY* key) noexcept {
+				if (key != nullptr) EVP_PKEY_free(key);
+			}
+#endif
+		};
+		/**
 		 * \brief Extract the public key of a pem certificate
 		 *
 		 * \param certstr	String containing the certificate encoded as pem
@@ -552,38 +634,34 @@ namespace jwt {
 		 * \param password	Password used to decrypt certificate (leave empty if not encrypted)
 		 * \param ec		error_code for error_detection (gets cleared if no error occures)
 		 */
-		inline std::shared_ptr<EVP_PKEY> load_public_key_from_string(const std::string& key,
-																	 const std::string& password, std::error_code& ec) {
+		inline evp_pkey_handle load_public_key_from_string(const std::string& key, const std::string& password,
+														   std::error_code& ec) {
 			ec.clear();
 			std::unique_ptr<BIO, decltype(&BIO_free_all)> pubkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
 			if (!pubkey_bio) {
 				ec = error::rsa_error::create_mem_bio_failed;
-				return nullptr;
+				return {};
 			}
 			if (key.substr(0, 27) == "-----BEGIN CERTIFICATE-----") {
 				auto epkey = helper::extract_pubkey_from_cert(key, password, ec);
-				if (ec) return nullptr;
+				if (ec) return {};
 				const int len = static_cast<int>(epkey.size());
 				if (BIO_write(pubkey_bio.get(), epkey.data(), len) != len) {
 					ec = error::rsa_error::load_key_bio_write;
-					return nullptr;
+					return {};
 				}
 			} else {
 				const int len = static_cast<int>(key.size());
 				if (BIO_write(pubkey_bio.get(), key.data(), len) != len) {
 					ec = error::rsa_error::load_key_bio_write;
-					return nullptr;
+					return {};
 				}
 			}
 
-			std::shared_ptr<EVP_PKEY> pkey(
-				PEM_read_bio_PUBKEY(pubkey_bio.get(), nullptr, nullptr,
-									(void*)password.data()), // NOLINT(google-readability-casting) requires `const_cast`
-				EVP_PKEY_free);
-			if (!pkey) {
-				ec = error::rsa_error::load_key_bio_read;
-				return nullptr;
-			}
+			evp_pkey_handle pkey(PEM_read_bio_PUBKEY(
+				pubkey_bio.get(), nullptr, nullptr,
+				(void*)password.data())); // NOLINT(google-readability-casting) requires `const_cast`
+			if (!pkey) ec = error::rsa_error::load_key_bio_read;
 			return pkey;
 		}
 
@@ -596,8 +674,7 @@ namespace jwt {
 		 * \param password	Password used to decrypt certificate or key (leave empty if not encrypted)
 		 * \throw			rsa_exception if an error occurred
 		 */
-		inline std::shared_ptr<EVP_PKEY> load_public_key_from_string(const std::string& key,
-																	 const std::string& password = "") {
+		inline evp_pkey_handle load_public_key_from_string(const std::string& key, const std::string& password = "") {
 			std::error_code ec;
 			auto res = load_public_key_from_string(key, password, ec);
 			error::throw_if_error(ec);
@@ -611,25 +688,21 @@ namespace jwt {
 		 * \param password	Password used to decrypt key (leave empty if not encrypted)
 		 * \param ec		error_code for error_detection (gets cleared if no error occures)
 		 */
-		inline std::shared_ptr<EVP_PKEY>
-		load_private_key_from_string(const std::string& key, const std::string& password, std::error_code& ec) {
+		inline evp_pkey_handle load_private_key_from_string(const std::string& key, const std::string& password,
+															std::error_code& ec) {
 			std::unique_ptr<BIO, decltype(&BIO_free_all)> privkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
 			if (!privkey_bio) {
 				ec = error::rsa_error::create_mem_bio_failed;
-				return nullptr;
+				return {};
 			}
 			const int len = static_cast<int>(key.size());
 			if (BIO_write(privkey_bio.get(), key.data(), len) != len) {
 				ec = error::rsa_error::load_key_bio_write;
-				return nullptr;
+				return {};
 			}
-			std::shared_ptr<EVP_PKEY> pkey(
-				PEM_read_bio_PrivateKey(privkey_bio.get(), nullptr, nullptr, const_cast<char*>(password.c_str())),
-				EVP_PKEY_free);
-			if (!pkey) {
-				ec = error::rsa_error::load_key_bio_read;
-				return nullptr;
-			}
+			evp_pkey_handle pkey(
+				PEM_read_bio_PrivateKey(privkey_bio.get(), nullptr, nullptr, const_cast<char*>(password.c_str())));
+			if (!pkey) ec = error::rsa_error::load_key_bio_read;
 			return pkey;
 		}
 
@@ -640,8 +713,7 @@ namespace jwt {
 		 * \param password	Password used to decrypt key (leave empty if not encrypted)
 		 * \throw			rsa_exception if an error occurred
 		 */
-		inline std::shared_ptr<EVP_PKEY> load_private_key_from_string(const std::string& key,
-																	  const std::string& password = "") {
+		inline evp_pkey_handle load_private_key_from_string(const std::string& key, const std::string& password = "") {
 			std::error_code ec;
 			auto res = load_private_key_from_string(key, password, ec);
 			error::throw_if_error(ec);
@@ -657,38 +729,34 @@ namespace jwt {
 		 * \param password	Password used to decrypt certificate (leave empty if not encrypted)
 		 * \param ec		error_code for error_detection (gets cleared if no error occures)
 		 */
-		inline std::shared_ptr<EVP_PKEY>
-		load_public_ec_key_from_string(const std::string& key, const std::string& password, std::error_code& ec) {
+		inline evp_pkey_handle load_public_ec_key_from_string(const std::string& key, const std::string& password,
+															  std::error_code& ec) {
 			ec.clear();
 			std::unique_ptr<BIO, decltype(&BIO_free_all)> pubkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
 			if (!pubkey_bio) {
 				ec = error::ecdsa_error::create_mem_bio_failed;
-				return nullptr;
+				return {};
 			}
 			if (key.substr(0, 27) == "-----BEGIN CERTIFICATE-----") {
 				auto epkey = helper::extract_pubkey_from_cert(key, password, ec);
-				if (ec) return nullptr;
+				if (ec) return {};
 				const int len = static_cast<int>(epkey.size());
 				if (BIO_write(pubkey_bio.get(), epkey.data(), len) != len) {
 					ec = error::ecdsa_error::load_key_bio_write;
-					return nullptr;
+					return {};
 				}
 			} else {
 				const int len = static_cast<int>(key.size());
 				if (BIO_write(pubkey_bio.get(), key.data(), len) != len) {
 					ec = error::ecdsa_error::load_key_bio_write;
-					return nullptr;
+					return {};
 				}
 			}
 
-			std::shared_ptr<EVP_PKEY> pkey(
-				PEM_read_bio_PUBKEY(pubkey_bio.get(), nullptr, nullptr,
-									(void*)password.data()), // NOLINT(google-readability-casting) requires `const_cast`
-				EVP_PKEY_free);
-			if (!pkey) {
-				ec = error::ecdsa_error::load_key_bio_read;
-				return nullptr;
-			}
+			evp_pkey_handle pkey(PEM_read_bio_PUBKEY(
+				pubkey_bio.get(), nullptr, nullptr,
+				(void*)password.data())); // NOLINT(google-readability-casting) requires `const_cast`
+			if (!pkey) ec = error::ecdsa_error::load_key_bio_read;
 			return pkey;
 		}
 
@@ -701,8 +769,8 @@ namespace jwt {
 		 * \param password	Password used to decrypt certificate or key (leave empty if not encrypted)
 		 * \throw			ecdsa_exception if an error occurred
 		 */
-		inline std::shared_ptr<EVP_PKEY> load_public_ec_key_from_string(const std::string& key,
-																		const std::string& password = "") {
+		inline evp_pkey_handle load_public_ec_key_from_string(const std::string& key,
+															  const std::string& password = "") {
 			std::error_code ec;
 			auto res = load_public_ec_key_from_string(key, password, ec);
 			error::throw_if_error(ec);
@@ -716,25 +784,21 @@ namespace jwt {
 		 * \param password	Password used to decrypt key (leave empty if not encrypted)
 		 * \param ec		error_code for error_detection (gets cleared if no error occures)
 		 */
-		inline std::shared_ptr<EVP_PKEY>
-		load_private_ec_key_from_string(const std::string& key, const std::string& password, std::error_code& ec) {
+		inline evp_pkey_handle load_private_ec_key_from_string(const std::string& key, const std::string& password,
+															   std::error_code& ec) {
 			std::unique_ptr<BIO, decltype(&BIO_free_all)> privkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
 			if (!privkey_bio) {
 				ec = error::ecdsa_error::create_mem_bio_failed;
-				return nullptr;
+				return {};
 			}
 			const int len = static_cast<int>(key.size());
 			if (BIO_write(privkey_bio.get(), key.data(), len) != len) {
 				ec = error::ecdsa_error::load_key_bio_write;
-				return nullptr;
+				return {};
 			}
-			std::shared_ptr<EVP_PKEY> pkey(
-				PEM_read_bio_PrivateKey(privkey_bio.get(), nullptr, nullptr, const_cast<char*>(password.c_str())),
-				EVP_PKEY_free);
-			if (!pkey) {
-				ec = error::ecdsa_error::load_key_bio_read;
-				return nullptr;
-			}
+			evp_pkey_handle pkey(
+				PEM_read_bio_PrivateKey(privkey_bio.get(), nullptr, nullptr, const_cast<char*>(password.c_str())));
+			if (!pkey) ec = error::ecdsa_error::load_key_bio_read;
 			return pkey;
 		}
 
@@ -745,8 +809,8 @@ namespace jwt {
 		 * \param password	Password used to decrypt key (leave empty if not encrypted)
 		 * \throw			ecdsa_exception if an error occurred
 		 */
-		inline std::shared_ptr<EVP_PKEY> load_private_ec_key_from_string(const std::string& key,
-																		 const std::string& password = "") {
+		inline evp_pkey_handle load_private_ec_key_from_string(const std::string& key,
+															   const std::string& password = "") {
 			std::error_code ec;
 			auto res = load_private_ec_key_from_string(key, password, ec);
 			error::throw_if_error(ec);
@@ -986,7 +1050,7 @@ namespace jwt {
 
 		private:
 			/// OpenSSL structure containing converted keys
-			std::shared_ptr<EVP_PKEY> pkey;
+			helper::evp_pkey_handle pkey;
 			/// Hash generator
 			const EVP_MD* (*md)();
 			/// algorithm's name
@@ -1210,7 +1274,7 @@ namespace jwt {
 			}
 
 			/// OpenSSL struct containing keys
-			std::shared_ptr<EVP_PKEY> pkey;
+			helper::evp_pkey_handle pkey;
 			/// Hash generator function
 			const EVP_MD* (*md)();
 			/// algorithm's name
@@ -1356,7 +1420,7 @@ namespace jwt {
 
 		private:
 			/// OpenSSL struct containing keys
-			std::shared_ptr<EVP_PKEY> pkey;
+			helper::evp_pkey_handle pkey;
 			/// algorithm's name
 			const std::string alg_name;
 		};
@@ -1492,7 +1556,7 @@ namespace jwt {
 
 		private:
 			/// OpenSSL structure containing keys
-			std::shared_ptr<EVP_PKEY> pkey;
+			helper::evp_pkey_handle pkey;
 			/// Hash generator function
 			const EVP_MD* (*md)();
 			/// algorithm's name
@@ -2190,11 +2254,18 @@ namespace jwt {
 		typename json_traits::string_type as_string() const { return json_traits::as_string(val); }
 
 		/**
-		 * Get the contained JSON value as a date
+		 * \brief Get the contained JSON value as a date
+		 *
+		 * If the value is a decimal, it is rounded up to the closest integer
+		 *
 		 * \return content as date
 		 * \throw std::bad_cast Content was not a date
 		 */
-		date as_date() const { return std::chrono::system_clock::from_time_t(as_int()); }
+		date as_date() const {
+			using std::chrono::system_clock;
+			if (get_type() == json::type::number) return system_clock::from_time_t(std::round(as_number()));
+			return system_clock::from_time_t(as_int());
+		}
 
 		/**
 		 * Get the contained JSON value as an array
