@@ -3137,7 +3137,7 @@ namespace jwt {
 #else
 				std::string result;
 				std::transform(str.begin(), str.end(), std::back_inserter(result),
-    				[&loc](unsigned char c){ return std::tolower(c, loc); });
+							   [&loc](unsigned char c){ return std::tolower(c, loc); });
 				return result;
 #endif
 			}
