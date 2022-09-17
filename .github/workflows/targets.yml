@@ -14,12 +14,11 @@ on:
       - ".github/workflows/targets.yml"
 
 jobs:
-  centos7:
-    runs-on: ubuntu-latest
-    container:
-      image: centos:centos7
+  gcc-4-8:
+    name: GCC 4.8
+    runs-on: ubuntu-18.04
     steps:
-      - run: yum -y install git gcc-c++
+      - run: sudo apt-get install gcc-4.8
       - uses: actions/checkout@v3
       - uses: ./.github/actions/install/cmake
 
