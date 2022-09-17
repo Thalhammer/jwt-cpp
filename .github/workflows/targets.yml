@@ -26,10 +26,10 @@ jobs:
         run: |
           mkdir build
           cd build
-          CC=gcc-4.8 CXX=g++4.8 cmake ..
+          CC=gcc-4.8 CXX=g++-4.8 cmake ..
           sudo cmake --install .
       - name: test
         working-directory: tests/cmake
         run: |
-          CC=gcc-4.8 CXX=g++4.8 cmake . -DTEST:STRING="defaults-enabled"
+          CC=gcc-4.8 CXX=g++-4.8 cmake . -DTEST:STRING="defaults-enabled"
           cmake --build .
