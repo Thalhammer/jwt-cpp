@@ -1,0 +1,35 @@
+name: Specific Targets CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+    paths:
+      - "CMakeLists.txt"
+      - "cmake/**"
+      - "include/jwt-cpp/**"
+      - "tests/cmake/**"
+      - ".github/actions/**"
+      - ".github/workflows/targets.yml"
+
+jobs:
+  gcc-4-8:
+    name: GCC 4.8
+    runs-on: ubuntu-18.04
+    steps:
+      - run: sudo apt-get install g++-4.8
+      - uses: lukka/get-cmake@latest
+      - uses: actions/checkout@v3
+
+      - name: setup
+        run: |
+          mkdir build
+          cd build
+          CC=gcc-4.8 CXX=g++-4.8 cmake ..
+          sudo cmake --install .
+      - name: test
+        working-directory: tests/cmake
+        run: |
+          CC=gcc-4.8 CXX=g++-4.8 cmake . -DTEST:STRING="defaults-enabled"
+          cmake --build .
