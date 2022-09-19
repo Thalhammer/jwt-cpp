@@ -57,6 +57,16 @@ TEST(BaseTest, Base64DecodeURL) {
 	ASSERT_EQ("1234", jwt::base::decode<jwt::alphabet::base64url>("MTIzNA%3d%3d"));
 }
 
+TEST(BaseTest, Base64DecodeURLCaseInsensitive) {
+	ASSERT_EQ("1", jwt::base::decode<jwt::alphabet::helper::base64url_percent_encoding>("MQ%3d%3d"));
+	ASSERT_EQ("1", jwt::base::decode<jwt::alphabet::helper::base64url_percent_encoding>("MQ%3D%3d"));
+	ASSERT_EQ("1", jwt::base::decode<jwt::alphabet::helper::base64url_percent_encoding>("MQ%3d%3D"));
+	ASSERT_EQ("12", jwt::base::decode<jwt::alphabet::helper::base64url_percent_encoding>("MTI%3d"));
+	ASSERT_EQ("123", jwt::base::decode<jwt::alphabet::helper::base64url_percent_encoding>("MTIz"));
+	ASSERT_EQ("1234", jwt::base::decode<jwt::alphabet::helper::base64url_percent_encoding>("MTIzNA%3d%3d"));
+	ASSERT_EQ("1234", jwt::base::decode<jwt::alphabet::helper::base64url_percent_encoding>("MTIzNA%3D%3D"));
+}
+
 TEST(BaseTest, Base64Encode) {
 	ASSERT_EQ("MQ==", jwt::base::encode<jwt::alphabet::base64>("1"));
 	ASSERT_EQ("MTI=", jwt::base::encode<jwt::alphabet::base64>("12"));
