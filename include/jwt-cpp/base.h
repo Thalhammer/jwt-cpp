@@ -106,7 +106,10 @@ namespace jwt {
 				size_t count = 0;
 				size_t length = 0;
 
-				padding operator+(const padding& p) { return padding{count + p.count, length + p.length}; }
+				padding() = default;
+				padding(size_t count, size_t length) : count(count), length(length) {}
+
+				padding operator+(const padding& p) { return padding(count + p.count, length + p.length); }
 
 				friend bool operator==(const padding& lhs, const padding& rhs) {
 					return lhs.count == rhs.count && lhs.length == rhs.length;
