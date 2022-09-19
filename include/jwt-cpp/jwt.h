@@ -1872,8 +1872,8 @@ namespace jwt {
 		template<typename traits_type, template<typename...> class Op, typename Signature>
 		struct is_function_signature_detected {
 			using type = Op<traits_type>;
-			static constexpr auto value = std::experimental::is_detected<Op, traits_type>::value &&
-										  std::is_function<type>::value && is_signature<type, Signature>::value;
+			static constexpr auto value = is_detected<Op, traits_type>::value && std::is_function<type>::value &&
+										  is_signature<type, Signature>::value;
 		};
 
 		template<typename traits_type, typename value_type>
@@ -1985,9 +1985,6 @@ namespace jwt {
 		template<typename traits_type>
 		using has_key_type = typename traits_type::key_type;
 
-		template<typename traits_type>
-		using has_value_type = typename traits_type::value_type;
-
 		template<typename object_type>
 		using has_iterator = typename object_type::iterator;
 
@@ -2058,6 +2055,10 @@ namespace jwt {
 
 		template<typename value_type, typename string_type, typename object_type>
 		struct is_valid_json_object {
+
+			template<typename T>
+			using value_type_t = typename T::value_type;
+
 			static constexpr auto value =
 				std::is_constructible<value_type, object_type>::value &&
 				is_detected<has_mapped_type, object_type>::value &&
@@ -2071,7 +2072,7 @@ namespace jwt {
 				is_at_const_signature<object_type, value_type, string_type>::value;
 
 			static constexpr auto supports_claims_transform =
-				value && is_detected<has_value_type, object_type>::value &&
+				value && is_detected<value_type_t, object_type>::value &&
 				std::is_same<typename object_type::value_type, std::pair<const string_type, value_type>>::value;
 		};
 
