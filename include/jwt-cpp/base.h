@@ -5,6 +5,7 @@
 #include <array>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #ifdef __has_cpp_attribute
 #if __has_cpp_attribute(fallthrough)
