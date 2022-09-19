@@ -1815,20 +1815,6 @@ namespace jwt {
 	} // namespace json
 
 	namespace details {
-#ifdef __cpp_lib_void_t
-		template<typename... Ts>
-		using void_t = std::void_t<Ts...>;
-#else
-		// https://en.cppreference.com/w/cpp/types/void_t
-		template<typename... Ts>
-		struct make_void {
-			using type = void;
-		};
-
-		template<typename... Ts>
-		using void_t = typename make_void<Ts...>::type;
-#endif
-
 #ifdef __cpp_lib_experimental_detect
 		template<template<typename...> class _Op, typename... _Args>
 		using is_detected = std::experimental::is_detected<_Op, _Args...>;
@@ -1844,6 +1830,20 @@ namespace jwt {
 			void operator=(nonesuch const&) = delete;
 			void operator=(nonesuch&&) = delete;
 		};
+
+#ifdef __cpp_lib_void_t
+		template<typename... Ts>
+		using void_t = std::void_t<Ts...>;
+#else
+		// https://en.cppreference.com/w/cpp/types/void_t
+		template<typename... Ts>
+		struct make_void {
+			using type = void;
+		};
+
+		template<typename... Ts>
+		using void_t = typename make_void<Ts...>::type;
+#endif
 
 		// https://en.cppreference.com/w/cpp/experimental/is_detected
 		template<class Default, class AlwaysVoid, template<class...> class Op, class... Args>
