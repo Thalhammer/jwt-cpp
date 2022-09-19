@@ -6,6 +6,8 @@
 #include <stdexcept>
 #include <string>
 
+#include <type_traits>
+
 #ifdef __has_cpp_attribute
 #if __has_cpp_attribute(fallthrough)
 #define JWT_FALLTHROUGH [[fallthrough]]
@@ -65,7 +67,7 @@ namespace jwt {
 			}
 		};
 		namespace helper {
-		/**
+			/**
 		 * @brief A General purpose base64url alphabet respecting the
 		 * [URI Case Normalization](https://datatracker.ietf.org/doc/html/rfc3986#section-6.2.2.1)
 		 *
@@ -80,8 +82,8 @@ namespace jwt {
 						 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'}};
 					return data;
 				}
-				static const std::initializer_list<std::string>& fill() {
-					static std::initializer_list<std::string> fill{"%3D", "%3d"};
+				static const std::array<std::string, 2>& fill() {
+					static std::array<std::string, 2> fill{{"%3D", "%3d"}};
 					return fill;
 				}
 			};
@@ -112,13 +114,14 @@ namespace jwt {
 				}
 			};
 
-			inline padding count_padding(const std::string& base, const std::initializer_list<std::string>& fills) {
+			template<int count>
+			padding count_padding(const std::string& base, const std::array<std::string, count>& fills) {
 				for (const auto& fill : fills) {
 					if (base.size() < fill.size()) continue;
 					// Does the end of the input exactly match the fill pattern?
 					if (base.substr(base.size() - fill.size()) == fill) {
 						return padding{1, fill.length()} +
-							   count_padding(base.substr(0, base.size() - fill.size()), fills);
+							   count_padding<count>(base.substr(0, base.size() - fill.size()), fills);
 					}
 				}
 
@@ -174,13 +177,9 @@ namespace jwt {
 				return res;
 			}
 
-			inline std::string decode(const std::string& base, const std::array<char, 64>& alphabet,
-									  const std::string& fill) {
-				return decode(base, alphabet, {fill});
-			}
-
-			inline std::string decode(const std::string& base, const std::array<char, 64>& alphabet,
-									  const std::initializer_list<std::string>& fill) {
+			template<int count>
+			std::string decode(const std::string& base, const std::array<char, 64>& alphabet,
+							   const std::array<std::string, count>& fill) {
 				const auto pad = count_padding(base, fill);
 				if (pad.count > 2) throw std::runtime_error("Invalid input: too much fill");
 
@@ -241,6 +240,20 @@ namespace jwt {
 				auto pos = base.find(fill);
 				return base.substr(0, pos);
 			}
+
+			template<class T>
+			using remove_reference_t = typename std::remove_reference<T>::type;
+
+			template<class T>
+			using remove_cv_t = typename std::remove_cv<T>::type;
+
+			template<class T>
+			struct remove_cvref {
+				typedef std::remove_cv_t<std::remove_reference_t<T>> type;
+			};
+
+			template<class T>
+			using remove_cvref_t = typename remove_cvref<T>::type;
 		} // namespace details
 
 		template<typename T>
@@ -250,6 +263,12 @@ namespace jwt {
 		template<typename T>
 		std::string decode(const std::string& base) {
 			return details::decode(base, T::data(), T::fill());
+		}
+		template<typename T, typename
+				 std::enable_if<std::is_same<details::remove_cvref_t<decltype(T::fill())>, std::string>::value,
+								  bool>::type = true>
+		std::string decode(const std::string& base) {
+			return details::decode(base, T::data(), std::array<std::string, 1>{T::fill()});
 		}
 		template<typename T>
 		std::string pad(const std::string& base) {
