@@ -22,7 +22,7 @@ namespace jwt {
 	 */
 	namespace alphabet {
 		/**
-		 * \brief valid list of characted when working with [Base64](https://datatracker.ietf.org/doc/html/rfc4648#section-4)
+		 * \brief valid list of character when working with [Base64](https://datatracker.ietf.org/doc/html/rfc4648#section-4)
 		 *
 		 * As directed in [X.509 Parameter](https://datatracker.ietf.org/doc/html/rfc7517#section-4.7) certificate chains are
 		 * base64-encoded as per [Section 4 of RFC4648](https://datatracker.ietf.org/doc/html/rfc4648#section-4)
@@ -42,10 +42,10 @@ namespace jwt {
 			}
 		};
 		/**
-		 * \brief valid list of characted when working with [Base64URL](https://tools.ietf.org/html/rfc4648#section-5)
+		 * \brief valid list of character when working with [Base64URL](https://tools.ietf.org/html/rfc4648#section-5)
 		 *
 		 * As directed by [RFC 7519 Terminology](https://datatracker.ietf.org/doc/html/rfc7519#section-2) set the definition of Base64URL
-		 * enconding as that in [RFC 7515](https://datatracker.ietf.org/doc/html/rfc7515#section-2) that states:
+		 * encoding as that in [RFC 7515](https://datatracker.ietf.org/doc/html/rfc7515#section-2) that states:
 		 *
 		 * > Base64 encoding using the URL- and filename-safe character set defined in
 		 * > [Section 5 of RFC 4648 RFC4648](https://tools.ietf.org/html/rfc4648#section-5), with all trailing '=' characters omitted
@@ -65,13 +65,13 @@ namespace jwt {
 			}
 		};
 		namespace helper {
-			/**
-		 * @brief A General purpose base64url alphabet respectcing the
+		/**
+		 * @brief A General purpose base64url alphabet respecting the
 		 * [URI Case Normalization](https://datatracker.ietf.org/doc/html/rfc3986#section-6.2.2.1)
 		 *
 		 * This is useful in situations outside of JWT encoding/decoding and is provided as a helper
 		 */
-			struct base64url_percentendcoded {
+			struct base64url_percent_encoding {
 				static const std::array<char, 64>& data() {
 					static constexpr std::array<char, 64> data{
 						{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
@@ -96,7 +96,7 @@ namespace jwt {
 	} // namespace alphabet
 
 	/**
-	 * \brief A collection of fexlible functions for working with base64 and base64url
+	 * \brief A collection of fellable functions for working with base64 and base64url
 	 */
 	namespace base {
 
