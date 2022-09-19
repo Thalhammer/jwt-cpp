@@ -112,7 +112,7 @@ namespace jwt {
 				}
 			};
 
-			inline padding count_padding(const std::string& base, const std::initializer_list<std::string>& fills) {
+			inline padding count_padding(const std::string& base, const std::vector<std::string>& fills) {
 				for (const auto& fill : fills) {
 					if (base.size() < fill.size()) continue;
 					// Does the end of the input exactly match the fill pattern?
@@ -175,12 +175,7 @@ namespace jwt {
 			}
 
 			inline std::string decode(const std::string& base, const std::array<char, 64>& alphabet,
-									  const std::string& fill) {
-				return decode(base, alphabet, {fill});
-			}
-
-			inline std::string decode(const std::string& base, const std::array<char, 64>& alphabet,
-									  const std::initializer_list<std::string>& fill) {
+									  const std::vector<std::string>& fill) {
 				const auto pad = count_padding(base, fill);
 				if (pad.count > 2) throw std::runtime_error("Invalid input: too much fill");
 
@@ -223,6 +218,11 @@ namespace jwt {
 				}
 
 				return res;
+			}
+
+			inline std::string decode(const std::string& base, const std::array<char, 64>& alphabet,
+									  const std::string& fill) {
+				return decode(base, alphabet, std::vector<std::string>{fill});
 			}
 
 			inline std::string pad(const std::string& base, const std::string& fill) {
