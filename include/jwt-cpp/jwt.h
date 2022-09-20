@@ -1862,17 +1862,28 @@ namespace jwt {
 		using is_detected = typename detector<nonesuch, void, Op, Args...>::value;
 
 		template<template<class...> class Op, class... Args>
-		constexpr bool is_detected_v = is_detected<Op, Args...>::value;
+		inline constexpr bool is_detected_v = is_detected<Op, Args...>::value;
 #endif
 
-		template<typename Op, typename Signature>
-		using is_signature = typename std::is_same<Op, Signature>;
+#if __cplusplus > 201703L
+		template<class T>
+		using is_function_v = std::is_function_v<T>;
+#else
+		template<class T>
+		inline constexpr bool is_function_v = std::is_function<T>::value;
+#endif
+
+		template<typename T, typename Signature>
+		using is_signature = typename std::is_same<T, Signature>;
+
+		template<typename T, typename Signature>
+		inline constexpr bool is_signature_v = is_signature<T, Signature>::value;
 
 		template<typename traits_type, template<typename...> class Op, typename Signature>
 		struct is_function_signature_detected {
 			using type = Op<traits_type>;
 			static constexpr auto value =
-				is_detected_v<Op, traits_type> && std::is_function<type>::value && is_signature<type, Signature>::value;
+				is_detected_v<Op, traits_type> && is_function_v<type> && is_signature_v<type, Signature>;
 		};
 
 		template<typename traits_type, typename value_type>
@@ -1942,21 +1953,21 @@ namespace jwt {
 		struct is_valid_traits {
 			// Internal assertions for better feedback
 			static_assert(supports_get_type<traits, typename traits::value_type>::value,
-						  "traits must provide `jwt::json::type get_type(const value_type&)`");
+						  "traits implementation must provide `jwt::json::type get_type(const value_type&)`");
 			static_assert(supports_as_object<traits, typename traits::value_type, typename traits::object_type>::value,
-						  "traits must provide `object_type as_object(const value_type&)`");
+						  "traits implementation must provide `object_type as_object(const value_type&)`");
 			static_assert(supports_as_array<traits, typename traits::value_type, typename traits::array_type>::value,
-						  "traits must provide `array_type as_array(const value_type&)`");
+						  "traits implementation must provide `array_type as_array(const value_type&)`");
 			static_assert(supports_as_string<traits, typename traits::value_type, typename traits::string_type>::value,
-						  "traits must provide `string_type as_string(const value_type&)`");
+						  "traits implementation must provide `string_type as_string(const value_type&)`");
 			static_assert(supports_as_number<traits, typename traits::value_type, typename traits::number_type>::value,
-						  "traits must provide `number_type as_number(const value_type&)`");
+						  "traits implementation must provide `number_type as_number(const value_type&)`");
 			static_assert(
 				supports_as_integer<traits, typename traits::value_type, typename traits::integer_type>::value,
-				"traits must provide `integer_type as_integer(const value_type&)`");
+				"traits implementation must provide `integer_type as_integer(const value_type&)`");
 			static_assert(
 				supports_as_boolean<traits, typename traits::value_type, typename traits::boolean_type>::value,
-				"traits must provide `boolean_type as_boolean(const value_type&)`");
+				"traits implementation must provide `boolean_type as_boolean(const value_type&)`");
 
 			static constexpr auto value =
 				supports_get_type<traits, typename traits::value_type>::value &&
