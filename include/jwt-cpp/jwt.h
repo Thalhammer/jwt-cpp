@@ -1866,8 +1866,7 @@ namespace jwt {
 #endif
 
 		template<typename Op, typename Signature>
-		using is_signature = typename std::is_same<Op,		   // Extract type of “as array”
-												   Signature>; // Compare function signature
+		using is_signature = typename std::is_same<Op, Signature>;
 
 		template<typename traits_type, template<typename...> class Op, typename Signature>
 		struct is_function_signature_detected {
