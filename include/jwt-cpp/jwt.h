@@ -1815,22 +1815,6 @@ namespace jwt {
 	} // namespace json
 
 	namespace details {
-#ifdef __cpp_lib_experimental_detect
-		template<template<typename...> class _Op, typename... _Args>
-		using is_detected = std::experimental::is_detected<_Op, _Args...>;
-
-		template<template<typename...> class _Op, typename... _Args>
-		using is_detected_t = std::experimental::detected_t<_Op, _Args...>;
-#else
-		struct nonesuch {
-			nonesuch() = delete;
-			~nonesuch() = delete;
-			nonesuch(nonesuch const&) = delete;
-			nonesuch(nonesuch const&&) = delete;
-			void operator=(nonesuch const&) = delete;
-			void operator=(nonesuch&&) = delete;
-		};
-
 #ifdef __cpp_lib_void_t
 		template<typename... Ts>
 		using void_t = std::void_t<Ts...>;
@@ -1844,6 +1828,22 @@ namespace jwt {
 		template<typename... Ts>
 		using void_t = typename make_void<Ts...>::type;
 #endif
+
+#ifdef __cpp_lib_experimental_detect
+		template<template<typename...> class _Op, typename... _Args>
+		using is_detected = std::experimental::is_detected<_Op, _Args...>;
+
+		template<template<typename...> class _Op, typename... _Args>
+		using is_detected_v = std::experimental::detected_v<_Op, _Args...>;
+#else
+		struct nonesuch {
+			nonesuch() = delete;
+			~nonesuch() = delete;
+			nonesuch(nonesuch const&) = delete;
+			nonesuch(nonesuch const&&) = delete;
+			void operator=(nonesuch const&) = delete;
+			void operator=(nonesuch&&) = delete;
+		};
 
 		// https://en.cppreference.com/w/cpp/experimental/is_detected
 		template<class Default, class AlwaysVoid, template<class...> class Op, class... Args>
@@ -1862,7 +1862,7 @@ namespace jwt {
 		using is_detected = typename detector<nonesuch, void, Op, Args...>::value;
 
 		template<template<class...> class Op, class... Args>
-		using is_detected_t = typename detector<nonesuch, void, Op, Args...>::type;
+		constexpr bool is_detected_v = is_detected<Op, Args...>::value;
 #endif
 
 		template<typename Op, typename Signature>
@@ -1872,8 +1872,8 @@ namespace jwt {
 		template<typename traits_type, template<typename...> class Op, typename Signature>
 		struct is_function_signature_detected {
 			using type = Op<traits_type>;
-			static constexpr auto value = is_detected<Op, traits_type>::value && std::is_function<type>::value &&
-										  is_signature<type, Signature>::value;
+			static constexpr auto value =
+				is_detected_v<Op, traits_type> && std::is_function<type>::value && is_signature<type, Signature>::value;
 		};
 
 		template<typename traits_type, typename value_type>
@@ -1979,47 +1979,18 @@ namespace jwt {
 			// TODO(prince-chrismc): Stream operators
 		};
 
-		template<typename traits_type>
-		using has_mapped_type = typename traits_type::mapped_type;
+		// https://stackoverflow.com/a/53967057/8480874
+		template<typename T, typename = void>
+		struct is_iterable : std::false_type {};
 
-		template<typename traits_type>
-		using has_key_type = typename traits_type::key_type;
+		template<typename T>
+		struct is_iterable<
+			T, void_t<decltype(std::begin(std::declval<T>())), decltype(std::end(std::declval<T>())),
+					  decltype(std::cbegin(std::declval<const T>())), decltype(std::cend(std::declval<const T>()))>>
+			: std::true_type {};
 
-		template<typename object_type>
-		using has_iterator = typename object_type::iterator;
-
-		template<typename object_type>
-		using has_const_iterator = typename object_type::const_iterator;
-
-		template<typename object_type>
-		using is_begin_signature =
-			typename std::is_same<decltype(std::declval<object_type>().begin()), has_iterator<object_type>>;
-
-		template<typename object_type>
-		using is_begin_const_signature =
-			typename std::is_same<decltype(std::declval<const object_type>().begin()), has_const_iterator<object_type>>;
-
-		template<typename object_type>
-		struct supports_begin {
-			static constexpr auto value =
-				is_detected<has_iterator, object_type>::value && is_detected<has_const_iterator, object_type>::value &&
-				is_begin_signature<object_type>::value && is_begin_const_signature<object_type>::value;
-		};
-
-		template<typename object_type>
-		using is_end_signature =
-			typename std::is_same<decltype(std::declval<object_type>().end()), has_iterator<object_type>>;
-
-		template<typename object_type>
-		using is_end_const_signature =
-			typename std::is_same<decltype(std::declval<const object_type>().end()), has_const_iterator<object_type>>;
-
-		template<typename object_type>
-		struct supports_end {
-			static constexpr auto value =
-				is_detected<has_iterator, object_type>::value && is_detected<has_const_iterator, object_type>::value &&
-				is_end_signature<object_type>::value && is_end_const_signature<object_type>::value;
-		};
+		template<typename T>
+		constexpr bool is_iterable_v = is_iterable<T>::value;
 
 		template<typename object_type, typename string_type>
 		using is_count_signature = typename std::is_integral<decltype(
@@ -2055,24 +2026,30 @@ namespace jwt {
 
 		template<typename value_type, typename string_type, typename object_type>
 		struct is_valid_json_object {
-
 			template<typename T>
 			using value_type_t = typename T::value_type;
+			template<typename T>
+			using mapped_type_t = typename T::mapped_type;
+			template<typename T>
+			using key_type_t = typename T::key_type;
+			template<typename T>
+			using iterator_t = typename T::iterator;
+			template<typename T>
+			using const_iterator_t = typename T::const_iterator;
 
 			static constexpr auto value =
-				std::is_constructible<value_type, object_type>::value &&
-				is_detected<has_mapped_type, object_type>::value &&
+				std::is_constructible<value_type, object_type>::value && is_detected_v<mapped_type_t, object_type> &&
 				std::is_same<typename object_type::mapped_type, value_type>::value &&
-				is_detected<has_key_type, object_type>::value &&
+				is_detected_v<key_type_t, object_type> &&
 				(std::is_same<typename object_type::key_type, string_type>::value ||
 				 std::is_constructible<typename object_type::key_type, string_type>::value) &&
-				supports_begin<object_type>::value && supports_end<object_type>::value &&
-				is_count_signature<object_type, string_type>::value &&
+				is_detected_v<iterator_t, object_type> && is_detected_v<const_iterator_t, object_type> &&
+				is_iterable_v<object_type> && is_count_signature<object_type, string_type>::value &&
 				is_subcription_operator_signature<object_type, value_type, string_type>::value &&
 				is_at_const_signature<object_type, value_type, string_type>::value;
 
 			static constexpr auto supports_claims_transform =
-				value && is_detected<value_type_t, object_type>::value &&
+				value && is_detected_v<value_type_t, object_type> &&
 				std::is_same<typename object_type::value_type, std::pair<const string_type, value_type>>::value;
 		};
 
