@@ -3563,9 +3563,7 @@ namespace jwt {
 		 * Get all jwk claims
 		 * \return Map of claims
 		 */
-		std::unordered_map<typename json_traits::string_type, basic_claim_t> get_claims() const {
-			return this->jwk_claims.claims;
-		}
+		typename json_traits::object_type get_claims() const { return this->jwk_claims.claims; }
 	};
 
 	/**
