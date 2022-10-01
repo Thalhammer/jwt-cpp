@@ -34,7 +34,7 @@ int main() {
 						   .sign(jwt::algorithm::none{});
 	const auto decoded = jwt::decode<traits>(token);
 
-	for (auto& e : decoded.get_header_claims())
+	for (auto& e : decoded.get_header_json())
 		std::cout << e.key() << " = " << e.value() << std::endl;
 
 	const auto array =
