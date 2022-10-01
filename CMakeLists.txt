@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.14)
 
 # HUNTER_ENABLED is always set if this package is included in a project using hunter (HunterGate sets it) In this case
 # we will use hunter as well to stay consistent. If not the use can supply it on configure to force using hunter.
@@ -62,6 +62,16 @@ if(JWT_EXTERNAL_PICOJSON)
   find_package(picojson 1.3.0 REQUIRED)
 endif()
 
+find_package(nlohmann_json CONFIG)
+
+if(NOT nlohmann_json_FOUND)
+  include(FetchContent)
+
+  fetchcontent_declare(nlohmann_json GIT_REPOSITORY https://github.com/nlohmann/json.git GIT_TAG v3.11.2)
+
+  fetchcontent_makeavailable(nlohmann_json)
+endif()
+
 set(JWT_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(JWT_HEADER_FILES ${JWT_INCLUDE_PATH}/jwt-cpp/jwt.h)
 foreach(traits ${JWT_JSON_TRAITS_OPTIONS})
@@ -107,7 +117,7 @@ if(JWT_EXTERNAL_PICOJSON)
   target_link_libraries(jwt-cpp INTERFACE picojson::picojson>)
 endif()
 
-# Hunter needs relative paths so the files are palced correctly
+# Hunter needs relative paths so the files are placed correctly
 if(NOT JWT_CMAKE_FILES_INSTALL_DIR)
   set(JWT_CMAKE_FILES_INSTALL_DIR cmake)
 endif()

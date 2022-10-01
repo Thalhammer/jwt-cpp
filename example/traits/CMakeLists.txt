@@ -19,8 +19,8 @@ endif()
 
 find_package(nlohmann_json CONFIG)
 if(TARGET nlohmann_json::nlohmann_json)
-add_executable(nlohmann-json nlohmann-json.cpp)
-target_link_libraries(nlohmann-json nlohmann_json::nlohmann_json jwt-cpp::jwt-cpp)
+  add_executable(nlohmann-json nlohmann-json.cpp)
+  target_link_libraries(nlohmann-json nlohmann_json::nlohmann_json jwt-cpp::jwt-cpp)
 endif()
 
 include("../../cmake/private-find-kazuho-picojson.cmake")
