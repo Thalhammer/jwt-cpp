@@ -90,19 +90,23 @@ namespace jwt {
 	 * \brief Everything related to error codes issued by the library
 	 */
 	namespace error {
-		struct signature_verification_exception : public std::system_error {
+		struct exception : public std::exception {
+			using exception::exception;
+		}
+
+		struct signature_verification_exception : exception, public std::system_error {
 			using system_error::system_error;
 		};
-		struct signature_generation_exception : public std::system_error {
+		struct signature_generation_exception : exception, public std::system_error {
 			using system_error::system_error;
 		};
-		struct rsa_exception : public std::system_error {
+		struct rsa_exception : exception, public std::system_error {
 			using system_error::system_error;
 		};
-		struct ecdsa_exception : public std::system_error {
+		struct ecdsa_exception : exception, public std::system_error {
 			using system_error::system_error;
 		};
-		struct token_verification_exception : public std::system_error {
+		struct token_verification_exception : exception, public std::system_error {
 			using system_error::system_error;
 		};
 		/**
@@ -362,15 +366,8 @@ namespace jwt {
 			}
 		}
 	} // namespace error
-
-	// FIXME: Remove
-	// Keep backward compat at least for a couple of revisions
-	using error::ecdsa_exception;
-	using error::rsa_exception;
-	using error::signature_generation_exception;
-	using error::signature_verification_exception;
-	using error::token_verification_exception;
 } // namespace jwt
+
 namespace std {
 	template<>
 	struct is_error_code_enum<jwt::error::rsa_error> : true_type {};
@@ -383,6 +380,7 @@ namespace std {
 	template<>
 	struct is_error_code_enum<jwt::error::token_verification_error> : true_type {};
 } // namespace std
+
 namespace jwt {
 	/**
 	 * \brief A collection for working with certificates
@@ -2316,13 +2314,13 @@ namespace jwt {
 		/**
 		 * Attempt to parse JSON was unsuccessful
 		 */
-		struct invalid_json_exception : public std::runtime_error {
+		struct invalid_json_exception : exception, public std::runtime_error {
 			invalid_json_exception() : runtime_error("invalid json") {}
 		};
 		/**
 		 * Attempt to access claim was unsuccessful
 		 */
-		struct claim_not_present_exception : public std::out_of_range {
+		struct claim_not_present_exception : exception, public std::out_of_range {
 			claim_not_present_exception() : out_of_range("claim not found") {}
 		};
 	} // namespace error

@@ -123,6 +123,7 @@ TEST(ClaimTest, PicoJSONTraitsAsDouble) {
 
 TEST(ClaimTest, MapOfClaim) {
 	using map = jwt::details::map_of_claims<jwt::traits::kazuho_picojson>;
+	ASSERT_THROW(map::parse_claims(R"##(__ not json __)##"), jwt::error::exception);
 	ASSERT_THROW(map::parse_claims(R"##(__ not json __)##"), jwt::error::invalid_json_exception);
 	const map claims{
 		map::parse_claims(R"##({ "array": [1], "string" : "hello world", "number": 9.9, "bool": true})##")};
@@ -137,5 +138,6 @@ TEST(ClaimTest, MapOfClaim) {
 	ASSERT_EQ(claims.get_claim("string").as_string(), "hello world");
 	ASSERT_EQ(claims.get_claim("number").as_number(), 9.9);
 	ASSERT_EQ(claims.get_claim("bool").as_bool(), true);
+	ASSERT_THROW(claims.get_claim("__missing__"), jwt::error::exception);
 	ASSERT_THROW(claims.get_claim("__missing__"), jwt::error::claim_not_present_exception);
 }
