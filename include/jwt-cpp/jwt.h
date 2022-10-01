@@ -975,7 +975,7 @@ namespace jwt {
 				} else if (!public_key.empty()) {
 					pkey = helper::load_public_key_from_string(public_key, public_key_password);
 				} else
-					throw rsa_exception(error::rsa_error::no_key_provided);
+					throw error::rsa_exception(error::rsa_error::no_key_provided);
 			}
 			/**
 			 * Sign jwt data
@@ -1085,13 +1085,13 @@ namespace jwt {
 					pkey = helper::load_public_ec_key_from_string(public_key, public_key_password);
 					check_public_key(pkey.get());
 				} else {
-					throw ecdsa_exception(error::ecdsa_error::no_key_provided);
+					throw error::ecdsa_exception(error::ecdsa_error::no_key_provided);
 				}
-				if (!pkey) throw ecdsa_exception(error::ecdsa_error::invalid_key);
+				if (!pkey) throw error::ecdsa_exception(error::ecdsa_error::invalid_key);
 
 				size_t keysize = EVP_PKEY_bits(pkey.get());
 				if (keysize != signature_length * 4 && (signature_length != 132 || keysize != 521))
-					throw ecdsa_exception(error::ecdsa_error::invalid_key_size);
+					throw error::ecdsa_exception(error::ecdsa_error::invalid_key_size);
 			}
 
 			/**
@@ -1191,12 +1191,12 @@ namespace jwt {
 #ifdef JWT_OPENSSL_3_0
 				std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)> ctx(
 					EVP_PKEY_CTX_new_from_pkey(nullptr, pkey, nullptr), EVP_PKEY_CTX_free);
-				if (!ctx) { throw ecdsa_exception(error::ecdsa_error::create_context_failed); }
-				if (EVP_PKEY_public_check(ctx.get()) != 1) { throw ecdsa_exception(error::ecdsa_error::invalid_key); }
+				if (!ctx) { throw error::ecdsa_exception(error::ecdsa_error::create_context_failed); }
+				if (EVP_PKEY_public_check(ctx.get()) != 1) { throw error::ecdsa_exception(error::ecdsa_error::invalid_key); }
 #else
 				std::unique_ptr<EC_KEY, decltype(&EC_KEY_free)> eckey(EVP_PKEY_get1_EC_KEY(pkey), EC_KEY_free);
-				if (!eckey) { throw ecdsa_exception(error::ecdsa_error::invalid_key); }
-				if (EC_KEY_check_key(eckey.get()) == 0) throw ecdsa_exception(error::ecdsa_error::invalid_key);
+				if (!eckey) { throw error::ecdsa_exception(error::ecdsa_error::invalid_key); }
+				if (EC_KEY_check_key(eckey.get()) == 0) throw error::ecdsa_exception(error::ecdsa_error::invalid_key);
 #endif
 			}
 
@@ -1204,12 +1204,12 @@ namespace jwt {
 #ifdef JWT_OPENSSL_3_0
 				std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)> ctx(
 					EVP_PKEY_CTX_new_from_pkey(nullptr, pkey, nullptr), EVP_PKEY_CTX_free);
-				if (!ctx) { throw ecdsa_exception(error::ecdsa_error::create_context_failed); }
-				if (EVP_PKEY_private_check(ctx.get()) != 1) { throw ecdsa_exception(error::ecdsa_error::invalid_key); }
+				if (!ctx) { throw error::ecdsa_exception(error::ecdsa_error::create_context_failed); }
+				if (EVP_PKEY_private_check(ctx.get()) != 1) { throw error::ecdsa_exception(error::ecdsa_error::invalid_key); }
 #else
 				std::unique_ptr<EC_KEY, decltype(&EC_KEY_free)> eckey(EVP_PKEY_get1_EC_KEY(pkey), EC_KEY_free);
-				if (!eckey) { throw ecdsa_exception(error::ecdsa_error::invalid_key); }
-				if (EC_KEY_check_key(eckey.get()) == 0) throw ecdsa_exception(error::ecdsa_error::invalid_key);
+				if (!eckey) { throw error::ecdsa_exception(error::ecdsa_error::invalid_key); }
+				if (EC_KEY_check_key(eckey.get()) == 0) throw error::ecdsa_exception(error::ecdsa_error::invalid_key);
 #endif
 			}
 
@@ -1315,7 +1315,7 @@ namespace jwt {
 				} else if (!public_key.empty()) {
 					pkey = helper::load_public_key_from_string(public_key, public_key_password);
 				} else
-					throw ecdsa_exception(error::ecdsa_error::load_key_bio_read);
+					throw error::ecdsa_exception(error::ecdsa_error::load_key_bio_read);
 			}
 			/**
 			 * Sign jwt data
@@ -1450,7 +1450,7 @@ namespace jwt {
 				} else if (!public_key.empty()) {
 					pkey = helper::load_public_key_from_string(public_key, public_key_password);
 				} else
-					throw rsa_exception(error::rsa_error::no_key_provided);
+					throw error::rsa_exception(error::rsa_error::no_key_provided);
 			}
 
 			/**
