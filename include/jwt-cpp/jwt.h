@@ -2329,10 +2329,8 @@ namespace jwt {
 
 	namespace details {
 		template<typename json_traits>
-		class map_of_claims {
+		struct map_of_claims {
 			typename json_traits::object_type claims;
-
-		public:
 			using basic_claim_t = basic_claim<json_traits>;
 			using iterator = typename json_traits::object_type::iterator;
 			using const_iterator = typename json_traits::object_type::const_iterator;
@@ -2385,21 +2383,6 @@ namespace jwt {
 			basic_claim_t get_claim(const typename json_traits::string_type& name) const {
 				if (!has_claim(name)) throw error::claim_not_present_exception();
 				return basic_claim_t{claims.at(name)};
-			}
-
-			std::unordered_map<typename json_traits::string_type, basic_claim_t> get_claims() const {
-				static_assert(
-					details::is_valid_json_object<typename json_traits::value_type, typename json_traits::string_type,
-												  typename json_traits::object_type>::supports_claims_transform,
-					"currently there is a limitation on the internal implemantation of the `object_type` to have an "
-					"`std::pair` like `value_type`");
-
-				std::unordered_map<typename json_traits::string_type, basic_claim_t> res;
-				std::transform(claims.begin(), claims.end(), std::inserter(res, res.end()),
-							   [](const typename json_traits::object_type::value_type& val) {
-								   return std::make_pair(val.first, basic_claim_t{val.second});
-							   });
-				return res;
 			}
 		};
 	} // namespace details
@@ -2704,15 +2687,15 @@ namespace jwt {
 		 * Get all payload claims
 		 * \return map of claims
 		 */
-		std::unordered_map<typename json_traits::string_type, basic_claim_t> get_payload_claims() const {
-			return this->payload_claims.get_claims();
+		typename json_traits::obect_type get_payload_claims() const {
+			return this->payload_claims.claims;
 		}
 		/**
 		 * Get all header claims
 		 * \return map of claims
 		 */
-		std::unordered_map<typename json_traits::string_type, basic_claim_t> get_header_claims() const {
-			return this->header_claims.get_claims();
+		typename json_traits::obect_type get_header_claims() const {
+			return this->header_claims.claims;
 		}
 		/**
 		 * Get a payload claim by name
@@ -3589,7 +3572,7 @@ namespace jwt {
 		 * \return Map of claims
 		 */
 		std::unordered_map<typename json_traits::string_type, basic_claim_t> get_claims() const {
-			return this->jwk_claims.get_claims();
+			return this->jwk_claims.claims;
 		}
 	};
 
