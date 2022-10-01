@@ -94,7 +94,7 @@ namespace jwt {
 		 * \brief Generic base class for all JWT specific exceptions
 		 */
 		struct exception : public std::exception {
-			using exception::exception;
+			using std::exception::exception;
 		};
 
 		struct signature_verification_exception : exception, public std::system_error {
