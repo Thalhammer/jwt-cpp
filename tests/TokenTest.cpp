@@ -124,13 +124,13 @@ TEST(TokenTest, CreateTokenES256NoPrivate) {
 			auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(
 				jwt::algorithm::es256(ecdsa256_pub_key, "", "", ""));
 		}(),
-		jwt::jwt::error::exception);
+		jwt::error::exception);
 	ASSERT_THROW(
 		[]() {
 			auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(
 				jwt::algorithm::es256(ecdsa256_pub_key, "", "", ""));
 		}(),
-		jwt::jwt::error::signature_generation_exception);
+		jwt::error::signature_generation_exception);
 }
 
 TEST(TokenTest, CreateTokenES384) {
@@ -156,7 +156,7 @@ TEST(TokenTest, CreateTokenES384NoPrivate) {
 			auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(
 				jwt::algorithm::es384(ecdsa384_pub_key, "", "", ""));
 		}(),
-		jwt::jwt::error::signature_generation_exception);
+		jwt::error::signature_generation_exception);
 }
 
 TEST(TokenTest, CreateTokenES512) {
@@ -179,7 +179,7 @@ TEST(TokenTest, CreateTokenES512NoPrivate) {
 			auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(
 				jwt::algorithm::es512(ecdsa521_pub_key, "", "", ""));
 		}(),
-		jwt::jwt::error::signature_generation_exception);
+		jwt::error::signature_generation_exception);
 }
 
 #if !defined(JWT_OPENSSL_1_0_0) && !defined(JWT_OPENSSL_1_1_0)
