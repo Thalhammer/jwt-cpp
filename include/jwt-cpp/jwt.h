@@ -1192,7 +1192,9 @@ namespace jwt {
 				std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)> ctx(
 					EVP_PKEY_CTX_new_from_pkey(nullptr, pkey, nullptr), EVP_PKEY_CTX_free);
 				if (!ctx) { throw error::ecdsa_exception(error::ecdsa_error::create_context_failed); }
-				if (EVP_PKEY_public_check(ctx.get()) != 1) { throw error::ecdsa_exception(error::ecdsa_error::invalid_key); }
+				if (EVP_PKEY_public_check(ctx.get()) != 1) {
+					throw error::ecdsa_exception(error::ecdsa_error::invalid_key);
+				}
 #else
 				std::unique_ptr<EC_KEY, decltype(&EC_KEY_free)> eckey(EVP_PKEY_get1_EC_KEY(pkey), EC_KEY_free);
 				if (!eckey) { throw error::ecdsa_exception(error::ecdsa_error::invalid_key); }
@@ -1205,7 +1207,9 @@ namespace jwt {
 				std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)> ctx(
 					EVP_PKEY_CTX_new_from_pkey(nullptr, pkey, nullptr), EVP_PKEY_CTX_free);
 				if (!ctx) { throw error::ecdsa_exception(error::ecdsa_error::create_context_failed); }
-				if (EVP_PKEY_private_check(ctx.get()) != 1) { throw error::ecdsa_exception(error::ecdsa_error::invalid_key); }
+				if (EVP_PKEY_private_check(ctx.get()) != 1) {
+					throw error::ecdsa_exception(error::ecdsa_error::invalid_key);
+				}
 #else
 				std::unique_ptr<EC_KEY, decltype(&EC_KEY_free)> eckey(EVP_PKEY_get1_EC_KEY(pkey), EC_KEY_free);
 				if (!eckey) { throw error::ecdsa_exception(error::ecdsa_error::invalid_key); }
