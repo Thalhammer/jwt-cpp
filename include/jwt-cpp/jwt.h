@@ -2102,10 +2102,6 @@ namespace jwt {
 				is_count_signature<object_type, string_type>::value &&
 				is_subcription_operator_signature<object_type, value_type, string_type>::value &&
 				is_at_const_signature<object_type, value_type, string_type>::value;
-
-			static constexpr auto supports_claims_transform =
-				value && is_detected<has_value_type, object_type>::value &&
-				std::is_same<typename object_type::value_type, std::pair<const string_type, value_type>>::value;
 		};
 
 		template<typename value_type, typename array_type>
