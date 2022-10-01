@@ -2687,16 +2687,12 @@ namespace jwt {
 		 * Get all payload claims
 		 * \return map of claims
 		 */
-		typename json_traits::object_type get_payload_claims() const {
-			return this->payload_claims.claims;
-		}
+		typename json_traits::object_type get_payload_claims() const { return this->payload_claims.claims; }
 		/**
 		 * Get all header claims
 		 * \return map of claims
 		 */
-		typename json_traits::object_type get_header_claims() const {
-			return this->header_claims.claims;
-		}
+		typename json_traits::object_type get_header_claims() const { return this->header_claims.claims; }
 		/**
 		 * Get a payload claim by name
 		 *

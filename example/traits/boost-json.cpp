@@ -34,9 +34,9 @@ int main() {
 						   .sign(jwt::algorithm::none{});
 	const auto decoded = jwt::decode<traits>(token);
 
-    for (auto& e : decoded.get_header_claims()) {
-        std::cout << e.key() << " = " << e.value() << std::endl;
-    }
+	for (auto& e : decoded.get_header_claims()) {
+		std::cout << e.key() << " = " << e.value() << std::endl;
+	}
 
 	const auto array =
 		traits::as_array(decoded.get_payload_claim("object").to_json().as_object()["api"].as_object()["array"]);
