@@ -33,8 +33,8 @@ K9EDZi0mZ7VUeeNKq476CU5X940yusahgneePQrDMF2nWFEtBCOiXQ==
 
 	verify.verify(decoded);
 
-	for (auto& e : decoded.get_header_claims())
-		std::cout << e.first << " = " << e.second.to_json() << std::endl;
-	for (auto& e : decoded.get_payload_claims())
-		std::cout << e.first << " = " << e.second.to_json() << std::endl;
+	for (auto& e : decoded.get_header_json())
+		std::cout << e.first << " = " << e.second << std::endl;
+	for (auto& e : decoded.get_payload_json())
+		std::cout << e.first << " = " << e.second << std::endl;
 }
