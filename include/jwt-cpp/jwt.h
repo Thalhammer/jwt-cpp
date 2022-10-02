@@ -2057,10 +2057,6 @@ namespace jwt {
 				is_iterable_v<object_type> && is_count_signature<object_type, string_type>::value &&
 				is_subcription_operator_signature<object_type, value_type, string_type>::value &&
 				is_at_const_signature<object_type, value_type, string_type>::value;
-
-			static constexpr auto supports_claims_transform =
-				value && is_detected_v<value_type_t, object_type> &&
-				std::is_same<typename object_type::value_type, std::pair<const string_type, value_type>>::value;
 		};
 
 		template<typename value_type, typename array_type>
@@ -2308,10 +2304,8 @@ namespace jwt {
 
 	namespace details {
 		template<typename json_traits>
-		class map_of_claims {
+		struct map_of_claims {
 			typename json_traits::object_type claims;
-
-		public:
 			using basic_claim_t = basic_claim<json_traits>;
 			using iterator = typename json_traits::object_type::iterator;
 			using const_iterator = typename json_traits::object_type::const_iterator;
@@ -2364,21 +2358,6 @@ namespace jwt {
 			basic_claim_t get_claim(const typename json_traits::string_type& name) const {
 				if (!has_claim(name)) throw error::claim_not_present_exception();
 				return basic_claim_t{claims.at(name)};
-			}
-
-			std::unordered_map<typename json_traits::string_type, basic_claim_t> get_claims() const {
-				static_assert(
-					details::is_valid_json_object<typename json_traits::value_type, typename json_traits::string_type,
-												  typename json_traits::object_type>::supports_claims_transform,
-					"currently there is a limitation on the internal implemantation of the `object_type` to have an "
-					"`std::pair` like `value_type`");
-
-				std::unordered_map<typename json_traits::string_type, basic_claim_t> res;
-				std::transform(claims.begin(), claims.end(), std::inserter(res, res.end()),
-							   [](const typename json_traits::object_type::value_type& val) {
-								   return std::make_pair(val.first, basic_claim_t{val.second});
-							   });
-				return res;
 			}
 		};
 	} // namespace details
@@ -2680,19 +2659,15 @@ namespace jwt {
 		 */
 		const typename json_traits::string_type& get_signature_base64() const noexcept { return signature_base64; }
 		/**
-		 * Get all payload claims
+		 * Get all payload as JSON object
 		 * \return map of claims
 		 */
-		std::unordered_map<typename json_traits::string_type, basic_claim_t> get_payload_claims() const {
-			return this->payload_claims.get_claims();
-		}
+		typename json_traits::object_type get_payload_json() const { return this->payload_claims.claims; }
 		/**
-		 * Get all header claims
+		 * Get all header as JSON object
 		 * \return map of claims
 		 */
-		std::unordered_map<typename json_traits::string_type, basic_claim_t> get_header_claims() const {
-			return this->header_claims.get_claims();
-		}
+		typename json_traits::object_type get_header_json() const { return this->header_claims.claims; }
 		/**
 		 * Get a payload claim by name
 		 *
@@ -3567,9 +3542,7 @@ namespace jwt {
 		 * Get all jwk claims
 		 * \return Map of claims
 		 */
-		std::unordered_map<typename json_traits::string_type, basic_claim_t> get_claims() const {
-			return this->jwk_claims.get_claims();
-		}
+		typename json_traits::object_type get_claims() const { return this->jwk_claims.claims; }
 	};
 
 	/**

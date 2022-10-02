@@ -57,7 +57,7 @@ YwIDAQAB
 
 	auto decoded = jwt::decode(token);
 
-	for (const auto& e : decoded.get_payload_claims())
+	for (const auto& e : decoded.get_payload_json())
 		std::cout << e.first << " = " << e.second << std::endl;
 
 	std::cout << std::endl;
