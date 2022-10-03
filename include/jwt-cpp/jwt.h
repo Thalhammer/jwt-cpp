@@ -1889,6 +1889,10 @@ namespace jwt {
 
 			static constexpr auto value =
 				is_function_signature_detected<traits_type, get_type_t, json::type(const value_type&)>::value;
+
+			// Internal assertions for better feedback
+			static_assert(value,
+						  "traits implementation must provide `jwt::json::type get_type(const value_type&)`");
 		};
 
 #define JSON_TYPE_TYPE(TYPE) json_##TYPE_type
@@ -1901,6 +1905,9 @@ namespace jwt {
                                                                                                                        \
 		static constexpr auto value = is_function_signature_detected<traits_type, AS_TYPE_T(TYPE),                     \
 																	 JSON_TYPE_TYPE(TYPE)(const value_type&)>::value;  \
+                                                                                                                       \
+		static_assert(value, 																						   \
+						  "traits implementation must provide `" #TYPE "_type as_" #TYPE "(const value_type&)`");	   \
 	}
 
 		SUPPORTS_AS(object);
@@ -1912,24 +1919,6 @@ namespace jwt {
 
 		template<typename traits>
 		struct is_valid_traits {
-			// Internal assertions for better feedback
-			static_assert(supports_get_type<traits, typename traits::value_type>::value,
-						  "traits implementation must provide `jwt::json::type get_type(const value_type&)`");
-			static_assert(supports_as_object<traits, typename traits::value_type, typename traits::object_type>::value,
-						  "traits implementation must provide `object_type as_object(const value_type&)`");
-			static_assert(supports_as_array<traits, typename traits::value_type, typename traits::array_type>::value,
-						  "traits implementation must provide `array_type as_array(const value_type&)`");
-			static_assert(supports_as_string<traits, typename traits::value_type, typename traits::string_type>::value,
-						  "traits implementation must provide `string_type as_string(const value_type&)`");
-			static_assert(supports_as_number<traits, typename traits::value_type, typename traits::number_type>::value,
-						  "traits implementation must provide `number_type as_number(const value_type&)`");
-			static_assert(
-				supports_as_integer<traits, typename traits::value_type, typename traits::integer_type>::value,
-				"traits implementation must provide `integer_type as_integer(const value_type&)`");
-			static_assert(
-				supports_as_boolean<traits, typename traits::value_type, typename traits::boolean_type>::value,
-				"traits implementation must provide `boolean_type as_boolean(const value_type&)`");
-
 			static constexpr auto value =
 				supports_get_type<traits, typename traits::value_type>::value &&
 				supports_as_object<traits, typename traits::value_type, typename traits::object_type>::value &&
@@ -1974,27 +1963,18 @@ namespace jwt {
 		using is_count_signature = typename std::is_integral<decltype(std::declval<const object_type>().count(
 			std::declval<const string_type>()))>;
 
-		template<typename object_type, typename string_type>
-		struct has_subcription_operator {
-			template<class>
-			struct sfinae_true : std::true_type {};
 
-			template<class T, class A0>
-			static auto test_operator_plus(int)
-				-> sfinae_true<decltype(std::declval<T>().operator[](std::declval<A0>()))>;
-			template<class, class A0>
-			static auto test_operator_plus(long) -> std::false_type;
-
-			static constexpr auto value = decltype(test_operator_plus<object_type, string_type>(0)){};
+		template<typename object_type, typename string_type, typename = void>
+		struct is_subcription_operator_signature : std::false_type {
 		};
 
-		template<typename object_type, typename value_type, typename string_type>
-		struct is_subcription_operator_signature {
-			static constexpr auto has_subscription_operator = has_subcription_operator<object_type, string_type>::value;
-			static_assert(has_subscription_operator,
-						  "object_type must implementate the subscription operator '[]' for this library");
-
-			static constexpr auto value = has_subscription_operator;
+		template<typename object_type, typename string_type>
+		struct is_subcription_operator_signature<object_type, string_type, void_t<
+			decltype(std::declval<object_type>().operator[](std::declval<string_type>()))
+		>> : std::true_type {
+			// TODO(prince-chrismc): I am not convienced this is meaningful anymore
+			static_assert(value,
+						  "object_type must implementate the subscription operator '[]' taking string_type as an arguement");
 		};
 
 		template<typename object_type, typename value_type, typename string_type>
@@ -2024,7 +2004,7 @@ namespace jwt {
 				 std::is_constructible<typename object_type::key_type, string_type>::value) &&
 				is_detected<iterator_t, object_type>::value && is_detected<const_iterator_t, object_type>::value &&
 				is_iterable<object_type>::value && is_count_signature<object_type, string_type>::value &&
-				is_subcription_operator_signature<object_type, value_type, string_type>::value &&
+				is_subcription_operator_signature<object_type, string_type>::value &&
 				is_at_const_signature<object_type, value_type, string_type>::value;
 		};
 
@@ -2046,20 +2026,6 @@ namespace jwt {
 								  string_type>;
 
 		template<typename string_type>
-		struct has_operate_plus_method { // https://stackoverflow.com/a/9154394/8480874
-			template<class>
-			struct sfinae_true : std::true_type {};
-
-			template<class T, class A0>
-			static auto test_operator_plus(int)
-				-> sfinae_true<decltype(std::declval<T>().operator+(std::declval<A0>()))>;
-			template<class, class A0>
-			static auto test_operator_plus(long) -> std::false_type;
-
-			static constexpr auto value = decltype(test_operator_plus<string_type, string_type>(0)){};
-		};
-
-		template<typename string_type>
 		using is_std_operate_plus_signature =
 			typename std::is_same<decltype(std::operator+(std::declval<string_type>(), std::declval<string_type>())),
 								  string_type>;
@@ -2072,7 +2038,7 @@ namespace jwt {
 								  "taking a start and end index, both must return a string_type");
 
 			static constexpr auto operator_plus =
-				has_operate_plus_method<string_type>::value || is_std_operate_plus_signature<string_type>::value;
+				is_std_operate_plus_signature<string_type>::value;
 			static_assert(operator_plus,
 						  "string_type must have a '+' operator implemented which returns the concatenated string");
 
