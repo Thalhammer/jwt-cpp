@@ -1883,8 +1883,8 @@ namespace jwt {
 		template<typename traits_type, template<typename...> class Op, typename Signature>
 		struct is_function_signature_detected {
 			using type = Op<traits_type>;
-			static constexpr auto value =
-				is_detected<Op, traits_type>::value && std::is_function<type>::value && is_signature<type, Signature>::value;
+			static constexpr auto value = is_detected<Op, traits_type>::value && std::is_function<type>::value &&
+										  is_signature<type, Signature>::value;
 		};
 
 		template<typename traits_type, typename value_type>
@@ -1896,59 +1896,24 @@ namespace jwt {
 				is_function_signature_detected<traits_type, get_type_t, json::type(const value_type&)>::value;
 		};
 
-		template<typename traits_type, typename value_type, typename object_type>
-		struct supports_as_object {
-			template<typename T>
-			using as_object_t = decltype(T::as_object);
+#define JSON_TYPE_TYPE(TYPE) json_##TYPE_type
+#define AS_TYPE_T(TYPE) as_##TYPE_t
+#define SUPPORTS_AS(TYPE)                                                                   		                   \
+	template<typename traits_type, typename value_type, typename JSON_TYPE_TYPE(TYPE)>                                 \
+	struct supports_as_##TYPE {                                                                                        \
+		template<typename T>                                                                                           \
+		using AS_TYPE_T(TYPE) = decltype(T::as_##TYPE);                                  	                           \
+                                                                                                                       \
+		static constexpr auto value = is_function_signature_detected<traits_type, AS_TYPE_T(TYPE),                     \
+																	 JSON_TYPE_TYPE(TYPE)(const value_type&)>::value;  \
+	}
 
-			static constexpr auto value =
-				is_function_signature_detected<traits_type, as_object_t, object_type(const value_type&)>::value;
-		};
-
-		template<typename traits_type, typename value_type, typename array_type>
-		struct supports_as_array {
-			template<typename T>
-			using as_array_t = decltype(T::as_array);
-
-			static constexpr auto value =
-				is_function_signature_detected<traits_type, as_array_t, array_type(const value_type&)>::value;
-		};
-
-		template<typename traits_type, typename value_type, typename string_type>
-		struct supports_as_string {
-			template<typename T>
-			using as_string_t = decltype(T::as_string);
-
-			static constexpr auto value =
-				is_function_signature_detected<traits_type, as_string_t, string_type(const value_type&)>::value;
-		};
-
-		template<typename traits_type, typename value_type, typename number_type>
-		struct supports_as_number {
-			template<typename T>
-			using as_number_t = decltype(T::as_number);
-
-			static constexpr auto value =
-				is_function_signature_detected<traits_type, as_number_t, number_type(const value_type&)>::value;
-		};
-
-		template<typename traits_type, typename value_type, typename integer_type>
-		struct supports_as_integer {
-			template<typename T>
-			using as_integer_t = decltype(T::as_integer);
-
-			static constexpr auto value =
-				is_function_signature_detected<traits_type, as_integer_t, integer_type(const value_type&)>::value;
-		};
-
-		template<typename traits_type, typename value_type, typename boolean_type>
-		struct supports_as_boolean {
-			template<typename T>
-			using as_boolean_t = decltype(T::as_boolean);
-
-			static constexpr auto value =
-				is_function_signature_detected<traits_type, as_boolean_t, boolean_type(const value_type&)>::value;
-		};
+		SUPPORTS_AS(object);
+		SUPPORTS_AS(array);
+		SUPPORTS_AS(string);
+		SUPPORTS_AS(number);
+		SUPPORTS_AS(integer);
+		SUPPORTS_AS(boolean);
 
 		template<typename traits>
 		struct is_valid_traits {
@@ -1998,12 +1963,12 @@ namespace jwt {
 		struct is_iterable<
 			T, void_t<decltype(std::begin(std::declval<T>())), decltype(std::end(std::declval<T>())),
 #if __cplusplus > 201402L
-					  decltype(std::cbegin(std::declval<const T>())), decltype(std::cend(std::declval<const T>()))
+					  decltype(std::cbegin(std::declval<T>())), decltype(std::cend(std::declval<T>()))
 #else
 					  decltype(std::begin(std::declval<const T>())), decltype(std::end(std::declval<const T>()))
 #endif
-					  >>
-			: std::true_type {};
+					  >> : std::true_type {
+		};
 
 #if __cplusplus > 201703L
 		template<typename T>
@@ -2011,8 +1976,8 @@ namespace jwt {
 #endif
 
 		template<typename object_type, typename string_type>
-		using is_count_signature = typename std::is_integral<decltype(
-			std::declval<const object_type>().count(std::declval<const string_type>()))>;
+		using is_count_signature = typename std::is_integral<decltype(std::declval<const object_type>().count(
+			std::declval<const string_type>()))>;
 
 		template<typename object_type, typename string_type>
 		struct has_subcription_operator {
@@ -2056,7 +2021,8 @@ namespace jwt {
 			using const_iterator_t = typename T::const_iterator;
 
 			static constexpr auto value =
-				std::is_constructible<value_type, object_type>::value && is_detected<mapped_type_t, object_type>::value &&
+				std::is_constructible<value_type, object_type>::value &&
+				is_detected<mapped_type_t, object_type>::value &&
 				std::is_same<typename object_type::mapped_type, value_type>::value &&
 				is_detected<key_type_t, object_type>::value &&
 				(std::is_same<typename object_type::key_type, string_type>::value ||
