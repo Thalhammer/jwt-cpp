@@ -1867,11 +1867,6 @@ namespace jwt {
 #endif
 #endif
 
-#if __cplusplus > 201703L
-		template<class T>
-		using is_function_v = std::is_function_v<T>;
-#endif
-
 		template<typename T, typename Signature>
 		using is_signature = typename std::is_same<T, Signature>;
 
