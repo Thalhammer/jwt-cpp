@@ -1861,29 +1861,30 @@ namespace jwt {
 		template<template<class...> class Op, class... Args>
 		using is_detected = typename detector<nonesuch, void, Op, Args...>::value;
 
+#if __cplusplus > 201703L
 		template<template<class...> class Op, class... Args>
 		inline constexpr bool is_detected_v = is_detected<Op, Args...>::value;
+#endif
 #endif
 
 #if __cplusplus > 201703L
 		template<class T>
 		using is_function_v = std::is_function_v<T>;
-#else
-		template<class T>
-		inline constexpr bool is_function_v = std::is_function<T>::value;
 #endif
 
 		template<typename T, typename Signature>
 		using is_signature = typename std::is_same<T, Signature>;
 
+#if __cplusplus > 201703L
 		template<typename T, typename Signature>
 		inline constexpr bool is_signature_v = is_signature<T, Signature>::value;
+#endif
 
 		template<typename traits_type, template<typename...> class Op, typename Signature>
 		struct is_function_signature_detected {
 			using type = Op<traits_type>;
 			static constexpr auto value =
-				is_detected_v<Op, traits_type> && is_function_v<type> && is_signature_v<type, Signature>;
+				is_detected<Op, traits_type>::value && std::is_function<type>::value && is_signature<type, Signature>::value;
 		};
 
 		template<typename traits_type, typename value_type>
@@ -1996,11 +1997,18 @@ namespace jwt {
 		template<typename T>
 		struct is_iterable<
 			T, void_t<decltype(std::begin(std::declval<T>())), decltype(std::end(std::declval<T>())),
-					  decltype(std::cbegin(std::declval<const T>())), decltype(std::cend(std::declval<const T>()))>>
+#if __cplusplus > 201402L
+					  decltype(std::cbegin(std::declval<const T>())), decltype(std::cend(std::declval<const T>()))
+#else
+					  decltype(std::begin(std::declval<const T>())), decltype(std::end(std::declval<const T>()))
+#endif
+					  >>
 			: std::true_type {};
 
+#if __cplusplus > 201703L
 		template<typename T>
-		constexpr bool is_iterable_v = is_iterable<T>::value;
+		inline constexpr bool is_iterable_v = is_iterable<T>::value;
+#endif
 
 		template<typename object_type, typename string_type>
 		using is_count_signature = typename std::is_integral<decltype(
@@ -2048,13 +2056,13 @@ namespace jwt {
 			using const_iterator_t = typename T::const_iterator;
 
 			static constexpr auto value =
-				std::is_constructible<value_type, object_type>::value && is_detected_v<mapped_type_t, object_type> &&
+				std::is_constructible<value_type, object_type>::value && is_detected<mapped_type_t, object_type>::value &&
 				std::is_same<typename object_type::mapped_type, value_type>::value &&
-				is_detected_v<key_type_t, object_type> &&
+				is_detected<key_type_t, object_type>::value &&
 				(std::is_same<typename object_type::key_type, string_type>::value ||
 				 std::is_constructible<typename object_type::key_type, string_type>::value) &&
-				is_detected_v<iterator_t, object_type> && is_detected_v<const_iterator_t, object_type> &&
-				is_iterable_v<object_type> && is_count_signature<object_type, string_type>::value &&
+				is_detected<iterator_t, object_type>::value && is_detected<const_iterator_t, object_type>::value &&
+				is_iterable<object_type>::value && is_count_signature<object_type, string_type>::value &&
 				is_subcription_operator_signature<object_type, value_type, string_type>::value &&
 				is_at_const_signature<object_type, value_type, string_type>::value;
 		};
