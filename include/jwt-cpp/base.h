@@ -18,6 +18,14 @@
 #endif
 
 namespace jwt {
+	namespace error {
+		/**
+		 * An issue ocurred encoding or decoding
+		 */
+		struct cryptographic_exception : public std::runtime_error {
+			using runtime_error::runtime_error
+		};
+	}
 	/**
 	 * \brief character maps when encoding and decoding
 	 */
@@ -90,7 +98,7 @@ namespace jwt {
 
 		inline uint32_t index(const std::array<char, 64>& alphabet, char symbol) {
 			auto itr = std::find_if(alphabet.cbegin(), alphabet.cend(), [symbol](char c) { return c == symbol; });
-			if (itr == alphabet.cend()) { throw std::runtime_error("Invalid input: not within alphabet"); }
+			if (itr == alphabet.cend()) { throw error::cryptographic_exception("Invalid input: symbol '" + &symbol + "' not within alphabet"); }
 
 			return std::distance(alphabet.cbegin(), itr);
 		}
@@ -100,7 +108,6 @@ namespace jwt {
 	 * \brief A collection of fellable functions for working with base64 and base64url
 	 */
 	namespace base {
-
 		namespace details {
 			struct padding {
 				size_t count = 0;
@@ -181,10 +188,10 @@ namespace jwt {
 			inline std::string decode(const std::string& base, const std::array<char, 64>& alphabet,
 									  const std::vector<std::string>& fill) {
 				const auto pad = count_padding(base, fill);
-				if (pad.count > 2) throw std::runtime_error("Invalid input: too much fill");
+				if (pad.count > 2) throw error::cryptographic_exception("Invalid input: too much fill");
 
 				const size_t size = base.size() - pad.length;
-				if ((size + pad.count) % 4 != 0) throw std::runtime_error("Invalid input: incorrect total size");
+				if ((size + pad.count) % 4 != 0) throw error::cryptographic_exception("Invalid input: incorrect total size");
 
 				size_t out_size = size / 4 * 3;
 				std::string res;
@@ -251,6 +258,14 @@ namespace jwt {
 		std::string encode(const std::string& bin) {
 			return details::encode(bin, T::data(), T::fill());
 		}
+		/**
+		 * \brief base64 decode a string using any alphabet
+		 *
+		 * \tparam T the alphabet to convert back into
+		 * \param base the base64 encoded to decode
+		 * \return std::string containing the decoded contents
+		 * \throw cryptographic_exception
+		 */
 		template<typename T>
 		std::string decode(const std::string& base) {
 			return details::decode(base, T::data(), T::fill());

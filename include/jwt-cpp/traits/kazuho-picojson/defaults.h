@@ -30,8 +30,8 @@ namespace jwt {
 	 * Decode a token
 	 * \param token Token to decode
 	 * \return Decoded token
-	 * \throw std::invalid_argument Token is not in correct format
-	 * \throw std::runtime_error Base64 decoding failed or invalid json
+	 * \throw invalid_argument Token is not in correct format
+	 * \throw runtime_error Base64 decoding failed or invalid json
 	 */
 	inline decoded_jwt<traits::kazuho_picojson> decode(const std::string& token) {
 		return decoded_jwt<traits::kazuho_picojson>(token);
@@ -46,8 +46,8 @@ namespace jwt {
 	 * \param token Token to decode
 	 * \param decode The token to parse
 	 * \return Decoded token
-	 * \throw std::invalid_argument Token is not in correct format
-	 * \throw std::runtime_error Base64 decoding failed or invalid json
+	 * \throw invalid_argument Token is not in correct format
+	 * \throw runtime_error Base64 decoding failed or invalid json
 	 */
 	template<typename Decode>
 	decoded_jwt<traits::kazuho_picojson> decode(const std::string& token, Decode decode) {
@@ -58,7 +58,7 @@ namespace jwt {
 	 * Parse a jwk
 	 * \param token JWK Token to parse
 	 * \return Parsed JWK
-	 * \throw std::runtime_error Token is not in correct format
+	 * \throw runtime_error Token is not in correct format
 	 */
 	inline jwk<traits::kazuho_picojson> parse_jwk(const traits::kazuho_picojson::string_type& token) {
 		return jwk<traits::kazuho_picojson>(token);
@@ -68,7 +68,7 @@ namespace jwt {
 	 * Parse a jwks
 	 * \param token JWKs Token to parse
 	 * \return Parsed JWKs
-	 * \throw std::runtime_error Token is not in correct format
+	 * \throw runtime_error Token is not in correct format
 	 */
 	inline jwks<traits::kazuho_picojson> parse_jwks(const traits::kazuho_picojson::string_type& token) {
 		return jwks<traits::kazuho_picojson>(token);
