@@ -1891,23 +1891,21 @@ namespace jwt {
 				is_function_signature_detected<traits_type, get_type_t, json::type(const value_type&)>::value;
 
 			// Internal assertions for better feedback
-			static_assert(value,
-						  "traits implementation must provide `jwt::json::type get_type(const value_type&)`");
+			static_assert(value, "traits implementation must provide `jwt::json::type get_type(const value_type&)`");
 		};
 
 #define JSON_TYPE_TYPE(TYPE) json_##TYPE_type
 #define AS_TYPE_T(TYPE) as_##TYPE_t
-#define SUPPORTS_AS(TYPE)                                                                   		                   \
+#define SUPPORTS_AS(TYPE)                                                                                              \
 	template<typename traits_type, typename value_type, typename JSON_TYPE_TYPE(TYPE)>                                 \
 	struct supports_as_##TYPE {                                                                                        \
 		template<typename T>                                                                                           \
-		using AS_TYPE_T(TYPE) = decltype(T::as_##TYPE);                                  	                           \
+		using AS_TYPE_T(TYPE) = decltype(T::as_##TYPE);                                                                \
                                                                                                                        \
 		static constexpr auto value = is_function_signature_detected<traits_type, AS_TYPE_T(TYPE),                     \
 																	 JSON_TYPE_TYPE(TYPE)(const value_type&)>::value;  \
                                                                                                                        \
-		static_assert(value, 																						   \
-						  "traits implementation must provide `" #TYPE "_type as_" #TYPE "(const value_type&)`");	   \
+		static_assert(value, "traits implementation must provide `" #TYPE "_type as_" #TYPE "(const value_type&)`");   \
 	}
 
 		SUPPORTS_AS(object);
@@ -1944,14 +1942,14 @@ namespace jwt {
 		struct is_iterable : std::false_type {};
 
 		template<typename T>
-		struct is_iterable<
-			T, void_t<decltype(std::begin(std::declval<T>())), decltype(std::end(std::declval<T>())),
+		struct is_iterable<T, void_t<decltype(std::begin(std::declval<T>())), decltype(std::end(std::declval<T>())),
 #if __cplusplus > 201402L
-					  decltype(std::cbegin(std::declval<T>())), decltype(std::cend(std::declval<T>()))
+									 decltype(std::cbegin(std::declval<T>())), decltype(std::cend(std::declval<T>()))
 #else
-					  decltype(std::begin(std::declval<const T>())), decltype(std::end(std::declval<const T>()))
+									 decltype(std::begin(std::declval<const T>())),
+									 decltype(std::end(std::declval<const T>()))
 #endif
-					  >> : std::true_type {
+									 >> : std::true_type {
 		};
 
 #if __cplusplus > 201703L
@@ -1963,18 +1961,17 @@ namespace jwt {
 		using is_count_signature = typename std::is_integral<decltype(std::declval<const object_type>().count(
 			std::declval<const string_type>()))>;
 
-
 		template<typename object_type, typename string_type, typename = void>
-		struct is_subcription_operator_signature : std::false_type {
-		};
+		struct is_subcription_operator_signature : std::false_type {};
 
 		template<typename object_type, typename string_type>
-		struct is_subcription_operator_signature<object_type, string_type, void_t<
-			decltype(std::declval<object_type>().operator[](std::declval<string_type>()))
-		>> : std::true_type {
+		struct is_subcription_operator_signature<
+			object_type, string_type,
+			void_t<decltype(std::declval<object_type>().operator[](std::declval<string_type>()))>> : std::true_type {
 			// TODO(prince-chrismc): I am not convienced this is meaningful anymore
-			static_assert(value,
-						  "object_type must implementate the subscription operator '[]' taking string_type as an arguement");
+			static_assert(
+				value,
+				"object_type must implementate the subscription operator '[]' taking string_type as an arguement");
 		};
 
 		template<typename object_type, typename value_type, typename string_type>
@@ -1984,8 +1981,6 @@ namespace jwt {
 
 		template<typename value_type, typename string_type, typename object_type>
 		struct is_valid_json_object {
-			template<typename T>
-			using value_type_t = typename T::value_type;
 			template<typename T>
 			using mapped_type_t = typename T::mapped_type;
 			template<typename T>
@@ -2010,7 +2005,12 @@ namespace jwt {
 
 		template<typename value_type, typename array_type>
 		struct is_valid_json_array {
+			template<typename T>
+			using value_type_t = typename T::value_type;
+
 			static constexpr auto value = std::is_constructible<value_type, array_type>::value &&
+										  is_iterable<array_type>::value &&
+										  is_detected<value_type_t, array_type>::value &&
 										  std::is_same<typename array_type::value_type, value_type>::value;
 		};
 
@@ -2037,8 +2037,7 @@ namespace jwt {
 			static_assert(substr, "string_type must have a substr method taking only a start index and an overload "
 								  "taking a start and end index, both must return a string_type");
 
-			static constexpr auto operator_plus =
-				is_std_operate_plus_signature<string_type>::value;
+			static constexpr auto operator_plus = is_std_operate_plus_signature<string_type>::value;
 			static_assert(operator_plus,
 						  "string_type must have a '+' operator implemented which returns the concatenated string");
 
