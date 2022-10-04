@@ -105,7 +105,7 @@ namespace jwt {
 
 			static boolean_type as_boolean(const json& val) {
 				if (val.type() != jsoncons::json_type::bool_value) throw std::bad_cast();
-				return val.as_boolean();
+				return val.as_bool();
 			}
 
 			static bool parse(json& val, const std::string& str) {
