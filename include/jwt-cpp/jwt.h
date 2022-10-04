@@ -265,7 +265,8 @@ namespace jwt {
 			rsa_private_encrypt_failed,
 			get_key_failed,
 			set_rsa_pss_saltlen_failed,
-			signature_decoding_failed
+			signature_decoding_failed,
+			size_exceeded_expected_length
 		};
 		/**
 		 * \brief Error category for signature generation errors
@@ -303,6 +304,8 @@ namespace jwt {
 						return "failed to create signature: EVP_PKEY_CTX_set_rsa_pss_saltlen failed";
 					case signature_generation_error::signature_decoding_failed:
 						return "failed to create signature: d2i_ECDSA_SIG failed";
+					case signature_generation_error::size_exceeded_expected_length:
+						return "failed to create signature: calculated bignum for r or s components exceeds signature length"
 					default: return "unknown signature generation error";
 					}
 				}
@@ -1227,7 +1230,6 @@ namespace jwt {
 				}
 
 #ifdef JWT_OPENSSL_1_0_0
-
 				auto rr = helper::bn2raw(sig->r);
 				auto rs = helper::bn2raw(sig->s);
 #else
@@ -1237,8 +1239,10 @@ namespace jwt {
 				auto rr = helper::bn2raw(r);
 				auto rs = helper::bn2raw(s);
 #endif
-				if (rr.size() > signature_length / 2 || rs.size() > signature_length / 2)
-					throw std::logic_error("bignum size exceeded expected length");
+				if (rr.size() > signature_length / 2 || rs.size() > signature_length / 2){
+					ec = error::signature_generation_error::size_exceeded_expected_length;
+					return {};
+				}
 				rr.insert(0, signature_length / 2 - rr.size(), '\0');
 				rs.insert(0, signature_length / 2 - rs.size(), '\0');
 				return rr + rs;
