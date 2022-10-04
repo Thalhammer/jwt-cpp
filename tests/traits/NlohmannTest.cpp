@@ -92,7 +92,8 @@ TEST(NlohmannTest, VerifyTokenExpired) {
 	const auto decoded_token = jwt::decode<jwt::traits::nlohmann_json>(token);
 	const auto verify =
 		jwt::verify<jwt::traits::nlohmann_json>().allow_algorithm(jwt::algorithm::hs256{"secret"}).with_issuer("auth0");
-	ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+	ASSERT_THROW(verify.verify(decoded_token), jwt::error::exception);
+	ASSERT_THROW(verify.verify(decoded_token), jwt::error::token_verification_exception);
 
 	std::error_code ec;
 	ASSERT_NO_THROW(verify.verify(decoded_token, ec));
