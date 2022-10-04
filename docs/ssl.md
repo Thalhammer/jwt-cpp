@@ -15,5 +15,5 @@ cmake . -DJWT_SSL_LIBRARY:STRING=wolfSSL
 
 ## Notes
 
-JWT-CPP relies on the OpenSSL API, as a result both LibreSSL and wolfSSL need to include their respective compatability layers.
+JWT-CPP relies on the OpenSSL API, as a result both LibreSSL and wolfSSL need to include their respective compatibility layers.
 Most system already have OpenSSL so it's important to make sure when compiling your application it only includes one. Otherwise you may have missing symbols when linking.

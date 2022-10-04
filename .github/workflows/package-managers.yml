@@ -25,6 +25,12 @@ jobs:
     - run: python3 -m pip install conan --upgrade
     - run: conan config init --force
 
+    - run: conan install .
+    - run: cmake .
+    - run: cmake --build .
+
+    - run: echo "run conan example"
+
   hunter:
     runs-on: ubuntu-latest
     steps:
