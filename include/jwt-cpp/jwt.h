@@ -1832,9 +1832,6 @@ namespace jwt {
 #ifdef __cpp_lib_experimental_detect
 		template<template<typename...> class _Op, typename... _Args>
 		using is_detected = std::experimental::is_detected<_Op, _Args...>;
-
-		template<template<typename...> class _Op, typename... _Args>
-		using is_detected_v = std::experimental::detected_v<_Op, _Args...>;
 #else
 		struct nonesuch {
 			nonesuch() = delete;
@@ -1860,20 +1857,10 @@ namespace jwt {
 
 		template<template<class...> class Op, class... Args>
 		using is_detected = typename detector<nonesuch, void, Op, Args...>::value;
-
-#if __cplusplus > 201703L
-		template<template<class...> class Op, class... Args>
-		inline constexpr bool is_detected_v = is_detected<Op, Args...>::value;
-#endif
 #endif
 
 		template<typename T, typename Signature>
 		using is_signature = typename std::is_same<T, Signature>;
-
-#if __cplusplus > 201703L
-		template<typename T, typename Signature>
-		inline constexpr bool is_signature_v = is_signature<T, Signature>::value;
-#endif
 
 		template<typename traits_type, template<typename...> class Op, typename Signature>
 		struct is_function_signature_detected {
