@@ -65,11 +65,13 @@ endif()
 find_package(nlohmann_json CONFIG)
 
 if(NOT nlohmann_json_FOUND)
+  message(STATUS "jwt-cpp: using FetchContent for nlohmann json")
   include(FetchContent)
-
-  fetchcontent_declare(nlohmann_json GIT_REPOSITORY https://github.com/nlohmann/json.git GIT_TAG v3.11.2)
-
-  fetchcontent_makeavailable(nlohmann_json)
+  FetchContent_Declare(nlohmann_json
+      URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz
+      DOWNLOAD_EXTRACT_TIMESTAMP OFF
+  )
+  FetchContent_MakeAvailable(nlohmann_json)
 endif()
 
 set(JWT_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include)
