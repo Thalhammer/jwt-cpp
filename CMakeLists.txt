@@ -1,4 +1,8 @@
 cmake_minimum_required(VERSION 3.14)
+cmake_policy(VERSION 3.14)
+if(POLICY CMP0135) # DOWNLOAD_EXTRACT_TIMESTAMP
+  cmake_policy(SET CMP0135 OLD)
+endif()
 
 # HUNTER_ENABLED is always set if this package is included in a project using hunter (HunterGate sets it) In this case
 # we will use hunter as well to stay consistent. If not the use can supply it on configure to force using hunter.
@@ -69,7 +73,7 @@ if(NOT nlohmann_json_FOUND)
   include(FetchContent)
   FetchContent_Declare(nlohmann_json
       URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz
-      DOWNLOAD_EXTRACT_TIMESTAMP OFF
+      URL_MD5 127794b2c82c0c5693805feaa2a703e2
   )
   FetchContent_MakeAvailable(nlohmann_json)
 endif()
