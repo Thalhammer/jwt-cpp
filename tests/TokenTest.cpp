@@ -114,18 +114,17 @@ TEST(TokenTest, CreateTokenES256) {
 
 	ASSERT_THROW(
 		jwt::verify().allow_algorithm(jwt::algorithm::es256(ecdsa256_pub_key_invalid, "", "", "")).verify(decoded),
-		jwt::signature_verification_exception);
+		jwt::error::signature_verification_exception);
 	ASSERT_NO_THROW(jwt::verify().allow_algorithm(jwt::algorithm::es256(ecdsa256_pub_key, "", "", "")).verify(decoded));
 }
 
 TEST(TokenTest, CreateTokenES256NoPrivate) {
-
 	ASSERT_THROW(
 		[]() {
 			auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(
 				jwt::algorithm::es256(ecdsa256_pub_key, "", "", ""));
 		}(),
-		jwt::signature_generation_exception);
+		jwt::error::signature_generation_exception);
 }
 
 TEST(TokenTest, CreateTokenES384) {
@@ -137,7 +136,7 @@ TEST(TokenTest, CreateTokenES384) {
 
 	ASSERT_THROW(
 		jwt::verify().allow_algorithm(jwt::algorithm::es384(ecdsa384_pub_key_invalid, "", "", "")).verify(decoded),
-		jwt::signature_verification_exception);
+		jwt::error::signature_verification_exception);
 	ASSERT_NO_THROW(jwt::verify().allow_algorithm(jwt::algorithm::es384(ecdsa384_pub_key, "", "", "")).verify(decoded));
 }
 
@@ -148,7 +147,7 @@ TEST(TokenTest, CreateTokenES384NoPrivate) {
 			auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(
 				jwt::algorithm::es384(ecdsa384_pub_key, "", "", ""));
 		}(),
-		jwt::signature_generation_exception);
+		jwt::error::signature_generation_exception);
 }
 
 TEST(TokenTest, CreateTokenES512) {
@@ -160,7 +159,7 @@ TEST(TokenTest, CreateTokenES512) {
 
 	ASSERT_THROW(
 		jwt::verify().allow_algorithm(jwt::algorithm::es512(ecdsa521_pub_key_invalid, "", "", "")).verify(decoded),
-		jwt::signature_verification_exception);
+		jwt::error::signature_verification_exception);
 	ASSERT_NO_THROW(jwt::verify().allow_algorithm(jwt::algorithm::es512(ecdsa521_pub_key, "", "", "")).verify(decoded));
 }
 
@@ -171,7 +170,7 @@ TEST(TokenTest, CreateTokenES512NoPrivate) {
 			auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(
 				jwt::algorithm::es512(ecdsa521_pub_key, "", "", ""));
 		}(),
-		jwt::signature_generation_exception);
+		jwt::error::signature_generation_exception);
 }
 
 #if !defined(JWT_OPENSSL_1_0_0) && !defined(JWT_OPENSSL_1_1_0)
@@ -184,7 +183,7 @@ TEST(TokenTest, CreateTokenEd25519) {
 
 	ASSERT_THROW(
 		jwt::verify().allow_algorithm(jwt::algorithm::ed25519(ed25519_pub_key_invalid, "", "", "")).verify(decoded),
-		jwt::signature_verification_exception);
+		jwt::error::signature_verification_exception);
 	ASSERT_NO_THROW(
 		jwt::verify().allow_algorithm(jwt::algorithm::ed25519(ed25519_pub_key, "", "", "")).verify(decoded));
 }
@@ -198,7 +197,7 @@ TEST(TokenTest, CreateTokenEd448) {
 
 	ASSERT_THROW(
 		jwt::verify().allow_algorithm(jwt::algorithm::ed448(ed448_pub_key_invalid, "", "", "")).verify(decoded),
-		jwt::signature_verification_exception);
+		jwt::error::signature_verification_exception);
 	ASSERT_NO_THROW(jwt::verify().allow_algorithm(jwt::algorithm::ed448(ed448_pub_key, "", "", "")).verify(decoded));
 }
 #endif
@@ -214,7 +213,7 @@ TEST(TokenTest, VerifyTokenWrongAlgorithm) {
 
 	auto decoded_token = jwt::decode(token);
 
-	ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+	ASSERT_THROW(verify.verify(decoded_token), jwt::error::token_verification_exception);
 }
 
 TEST(TokenTest, VerifyTokenNoneFail) {
@@ -225,7 +224,7 @@ TEST(TokenTest, VerifyTokenNoneFail) {
 
 	auto decoded_token = jwt::decode(token);
 
-	ASSERT_THROW(verify.verify(decoded_token), jwt::signature_verification_exception);
+	ASSERT_THROW(verify.verify(decoded_token), jwt::error::signature_verification_exception);
 }
 
 TEST(TokenTest, VerifyTokenRS256FailNoKey) {
@@ -233,7 +232,7 @@ TEST(TokenTest, VerifyTokenRS256FailNoKey) {
 		[]() {
 			auto verify = jwt::verify().allow_algorithm(jwt::algorithm::rs256("", "", "", "")).with_issuer("auth0");
 		}(),
-		jwt::rsa_exception);
+		jwt::error::rsa_exception);
 }
 
 TEST(TokenTest, VerifyTokenRS256) {
@@ -291,7 +290,7 @@ TEST(TokenTest, VerifyTokenRS256Fail) {
 
 	auto decoded_token = jwt::decode(token);
 
-	ASSERT_THROW(verify.verify(decoded_token), jwt::signature_verification_exception);
+	ASSERT_THROW(verify.verify(decoded_token), jwt::error::signature_verification_exception);
 }
 
 TEST(TokenTest, VerifyTokenRS512) {
@@ -347,7 +346,7 @@ TEST(TokenTest, VerifyTokenRS512Fail) {
 
 	auto decoded_token = jwt::decode(token);
 
-	ASSERT_THROW(verify.verify(decoded_token), jwt::signature_verification_exception);
+	ASSERT_THROW(verify.verify(decoded_token), jwt::error::signature_verification_exception);
 }
 
 TEST(TokenTest, VerifyTokenHS256) {
@@ -367,7 +366,7 @@ TEST(TokenTest, VerifyTokenHS256Fail) {
 	auto verify = jwt::verify().allow_algorithm(jwt::algorithm::hs256{"wrongsecret"}).with_issuer("auth0");
 
 	auto decoded_token = jwt::decode(token);
-	ASSERT_THROW(verify.verify(decoded_token), jwt::signature_verification_exception);
+	ASSERT_THROW(verify.verify(decoded_token), jwt::error::signature_verification_exception);
 }
 
 TEST(TokenTest, VerifyTokenHS256FailSignatureLength) {
@@ -377,7 +376,7 @@ TEST(TokenTest, VerifyTokenHS256FailSignatureLength) {
 	auto verify = jwt::verify().allow_algorithm(jwt::algorithm::hs256{"secret"}).with_issuer("auth0");
 
 	auto decoded_token = jwt::decode(token);
-	ASSERT_THROW(verify.verify(decoded_token), jwt::signature_verification_exception);
+	ASSERT_THROW(verify.verify(decoded_token), jwt::error::signature_verification_exception);
 }
 
 TEST(TokenTest, VerifyFail) {
@@ -393,42 +392,42 @@ TEST(TokenTest, VerifyFail) {
 
 		{
 			auto verify = jwt::verify().allow_algorithm(jwt::algorithm::none{}).with_issuer("auth");
-			ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+			ASSERT_THROW(verify.verify(decoded_token), jwt::error::token_verification_exception);
 		}
 		{
 			auto verify = jwt::verify().allow_algorithm(jwt::algorithm::none{}).with_type("JWT");
-			ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+			ASSERT_THROW(verify.verify(decoded_token), jwt::error::token_verification_exception);
 		}
 		{
 			auto verify = jwt::verify()
 							  .allow_algorithm(jwt::algorithm::none{})
 							  .with_issuer("auth0")
 							  .with_audience(std::set<std::string>{"test"});
-			ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+			ASSERT_THROW(verify.verify(decoded_token), jwt::error::token_verification_exception);
 		}
 		{
 			auto verify =
 				jwt::verify().allow_algorithm(jwt::algorithm::none{}).with_issuer("auth0").with_audience("test");
-			ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+			ASSERT_THROW(verify.verify(decoded_token), jwt::error::token_verification_exception);
 		}
 		{
 			auto verify =
 				jwt::verify().allow_algorithm(jwt::algorithm::none{}).with_issuer("auth0").with_subject("test");
-			ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+			ASSERT_THROW(verify.verify(decoded_token), jwt::error::token_verification_exception);
 		}
 		{
 			auto verify = jwt::verify()
 							  .allow_algorithm(jwt::algorithm::none{})
 							  .with_issuer("auth0")
 							  .with_claim("myclaim", jwt::claim(std::string("test")));
-			ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+			ASSERT_THROW(verify.verify(decoded_token), jwt::error::token_verification_exception);
 		}
 		{
 			auto verify = jwt::verify()
 							  .allow_algorithm(jwt::algorithm::none{})
 							  .with_issuer("auth0")
 							  .with_claim("typetest", jwt::claim(picojson::value(true)));
-			ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+			ASSERT_THROW(verify.verify(decoded_token), jwt::error::token_verification_exception);
 		}
 		{
 			jwt::claim object;
@@ -440,7 +439,7 @@ TEST(TokenTest, VerifyFail) {
 							  .allow_algorithm(jwt::algorithm::none{})
 							  .with_issuer("auth0")
 							  .with_claim("myclaim", object);
-			ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+			ASSERT_THROW(verify.verify(decoded_token), jwt::error::token_verification_exception);
 		}
 	}
 	{
@@ -451,7 +450,7 @@ TEST(TokenTest, VerifyFail) {
 		{
 			auto verify =
 				jwt::verify().allow_algorithm(jwt::algorithm::none{}).with_issuer("auth0").with_audience("test");
-			ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+			ASSERT_THROW(verify.verify(decoded_token), jwt::error::token_verification_exception);
 		}
 	}
 }
@@ -461,7 +460,7 @@ TEST(TokenTest, VerifyTokenES256FailNoKey) {
 		[]() {
 			auto verify = jwt::verify().allow_algorithm(jwt::algorithm::es256("", "", "", "")).with_issuer("auth0");
 		}(),
-		jwt::ecdsa_exception);
+		jwt::error::ecdsa_exception);
 }
 
 TEST(TokenTest, VerifyTokenES256) {
@@ -481,7 +480,7 @@ TEST(TokenTest, VerifyTokenES256Fail) {
 	auto verify = jwt::verify().allow_algorithm(jwt::algorithm::es256(ecdsa256_pub_key_invalid, "", "", ""));
 	auto decoded_token = jwt::decode(token);
 
-	ASSERT_THROW(verify.verify(decoded_token), jwt::signature_verification_exception);
+	ASSERT_THROW(verify.verify(decoded_token), jwt::error::signature_verification_exception);
 }
 
 TEST(TokenTest, VerifyTokenES384) {
@@ -503,7 +502,7 @@ TEST(TokenTest, VerifyTokenES384Fail) {
 	auto verify = jwt::verify().allow_algorithm(jwt::algorithm::es384(ecdsa384_pub_key_invalid, "", "", ""));
 	auto decoded_token = jwt::decode(token);
 
-	ASSERT_THROW(verify.verify(decoded_token), jwt::signature_verification_exception);
+	ASSERT_THROW(verify.verify(decoded_token), jwt::error::signature_verification_exception);
 }
 
 TEST(TokenTest, VerifyTokenES521) {
@@ -527,7 +526,7 @@ TEST(TokenTest, VerifyTokenES521Fail) {
 	auto verify = jwt::verify().allow_algorithm(jwt::algorithm::es512(ecdsa521_pub_key_invalid, "", "", ""));
 	auto decoded_token = jwt::decode(token);
 
-	ASSERT_THROW(verify.verify(decoded_token), jwt::signature_verification_exception);
+	ASSERT_THROW(verify.verify(decoded_token), jwt::error::signature_verification_exception);
 }
 
 TEST(TokenTest, VerifyTokenPS256) {
@@ -571,7 +570,7 @@ TEST(TokenTest, VerifyTokenPS256Fail) {
 
 	auto decoded_token = jwt::decode(token);
 
-	ASSERT_THROW(verify.verify(decoded_token), jwt::signature_verification_exception);
+	ASSERT_THROW(verify.verify(decoded_token), jwt::error::signature_verification_exception);
 }
 
 TEST(TokenTest, VerifyTokenPS256FailNoKey) {
@@ -579,7 +578,7 @@ TEST(TokenTest, VerifyTokenPS256FailNoKey) {
 		[]() {
 			auto verify = jwt::verify().allow_algorithm(jwt::algorithm::ps256("", "", "", "")).with_issuer("auth0");
 		}(),
-		jwt::rsa_exception);
+		jwt::error::rsa_exception);
 }
 
 #if !defined(JWT_OPENSSL_1_0_0) && !defined(JWT_OPENSSL_1_1_0)
@@ -602,7 +601,7 @@ TEST(TokenTest, VerifyTokenEd25519Fail) {
 	auto verify = jwt::verify().allow_algorithm(jwt::algorithm::ed25519(ed25519_pub_key_invalid, "", "", ""));
 	auto decoded_token = jwt::decode(token);
 
-	ASSERT_THROW(verify.verify(decoded_token), jwt::signature_verification_exception);
+	ASSERT_THROW(verify.verify(decoded_token), jwt::error::signature_verification_exception);
 }
 
 TEST(TokenTest, VerifyTokenEd448) {
@@ -626,7 +625,7 @@ TEST(TokenTest, VerifyTokenEd448Fail) {
 	auto verify = jwt::verify().allow_algorithm(jwt::algorithm::ed448(ed448_pub_key_invalid, "", "", ""));
 	auto decoded_token = jwt::decode(token);
 
-	ASSERT_THROW(verify.verify(decoded_token), jwt::signature_verification_exception);
+	ASSERT_THROW(verify.verify(decoded_token), jwt::error::signature_verification_exception);
 }
 #endif
 
@@ -641,7 +640,7 @@ TEST(TokenTest, VerifyTokenExpireFail) {
 
 	auto verify = jwt::verify<test_clock, jwt::traits::kazuho_picojson>({std::chrono::system_clock::from_time_t(110)})
 					  .allow_algorithm(jwt::algorithm::none{});
-	ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+	ASSERT_THROW(verify.verify(decoded_token), jwt::error::token_verification_exception);
 	std::error_code ec;
 	ASSERT_NO_THROW(verify.verify(decoded_token, ec));
 	ASSERT_TRUE(!(!ec));
@@ -668,7 +667,7 @@ TEST(TokenTest, VerifyTokenNBFFail) {
 
 	auto verify = jwt::verify<test_clock, jwt::traits::kazuho_picojson>({std::chrono::system_clock::from_time_t(90)})
 					  .allow_algorithm(jwt::algorithm::none{});
-	ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+	ASSERT_THROW(verify.verify(decoded_token), jwt::error::token_verification_exception);
 	std::error_code ec;
 	ASSERT_NO_THROW(verify.verify(decoded_token, ec));
 	ASSERT_TRUE(!(!ec));
@@ -695,7 +694,7 @@ TEST(TokenTest, VerifyTokenIATFail) {
 
 	auto verify = jwt::verify<test_clock, jwt::traits::kazuho_picojson>({std::chrono::system_clock::from_time_t(90)})
 					  .allow_algorithm(jwt::algorithm::none{});
-	ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+	ASSERT_THROW(verify.verify(decoded_token), jwt::error::token_verification_exception);
 	std::error_code ec;
 	ASSERT_NO_THROW(verify.verify(decoded_token, ec));
 	ASSERT_TRUE(!(!ec));
@@ -738,36 +737,36 @@ TEST(TokenTest, GetClaimThrows) {
 
 TEST(TokenTest, ThrowInvalidKeyLength) {
 	// We should throw if passed the wrong size
-	ASSERT_THROW(jwt::algorithm::es256(ecdsa384_pub_key, ""), jwt::ecdsa_exception);
-	ASSERT_THROW(jwt::algorithm::es256("", ecdsa384_priv_key), jwt::ecdsa_exception);
-	ASSERT_THROW(jwt::algorithm::es256(ecdsa384_pub_key, ecdsa384_priv_key), jwt::ecdsa_exception);
-	ASSERT_THROW(jwt::algorithm::es256(ecdsa521_pub_key, ""), jwt::ecdsa_exception);
-	ASSERT_THROW(jwt::algorithm::es256("", ecdsa521_priv_key), jwt::ecdsa_exception);
-	ASSERT_THROW(jwt::algorithm::es256(ecdsa521_pub_key, ecdsa521_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es256(ecdsa384_pub_key, ""), jwt::error::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es256("", ecdsa384_priv_key), jwt::error::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es256(ecdsa384_pub_key, ecdsa384_priv_key), jwt::error::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es256(ecdsa521_pub_key, ""), jwt::error::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es256("", ecdsa521_priv_key), jwt::error::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es256(ecdsa521_pub_key, ecdsa521_priv_key), jwt::error::ecdsa_exception);
 
 	// But also if only one cert has the wrong size
-	ASSERT_THROW(jwt::algorithm::es256(ecdsa256_pub_key, ecdsa384_priv_key), jwt::ecdsa_exception);
-	ASSERT_THROW(jwt::algorithm::es256(ecdsa256_pub_key, ecdsa521_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es256(ecdsa256_pub_key, ecdsa384_priv_key), jwt::error::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es256(ecdsa256_pub_key, ecdsa521_priv_key), jwt::error::ecdsa_exception);
 
-	ASSERT_THROW(jwt::algorithm::es384(ecdsa256_pub_key, ""), jwt::ecdsa_exception);
-	ASSERT_THROW(jwt::algorithm::es384("", ecdsa256_priv_key), jwt::ecdsa_exception);
-	ASSERT_THROW(jwt::algorithm::es384(ecdsa256_pub_key, ecdsa256_priv_key), jwt::ecdsa_exception);
-	ASSERT_THROW(jwt::algorithm::es384(ecdsa521_pub_key, ""), jwt::ecdsa_exception);
-	ASSERT_THROW(jwt::algorithm::es384("", ecdsa521_priv_key), jwt::ecdsa_exception);
-	ASSERT_THROW(jwt::algorithm::es384(ecdsa521_pub_key, ecdsa521_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es384(ecdsa256_pub_key, ""), jwt::error::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es384("", ecdsa256_priv_key), jwt::error::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es384(ecdsa256_pub_key, ecdsa256_priv_key), jwt::error::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es384(ecdsa521_pub_key, ""), jwt::error::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es384("", ecdsa521_priv_key), jwt::error::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es384(ecdsa521_pub_key, ecdsa521_priv_key), jwt::error::ecdsa_exception);
 
-	ASSERT_THROW(jwt::algorithm::es384(ecdsa384_pub_key, ecdsa256_priv_key), jwt::ecdsa_exception);
-	ASSERT_THROW(jwt::algorithm::es384(ecdsa384_pub_key, ecdsa521_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es384(ecdsa384_pub_key, ecdsa256_priv_key), jwt::error::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es384(ecdsa384_pub_key, ecdsa521_priv_key), jwt::error::ecdsa_exception);
 
-	ASSERT_THROW(jwt::algorithm::es512(ecdsa256_pub_key, ""), jwt::ecdsa_exception);
-	ASSERT_THROW(jwt::algorithm::es512("", ecdsa256_priv_key), jwt::ecdsa_exception);
-	ASSERT_THROW(jwt::algorithm::es512(ecdsa256_pub_key, ecdsa256_priv_key), jwt::ecdsa_exception);
-	ASSERT_THROW(jwt::algorithm::es512(ecdsa384_pub_key, ""), jwt::ecdsa_exception);
-	ASSERT_THROW(jwt::algorithm::es512("", ecdsa384_priv_key), jwt::ecdsa_exception);
-	ASSERT_THROW(jwt::algorithm::es512(ecdsa384_pub_key, ecdsa384_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es512(ecdsa256_pub_key, ""), jwt::error::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es512("", ecdsa256_priv_key), jwt::error::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es512(ecdsa256_pub_key, ecdsa256_priv_key), jwt::error::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es512(ecdsa384_pub_key, ""), jwt::error::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es512("", ecdsa384_priv_key), jwt::error::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es512(ecdsa384_pub_key, ecdsa384_priv_key), jwt::error::ecdsa_exception);
 
-	ASSERT_THROW(jwt::algorithm::es512(ecdsa521_pub_key, ecdsa256_priv_key), jwt::ecdsa_exception);
-	ASSERT_THROW(jwt::algorithm::es512(ecdsa521_pub_key, ecdsa384_priv_key), jwt::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es512(ecdsa521_pub_key, ecdsa256_priv_key), jwt::error::ecdsa_exception);
+	ASSERT_THROW(jwt::algorithm::es512(ecdsa521_pub_key, ecdsa384_priv_key), jwt::error::ecdsa_exception);
 
 	// Make sure we do not throw if the correct params are passed
 	ASSERT_NO_THROW(jwt::algorithm::es256(ecdsa256_pub_key, ecdsa256_priv_key));

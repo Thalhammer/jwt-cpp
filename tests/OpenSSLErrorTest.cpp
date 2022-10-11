@@ -490,7 +490,7 @@ TEST(OpenSSLErrorTest, ExtractPubkeyFromCert) {
 		try {
 			jwt::helper::extract_pubkey_from_cert(sample_cert, "");
 			FAIL(); // Should never reach this
-		} catch (const jwt::rsa_exception& e) { ec = e.code(); }
+		} catch (const jwt::error::rsa_exception& e) { ec = e.code(); }
 	});
 }
 
@@ -516,7 +516,7 @@ TEST(OpenSSLErrorTest, ConvertCertBase64DerToPem) {
 		try {
 			jwt::helper::convert_base64_der_to_pem(sample_cert_base64_der);
 			FAIL(); // Should never reach this
-		} catch (const jwt::rsa_exception& e) { ec = e.code(); }
+		} catch (const jwt::error::rsa_exception& e) { ec = e.code(); }
 	});
 }
 
@@ -545,7 +545,7 @@ TEST(OpenSSLErrorTest, LoadPublicKeyFromString) {
 		try {
 			jwt::helper::load_public_key_from_string(rsa_pub_key, "");
 			FAIL(); // Should never reach this
-		} catch (const jwt::rsa_exception& e) { ec = e.code(); }
+		} catch (const jwt::error::rsa_exception& e) { ec = e.code(); }
 	});
 }
 
@@ -582,7 +582,7 @@ TEST(OpenSSLErrorTest, LoadPublicKeyCertFromString) {
 		try {
 			jwt::helper::load_public_key_from_string(sample_cert, "");
 			FAIL(); // Should never reach this
-		} catch (const jwt::rsa_exception& e) { ec = e.code(); }
+		} catch (const jwt::error::rsa_exception& e) { ec = e.code(); }
 	});
 }
 
@@ -619,7 +619,7 @@ TEST(OpenSSLErrorTest, LoadPrivateKeyFromString) {
 		try {
 			jwt::helper::load_private_key_from_string(rsa_priv_key, "");
 			FAIL(); // Should never reach this
-		} catch (const jwt::rsa_exception& e) { ec = e.code(); }
+		} catch (const jwt::error::rsa_exception& e) { ec = e.code(); }
 	});
 }
 
