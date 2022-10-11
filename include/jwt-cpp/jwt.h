@@ -464,7 +464,7 @@ namespace jwt {
 #endif
 		};
 
-		inline std::unique_ptr<BIO, decltype(&BIO_free_all)> make_mem_buf_bio(){
+		inline std::unique_ptr<BIO, decltype(&BIO_free_all)> make_mem_buf_bio() {
 			return std::unique_ptr<BIO, decltype(&BIO_free_all)>(BIO_new(BIO_s_mem()), BIO_free_all);
 		}
 
@@ -476,14 +476,14 @@ namespace jwt {
 				BIO_new_mem_buf(data.data(), static_cast<int>(data.size())), BIO_free_all
 #endif
 			);
-}
+		}
 
-		inline std::unique_ptr<EVP_MD_CTX, void(*)(EVP_MD_CTX*)> make_evp_md_ctx() {
-			return 
+		inline std::unique_ptr<EVP_MD_CTX, void (*)(EVP_MD_CTX*)> make_evp_md_ctx() {
+			return
 #ifdef JWT_OPENSSL_1_0_0
-				  std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)>(EVP_MD_CTX_create(), &EVP_MD_CTX_destroy);
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)>(EVP_MD_CTX_create(), &EVP_MD_CTX_destroy);
 #else
-				  std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)>(EVP_MD_CTX_new(), &EVP_MD_CTX_free);
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)>(EVP_MD_CTX_new(), &EVP_MD_CTX_free);
 #endif
 		}
 
