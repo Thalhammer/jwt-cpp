@@ -747,7 +747,7 @@ namespace jwt {
 		inline evp_pkey_handle load_public_ec_key_from_string(const std::string& key, const std::string& password,
 															  std::error_code& ec) {
 			ec.clear();
-			pubkey_bio = make_mem_buf_bio();
+			auto pubkey_bio = make_mem_buf_bio();
 			if (!pubkey_bio) {
 				ec = error::ecdsa_error::create_mem_bio_failed;
 				return {};
