@@ -398,7 +398,7 @@ namespace jwt {
 			constexpr evp_pkey_handle() noexcept = default;
 #ifdef JWT_OPENSSL_1_0_0
 			/**
-			 * \brief Contruct a new handle. The handle takes ownership of the key.
+			 * \brief Construct a new handle. The handle takes ownership of the key.
 			 * \param key The key to store
 			 */
 			explicit evp_pkey_handle(EVP_PKEY* key) { m_key = std::shared_ptr<EVP_PKEY>(key, EVP_PKEY_free); }
@@ -411,7 +411,7 @@ namespace jwt {
 			std::shared_ptr<EVP_PKEY> m_key{nullptr};
 #else
 			/**
-			 * \brief Contruct a new handle. The handle takes ownership of the key.
+			 * \brief Construct a new handle. The handle takes ownership of the key.
 			 * \param key The key to store
 			 */
 			explicit constexpr evp_pkey_handle(EVP_PKEY* key) noexcept : m_key{key} {}
@@ -463,24 +463,42 @@ namespace jwt {
 			}
 #endif
 		};
+
+		inline std::unique_ptr<BIO, decltype(&BIO_free_all)> make_mem_buf_bio() {
+			return std::unique_ptr<BIO, decltype(&BIO_free_all)>(BIO_new(BIO_s_mem()), BIO_free_all);
+		}
+
+		inline std::unique_ptr<BIO, decltype(&BIO_free_all)> make_mem_buf_bio(const std::string& data) {
+			return std::unique_ptr<BIO, decltype(&BIO_free_all)>(
+#if OPENSSL_VERSION_NUMBER <= 0x10100003L
+				BIO_new_mem_buf(const_cast<char*>(data.data()), static_cast<int>(data.size())), BIO_free_all
+#else
+				BIO_new_mem_buf(data.data(), static_cast<int>(data.size())), BIO_free_all
+#endif
+			);
+		}
+
+		inline std::unique_ptr<EVP_MD_CTX, void (*)(EVP_MD_CTX*)> make_evp_md_ctx() {
+			return
+#ifdef JWT_OPENSSL_1_0_0
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)>(EVP_MD_CTX_create(), &EVP_MD_CTX_destroy);
+#else
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)>(EVP_MD_CTX_new(), &EVP_MD_CTX_free);
+#endif
+		}
+
 		/**
 		 * \brief Extract the public key of a pem certificate
 		 *
 		 * \param certstr	String containing the certificate encoded as pem
 		 * \param pw		Password used to decrypt certificate (leave empty if not encrypted)
-		 * \param ec		error_code for error_detection (gets cleared if no error occures)
+		 * \param ec		error_code for error_detection (gets cleared if no error ocurred)
 		 */
 		inline std::string extract_pubkey_from_cert(const std::string& certstr, const std::string& pw,
 													std::error_code& ec) {
 			ec.clear();
-#if OPENSSL_VERSION_NUMBER <= 0x10100003L
-			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(
-				BIO_new_mem_buf(const_cast<char*>(certstr.data()), static_cast<int>(certstr.size())), BIO_free_all);
-#else
-			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(
-				BIO_new_mem_buf(certstr.data(), static_cast<int>(certstr.size())), BIO_free_all);
-#endif
-			std::unique_ptr<BIO, decltype(&BIO_free_all)> keybio(BIO_new(BIO_s_mem()), BIO_free_all);
+			auto certbio = make_mem_buf_bio(certstr);
+			auto keybio = make_mem_buf_bio();
 			if (!certbio || !keybio) {
 				ec = error::rsa_error::create_mem_bio_failed;
 				return {};
@@ -547,7 +565,7 @@ namespace jwt {
 
 			std::unique_ptr<X509, decltype(&X509_free)> cert(
 				d2i_X509(NULL, &c_str, static_cast<int>(decodedStr.size())), X509_free);
-			std::unique_ptr<BIO, decltype(&BIO_free_all)> certbio(BIO_new(BIO_s_mem()), BIO_free_all);
+			auto certbio = make_mem_buf_bio();
 			if (!cert || !certbio) {
 				ec = error::rsa_error::create_mem_bio_failed;
 				return {};
@@ -634,7 +652,7 @@ namespace jwt {
 		inline evp_pkey_handle load_public_key_from_string(const std::string& key, const std::string& password,
 														   std::error_code& ec) {
 			ec.clear();
-			std::unique_ptr<BIO, decltype(&BIO_free_all)> pubkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
+			auto pubkey_bio = make_mem_buf_bio();
 			if (!pubkey_bio) {
 				ec = error::rsa_error::create_mem_bio_failed;
 				return {};
@@ -687,7 +705,7 @@ namespace jwt {
 		 */
 		inline evp_pkey_handle load_private_key_from_string(const std::string& key, const std::string& password,
 															std::error_code& ec) {
-			std::unique_ptr<BIO, decltype(&BIO_free_all)> privkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
+			auto privkey_bio = make_mem_buf_bio();
 			if (!privkey_bio) {
 				ec = error::rsa_error::create_mem_bio_failed;
 				return {};
@@ -729,7 +747,7 @@ namespace jwt {
 		inline evp_pkey_handle load_public_ec_key_from_string(const std::string& key, const std::string& password,
 															  std::error_code& ec) {
 			ec.clear();
-			std::unique_ptr<BIO, decltype(&BIO_free_all)> pubkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
+			auto pubkey_bio = make_mem_buf_bio();
 			if (!pubkey_bio) {
 				ec = error::ecdsa_error::create_mem_bio_failed;
 				return {};
@@ -783,7 +801,7 @@ namespace jwt {
 		 */
 		inline evp_pkey_handle load_private_ec_key_from_string(const std::string& key, const std::string& password,
 															   std::error_code& ec) {
-			std::unique_ptr<BIO, decltype(&BIO_free_all)> privkey_bio(BIO_new(BIO_s_mem()), BIO_free_all);
+			auto privkey_bio = make_mem_buf_bio();
 			if (!privkey_bio) {
 				ec = error::ecdsa_error::create_mem_bio_failed;
 				return {};
@@ -978,11 +996,7 @@ namespace jwt {
 			 */
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
-#ifdef JWT_OPENSSL_1_0_0
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_destroy);
-#else
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_free);
-#endif
+				auto ctx = helper::make_evp_md_ctx();
 				if (!ctx) {
 					ec = error::signature_generation_error::create_context_failed;
 					return {};
@@ -1015,11 +1029,7 @@ namespace jwt {
 			 */
 			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
 				ec.clear();
-#ifdef JWT_OPENSSL_1_0_0
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_destroy);
-#else
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_free);
-#endif
+				auto ctx = helper::make_evp_md_ctx();
 				if (!ctx) {
 					ec = error::signature_verification_error::create_context_failed;
 					return;
@@ -1095,11 +1105,7 @@ namespace jwt {
 			 */
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
-#ifdef JWT_OPENSSL_1_0_0
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_destroy);
-#else
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_free);
-#endif
+				auto ctx = helper::make_evp_md_ctx();
 				if (!ctx) {
 					ec = error::signature_generation_error::create_context_failed;
 					return {};
@@ -1139,11 +1145,7 @@ namespace jwt {
 				std::string der_signature = p1363_to_der_signature(signature, ec);
 				if (ec) { return; }
 
-#ifdef JWT_OPENSSL_1_0_0
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_destroy);
-#else
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_create(), EVP_MD_CTX_free);
-#endif
+				auto ctx = helper::make_evp_md_ctx();
 				if (!ctx) {
 					ec = error::signature_verification_error::create_context_failed;
 					return;
@@ -1322,12 +1324,7 @@ namespace jwt {
 			 */
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
-#ifdef JWT_OPENSSL_1_0_0
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(),
-																			   &EVP_MD_CTX_destroy);
-#else
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
-#endif
+				auto ctx = helper::make_evp_md_ctx();
 				if (!ctx) {
 					ec = error::signature_generation_error::create_context_failed;
 					return {};
@@ -1375,12 +1372,7 @@ namespace jwt {
 			 */
 			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
 				ec.clear();
-#ifdef JWT_OPENSSL_1_0_0
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> ctx(EVP_MD_CTX_create(),
-																			   &EVP_MD_CTX_destroy);
-#else
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
-#endif
+				auto ctx = helper::make_evp_md_ctx();
 				if (!ctx) {
 					ec = error::signature_verification_error::create_context_failed;
 					return;
@@ -1458,12 +1450,7 @@ namespace jwt {
 			 */
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
-#ifdef JWT_OPENSSL_1_0_0
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> md_ctx(EVP_MD_CTX_create(),
-																				  &EVP_MD_CTX_destroy);
-#else
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> md_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
-#endif
+				auto md_ctx = helper::make_evp_md_ctx();
 				if (!md_ctx) {
 					ec = error::signature_generation_error::create_context_failed;
 					return {};
@@ -1512,12 +1499,7 @@ namespace jwt {
 			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
 				ec.clear();
 
-#ifdef JWT_OPENSSL_1_0_0
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)> md_ctx(EVP_MD_CTX_create(),
-																				  &EVP_MD_CTX_destroy);
-#else
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> md_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
-#endif
+				auto md_ctx = helper::make_evp_md_ctx();
 				if (!md_ctx) {
 					ec = error::signature_verification_error::create_context_failed;
 					return;
