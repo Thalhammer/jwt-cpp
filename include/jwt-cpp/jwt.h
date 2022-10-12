@@ -2891,14 +2891,22 @@ namespace jwt {
 			typename json_traits::object_type obj_header = header_claims;
 			if (header_claims.count("alg") == 0) obj_header["alg"] = typename json_traits::value_type(algo.name());
 
-			const auto header = encode(json_traits::serialize(typename json_traits::value_type(obj_header)));
-			const auto payload = encode(json_traits::serialize(typename json_traits::value_type(payload_claims)));
-			const auto token = header + "." + payload;
+			const std::string header = encode(json_traits::serialize(typename json_traits::value_type(obj_header)));
+			const std::string payload = encode(json_traits::serialize(typename json_traits::value_type(payload_claims)));
+			std::string token;
+			token.reserve(header.length() + 1 + payload.length());
+			token.append(header).append(".").append(payload);
 
-			auto signature = algo.sign(token, ec);
+			std::string signature = algo.sign(token, ec);
 			if (ec) return {};
 
-			return token + "." + encode(signature);
+			const auto encoded_string = encode(signature);
+
+			std::string result;
+			result.reserve(token.length() + 1 + encoded_string.length());
+			result.append(token).append(".").append(encoded_string);
+
+			return result;
 		}
 #ifndef JWT_DISABLE_BASE64
 		/**
