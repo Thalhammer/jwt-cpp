@@ -29,7 +29,7 @@ jobs:
           
       # Package the nusepc file
       - name: Create NuGet pkg
-        run: nuget pack jwt-cpp.nuspec
+        run: nuget pack 'nuget/jwt-cpp.nuspec'
         
       # Publish nuget pkg
       - name: Publish NuGet pkg
