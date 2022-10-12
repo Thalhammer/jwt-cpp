@@ -29,10 +29,11 @@ jobs:
           
       # Package the nusepc file
       - name: Create NuGet pkg
+        working-directory: ./nuget
         run: nuget pack jwt-cpp.nuspec
-          working-directory: ./nuget
         
       # Publish nuget pkg
       - name: Publish NuGet pkg
+        working-directory: ./nuget
         run: nuget push -Source 'https://api.nuget.org/v3/index.json'
-          working-directory: ./nuget
+          
