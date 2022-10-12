@@ -19,7 +19,7 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
         with:
-          ref: 'v0.6.0-dev0.1'
+          ref: 'v0.6.0-dev0.2'
       
       # Deploy NuGet so we can call the pack and push cmds
       - name: Setup NuGet.exe for use with actions
@@ -33,4 +33,4 @@ jobs:
         
       # Publish nuget pkg
       - name: Publish NuGet pkg
-        run: nuget push 'nuget/*.nupkg' -Source 'https://api.nuget.org/v3/index.json' -Version '0.6.0-dev0.1'
+        run: nuget push 'nuget/*.nupkg' -Source 'https://api.nuget.org/v3/index.json' -Version '0.6.0-dev0.2'
