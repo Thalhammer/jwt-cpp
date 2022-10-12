@@ -35,5 +35,5 @@ jobs:
       # Publish nuget pkg
       - name: Publish NuGet pkg
         working-directory: ./nuget
-        run: nuget push -Source 'https://api.nuget.org/v3/index.json'
+        run: nuget push *.nupkg -Source 'https://api.nuget.org/v3/index.json'
           
