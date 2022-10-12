@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>jwt-cpp</id>
-    <version>0.6.0-dev0.1</version>
+    <version>0.6.0-dev0.2</version>
     <authors>Dominik Thalhammer; Chris Mc</authors>
     <owners>Dominik Thalhammer; Chris Mc</owners>
     <projectUrl>https://github.com/Thalhammer/jwt-cpp</projectUrl>
