@@ -34,4 +34,4 @@ jobs:
         
       # Publish nuget pkg
       - name: Publish NuGet pkg
-        run: nuget push *.nupkg -Source 'https://api.nuget.org/v3/index.json' -Version '${{ secrets.current_version }}'
+        run: nuget push *.nupkg -Source 'https://api.nuget.org/v3/index.json' -Version '${{ secrets.current_version }}-dev0.1'
