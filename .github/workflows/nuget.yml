@@ -19,7 +19,7 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
         with:
-          ref: 'v0.6.0-dev0.2'
+          ref: 'v0.6.0'
       
       # Deploy NuGet so we can call the pack and push cmds
       - name: Setup NuGet.exe for use with actions
