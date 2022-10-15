@@ -2,9 +2,9 @@
 <package>
   <metadata>
     <id>jwt-cpp</id>
-    <version>0.6.0</version>
-    <authors>Dominik Thalhammer; Chris Mc</authors>
-    <owners>Dominik Thalhammer; Chris Mc</owners>
+    <version>0.6.0-dev0.2</version>
+    <authors>Thalhammer; prince-chrismc</authors>
+    <owners>Thalhammer; prince-chrismc</owners>
     <projectUrl>https://github.com/Thalhammer/jwt-cpp</projectUrl>
     <description>JWT++ is a header only library for creating and validating JSON Web Tokens in C++11. This library supports all the algorithms defined by the JWT specifications, and the modular design allows to easily add additional algorithms without any problems. In the name of flexibility and extensibility, jwt-cpp supports OpenSSL, LibreSSL, and wolfSSL. And there is no hard dependency on a JSON library.
     </description>
