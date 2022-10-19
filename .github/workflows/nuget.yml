@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Setup NuGet
-        uses: NuGet/setup-nuget@v1.0.7
+        uses: NuGet/setup-nuget@v1
         with:
           nuget-api-key: ${{ secrets.nuget_api_key }}
           
