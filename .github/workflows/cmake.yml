@@ -73,16 +73,30 @@ jobs:
           cmake --build .
 
   min-req:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
+    env:
+      RUN_ON: ubuntu-20.04
+      CMAKE_URL: https://cmake.org/files/v3.14/cmake-3.14.7.tar.gz
+      CMAKE_VERSION: 3.14.7
     steps:
       - uses: actions/checkout@v2
-      - name: install cmake
+      - name: Cache CMake
+        id: cache-cmake
+        uses: actions/cache@v3
+        with:
+          path: cmake-${{ env.CMAKE_VERSION }}
+          key: ubuntu-20.04-${{ github.job }}-cmake-${{ env.CMAKE_VERSION }}
+      - name: Build cmake
+        if: steps.cache-cmake.outputs.cache-hit != 'true'
         run: |
-          wget https://cmake.org/files/v3.14/cmake-3.14.7.tar.gz
-          tar -zxf cmake-3.14.7.tar.gz
-          cd cmake-3.14.7
+          wget ${{ env.CMAKE_URL }}
+          tar -zxf cmake-${{ env.CMAKE_VERSION }}.tar.gz
+          cd cmake-${{ env.CMAKE_VERSION }}
           ./bootstrap
           make -j $(nproc)
+      - name: Install cmake
+        run: |
+          cd cmake-${{ env.CMAKE_VERSION }}
           sudo make install
 
       - uses: ./.github/actions/install/gtest

@@ -8,7 +8,7 @@ on:
 
 jobs:
   clang-format:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -21,10 +21,10 @@ jobs:
         - "example/**/*.cpp"
     steps:
       - run: |
-          sudo apt-get install clang-format
+          sudo apt-get install clang-format-14
           shopt -s globstar
       - uses: actions/checkout@v2
-      - run: clang-format -i ${{ matrix.files }}
+      - run: clang-format-14 -i ${{ matrix.files }}
       - uses: ./.github/actions/process-linting-results
         with:
           linter_name: clang-format
