@@ -10,7 +10,7 @@ jobs:
   coverage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: lukka/get-cmake@latest
       - uses: ./.github/actions/install/gtest
       - uses: ./.github/actions/install/danielaparker-jsoncons
@@ -34,7 +34,7 @@ jobs:
   fuzzing:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - uses: lukka/get-cmake@latest
     - uses: ./.github/actions/install/gtest
       
@@ -55,7 +55,7 @@ jobs:
   asan: ## Based on https://gist.github.com/jlblancoc/44be9d4d466f0a973b1f3808a8e56782
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: lukka/get-cmake@latest
       - uses: ./.github/actions/install/gtest
 
