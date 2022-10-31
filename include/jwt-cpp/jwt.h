@@ -1861,26 +1861,30 @@ namespace jwt {
 			static_assert(value, "traits implementation must provide `jwt::json::type get_type(const value_type&)`");
 		};
 
-#define JSON_TYPE_TYPE(TYPE) json_##TYPE_type
-#define AS_TYPE_T(TYPE) as_##TYPE_t
-#define SUPPORTS_AS(TYPE)                                                                                              \
-	template<typename traits_type, typename value_type, typename JSON_TYPE_TYPE(TYPE)>                                 \
+#define JWT_CPP_JSON_TYPE_TYPE(TYPE) json_##TYPE_type
+#define JWT_CPP_AS_TYPE_T(TYPE) as_##TYPE_t
+#define JWT_CPP_SUPPORTS_AS(TYPE)                                                                                              \
+	template<typename traits_type, typename value_type, typename JWT_CPP_JSON_TYPE_TYPE(TYPE)>                                 \
 	struct supports_as_##TYPE {                                                                                        \
 		template<typename T>                                                                                           \
-		using AS_TYPE_T(TYPE) = decltype(T::as_##TYPE);                                                                \
+		using JWT_CPP_AS_TYPE_T(TYPE) = decltype(T::as_##TYPE);                                                                \
                                                                                                                        \
-		static constexpr auto value = is_function_signature_detected<traits_type, AS_TYPE_T(TYPE),                     \
-																	 JSON_TYPE_TYPE(TYPE)(const value_type&)>::value;  \
+		static constexpr auto value = is_function_signature_detected<traits_type, JWT_CPP_AS_TYPE_T(TYPE),                     \
+																	 JWT_CPP_JSON_TYPE_TYPE(TYPE)(const value_type&)>::value;  \
                                                                                                                        \
 		static_assert(value, "traits implementation must provide `" #TYPE "_type as_" #TYPE "(const value_type&)`");   \
 	}
 
-		SUPPORTS_AS(object);
-		SUPPORTS_AS(array);
-		SUPPORTS_AS(string);
-		SUPPORTS_AS(number);
-		SUPPORTS_AS(integer);
-		SUPPORTS_AS(boolean);
+		JWT_CPP_SUPPORTS_AS(object);
+		JWT_CPP_SUPPORTS_AS(array);
+		JWT_CPP_SUPPORTS_AS(string);
+		JWT_CPP_SUPPORTS_AS(number);
+		JWT_CPP_SUPPORTS_AS(integer);
+		JWT_CPP_SUPPORTS_AS(boolean);
+
+#undef JWT_CPP_JSON_TYPE_TYPE
+#undef JWT_CPP_AS_TYPE_T
+#undef JWT_CPP_SUPPORTS_AS
 
 		template<typename traits>
 		struct is_valid_traits {
