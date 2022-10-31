@@ -1863,14 +1863,15 @@ namespace jwt {
 
 #define JWT_CPP_JSON_TYPE_TYPE(TYPE) json_##TYPE_type
 #define JWT_CPP_AS_TYPE_T(TYPE) as_##TYPE_t
-#define JWT_CPP_SUPPORTS_AS(TYPE)                                                                                              \
-	template<typename traits_type, typename value_type, typename JWT_CPP_JSON_TYPE_TYPE(TYPE)>                                 \
+#define JWT_CPP_SUPPORTS_AS(TYPE)                                                                                      \
+	template<typename traits_type, typename value_type, typename JWT_CPP_JSON_TYPE_TYPE(TYPE)>                         \
 	struct supports_as_##TYPE {                                                                                        \
 		template<typename T>                                                                                           \
-		using JWT_CPP_AS_TYPE_T(TYPE) = decltype(T::as_##TYPE);                                                                \
+		using JWT_CPP_AS_TYPE_T(TYPE) = decltype(T::as_##TYPE);                                                        \
                                                                                                                        \
-		static constexpr auto value = is_function_signature_detected<traits_type, JWT_CPP_AS_TYPE_T(TYPE),                     \
-																	 JWT_CPP_JSON_TYPE_TYPE(TYPE)(const value_type&)>::value;  \
+		static constexpr auto value =                                                                                  \
+			is_function_signature_detected<traits_type, JWT_CPP_AS_TYPE_T(TYPE),                                       \
+										   JWT_CPP_JSON_TYPE_TYPE(TYPE)(const value_type&)>::value;                    \
                                                                                                                        \
 		static_assert(value, "traits implementation must provide `" #TYPE "_type as_" #TYPE "(const value_type&)`");   \
 	}
