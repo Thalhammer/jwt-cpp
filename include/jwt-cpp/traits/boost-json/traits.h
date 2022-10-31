@@ -49,7 +49,7 @@ namespace jwt {
 				return string_type{val.get_string()};
 			}
 
-			static integer_type as_int(const value_type& val) {
+			static integer_type as_integer(const value_type& val) {
 				switch (val.kind()) {
 				case json::kind::int64: return val.get_int64();
 				case json::kind::uint64: return static_cast<int64_t>(val.get_uint64());
@@ -57,7 +57,7 @@ namespace jwt {
 				}
 			}
 
-			static boolean_type as_bool(const value_type& val) {
+			static boolean_type as_boolean(const value_type& val) {
 				if (val.kind() != json::kind::bool_) throw std::bad_cast();
 				return val.get_bool();
 			}

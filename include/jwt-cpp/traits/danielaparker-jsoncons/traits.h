@@ -98,12 +98,12 @@ namespace jwt {
 				return val.as_double();
 			}
 
-			static integer_type as_int(const json& val) {
+			static integer_type as_integer(const json& val) {
 				if (get_type(val) != jwt::json::type::integer) throw std::bad_cast();
 				return val.as<integer_type>();
 			}
 
-			static boolean_type as_bool(const json& val) {
+			static boolean_type as_boolean(const json& val) {
 				if (val.type() != jsoncons::json_type::bool_value) throw std::bad_cast();
 				return val.as_bool();
 			}

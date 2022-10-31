@@ -1812,9 +1812,6 @@ namespace jwt {
 #ifdef __cpp_lib_experimental_detect
 		template<template<typename...> class _Op, typename... _Args>
 		using is_detected = std::experimental::is_detected<_Op, _Args...>;
-
-		template<template<typename...> class _Op, typename... _Args>
-		using is_detected_t = std::experimental::detected_t<_Op, _Args...>;
 #else
 		struct nonesuch {
 			nonesuch() = delete;
@@ -1840,139 +1837,58 @@ namespace jwt {
 
 		template<template<class...> class Op, class... Args>
 		using is_detected = typename detector<nonesuch, void, Op, Args...>::value;
-
-		template<template<class...> class Op, class... Args>
-		using is_detected_t = typename detector<nonesuch, void, Op, Args...>::type;
 #endif
 
-		template<typename traits_type>
-		using get_type_function = decltype(traits_type::get_type);
+		template<typename T, typename Signature>
+		using is_signature = typename std::is_same<T, Signature>;
 
-		template<typename traits_type, typename value_type>
-		using is_get_type_signature =
-			typename std::is_same<get_type_function<traits_type>, json::type(const value_type&)>;
+		template<typename traits_type, template<typename...> class Op, typename Signature>
+		struct is_function_signature_detected {
+			using type = Op<traits_type>;
+			static constexpr auto value = is_detected<Op, traits_type>::value && std::is_function<type>::value &&
+										  is_signature<type, Signature>::value;
+		};
 
 		template<typename traits_type, typename value_type>
 		struct supports_get_type {
-			static constexpr auto value = is_detected<get_type_function, traits_type>::value &&
-										  std::is_function<get_type_function<traits_type>>::value &&
-										  is_get_type_signature<traits_type, value_type>::value;
+			template<typename T>
+			using get_type_t = decltype(T::get_type);
+
+			static constexpr auto value =
+				is_function_signature_detected<traits_type, get_type_t, json::type(const value_type&)>::value;
+
+			// Internal assertions for better feedback
+			static_assert(value, "traits implementation must provide `jwt::json::type get_type(const value_type&)`");
 		};
 
-		template<typename traits_type>
-		using as_object_function = decltype(traits_type::as_object);
+#define JWT_CPP_JSON_TYPE_TYPE(TYPE) json_##TYPE_type
+#define JWT_CPP_AS_TYPE_T(TYPE) as_##TYPE_t
+#define JWT_CPP_SUPPORTS_AS(TYPE)                                                                                      \
+	template<typename traits_type, typename value_type, typename JWT_CPP_JSON_TYPE_TYPE(TYPE)>                         \
+	struct supports_as_##TYPE {                                                                                        \
+		template<typename T>                                                                                           \
+		using JWT_CPP_AS_TYPE_T(TYPE) = decltype(T::as_##TYPE);                                                        \
+                                                                                                                       \
+		static constexpr auto value =                                                                                  \
+			is_function_signature_detected<traits_type, JWT_CPP_AS_TYPE_T(TYPE),                                       \
+										   JWT_CPP_JSON_TYPE_TYPE(TYPE)(const value_type&)>::value;                    \
+                                                                                                                       \
+		static_assert(value, "traits implementation must provide `" #TYPE "_type as_" #TYPE "(const value_type&)`");   \
+	}
 
-		template<typename traits_type, typename value_type, typename object_type>
-		using is_as_object_signature =
-			typename std::is_same<as_object_function<traits_type>, object_type(const value_type&)>;
+		JWT_CPP_SUPPORTS_AS(object);
+		JWT_CPP_SUPPORTS_AS(array);
+		JWT_CPP_SUPPORTS_AS(string);
+		JWT_CPP_SUPPORTS_AS(number);
+		JWT_CPP_SUPPORTS_AS(integer);
+		JWT_CPP_SUPPORTS_AS(boolean);
 
-		template<typename traits_type, typename value_type, typename object_type>
-		struct supports_as_object {
-			static constexpr auto value = std::is_constructible<value_type, object_type>::value &&
-										  is_detected<as_object_function, traits_type>::value &&
-										  std::is_function<as_object_function<traits_type>>::value &&
-										  is_as_object_signature<traits_type, value_type, object_type>::value;
-		};
-
-		template<typename traits_type>
-		using as_array_function = decltype(traits_type::as_array);
-
-		template<typename traits_type, typename value_type, typename array_type>
-		using is_as_array_signature =
-			typename std::is_same<as_array_function<traits_type>, array_type(const value_type&)>;
-
-		template<typename traits_type, typename value_type, typename array_type>
-		struct supports_as_array {
-			static constexpr auto value = std::is_constructible<value_type, array_type>::value &&
-										  is_detected<as_array_function, traits_type>::value &&
-										  std::is_function<as_array_function<traits_type>>::value &&
-										  is_as_array_signature<traits_type, value_type, array_type>::value;
-		};
-
-		template<typename traits_type>
-		using as_string_function = decltype(traits_type::as_string);
-
-		template<typename traits_type, typename value_type, typename string_type>
-		using is_as_string_signature =
-			typename std::is_same<as_string_function<traits_type>, string_type(const value_type&)>;
-
-		template<typename traits_type, typename value_type, typename string_type>
-		struct supports_as_string {
-			static constexpr auto value = std::is_constructible<value_type, string_type>::value &&
-										  is_detected<as_string_function, traits_type>::value &&
-										  std::is_function<as_string_function<traits_type>>::value &&
-										  is_as_string_signature<traits_type, value_type, string_type>::value;
-		};
-
-		template<typename traits_type>
-		using as_number_function = decltype(traits_type::as_number);
-
-		template<typename traits_type, typename value_type, typename number_type>
-		using is_as_number_signature =
-			typename std::is_same<as_number_function<traits_type>, number_type(const value_type&)>;
-
-		template<typename traits_type, typename value_type, typename number_type>
-		struct supports_as_number {
-			static constexpr auto value = std::is_floating_point<number_type>::value &&
-										  std::is_constructible<value_type, number_type>::value &&
-										  is_detected<as_number_function, traits_type>::value &&
-										  std::is_function<as_number_function<traits_type>>::value &&
-										  is_as_number_signature<traits_type, value_type, number_type>::value;
-		};
-
-		template<typename traits_type>
-		using as_integer_function = decltype(traits_type::as_int);
-
-		template<typename traits_type, typename value_type, typename integer_type>
-		using is_as_integer_signature =
-			typename std::is_same<as_integer_function<traits_type>, integer_type(const value_type&)>;
-
-		template<typename traits_type, typename value_type, typename integer_type>
-		struct supports_as_integer {
-			static constexpr auto value = std::is_signed<integer_type>::value &&
-										  !std::is_floating_point<integer_type>::value &&
-										  std::is_constructible<value_type, integer_type>::value &&
-										  is_detected<as_integer_function, traits_type>::value &&
-										  std::is_function<as_integer_function<traits_type>>::value &&
-										  is_as_integer_signature<traits_type, value_type, integer_type>::value;
-		};
-
-		template<typename traits_type>
-		using as_boolean_function = decltype(traits_type::as_bool);
-
-		template<typename traits_type, typename value_type, typename boolean_type>
-		using is_as_boolean_signature =
-			typename std::is_same<as_boolean_function<traits_type>, boolean_type(const value_type&)>;
-
-		template<typename traits_type, typename value_type, typename boolean_type>
-		struct supports_as_boolean {
-			static constexpr auto value = std::is_convertible<boolean_type, bool>::value &&
-										  std::is_constructible<value_type, boolean_type>::value &&
-										  is_detected<as_boolean_function, traits_type>::value &&
-										  std::is_function<as_boolean_function<traits_type>>::value &&
-										  is_as_boolean_signature<traits_type, value_type, boolean_type>::value;
-		};
+#undef JWT_CPP_JSON_TYPE_TYPE
+#undef JWT_CPP_AS_TYPE_T
+#undef JWT_CPP_SUPPORTS_AS
 
 		template<typename traits>
 		struct is_valid_traits {
-			// Internal assertions for better feedback
-			static_assert(supports_get_type<traits, typename traits::value_type>::value,
-						  "traits must provide `jwt::json::type get_type(const value_type&)`");
-			static_assert(supports_as_object<traits, typename traits::value_type, typename traits::object_type>::value,
-						  "traits must provide `object_type as_object(const value_type&)`");
-			static_assert(supports_as_array<traits, typename traits::value_type, typename traits::array_type>::value,
-						  "traits must provide `array_type as_array(const value_type&)`");
-			static_assert(supports_as_string<traits, typename traits::value_type, typename traits::string_type>::value,
-						  "traits must provide `string_type as_string(const value_type&)`");
-			static_assert(supports_as_number<traits, typename traits::value_type, typename traits::number_type>::value,
-						  "traits must provide `number_type as_number(const value_type&)`");
-			static_assert(
-				supports_as_integer<traits, typename traits::value_type, typename traits::integer_type>::value,
-				"traits must provide `integer_type as_int(const value_type&)`");
-			static_assert(
-				supports_as_boolean<traits, typename traits::value_type, typename traits::boolean_type>::value,
-				"traits must provide `boolean_type as_bool(const value_type&)`");
-
 			static constexpr auto value =
 				supports_get_type<traits, typename traits::value_type>::value &&
 				supports_as_object<traits, typename traits::value_type, typename traits::object_type>::value &&
@@ -1993,76 +1909,41 @@ namespace jwt {
 			// TODO(prince-chrismc): Stream operators
 		};
 
-		template<typename traits_type>
-		using has_mapped_type = typename traits_type::mapped_type;
+		// https://stackoverflow.com/a/53967057/8480874
+		template<typename T, typename = void>
+		struct is_iterable : std::false_type {};
 
-		template<typename traits_type>
-		using has_key_type = typename traits_type::key_type;
-
-		template<typename traits_type>
-		using has_value_type = typename traits_type::value_type;
-
-		template<typename object_type>
-		using has_iterator = typename object_type::iterator;
-
-		template<typename object_type>
-		using has_const_iterator = typename object_type::const_iterator;
-
-		template<typename object_type>
-		using is_begin_signature =
-			typename std::is_same<decltype(std::declval<object_type>().begin()), has_iterator<object_type>>;
-
-		template<typename object_type>
-		using is_begin_const_signature =
-			typename std::is_same<decltype(std::declval<const object_type>().begin()), has_const_iterator<object_type>>;
-
-		template<typename object_type>
-		struct supports_begin {
-			static constexpr auto value =
-				is_detected<has_iterator, object_type>::value && is_detected<has_const_iterator, object_type>::value &&
-				is_begin_signature<object_type>::value && is_begin_const_signature<object_type>::value;
+		template<typename T>
+		struct is_iterable<T, void_t<decltype(std::begin(std::declval<T>())), decltype(std::end(std::declval<T>())),
+#if __cplusplus > 201402L
+									 decltype(std::cbegin(std::declval<T>())), decltype(std::cend(std::declval<T>()))
+#else
+									 decltype(std::begin(std::declval<const T>())),
+									 decltype(std::end(std::declval<const T>()))
+#endif
+									 >> : std::true_type {
 		};
 
-		template<typename object_type>
-		using is_end_signature =
-			typename std::is_same<decltype(std::declval<object_type>().end()), has_iterator<object_type>>;
-
-		template<typename object_type>
-		using is_end_const_signature =
-			typename std::is_same<decltype(std::declval<const object_type>().end()), has_const_iterator<object_type>>;
-
-		template<typename object_type>
-		struct supports_end {
-			static constexpr auto value =
-				is_detected<has_iterator, object_type>::value && is_detected<has_const_iterator, object_type>::value &&
-				is_end_signature<object_type>::value && is_end_const_signature<object_type>::value;
-		};
+#if __cplusplus > 201703L
+		template<typename T>
+		inline constexpr bool is_iterable_v = is_iterable<T>::value;
+#endif
 
 		template<typename object_type, typename string_type>
 		using is_count_signature = typename std::is_integral<decltype(std::declval<const object_type>().count(
 			std::declval<const string_type>()))>;
 
+		template<typename object_type, typename string_type, typename = void>
+		struct is_subcription_operator_signature : std::false_type {};
+
 		template<typename object_type, typename string_type>
-		struct has_subcription_operator {
-			template<class>
-			struct sfinae_true : std::true_type {};
-
-			template<class T, class A0>
-			static auto test_operator_plus(int)
-				-> sfinae_true<decltype(std::declval<T>().operator[](std::declval<A0>()))>;
-			template<class, class A0>
-			static auto test_operator_plus(long) -> std::false_type;
-
-			static constexpr auto value = decltype(test_operator_plus<object_type, string_type>(0)){};
-		};
-
-		template<typename object_type, typename value_type, typename string_type>
-		struct is_subcription_operator_signature {
-			static constexpr auto has_subscription_operator = has_subcription_operator<object_type, string_type>::value;
-			static_assert(has_subscription_operator,
-						  "object_type must implementate the subscription operator '[]' for this library");
-
-			static constexpr auto value = has_subscription_operator;
+		struct is_subcription_operator_signature<
+			object_type, string_type,
+			void_t<decltype(std::declval<object_type>().operator[](std::declval<string_type>()))>> : std::true_type {
+			// TODO(prince-chrismc): I am not convienced this is meaningful anymore
+			static_assert(
+				value,
+				"object_type must implementate the subscription operator '[]' taking string_type as an arguement");
 		};
 
 		template<typename object_type, typename value_type, typename string_type>
@@ -2072,21 +1953,37 @@ namespace jwt {
 
 		template<typename value_type, typename string_type, typename object_type>
 		struct is_valid_json_object {
+			template<typename T>
+			using mapped_type_t = typename T::mapped_type;
+			template<typename T>
+			using key_type_t = typename T::key_type;
+			template<typename T>
+			using iterator_t = typename T::iterator;
+			template<typename T>
+			using const_iterator_t = typename T::const_iterator;
+
 			static constexpr auto value =
-				is_detected<has_mapped_type, object_type>::value &&
+				std::is_constructible<value_type, object_type>::value &&
+				is_detected<mapped_type_t, object_type>::value &&
 				std::is_same<typename object_type::mapped_type, value_type>::value &&
-				is_detected<has_key_type, object_type>::value &&
+				is_detected<key_type_t, object_type>::value &&
 				(std::is_same<typename object_type::key_type, string_type>::value ||
 				 std::is_constructible<typename object_type::key_type, string_type>::value) &&
-				supports_begin<object_type>::value && supports_end<object_type>::value &&
-				is_count_signature<object_type, string_type>::value &&
-				is_subcription_operator_signature<object_type, value_type, string_type>::value &&
+				is_detected<iterator_t, object_type>::value && is_detected<const_iterator_t, object_type>::value &&
+				is_iterable<object_type>::value && is_count_signature<object_type, string_type>::value &&
+				is_subcription_operator_signature<object_type, string_type>::value &&
 				is_at_const_signature<object_type, value_type, string_type>::value;
 		};
 
 		template<typename value_type, typename array_type>
 		struct is_valid_json_array {
-			static constexpr auto value = std::is_same<typename array_type::value_type, value_type>::value;
+			template<typename T>
+			using value_type_t = typename T::value_type;
+
+			static constexpr auto value = std::is_constructible<value_type, array_type>::value &&
+										  is_iterable<array_type>::value &&
+										  is_detected<value_type_t, array_type>::value &&
+										  std::is_same<typename array_type::value_type, value_type>::value;
 		};
 
 		template<typename string_type, typename integer_type>
@@ -2101,41 +1998,45 @@ namespace jwt {
 								  string_type>;
 
 		template<typename string_type>
-		struct has_operate_plus_method { // https://stackoverflow.com/a/9154394/8480874
-			template<class>
-			struct sfinae_true : std::true_type {};
-
-			template<class T, class A0>
-			static auto test_operator_plus(int)
-				-> sfinae_true<decltype(std::declval<T>().operator+(std::declval<A0>()))>;
-			template<class, class A0>
-			static auto test_operator_plus(long) -> std::false_type;
-
-			static constexpr auto value = decltype(test_operator_plus<string_type, string_type>(0)){};
-		};
-
-		template<typename string_type>
 		using is_std_operate_plus_signature =
 			typename std::is_same<decltype(std::operator+(std::declval<string_type>(), std::declval<string_type>())),
 								  string_type>;
 
-		template<typename string_type, typename integer_type>
+		template<typename value_type, typename string_type, typename integer_type>
 		struct is_valid_json_string {
 			static constexpr auto substr = is_substr_start_end_index_signature<string_type, integer_type>::value &&
 										   is_substr_start_index_signature<string_type, integer_type>::value;
 			static_assert(substr, "string_type must have a substr method taking only a start index and an overload "
 								  "taking a start and end index, both must return a string_type");
 
-			static constexpr auto operator_plus =
-				has_operate_plus_method<string_type>::value || is_std_operate_plus_signature<string_type>::value;
+			static constexpr auto operator_plus = is_std_operate_plus_signature<string_type>::value;
 			static_assert(operator_plus,
 						  "string_type must have a '+' operator implemented which returns the concatenated string");
 
-			static constexpr auto value = substr && operator_plus;
+			static constexpr auto value =
+				std::is_constructible<value_type, string_type>::value && substr && operator_plus;
 		};
 
-		template<typename value_type, typename string_type, typename integer_type, typename object_type,
-				 typename array_type>
+		template<typename value_type, typename number_type>
+		struct is_valid_json_number {
+			static constexpr auto value =
+				std::is_floating_point<number_type>::value && std::is_constructible<value_type, number_type>::value;
+		};
+
+		template<typename value_type, typename integer_type>
+		struct is_valid_json_integer {
+			static constexpr auto value = std::is_signed<integer_type>::value &&
+										  !std::is_floating_point<integer_type>::value &&
+										  std::is_constructible<value_type, integer_type>::value;
+		};
+		template<typename value_type, typename boolean_type>
+		struct is_valid_json_boolean {
+			static constexpr auto value = std::is_convertible<boolean_type, bool>::value &&
+										  std::is_constructible<value_type, boolean_type>::value;
+		};
+
+		template<typename value_type, typename object_type, typename array_type, typename string_type,
+				 typename number_type, typename integer_type, typename boolean_type>
 		struct is_valid_json_types {
 			// Internal assertions for better feedback
 			static_assert(is_valid_json_value<value_type>::value,
@@ -2145,10 +2046,13 @@ namespace jwt {
 			static_assert(is_valid_json_array<value_type, array_type>::value,
 						  "array_type must be a container of value_type");
 
-			static constexpr auto value = is_valid_json_object<value_type, string_type, object_type>::value &&
-										  is_valid_json_value<value_type>::value &&
+			static constexpr auto value = is_valid_json_value<value_type>::value &&
+										  is_valid_json_object<value_type, string_type, object_type>::value &&
 										  is_valid_json_array<value_type, array_type>::value &&
-										  is_valid_json_string<string_type, integer_type>::value;
+										  is_valid_json_string<value_type, string_type, integer_type>::value &&
+										  is_valid_json_number<value_type, number_type>::value &&
+										  is_valid_json_integer<value_type, integer_type>::value &&
+										  is_valid_json_boolean<value_type, boolean_type>::value;
 		};
 	} // namespace details
 
@@ -2173,9 +2077,10 @@ namespace jwt {
 					  "string_type must be a std::string, convertible to a std::string, or construct a std::string.");
 
 		static_assert(
-			details::is_valid_json_types<typename json_traits::value_type, typename json_traits::string_type,
-										 typename json_traits::integer_type, typename json_traits::object_type,
-										 typename json_traits::array_type>::value,
+			details::is_valid_json_types<typename json_traits::value_type, typename json_traits::object_type,
+										 typename json_traits::array_type, typename json_traits::string_type,
+										 typename json_traits::number_type, typename json_traits::integer_type,
+										 typename json_traits::boolean_type>::value,
 			"must staisfy json container requirements");
 		static_assert(details::is_valid_traits<json_traits>::value, "traits must satisfy requirements");
 
@@ -2243,7 +2148,7 @@ namespace jwt {
 		date as_date() const {
 			using std::chrono::system_clock;
 			if (get_type() == json::type::number) return system_clock::from_time_t(std::round(as_number()));
-			return system_clock::from_time_t(as_int());
+			return system_clock::from_time_t(as_integer());
 		}
 
 		/**
@@ -2271,14 +2176,14 @@ namespace jwt {
 		 * \return content as int
 		 * \throw std::bad_cast Content was not an int
 		 */
-		typename json_traits::integer_type as_int() const { return json_traits::as_int(val); }
+		typename json_traits::integer_type as_integer() const { return json_traits::as_integer(val); }
 
 		/**
 		 * Get the contained JSON value as a bool
 		 * \return content as bool
 		 * \throw std::bad_cast Content was not a bool
 		 */
-		typename json_traits::boolean_type as_bool() const { return json_traits::as_bool(val); }
+		typename json_traits::boolean_type as_boolean() const { return json_traits::as_boolean(val); }
 
 		/**
 		 * Get the contained JSON value as a number
@@ -2982,8 +2887,8 @@ namespace jwt {
 				if (ec) return;
 				const bool matches = [&]() {
 					switch (expected.get_type()) {
-					case json::type::boolean: return expected.as_bool() == jc.as_bool();
-					case json::type::integer: return expected.as_int() == jc.as_int();
+					case json::type::boolean: return expected.as_boolean() == jc.as_boolean();
+					case json::type::integer: return expected.as_integer() == jc.as_integer();
 					case json::type::number: return expected.as_number() == jc.as_number();
 					case json::type::string: return expected.as_string() == jc.as_string();
 					case json::type::array:
