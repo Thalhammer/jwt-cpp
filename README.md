@@ -150,3 +150,6 @@ In order to build the test cases you also need
 ## Troubleshooting
 
 See the [FAQs](docs/faqs.md) for tips.
+
+## Conference Coverage
+[![CppCon](https://img.youtube.com/vi/Oq4NW5idmiI/0.jpg)](https://www.youtube.com/watch?v=Oq4NW5idmiI)
