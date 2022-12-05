@@ -468,6 +468,10 @@ namespace jwt {
 			return std::unique_ptr<BIO, decltype(&BIO_free_all)>(BIO_new(BIO_s_mem()), BIO_free_all);
 		}
 
+		inline std::unique_ptr<BIO, decltype(&BIO_free_all)> make_mem_buf_bio_base64() {
+			return std::unique_ptr<BIO, decltype(&BIO_free_all)>(BIO_new(BIO_f_base64()), BIO_free_all);
+		}
+
 		inline std::unique_ptr<BIO, decltype(&BIO_free_all)> make_mem_buf_bio(const std::string& data) {
 			return std::unique_ptr<BIO, decltype(&BIO_free_all)>(
 #if OPENSSL_VERSION_NUMBER <= 0x10100003L
@@ -538,6 +542,37 @@ namespace jwt {
 		inline std::string extract_pubkey_from_cert(const std::string& certstr, const std::string& pw = "") {
 			std::error_code ec;
 			auto res = extract_pubkey_from_cert(certstr, pw, ec);
+			error::throw_if_error(ec);
+			return res;
+		}
+
+		inline std::string openssl_base64_decode(const std::string& base, std::error_code& ec) {
+			auto b64 = make_mem_buf_bio_base64();
+			BIO_set_flags(b64.get(), BIO_FLAGS_BASE64_NO_NL);
+			if (!b64)
+			{
+				ec = error::rsa_error::create_mem_bio_failed;
+				return {};
+			}
+
+			auto inputbio = make_mem_buf_bio(base);
+			if (!inputbio)
+			{
+				ec = error::rsa_error::create_mem_bio_failed;
+				return {};
+			}
+
+			inputbio.reset(BIO_push(b64.release(), inputbio.release()));
+			BIO_set_flags(inputbio.get(), BIO_FLAGS_BASE64_NO_NL);
+			std::string decoderesult( base.length / 4 * 3, '\0');
+			BIO_read(inputbio.get(), (char*)decoderesult.data(), (int)base.length());
+
+			return decoderesult;
+		}
+
+		inline std::string openssl_base64_decode(const std::string& base) {
+			std::error_code ec;
+			auto res = openssl_base64_decode(base, ec);
 			error::throw_if_error(ec);
 			return res;
 		}
