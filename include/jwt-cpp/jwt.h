@@ -127,8 +127,8 @@ namespace jwt {
 			class rsa_error_cat : public std::error_category {
 			public:
 				const char* name() const noexcept override { return "rsa_error"; };
-				std::string message(int ev) const override {
-					switch (static_cast<rsa_error>(ev)) {
+				std::string message(int ec) const override {
+					switch (static_cast<rsa_error>(ec)) {
 					case rsa_error::ok: return "no error";
 					case rsa_error::cert_load_failed: return "error loading cert into memory";
 					case rsa_error::get_key_failed: return "error getting key from certificate";
@@ -147,7 +147,7 @@ namespace jwt {
 			return cat;
 		}
 
-		inline std::error_code make_error_code(rsa_error e) { return {static_cast<int>(e), rsa_error_category()}; }
+		inline std::error_code make_error_code(rsa_error ec) { return {static_cast<int>(ec), rsa_error_category()}; }
 		/**
 		 * \brief Errors related to processing of RSA signatures
 		 */
@@ -168,8 +168,8 @@ namespace jwt {
 			class ecdsa_error_cat : public std::error_category {
 			public:
 				const char* name() const noexcept override { return "ecdsa_error"; };
-				std::string message(int ev) const override {
-					switch (static_cast<ecdsa_error>(ev)) {
+				std::string message(int ec) const override {
+					switch (static_cast<ecdsa_error>(ec)) {
 					case ecdsa_error::ok: return "no error";
 					case ecdsa_error::load_key_bio_write: return "failed to load key: bio write failed";
 					case ecdsa_error::load_key_bio_read: return "failed to load key: bio read failed";
@@ -187,7 +187,9 @@ namespace jwt {
 			return cat;
 		}
 
-		inline std::error_code make_error_code(ecdsa_error e) { return {static_cast<int>(e), ecdsa_error_category()}; }
+		inline std::error_code make_error_code(ecdsa_error ec) {
+			return {static_cast<int>(ec), ecdsa_error_category()};
+		}
 
 		/**
 		 * \brief Errors related to verification of signatures
@@ -210,8 +212,8 @@ namespace jwt {
 			class verification_error_cat : public std::error_category {
 			public:
 				const char* name() const noexcept override { return "signature_verification_error"; };
-				std::string message(int ev) const override {
-					switch (static_cast<signature_verification_error>(ev)) {
+				std::string message(int ec) const override {
+					switch (static_cast<signature_verification_error>(ec)) {
 					case signature_verification_error::ok: return "no error";
 					case signature_verification_error::invalid_signature: return "invalid signature";
 					case signature_verification_error::create_context_failed:
@@ -236,8 +238,8 @@ namespace jwt {
 			return cat;
 		}
 
-		inline std::error_code make_error_code(signature_verification_error e) {
-			return {static_cast<int>(e), signature_verification_error_category()};
+		inline std::error_code make_error_code(signature_verification_error ec) {
+			return {static_cast<int>(ec), signature_verification_error_category()};
 		}
 
 		/**
@@ -267,8 +269,8 @@ namespace jwt {
 			class signature_generation_error_cat : public std::error_category {
 			public:
 				const char* name() const noexcept override { return "signature_generation_error"; };
-				std::string message(int ev) const override {
-					switch (static_cast<signature_generation_error>(ev)) {
+				std::string message(int ec) const override {
+					switch (static_cast<signature_generation_error>(ec)) {
 					case signature_generation_error::ok: return "no error";
 					case signature_generation_error::hmac_failed: return "hmac failed";
 					case signature_generation_error::create_context_failed:
@@ -304,8 +306,8 @@ namespace jwt {
 			return cat;
 		}
 
-		inline std::error_code make_error_code(signature_generation_error e) {
-			return {static_cast<int>(e), signature_generation_error_category()};
+		inline std::error_code make_error_code(signature_generation_error ec) {
+			return {static_cast<int>(ec), signature_generation_error_category()};
 		}
 
 		/**
@@ -327,8 +329,8 @@ namespace jwt {
 			class token_verification_error_cat : public std::error_category {
 			public:
 				const char* name() const noexcept override { return "token_verification_error"; };
-				std::string message(int ev) const override {
-					switch (static_cast<token_verification_error>(ev)) {
+				std::string message(int ec) const override {
+					switch (static_cast<token_verification_error>(ec)) {
 					case token_verification_error::ok: return "no error";
 					case token_verification_error::wrong_algorithm: return "wrong algorithm";
 					case token_verification_error::missing_claim: return "decoded JWT is missing required claim(s)";
@@ -347,8 +349,8 @@ namespace jwt {
 			return cat;
 		}
 
-		inline std::error_code make_error_code(token_verification_error e) {
-			return {static_cast<int>(e), token_verification_error_category()};
+		inline std::error_code make_error_code(token_verification_error ec) {
+			return {static_cast<int>(ec), token_verification_error_category()};
 		}
 
 		inline void throw_if_error(std::error_code ec) {
@@ -465,21 +467,21 @@ namespace jwt {
 		};
 
 		inline std::unique_ptr<BIO, decltype(&BIO_free_all)> make_mem_buf_bio() {
-			return std::unique_ptr<BIO, decltype(&BIO_free_all)>(BIO_new(BIO_s_mem()), BIO_free_all);
+			return {BIO_new(BIO_s_mem()), BIO_free_all};
 		}
 
 		inline std::unique_ptr<BIO, decltype(&BIO_free_all)> make_mem_buf_bio_base64() {
-			return std::unique_ptr<BIO, decltype(&BIO_free_all)>(BIO_new(BIO_f_base64()), BIO_free_all);
+			return {BIO_new(BIO_f_base64()), BIO_free_all};
 		}
 
 		inline std::unique_ptr<BIO, decltype(&BIO_free_all)> make_mem_buf_bio(const std::string& data) {
-			return std::unique_ptr<BIO, decltype(&BIO_free_all)>(
+			return {
 #if OPENSSL_VERSION_NUMBER <= 0x10100003L
 				BIO_new_mem_buf(const_cast<char*>(data.data()), static_cast<int>(data.size())), BIO_free_all
 #else
 				BIO_new_mem_buf(data.data(), static_cast<int>(data.size())), BIO_free_all
 #endif
-			);
+			};
 		}
 
 		inline std::unique_ptr<EVP_MD_CTX, void (*)(EVP_MD_CTX*)> make_evp_md_ctx() {
@@ -549,25 +551,23 @@ namespace jwt {
 		inline std::string openssl_base64_decode(const std::string& base, std::error_code& ec) {
 			auto b64 = make_mem_buf_bio_base64();
 			BIO_set_flags(b64.get(), BIO_FLAGS_BASE64_NO_NL);
-			if (!b64)
-			{
+			if (!b64) {
 				ec = error::rsa_error::create_mem_bio_failed;
 				return {};
 			}
 
-			auto inputbio = make_mem_buf_bio(base);
-			if (!inputbio)
-			{
+			auto input_bio = make_mem_buf_bio(base);
+			if (!input_bio) {
 				ec = error::rsa_error::create_mem_bio_failed;
 				return {};
 			}
 
-			inputbio.reset(BIO_push(b64.release(), inputbio.release()));
-			BIO_set_flags(inputbio.get(), BIO_FLAGS_BASE64_NO_NL);
-			std::string decoderesult( base.length / 4 * 3, '\0');
-			BIO_read(inputbio.get(), (char*)decoderesult.data(), (int)base.length());
+			input_bio.reset(BIO_push(b64.release(), input_bio.release()));
+			BIO_set_flags(input_bio.get(), BIO_FLAGS_BASE64_NO_NL);
+			std::string decode_result(base.length() / 4 * 3, '\0');
+			BIO_read(input_bio.get(), const_cast<char*>(decode_result.data()), static_cast<int>(base.length()));
 
-			return decoderesult;
+			return decode_result;
 		}
 
 		inline std::string openssl_base64_decode(const std::string& base) {
@@ -589,17 +589,17 @@ namespace jwt {
 		 *
 		 * \param cert_base64_der_str 	String containing the certificate encoded as base64 DER
 		 * \param decode 				The function to decode the cert
-		 * \param ec					error_code for error_detection (gets cleared if no error occures)
+		 * \param ec					error_code for error_detection (gets cleared if no error occurs)
 		 */
 		template<typename Decode>
 		std::string convert_base64_der_to_pem(const std::string& cert_base64_der_str, Decode decode,
 											  std::error_code& ec) {
 			ec.clear();
-			const auto decodedStr = decode(cert_base64_der_str);
-			auto c_str = reinterpret_cast<const unsigned char*>(decodedStr.c_str());
+			const auto decoded_str = decode(cert_base64_der_str);
+			const auto* c_str = reinterpret_cast<const unsigned char*>(decoded_str.c_str());
 
 			std::unique_ptr<X509, decltype(&X509_free)> cert(
-				d2i_X509(NULL, &c_str, static_cast<int>(decodedStr.size())), X509_free);
+				d2i_X509(nullptr, &c_str, static_cast<int>(decoded_str.size())), X509_free);
 			auto certbio = make_mem_buf_bio();
 			if (!cert || !certbio) {
 				ec = error::rsa_error::create_mem_bio_failed;
@@ -891,9 +891,9 @@ namespace jwt {
 		 * \return BIGNUM representation
 		 */
 		inline std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw) {
-			return std::unique_ptr<BIGNUM, decltype(&BN_free)>(
+			return {
 				BN_bin2bn(reinterpret_cast<const unsigned char*>(raw.data()), static_cast<int>(raw.size()), nullptr),
-				BN_free);
+				BN_free};
 		}
 	} // namespace helper
 
@@ -1195,9 +1195,9 @@ namespace jwt {
 				}
 
 #if OPENSSL_VERSION_NUMBER < 0x10002000L
-				unsigned char* der_sig_data = reinterpret_cast<unsigned char*>(const_cast<char*>(der_signature.data()));
+				auto* der_sig_data = reinterpret_cast<unsigned char*>(const_cast<char*>(der_signature.data()));
 #else
-				const unsigned char* der_sig_data = reinterpret_cast<const unsigned char*>(der_signature.data());
+				const auto* der_sig_data = reinterpret_cast<const unsigned char*>(der_signature.data());
 #endif
 				auto res =
 					EVP_DigestVerifyFinal(ctx.get(), der_sig_data, static_cast<unsigned int>(der_signature.length()));
@@ -1248,7 +1248,7 @@ namespace jwt {
 			}
 
 			std::string der_to_p1363_signature(const std::string& der_signature, std::error_code& ec) const {
-				const unsigned char* possl_signature = reinterpret_cast<const unsigned char*>(der_signature.data());
+				const auto* possl_signature = reinterpret_cast<const unsigned char*>(der_signature.data());
 				std::unique_ptr<ECDSA_SIG, decltype(&ECDSA_SIG_free)> sig(
 					d2i_ECDSA_SIG(nullptr, &possl_signature, static_cast<long>(der_signature.length())),
 					ECDSA_SIG_free);
@@ -1302,7 +1302,8 @@ namespace jwt {
 					return {};
 				}
 				std::string der_signature(length, '\0');
-				unsigned char* psbuffer = (unsigned char*)der_signature.data();
+				auto psbuffer =
+					(unsigned char*)der_signature.data(); // NOLINT(google-readability-casting) requires `const_cast`
 				length = i2d_ECDSA_SIG(psig, &psbuffer);
 				if (length < 0) {
 					ec = error::signature_verification_error::signature_encoding_failed;
@@ -1562,7 +1563,10 @@ namespace jwt {
 					return;
 				}
 
-				if (EVP_DigestVerifyFinal(md_ctx.get(), (unsigned char*)signature.data(), signature.size()) <= 0) {
+				if (EVP_DigestVerifyFinal(
+						md_ctx.get(),
+						(unsigned char*)signature.data(), // NOLINT(google-readability-casting) requires `const_cast`
+						signature.size()) <= 0) {
 					ec = error::signature_verification_error::verifyfinal_failed;
 					return;
 				}
@@ -2127,9 +2131,9 @@ namespace jwt {
 
 		basic_claim() = default;
 		basic_claim(const basic_claim&) = default;
-		basic_claim(basic_claim&&) = default;
+		basic_claim(basic_claim&&) noexcept = default;
 		basic_claim& operator=(const basic_claim&) = default;
-		basic_claim& operator=(basic_claim&&) = default;
+		basic_claim& operator=(basic_claim&&) noexcept = default;
 		~basic_claim() = default;
 
 		JWT_CLAIM_EXPLICIT basic_claim(typename json_traits::string_type s) : val(std::move(s)) {}
@@ -2201,8 +2205,8 @@ namespace jwt {
 		 */
 		set_t as_set() const {
 			set_t res;
-			for (const auto& e : json_traits::as_array(val)) {
-				res.insert(json_traits::as_string(e));
+			for (const auto& elem : json_traits::as_array(val)) {
+				res.insert(json_traits::as_string(elem));
 			}
 			return res;
 		}
@@ -2254,11 +2258,12 @@ namespace jwt {
 
 			map_of_claims() = default;
 			map_of_claims(const map_of_claims&) = default;
-			map_of_claims(map_of_claims&&) = default;
+			map_of_claims(map_of_claims&&) noexcept = default;
 			map_of_claims& operator=(const map_of_claims&) = default;
-			map_of_claims& operator=(map_of_claims&&) = default;
+			map_of_claims& operator=(map_of_claims&&) noexcept = default;
+			~map_of_claims() = default;
 
-			map_of_claims(typename json_traits::object_type json) : claims(std::move(json)) {}
+			JWT_CLAIM_EXPLICIT map_of_claims(typename json_traits::object_type json) : claims(std::move(json)) {}
 
 			iterator begin() { return claims.begin(); }
 			iterator end() { return claims.end(); }
@@ -2889,26 +2894,26 @@ namespace jwt {
 						return {};
 					}
 					return jwt.get_header_claim(claim_key);
-				} else {
-					if (!jwt.has_payload_claim(claim_key)) {
-						ec = error::token_verification_error::missing_claim;
-						return {};
-					}
-					return jwt.get_payload_claim(claim_key);
 				}
+
+				if (!jwt.has_payload_claim(claim_key)) {
+					ec = error::token_verification_error::missing_claim;
+					return {};
+				}
+				return jwt.get_payload_claim(claim_key);
 			}
-			basic_claim<json_traits> get_claim(bool in_header, json::type t, std::error_code& ec) const {
-				auto c = get_claim(in_header, ec);
+			basic_claim<json_traits> get_claim(bool in_header, json::type type, std::error_code& ec) const {
+				auto claim = get_claim(in_header, ec);
 				if (ec) return {};
-				if (c.get_type() != t) {
+				if (claim.get_type() != type) {
 					ec = error::token_verification_error::claim_type_missmatch;
 					return {};
 				}
-				return c;
+				return claim;
 			}
 			basic_claim<json_traits> get_claim(std::error_code& ec) const { return get_claim(false, ec); }
-			basic_claim<json_traits> get_claim(json::type t, std::error_code& ec) const {
-				return get_claim(false, t, ec);
+			basic_claim<json_traits> get_claim(json::type type, std::error_code& ec) const {
+				return get_claim(false, type, ec);
 			}
 		};
 
@@ -2983,17 +2988,17 @@ namespace jwt {
 		struct is_subset_claim {
 			const typename basic_claim<json_traits>::set_t expected;
 			void operator()(const verify_context<json_traits>& ctx, std::error_code& ec) const {
-				auto c = ctx.get_claim(in_header, ec);
+				auto claim = ctx.get_claim(in_header, ec);
 				if (ec) return;
-				if (c.get_type() == json::type::string) {
+				if (claim.get_type() == json::type::string) {
 					if (expected.size() != 1 || *expected.begin() != c.as_string()) {
 						ec = error::token_verification_error::audience_missmatch;
 						return;
 					}
-				} else if (c.get_type() == json::type::array) {
+				} else if (claim.get_type() == json::type::array) {
 					auto jc = c.as_set();
-					for (auto& e : expected) {
-						if (jc.find(e) == jc.end()) {
+					for (auto& elem : expected) {
+						if (jc.find(elem) == jc.end()) {
 							ec = error::token_verification_error::audience_missmatch;
 							return;
 						}
@@ -3016,9 +3021,9 @@ namespace jwt {
 				: expected(to_lower_unicode(e, loc)), locale(loc) {}
 
 			void operator()(const verify_context<json_traits>& ctx, std::error_code& ec) const {
-				const auto c = ctx.get_claim(in_header, json::type::string, ec);
+				const auto claim = ctx.get_claim(in_header, json::type::string, ec);
 				if (ec) return;
-				if (to_lower_unicode(c.as_string(), locale) != expected) {
+				if (to_lower_unicode(claim.as_string(), locale) != expected) {
 					ec = error::token_verification_error::claim_value_missmatch;
 				}
 			}
@@ -3027,8 +3032,8 @@ namespace jwt {
 #if __cplusplus > 201103L
 				std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> conv;
 				auto wide = conv.from_bytes(str);
-				auto& f = std::use_facet<std::ctype<wchar_t>>(loc);
-				f.tolower(&wide[0], &wide[0] + wide.size());
+				const auto& facet = std::use_facet<std::ctype<wchar_t>>(loc);
+				facet.tolower(wide.data(), wide.data() + wide.size());
 				return conv.to_bytes(wide);
 #else
 				std::string result;
@@ -3068,7 +3073,7 @@ namespace jwt {
 		template<typename T>
 		struct algo : public algo_base {
 			T alg;
-			explicit algo(T a) : alg(a) {}
+			explicit algo(T algorithm) : alg(algorithm) {}
 			void verify(const std::string& data, const std::string& sig, std::error_code& ec) override {
 				alg.verify(data, sig, ec);
 			}
@@ -3202,9 +3207,9 @@ namespace jwt {
 		 * \return *this to allow chaining
 		 */
 		verifier& with_audience(const typename json_traits::string_type& aud) {
-			typename basic_claim_t::set_t s;
-			s.insert(aud);
-			return with_audience(s);
+			typename basic_claim_t::set_t set;
+			set.insert(aud);
+			return with_audience(set);
 		}
 		/**
 		 * Set an id to check for.
@@ -3274,9 +3279,9 @@ namespace jwt {
 			if (ec) return;
 
 			verify_ops::verify_context<json_traits> ctx{clock.now(), jwt, default_leeway};
-			for (auto& c : claims) {
-				ctx.claim_key = c.first;
-				c.second(ctx, ec);
+			for (auto& claim : claims) {
+				ctx.claim_key = claim.first;
+				claim.second(ctx, ec);
 				if (ec) return;
 			}
 		}
@@ -3560,8 +3565,8 @@ namespace jwt {
 	 * \return verifier instance
 	 */
 	template<typename Clock, typename json_traits>
-	verifier<Clock, json_traits> verify(Clock c) {
-		return verifier<Clock, json_traits>(c);
+	verifier<Clock, json_traits> verify(Clock clock) {
+		return verifier<Clock, json_traits>(clock);
 	}
 
 	/**
@@ -3577,8 +3582,8 @@ namespace jwt {
 	 * \return verifier instance
 	 */
 	template<typename json_traits>
-	verifier<default_clock, json_traits> verify(default_clock c = {}) {
-		return verifier<default_clock, json_traits>(c);
+	verifier<default_clock, json_traits> verify(default_clock clock = {}) {
+		return verifier<default_clock, json_traits>(clock);
 	}
 
 	/**
@@ -3626,13 +3631,13 @@ namespace jwt {
 } // namespace jwt
 
 template<typename json_traits>
-std::istream& operator>>(std::istream& is, jwt::basic_claim<json_traits>& c) {
-	return c.operator>>(is);
+std::istream& operator>>(std::istream& is, jwt::basic_claim<json_traits>& claim) {
+	return claim.operator>>(is);
 }
 
 template<typename json_traits>
-std::ostream& operator<<(std::ostream& os, const jwt::basic_claim<json_traits>& c) {
-	return os << c.to_json();
+std::ostream& operator<<(std::ostream& os, const jwt::basic_claim<json_traits>& claim) {
+	return os << claim.to_json();
 }
 
 #ifndef JWT_DISABLE_PICOJSON

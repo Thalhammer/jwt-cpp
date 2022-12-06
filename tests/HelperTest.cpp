@@ -18,7 +18,8 @@ TEST(HelperTest, Base64DER2PemCert) {
 }
 
 TEST(HelperTest, OpensslBase64DER2PemCert) {
-	auto cert_pem = jwt::helper::convert_base64_der_to_pem(google_cert_base64_der. openssl_base64_decode);
+	auto cert_pem = jwt::helper::convert_base64_der_to_pem(
+		google_cert_base64_der, [](const std::string& base) { return jwt::helper::openssl_base64_decode(base); });
 	ASSERT_EQ(google_cert, cert_pem);
 }
 
