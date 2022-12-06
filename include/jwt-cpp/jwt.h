@@ -2263,7 +2263,7 @@ namespace jwt {
 			map_of_claims& operator=(map_of_claims&&) noexcept = default;
 			~map_of_claims() = default;
 
-			JWT_CLAIM_EXPLICIT map_of_claims(typename json_traits::object_type json) : claims(std::move(json)) {}
+			map_of_claims(typename json_traits::object_type json) : claims(std::move(json)) {}
 
 			iterator begin() { return claims.begin(); }
 			iterator end() { return claims.end(); }
@@ -2991,12 +2991,12 @@ namespace jwt {
 				auto claim = ctx.get_claim(in_header, ec);
 				if (ec) return;
 				if (claim.get_type() == json::type::string) {
-					if (expected.size() != 1 || *expected.begin() != c.as_string()) {
+					if (expected.size() != 1 || *expected.begin() != claim.as_string()) {
 						ec = error::token_verification_error::audience_missmatch;
 						return;
 					}
 				} else if (claim.get_type() == json::type::array) {
-					auto jc = c.as_set();
+					auto jc = claim.as_set();
 					for (auto& elem : expected) {
 						if (jc.find(elem) == jc.end()) {
 							ec = error::token_verification_error::audience_missmatch;
@@ -3033,7 +3033,7 @@ namespace jwt {
 				std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> conv;
 				auto wide = conv.from_bytes(str);
 				const auto& facet = std::use_facet<std::ctype<wchar_t>>(loc);
-				facet.tolower(wide.data(), wide.data() + wide.size());
+				facet.tolower(const_cast<wchar_t*>(wide.data()), wide.data() + wide.size());
 				return conv.to_bytes(wide);
 #else
 				std::string result;
