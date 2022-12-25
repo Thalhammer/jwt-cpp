@@ -562,10 +562,12 @@ namespace jwt {
 				return {};
 			}
 
-			input_bio.reset(BIO_push(b64.release(), input_bio.release()));
-			BIO_set_flags(input_bio.get(), BIO_FLAGS_BASE64_NO_NL);
-			std::string decode_result(base.length() / 4 * 3, '\0');
-			BIO_read(input_bio.get(), const_cast<char*>(decode_result.data()), static_cast<int>(base.length()));
+			auto output_bio = BIO_push(b64.release(), input_bio.release());
+			BIO_set_flags(output_bio, BIO_FLAGS_BASE64_NO_NL);
+			const auto padded_length = ((4 * base.length() / 3) + 3) & ~3;
+			std::string decode_result(padded_length, '\0');
+			BIO_read(output_bio, const_cast<char*>(decode_result.data()), static_cast<int>(base.length()));
+			BIO_free(output_bio); // wolfSSL does not like free all :thinking:
 
 			return decode_result;
 		}
@@ -577,6 +579,7 @@ namespace jwt {
 			return res;
 		}
 
+#include <stdio.h>
 		/**
 		 * \brief Convert the certificate provided as base64 DER to PEM.
 		 *
@@ -597,9 +600,10 @@ namespace jwt {
 			ec.clear();
 			const auto decoded_str = decode(cert_base64_der_str);
 			const auto* c_str = reinterpret_cast<const unsigned char*>(decoded_str.c_str());
+			for (auto& el : decoded_str) printf("%02hhx", el);
+			const auto size = static_cast<int>(decoded_str.size());
 
-			std::unique_ptr<X509, decltype(&X509_free)> cert(
-				d2i_X509(nullptr, &c_str, static_cast<int>(decoded_str.size())), X509_free);
+			std::unique_ptr<X509, decltype(&X509_free)> cert(d2i_X509(nullptr, &c_str, size), X509_free);
 			auto certbio = make_mem_buf_bio();
 			if (!cert || !certbio) {
 				ec = error::rsa_error::create_mem_bio_failed;
