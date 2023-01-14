@@ -119,6 +119,7 @@ TEST(TokenTest, CreateTokenES256) {
 }
 
 TEST(TokenTest, CreateTokenES256NoPrivate) {
+
 	ASSERT_THROW(
 		[]() {
 			auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(

@@ -139,3 +139,37 @@ TEST(ClaimTest, MapOfClaim) {
 	ASSERT_EQ(claims.get_claim("bool").as_boolean(), true);
 	ASSERT_THROW(claims.get_claim("__missing__"), jwt::error::claim_not_present_exception);
 }
+
+#ifdef JWT_HAS_STRING_VIEW
+TEST(ClaimTest, StringViewSupport) {
+	// Force all parameters to be string_views
+	std::string_view jwtType = "JWT";
+	std::string_view claimKey = "access_key";
+	std::string_view claimPayload = "accessKeyPayload";
+	std::string_view alg = "hs512";
+	std::string_view contentType = "mycontent";
+	std::string_view keyId = "mykeyid";
+	std::string_view issuer = "myissuer";
+	std::string_view subject = "mysubject";
+	std::string_view audience = "myaudience";
+	std::string_view id = "myid";
+
+	auto jsonWebToken = jwt::create()
+							.set_algorithm(alg)
+							.set_type(jwtType)
+							.set_content_type(contentType)
+							.set_key_id(keyId)
+							.set_issuer(issuer)
+							.set_subject(subject)
+							.set_audience(audience)
+							.set_id(id)
+							.set_payload_claim(claimKey, jwt::claim(claimPayload));
+
+	std::string_view privateKey = "myprivatekey";
+
+	auto token = jsonWebToken.sign(jwt::algorithm::hs256{privateKey});
+	ASSERT_EQ(token, "eyJhbGciOiJoczUxMiIsImN0eSI6Im15Y29udGVudCIsImtpZCI6Im15a2V5aWQiLCJ0eXAiOiJKV1QifQ."
+					 "eyJhY2Nlc3Nfa2V5IjoiYWNjZXNzS2V5UGF5bG9hZCIsImF1ZCI6Im15YXVkaWVuY2UiLCJpc3MiOiJteWlzc3VlciIsImp0a"
+					 "SI6Im15aWQiLCJzdWIiOiJteXN1YmplY3QifQ.9fd56G-dAxHh89Dl7wZftwsoSfFO_msUFYvA5q77fes");
+}
+#endif

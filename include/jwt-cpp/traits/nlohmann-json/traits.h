@@ -64,7 +64,8 @@ namespace jwt {
 				return val.get<double>();
 			}
 
-			static bool parse(json& val, std::string str) {
+			template<class string_t>
+			static bool parse(json& val, const string_t& str) {
 				val = json::parse(str.begin(), str.end());
 				return true;
 			}

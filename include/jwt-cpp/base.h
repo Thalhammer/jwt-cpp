@@ -2,11 +2,11 @@
 #define JWT_CPP_BASE_H
 
 #include <algorithm>
-#include <array>
 #include <cstdint>
 #include <stdexcept>
 #include <string>
-#include <vector>
+
+#include "string_types.h"
 
 #ifdef __has_cpp_attribute
 #if __has_cpp_attribute(fallthrough)
@@ -16,6 +16,11 @@
 
 #ifndef JWT_FALLTHROUGH
 #define JWT_FALLTHROUGH
+#endif
+
+#ifndef JWT_HAS_STRING_VIEW
+#include <array>
+#include <cstring>
 #endif
 
 namespace jwt {
@@ -30,19 +35,31 @@ namespace jwt {
 		 * base64-encoded as per [Section 4 of RFC4648](https://datatracker.ietf.org/doc/html/rfc4648#section-4)
 		 */
 		struct base64 {
+
+#define JWT_BASE_ALPHABET                                                                                              \
+	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', \
+		'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',  \
+		't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
+
+#ifdef JWT_HAS_STRING_VIEW
+			// From C++17 it's perfectly fine to have inline static variables. No ODR violation in this case.
+			static constexpr char kData[]{JWT_BASE_ALPHABET, '+', '/'};
+
+			static constexpr std::string_view kFill[]{"="};
+#else
+			// For pre C++17 standards, we need to use a method
 			static const std::array<char, 64>& data() {
-				static constexpr std::array<char, 64> data{
-					{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
-					 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
-					 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-					 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'}};
-				return data;
+				static constexpr std::array<char, 64> kData{{JWT_BASE_ALPHABET, '+', '/'}};
+				return kData;
 			}
-			static const std::string& fill() {
-				static std::string fill{"="};
-				return fill;
+
+			static const std::array<const char*, 1>& fill() {
+				static constexpr std::array<const char*, 1> kFill{"="};
+				return kFill;
 			}
+#endif
 		};
+
 		/**
 		 * \brief valid list of character when working with [Base64URL](https://tools.ietf.org/html/rfc4648#section-5)
 		 *
@@ -53,18 +70,24 @@ namespace jwt {
 		 * > [Section 5 of RFC 4648 RFC4648](https://tools.ietf.org/html/rfc4648#section-5), with all trailing '=' characters omitted
 		 */
 		struct base64url {
+
+#ifdef JWT_HAS_STRING_VIEW
+			static constexpr char kData[]{JWT_BASE_ALPHABET, '-', '_'};
+
+			static constexpr std::string_view kFill[]{"%3d"};
+#else
+			// For pre C++17 standards, we need to use a method
 			static const std::array<char, 64>& data() {
-				static constexpr std::array<char, 64> data{
-					{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
-					 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
-					 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-					 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'}};
-				return data;
+				static constexpr std::array<char, 64> kData{{JWT_BASE_ALPHABET, '-', '_'}};
+				return kData;
 			}
-			static const std::string& fill() {
-				static std::string fill{"%3d"};
-				return fill;
+
+			static const std::array<const char*, 1>& fill() {
+				static constexpr std::array<const char*, 1> kFill{"%3d"};
+				return kFill;
 			}
+
+#endif
 		};
 		namespace helper {
 			/**
@@ -74,26 +97,35 @@ namespace jwt {
 			 * This is useful in situations outside of JWT encoding/decoding and is provided as a helper
 			 */
 			struct base64url_percent_encoding {
+
+#ifdef JWT_HAS_STRING_VIEW
+				static constexpr char kData[]{JWT_BASE_ALPHABET, '-', '_'};
+
+				static constexpr std::string_view kFill[]{"%3D", "%3d"};
+#else
+				// For pre C++17 standards, we need to use a method
 				static const std::array<char, 64>& data() {
-					static constexpr std::array<char, 64> data{
-						{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
-						 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
-						 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-						 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'}};
-					return data;
+					static constexpr std::array<char, 64> kData{{JWT_BASE_ALPHABET, '-', '_'}};
+					return kData;
 				}
-				static const std::initializer_list<std::string>& fill() {
-					static std::initializer_list<std::string> fill{"%3D", "%3d"};
-					return fill;
+
+				static const std::array<const char*, 2>& fill() {
+					static constexpr std::array<const char*, 2> kFill{"%3D", "%3d"};
+					return kFill;
 				}
+#endif
 			};
 		} // namespace helper
 
-		inline uint32_t index(const std::array<char, 64>& alphabet, char symbol) {
-			auto itr = std::find_if(alphabet.cbegin(), alphabet.cend(), [symbol](char c) { return c == symbol; });
-			if (itr == alphabet.cend()) { throw std::runtime_error("Invalid input: not within alphabet"); }
+		template<class char_it>
+		inline uint32_t index(char_it alphabetBeg, char_it alphabetEnd, char symbol) {
+			if (symbol >= 'A' && symbol <= 'Z') { return static_cast<uint32_t>(symbol - 'A'); }
+			if (symbol >= 'a' && symbol <= 'z') { return static_cast<uint32_t>(26 + symbol - 'a'); }
+			if (symbol >= '0' && symbol <= '9') { return static_cast<uint32_t>(52 + symbol - '0'); }
+			auto itr = std::find(std::next(alphabetBeg, 62U), alphabetEnd, symbol);
+			if (itr == alphabetEnd) { throw std::runtime_error("Invalid input: not within alphabet"); }
 
-			return std::distance(alphabet.cbegin(), itr);
+			return static_cast<uint32_t>(std::distance(alphabetBeg, itr));
 		}
 	} // namespace alphabet
 
@@ -108,39 +140,44 @@ namespace jwt {
 				size_t length = 0;
 
 				padding() = default;
-				padding(size_t count, size_t length) : count(count), length(length) {}
 
-				padding operator+(const padding& p) { return padding(count + p.count, length + p.length); }
+				padding(size_t c, size_t l) : count(c), length(l) {}
 
-				friend bool operator==(const padding& lhs, const padding& rhs) {
-					return lhs.count == rhs.count && lhs.length == rhs.length;
-				}
+				padding operator+(const padding& p) const { return padding{count + p.count, length + p.length}; }
 			};
 
-			inline padding count_padding(const std::string& base, const std::vector<std::string>& fills) {
-				for (const auto& fill : fills) {
-					if (base.size() < fill.size()) continue;
-					// Does the end of the input exactly match the fill pattern?
-					if (base.substr(base.size() - fill.size()) == fill) {
-						return padding{1, fill.length()} +
-							   count_padding(base.substr(0, base.size() - fill.size()), fills);
+			inline std::size_t string_len(string_view str) { return str.size(); }
+
+			template<class str_input_it>
+			padding count_padding(string_view base, str_input_it fillStart, str_input_it fillEnd) {
+				for (str_input_it fillIt = fillStart; fillIt != fillEnd; ++fillIt) {
+					std::size_t fillLen = string_len(*fillIt);
+					if (base.size() >= fillLen) {
+						std::size_t deltaLen = base.size() - fillLen;
+						// Does the end of the input exactly match the fill pattern?
+						if (base.substr(deltaLen) == *fillIt) {
+							return padding{1UL, fillLen} + count_padding(base.substr(0, deltaLen), fillStart, fillEnd);
+						}
 					}
 				}
 
 				return {};
 			}
 
-			inline std::string encode(const std::string& bin, const std::array<char, 64>& alphabet,
-									  const std::string& fill) {
+			inline std::string encode(string_view bin, const char* alphabet, string_view fill) {
 				size_t size = bin.size();
 				std::string res;
 
+				res.reserve((4UL * size) / 3UL);
+
 				// clear incomplete bytes
-				size_t fast_size = size - size % 3;
-				for (size_t i = 0; i < fast_size;) {
-					uint32_t octet_a = static_cast<unsigned char>(bin[i++]);
-					uint32_t octet_b = static_cast<unsigned char>(bin[i++]);
-					uint32_t octet_c = static_cast<unsigned char>(bin[i++]);
+				size_t mod = size % 3;
+
+				size_t fast_size = size - mod;
+				for (size_t i = 0; i < fast_size; i += 3) {
+					uint32_t octet_a = static_cast<unsigned char>(bin[i]);
+					uint32_t octet_b = static_cast<unsigned char>(bin[i + 1]);
+					uint32_t octet_c = static_cast<unsigned char>(bin[i + 2]);
 
 					uint32_t triple = (octet_a << 0x10) + (octet_b << 0x08) + octet_c;
 
@@ -151,8 +188,6 @@ namespace jwt {
 				}
 
 				if (fast_size == size) return res;
-
-				size_t mod = size % 3;
 
 				uint32_t octet_a = fast_size < size ? static_cast<unsigned char>(bin[fast_size++]) : 0;
 				uint32_t octet_b = fast_size < size ? static_cast<unsigned char>(bin[fast_size++]) : 0;
@@ -179,9 +214,10 @@ namespace jwt {
 				return res;
 			}
 
-			inline std::string decode(const std::string& base, const std::array<char, 64>& alphabet,
-									  const std::vector<std::string>& fill) {
-				const auto pad = count_padding(base, fill);
+			template<class char_it, class str_input_it>
+			inline std::string decode(string_view base, char_it alphabetBeg, char_it alphabetEnd,
+									  str_input_it fillStart, str_input_it fillEnd) {
+				const auto pad = count_padding(base, fillStart, fillEnd);
 				if (pad.count > 2) throw std::runtime_error("Invalid input: too much fill");
 
 				const size_t size = base.size() - pad.length;
@@ -191,7 +227,9 @@ namespace jwt {
 				std::string res;
 				res.reserve(out_size);
 
-				auto get_sextet = [&](size_t offset) { return alphabet::index(alphabet, base[offset]); };
+				auto get_sextet = [&](size_t offset) {
+					return alphabet::index(alphabetBeg, alphabetEnd, base[offset]);
+				};
 
 				size_t fast_size = size - size % 4;
 				for (size_t i = 0; i < fast_size;) {
@@ -225,46 +263,64 @@ namespace jwt {
 				return res;
 			}
 
-			inline std::string decode(const std::string& base, const std::array<char, 64>& alphabet,
-									  const std::string& fill) {
-				return decode(base, alphabet, std::vector<std::string>{fill});
-			}
-
-			inline std::string pad(const std::string& base, const std::string& fill) {
-				std::string padding;
-				switch (base.size() % 4) {
-				case 1: padding += fill; JWT_FALLTHROUGH;
-				case 2: padding += fill; JWT_FALLTHROUGH;
-				case 3: padding += fill; JWT_FALLTHROUGH;
+			inline std::string pad(string_view base, string_view fill) {
+				std::string res(base);
+				switch (res.size() % 4) {
+				case 1: res += fill; JWT_FALLTHROUGH;
+				case 2: res += fill; JWT_FALLTHROUGH;
+				case 3: res += fill; JWT_FALLTHROUGH;
 				default: break;
 				}
-
-				return base + padding;
+				return res;
 			}
 
-			inline std::string trim(const std::string& base, const std::string& fill) {
+			inline std::string trim(string_view base, string_view fill) {
 				auto pos = base.find(fill);
-				return base.substr(0, pos);
+				return static_cast<std::string>(base.substr(0, pos));
 			}
 		} // namespace details
 
+#ifdef JWT_HAS_STRING_VIEW
 		template<typename T>
-		std::string encode(const std::string& bin) {
-			return details::encode(bin, T::data(), T::fill());
+		std::string encode(string_view bin) {
+			return details::encode(bin, T::kData, T::kFill[0]);
 		}
 		template<typename T>
-		std::string decode(const std::string& base) {
-			return details::decode(base, T::data(), T::fill());
+		std::string decode(string_view base) {
+			return details::decode(base, std::begin(T::kData), std::end(T::kData), std::begin(T::kFill),
+								   std::end(T::kFill));
 		}
 		template<typename T>
-		std::string pad(const std::string& base) {
-			return details::pad(base, T::fill());
+		std::string pad(string_view base) {
+			return details::pad(base, T::kFill[0]);
 		}
 		template<typename T>
-		std::string trim(const std::string& base) {
-			return details::trim(base, T::fill());
+		std::string trim(string_view base) {
+			return details::trim(base, T::kFill[0]);
 		}
+
+#else
+		template<typename T>
+		std::string encode(string_view bin) {
+			return details::encode(bin, T::data().data(), T::fill()[0]);
+		}
+		template<typename T>
+		std::string decode(string_view base) {
+			return details::decode(base, std::begin(T::data()), std::end(T::data()), std::begin(T::fill()),
+								   std::end(T::fill()));
+		}
+		template<typename T>
+		std::string pad(string_view base) {
+			return details::pad(base, T::fill()[0]);
+		}
+		template<typename T>
+		std::string trim(string_view base) {
+			return details::trim(base, T::fill()[0]);
+		}
+#endif
 	} // namespace base
 } // namespace jwt
+
+#undef JWT_BASE_ALPHABET
 
 #endif
