@@ -104,6 +104,8 @@ extern "C" {
   } while (0)
 #endif
 
+
+
 #ifdef _MSC_VER
 #define SNPRINTF _snprintf_s
 #pragma warning(push)
@@ -116,6 +118,14 @@ extern "C" {
 #endif
 
 namespace picojson {
+
+// string_view
+#if __cplusplus >= 201703L
+#include <string_view>
+using string_view = std::string_view;
+#else
+using string_view = const std::string &;
+#endif
 
 enum {
   null_type,
@@ -137,7 +147,13 @@ struct null {};
 class value {
 public:
   typedef std::vector<value> array;
-  typedef std::map<std::string, value> object;
+  typedef std::map<std::string, value
+#if __cplusplus >= 201703L
+  // allow map to use transparent type for comparisons
+  ,
+  std::less<>
+#endif
+  > object;
   union _storage {
     bool boolean_;
     double number_;
@@ -161,7 +177,7 @@ public:
   explicit value(int64_t i);
 #endif
   explicit value(double n);
-  explicit value(const std::string &s);
+  explicit value(string_view s);
   explicit value(const array &a);
   explicit value(const object &o);
 #if PICOJSON_USE_RVALUE_REFERENCE
@@ -188,12 +204,12 @@ public:
 #endif
   bool evaluate_as_boolean() const;
   const value &get(const size_t idx) const;
-  const value &get(const std::string &key) const;
+  const value &get(string_view key) const;
   value &get(const size_t idx);
-  value &get(const std::string &key);
+  value &get(string_view key);
 
   bool contains(const size_t idx) const;
-  bool contains(const std::string &key) const;
+  bool contains(string_view key) const;
   std::string to_str() const;
   template <typename Iter> void serialize(Iter os, bool prettify = false) const;
   std::string serialize(bool prettify = false) const;
@@ -209,8 +225,7 @@ private:
 typedef value::array array;
 typedef value::object object;
 
-inline value::value() : type_(null_type), u_() {
-}
+inline value::value() : type_(null_type), u_() {}
 
 inline value::value(int type, bool) : type_(type), u_() {
   switch (type) {
@@ -257,7 +272,7 @@ inline value::value(double n) : type_(number_type), u_() {
   u_.number_ = n;
 }
 
-inline value::value(const std::string &s) : type_(string_type), u_() {
+inline value::value(string_view s) : type_(string_type), u_() {
   u_.string_ = new std::string(s);
 }
 
@@ -452,14 +467,14 @@ inline value &value::get(const size_t idx) {
   return idx < u_.array_->size() ? (*u_.array_)[idx] : s_null;
 }
 
-inline const value &value::get(const std::string &key) const {
+inline const value &value::get(string_view key) const {
   static value s_null;
   PICOJSON_ASSERT(is<object>());
   object::const_iterator i = u_.object_->find(key);
   return i != u_.object_->end() ? i->second : s_null;
 }
 
-inline value &value::get(const std::string &key) {
+inline value &value::get(string_view key) {
   static value s_null;
   PICOJSON_ASSERT(is<object>());
   object::iterator i = u_.object_->find(key);
@@ -471,7 +486,7 @@ inline bool value::contains(const size_t idx) const {
   return idx < u_.array_->size();
 }
 
-inline bool value::contains(const std::string &key) const {
+inline bool value::contains(string_view key) const {
   PICOJSON_ASSERT(is<object>());
   object::const_iterator i = u_.object_->find(key);
   return i != u_.object_->end();
@@ -522,7 +537,7 @@ inline std::string value::to_str() const {
   return std::string();
 }
 
-template <typename Iter> void copy(const std::string &s, Iter oi) {
+template <typename Iter> void copy(string_view s, Iter oi) {
   std::copy(s.begin(), s.end(), oi);
 }
 
@@ -556,7 +571,7 @@ template <typename Iter> struct serialize_str_char {
   }
 };
 
-template <typename Iter> void serialize_str(const std::string &s, Iter oi) {
+template <typename Iter> void serialize_str(string_view s, Iter oi) {
   *oi++ = '"';
   serialize_str_char<Iter> process_char = {oi};
   std::for_each(s.begin(), s.end(), process_char);
@@ -703,8 +718,8 @@ public:
     }
     return true;
   }
-  bool match(const std::string &pattern) {
-    for (std::string::const_iterator pi(pattern.begin()); pi != pattern.end(); ++pi) {
+  bool match(string_view pattern) {
+    for (auto pi(pattern.begin()); pi != pattern.end(); ++pi) {
       if (getc() != *pi) {
         ungetc();
         return false;
@@ -1124,7 +1139,7 @@ template <typename Iter> inline Iter parse(value &out, const Iter &first, const 
   return _parse(ctx, first, last, err);
 }
 
-inline std::string parse(value &out, const std::string &s) {
+inline std::string parse(value &out, string_view s) {
   std::string err;
   parse(out, s.begin(), s.end(), &err);
   return err;
@@ -1139,7 +1154,7 @@ inline std::string parse(value &out, std::istream &is) {
 template <typename T> struct last_error_t { static std::string s; };
 template <typename T> std::string last_error_t<T>::s;
 
-inline void set_last_error(const std::string &s) {
+inline void set_last_error(string_view s) {
   last_error_t<bool>::s = s;
 }
 
