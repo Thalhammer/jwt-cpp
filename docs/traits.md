@@ -25,7 +25,7 @@ struct my_favorite_json_library_traits {
     using integer_type = int64_t; // The "integral type"
     using boolean_type = bool; // The "boolean type"
 
-    // Translation between the implementation notion of type, to the jwt::json::type equivilant
+    // Translation between the implementation notion of type, to the jwt::json::type equivalent
     static jwt::json::type get_type(const value_type &val) {
         using jwt::json::type;
 
