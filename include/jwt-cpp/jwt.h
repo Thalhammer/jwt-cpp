@@ -543,28 +543,21 @@ namespace jwt {
 		}
 
 		/**
-		 * \brief Convert the certificate provided as base64 DER to PEM.
+		 * \brief Convert the certificate provided as DER to PEM.
 		 *
-		 * This is useful when using with JWKs as x5c claim is encoded as base64 DER. More info
-		 * (here)[https://tools.ietf.org/html/rfc7517#section-4.7]
+		 * \tparam Any is used to stop linker errors instead of using inline.
 		 *
-		 * \tparam Decode is callabled, taking a string_type and returns a string_type.
-		 * It should ensure the padding of the input and then base64 decode and return
-		 * the results.
-		 *
-		 * \param cert_base64_der_str 	String containing the certificate encoded as base64 DER
-		 * \param decode 				The function to decode the cert
-		 * \param ec					error_code for error_detection (gets cleared if no error occures)
+		 * \param cert_der_str 	String containing the certificate encoded as base64 DER
+		 * \param ec			error_code for error_detection (gets cleared if no error occures)
 		 */
-		template<typename Decode>
-		std::string convert_base64_der_to_pem(const std::string& cert_base64_der_str, Decode decode,
-											  std::error_code& ec) {
+		template<typename Any = void>
+		std::string convert_der_to_pem(const std::string& cert_der_str, std::error_code& ec) {
 			ec.clear();
-			const auto decodedStr = decode(cert_base64_der_str);
-			auto c_str = reinterpret_cast<const unsigned char*>(decodedStr.c_str());
+
+			auto c_str = reinterpret_cast<const unsigned char*>(cert_der_str.c_str());
 
 			std::unique_ptr<X509, decltype(&X509_free)> cert(
-				d2i_X509(NULL, &c_str, static_cast<int>(decodedStr.size())), X509_free);
+				d2i_X509(NULL, &c_str, static_cast<int>(cert_der_str.size())), X509_free);
 			auto certbio = make_mem_buf_bio();
 			if (!cert || !certbio) {
 				ec = error::rsa_error::create_mem_bio_failed;
@@ -598,6 +591,28 @@ namespace jwt {
 		 *
 		 * \param cert_base64_der_str 	String containing the certificate encoded as base64 DER
 		 * \param decode 				The function to decode the cert
+		 * \param ec					error_code for error_detection (gets cleared if no error occures)
+		 */
+		template<typename Decode>
+		std::string convert_base64_der_to_pem(const std::string& cert_base64_der_str, Decode decode,
+											  std::error_code& ec) {
+			ec.clear();
+			const auto decodedStr = decode(cert_base64_der_str);
+			return convert_der_to_pem(decodedStr, ec);
+		}
+
+		/**
+		 * \brief Convert the certificate provided as base64 DER to PEM.
+		 *
+		 * This is useful when using with JWKs as x5c claim is encoded as base64 DER. More info
+		 * (here)[https://tools.ietf.org/html/rfc7517#section-4.7]
+		 *
+		 * \tparam Decode is callabled, taking a string_type and returns a string_type.
+		 * It should ensure the padding of the input and then base64 decode and return
+		 * the results.
+		 *
+		 * \param cert_base64_der_str 	String containing the certificate encoded as base64 DER
+		 * \param decode 				The function to decode the cert
 		 * \throw						rsa_exception if an error occurred
 		 */
 		template<typename Decode>
@@ -607,6 +622,21 @@ namespace jwt {
 			error::throw_if_error(ec);
 			return res;
 		}
+
+		/**
+		 * \brief Convert the certificate provided as DER to PEM.
+		 *
+		 * \param cert_der_str 	String containing the DER certificate
+		 * \param decode 		The function to decode the cert
+		 * \throw				rsa_exception if an error occurred
+		 */
+		inline std::string convert_der_to_pem(const std::string& cert_der_str) {
+			std::error_code ec;
+			auto res = convert_der_to_pem(cert_der_str, ec);
+			error::throw_if_error(ec);
+			return res;
+		}
+
 #ifndef JWT_DISABLE_BASE64
 		/**
 		 * \brief Convert the certificate provided as base64 DER to PEM.
