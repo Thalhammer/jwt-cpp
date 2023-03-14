@@ -545,13 +545,10 @@ namespace jwt {
 		/**
 		 * \brief Convert the certificate provided as DER to PEM.
 		 *
-		 * \tparam Any is used to stop linker errors instead of using inline.
-		 *
 		 * \param cert_der_str 	String containing the certificate encoded as base64 DER
 		 * \param ec			error_code for error_detection (gets cleared if no error occures)
 		 */
-		template<typename Any = void>
-		std::string convert_der_to_pem(const std::string& cert_der_str, std::error_code& ec) {
+		inline std::string convert_der_to_pem(const std::string& cert_der_str, std::error_code& ec) {
 			ec.clear();
 
 			auto c_str = reinterpret_cast<const unsigned char*>(cert_der_str.c_str());
@@ -597,8 +594,8 @@ namespace jwt {
 		std::string convert_base64_der_to_pem(const std::string& cert_base64_der_str, Decode decode,
 											  std::error_code& ec) {
 			ec.clear();
-			const auto decodedStr = decode(cert_base64_der_str);
-			return convert_der_to_pem(decodedStr, ec);
+			const auto decoded_str = decode(cert_base64_der_str);
+			return convert_der_to_pem(decoded_str, ec);
 		}
 
 		/**
