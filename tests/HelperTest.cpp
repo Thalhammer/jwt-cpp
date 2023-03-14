@@ -17,6 +17,14 @@ TEST(HelperTest, Base64DER2PemCert) {
 	ASSERT_EQ(google_cert, cert_pem);
 }
 
+TEST(HelperTest, DER2PemCert) {
+	auto decoded = jwt::base::decode<jwt::alphabet::base64>(
+		jwt::base::pad<jwt::alphabet::base64>(google_cert_base64_der)
+	);
+	auto cert_pem = jwt::helper::convert_der_to_pem(decoded);
+	ASSERT_EQ(google_cert, cert_pem);
+}
+
 TEST(HelperTest, ErrorCodeMessages) {
 	ASSERT_EQ(std::error_code(jwt::error::rsa_error::ok).message(), "no error");
 	ASSERT_EQ(std::error_code(static_cast<jwt::error::rsa_error>(-1)).message(), "unknown RSA error");
