@@ -3017,11 +3017,11 @@ namespace jwt {
 			}
 
 			static std::string to_lower_unicode(const std::string& str, const std::locale& loc) {
-#if __cplusplus > 201103L
 				std::mbstate_t state = std::mbstate_t();
 				const char* in_next = str.data();
 				const char* in_end = str.data() + str.size();
 				std::wstring wide;
+				wide.reserve(str.size());
 
 				while (in_next != in_end) {
 					wchar_t wc;
@@ -3039,6 +3039,7 @@ namespace jwt {
 				f.tolower(&wide[0], &wide[0] + wide.size());
 
 				std::string out;
+				out.reserve(wide.size());
 				for (wchar_t wc : wide) {
 					char mb[MB_CUR_MAX];
 					std::size_t n = std::wcrtomb(mb, wc, &state);
@@ -3047,12 +3048,6 @@ namespace jwt {
 				}
 
 				return out;
-#else
-				std::string result;
-				std::transform(str.begin(), str.end(), std::back_inserter(result),
-							   [&loc](unsigned char c) { return std::tolower(c, loc); });
-				return result;
-#endif
 			}
 		};
 	} // namespace verify_ops
