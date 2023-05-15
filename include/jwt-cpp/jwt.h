@@ -3026,10 +3026,11 @@ namespace jwt {
 				while (in_next != in_end) {
 					wchar_t wc;
 					std::size_t result = std::mbrtowc(&wc, in_next, in_end - in_next, &state);
-					if(result == static_cast<std::size_t>(-1)) {
-						throw std::runtime_error("encoding error: "+std::string(std::strerror(errno)));
-					} else if(result == static_cast<std::size_t>(-2)) {
-						throw std::runtime_error("conversion error: next bytes constitute an incomplete, but so far valid, multibyte character.");
+					if (result == static_cast<std::size_t>(-1)) {
+						throw std::runtime_error("encoding error: " + std::string(std::strerror(errno)));
+					} else if (result == static_cast<std::size_t>(-2)) {
+						throw std::runtime_error("conversion error: next bytes constitute an incomplete, but so far "
+												 "valid, multibyte character.");
 					}
 					in_next += result;
 					wide.push_back(wc);
@@ -3043,8 +3044,7 @@ namespace jwt {
 				for (wchar_t wc : wide) {
 					char mb[MB_CUR_MAX];
 					std::size_t n = std::wcrtomb(mb, wc, &state);
-					if (n != static_cast<std::size_t>(-1))
-						out.append(mb, n);
+					if (n != static_cast<std::size_t>(-1)) out.append(mb, n);
 				}
 
 				return out;
