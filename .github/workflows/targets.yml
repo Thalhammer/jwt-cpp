@@ -16,18 +16,25 @@ on:
 jobs:
   gcc-4-8:
     name: GCC 4.8
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:18.04
     steps:
-      - run: sudo apt-get install g++-4.8
-      - uses: lukka/get-cmake@latest
+      - run: |
+          apt-get update
+          apt-get install -y g++-4.8
       - uses: actions/checkout@v3
+      - uses: ./.github/actions/install/cmake
+        with:
+          version: "3.26.3"
+          url: "https://cmake.org/files/v3.26/cmake-3.26.3.tar.gz"
 
       - name: setup
         run: |
           mkdir build
           cd build
           CC=gcc-4.8 CXX=g++-4.8 cmake ..
-          sudo cmake --install .
+          cmake --install .
       - name: test
         working-directory: tests/cmake
         run: |
