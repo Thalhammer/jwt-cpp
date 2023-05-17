@@ -28,5 +28,12 @@ runs:
   - name: Install cmake
     run: |
       cd cmake-${{ inputs.version }}
-      sudo make install
+      # Depending if we run in on a GitHub Actions or from within a Docker image we have different permissions
+      if [[ $EUID > 0 ]]; then
+        # If we are not root then we need to sudo
+        sudo make install
+      else
+        # Default docker image does not have users setup so we are only root and can not sudo
+        make install
+      fi
     shell: bash
