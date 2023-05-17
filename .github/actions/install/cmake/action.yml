@@ -28,5 +28,5 @@ runs:
   - name: Install cmake
     run: |
       cd cmake-${{ inputs.version }}
-      make install
+      sudo make install
     shell: bash
