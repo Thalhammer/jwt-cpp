@@ -19,10 +19,13 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ubuntu:18.04
+    env:
+      CC: /usr/bin/gcc-4.8
+      CXX: /usr/bin/g++-4.8
     steps:
       - run: |
           apt-get update
-          apt-get install -y g++-4.8 wget
+          apt-get install -y g++-4.8 wget make libssl-dev
       - uses: actions/checkout@v3
       - uses: ./.github/actions/install/cmake
         with:
@@ -33,7 +36,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          CC=gcc-4.8 CXX=g++-4.8 cmake ..
+          cmake ..
           cmake --install .
       - name: test
         working-directory: tests/cmake
