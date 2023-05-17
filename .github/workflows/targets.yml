@@ -22,7 +22,7 @@ jobs:
     steps:
       - run: |
           apt-get update
-          apt-get install -y g++-4.8
+          apt-get install -y g++-4.8 wget
       - uses: actions/checkout@v3
       - uses: ./.github/actions/install/cmake
         with:
