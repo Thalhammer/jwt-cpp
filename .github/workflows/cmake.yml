@@ -74,15 +74,12 @@ jobs:
 
   min-req:
     runs-on: ubuntu-20.04
-    env:
-      CMAKE_URL: https://cmake.org/files/v3.14/cmake-3.14.7.tar.gz
-      CMAKE_VERSION: 3.14.7
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/install/cmake
         with:
-          version: "3.26.3"
-          url: "https://cmake.org/files/v3.26/cmake-3.26.3.tar.gz"
+          version: "3.14.7"
+          url: "https://cmake.org/files/v3.14/cmake-3.14.7.tar.gz"
       - uses: ./.github/actions/install/gtest
 
       - name: setup
