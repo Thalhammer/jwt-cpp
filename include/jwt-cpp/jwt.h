@@ -74,6 +74,10 @@
 #define JWT_CLAIM_EXPLICIT explicit
 #endif
 
+#ifdef JWT_OPENSSL_3_0
+#include <openssl/param_build.h>
+#endif
+
 /**
  * \brief JSON Web Token
  *
@@ -890,6 +894,40 @@ namespace jwt {
 		}
 	} // namespace helper
 
+	class key {
+	public:
+		static key symmetric(const std::string& bytes) { return key(bytes); }
+
+		static key asymmetric(helper::evp_pkey_handle pkey) { return key(pkey); }
+
+		std::string get_symmetric_key() const {
+			if (!is_symmetric) { throw std::logic_error("not a symmetric key"); }
+
+			return oct_key;
+		}
+
+		helper::evp_pkey_handle get_asymmetric_key() const {
+			if (is_symmetric) { throw std::logic_error("not an asymmetric key"); }
+
+			return pkey;
+		}
+
+	private:
+		key(const std::string& key) {
+			is_symmetric = true;
+			oct_key = key;
+		}
+
+		key(helper::evp_pkey_handle key) {
+			is_symmetric = false;
+			pkey = key;
+		}
+
+		bool is_symmetric;
+		helper::evp_pkey_handle pkey;
+		std::string oct_key;
+	};
+
 	/**
 	 * \brief Various cryptographic algorithms when working with JWT
 	 *
@@ -1016,6 +1054,9 @@ namespace jwt {
 				} else
 					throw error::rsa_exception(error::rsa_error::no_key_provided);
 			}
+
+			rsa(helper::evp_pkey_handle pkey, const EVP_MD* (*md)(), std::string name)
+				: pkey(pkey), md(md), alg_name(std::move(name)) {}
 			/**
 			 * Sign jwt data
 			 * \param data The data to sign
@@ -1124,6 +1165,9 @@ namespace jwt {
 				if (keysize != signature_length * 4 && (signature_length != 132 || keysize != 521))
 					throw error::ecdsa_exception(error::ecdsa_error::invalid_key_size);
 			}
+
+			ecdsa(helper::evp_pkey_handle pkey, const EVP_MD* (*md)(), std::string name, size_t siglen)
+				: pkey(pkey), md(md), alg_name(std::move(name)), signature_length(siglen) {}
 
 			/**
 			 * Sign jwt data
@@ -1471,6 +1515,9 @@ namespace jwt {
 					throw error::rsa_exception(error::rsa_error::no_key_provided);
 			}
 
+			pss(helper::evp_pkey_handle pkey, const EVP_MD* (*md)(), std::string name)
+				: pkey(pkey), md(md), alg_name(std::move(name)) {}
+
 			/**
 			 * Sign jwt data
 			 * \param data The data to sign
@@ -1619,6 +1666,8 @@ namespace jwt {
 			explicit rs256(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: rsa(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "RS256") {}
+
+			explicit rs256(helper::evp_pkey_handle pkey) : rsa(pkey, EVP_sha256, "RS256") {}
 		};
 		/**
 		 * RS384 algorithm
@@ -1634,6 +1683,8 @@ namespace jwt {
 			explicit rs384(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: rsa(public_key, private_key, public_key_password, private_key_password, EVP_sha384, "RS384") {}
+
+			explicit rs384(helper::evp_pkey_handle pkey) : rsa(pkey, EVP_sha384, "RS384") {}
 		};
 		/**
 		 * RS512 algorithm
@@ -1649,6 +1700,8 @@ namespace jwt {
 			explicit rs512(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: rsa(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "RS512") {}
+
+			explicit rs512(helper::evp_pkey_handle pkey) : rsa(pkey, EVP_sha512, "RS512") {}
 		};
 		/**
 		 * ES256 algorithm
@@ -1666,6 +1719,8 @@ namespace jwt {
 			explicit es256(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "ES256", 64) {}
+
+			explicit es256(helper::evp_pkey_handle pkey) : ecdsa(pkey, EVP_sha256, "ES256", 64) {}
 		};
 		/**
 		 * ES384 algorithm
@@ -1683,6 +1738,8 @@ namespace jwt {
 			explicit es384(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha384, "ES384", 96) {}
+
+			explicit es384(helper::evp_pkey_handle pkey) : ecdsa(pkey, EVP_sha384, "ES384", 96) {}
 		};
 		/**
 		 * ES512 algorithm
@@ -1700,6 +1757,8 @@ namespace jwt {
 			explicit es512(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "ES512", 132) {}
+
+			explicit es512(helper::evp_pkey_handle pkey) : ecdsa(pkey, EVP_sha512, "ES512", 132) {}
 		};
 		/**
 		 * ES256K algorithm
@@ -1716,6 +1775,8 @@ namespace jwt {
 			explicit es256k(const std::string& public_key, const std::string& private_key = "",
 							const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "ES256K", 64) {}
+
+			explicit es256k(helper::evp_pkey_handle pkey) : ecdsa(pkey, EVP_sha256, "ES256K", 64) {}
 		};
 
 #if !defined(JWT_OPENSSL_1_0_0) && !defined(JWT_OPENSSL_1_1_0)
@@ -1778,6 +1839,8 @@ namespace jwt {
 			explicit ps256(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: pss(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "PS256") {}
+
+			explicit ps256(helper::evp_pkey_handle pkey) : pss(pkey, EVP_sha256, "PS256") {}
 		};
 		/**
 		 * PS384 algorithm
@@ -1793,6 +1856,8 @@ namespace jwt {
 			explicit ps384(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: pss(public_key, private_key, public_key_password, private_key_password, EVP_sha384, "PS384") {}
+
+			explicit ps384(helper::evp_pkey_handle pkey) : pss(pkey, EVP_sha384, "PS384") {}
 		};
 		/**
 		 * PS512 algorithm
@@ -1808,6 +1873,8 @@ namespace jwt {
 			explicit ps512(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: pss(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "PS512") {}
+
+			explicit ps512(helper::evp_pkey_handle pkey) : pss(pkey, EVP_sha512, "PS512") {}
 		};
 	} // namespace algorithm
 
@@ -3053,248 +3120,6 @@ namespace jwt {
 	} // namespace verify_ops
 
 	/**
-	 * Verifier class used to check if a decoded token contains all claims required by your application and has a valid
-	 * signature.
-	 */
-	template<typename Clock, typename json_traits>
-	class verifier {
-	public:
-		using basic_claim_t = basic_claim<json_traits>;
-		/**
-		 * Verification function
-		 *
-		 * This gets passed the current verifier, a reference to the decoded jwt, a reference to the key of this claim,
-		 * as well as a reference to an error_code.
-		 * The function checks if the actual value matches certain rules (e.g. equality to value x) and sets the error_code if
-		 * it does not. Once a non zero error_code is encountered the verification stops and this error_code becomes the result
-		 * returned from verify
-		 */
-		using verify_check_fn_t =
-			std::function<void(const verify_ops::verify_context<json_traits>&, std::error_code& ec)>;
-
-	private:
-		struct algo_base {
-			virtual ~algo_base() = default;
-			virtual void verify(const std::string& data, const std::string& sig, std::error_code& ec) = 0;
-		};
-		template<typename T>
-		struct algo : public algo_base {
-			T alg;
-			explicit algo(T a) : alg(a) {}
-			void verify(const std::string& data, const std::string& sig, std::error_code& ec) override {
-				alg.verify(data, sig, ec);
-			}
-		};
-		/// Required claims
-		std::unordered_map<typename json_traits::string_type, verify_check_fn_t> claims;
-		/// Leeway time for exp, nbf and iat
-		size_t default_leeway = 0;
-		/// Instance of clock type
-		Clock clock;
-		/// Supported algorithms
-		std::unordered_map<std::string, std::shared_ptr<algo_base>> algs;
-
-	public:
-		/**
-		 * Constructor for building a new verifier instance
-		 * \param c Clock instance
-		 */
-		explicit verifier(Clock c) : clock(c) {
-			claims["exp"] = [](const verify_ops::verify_context<json_traits>& ctx, std::error_code& ec) {
-				if (!ctx.jwt.has_expires_at()) return;
-				auto exp = ctx.jwt.get_expires_at();
-				if (ctx.current_time > exp + std::chrono::seconds(ctx.default_leeway)) {
-					ec = error::token_verification_error::token_expired;
-				}
-			};
-			claims["iat"] = [](const verify_ops::verify_context<json_traits>& ctx, std::error_code& ec) {
-				if (!ctx.jwt.has_issued_at()) return;
-				auto iat = ctx.jwt.get_issued_at();
-				if (ctx.current_time < iat - std::chrono::seconds(ctx.default_leeway)) {
-					ec = error::token_verification_error::token_expired;
-				}
-			};
-			claims["nbf"] = [](const verify_ops::verify_context<json_traits>& ctx, std::error_code& ec) {
-				if (!ctx.jwt.has_not_before()) return;
-				auto nbf = ctx.jwt.get_not_before();
-				if (ctx.current_time < nbf - std::chrono::seconds(ctx.default_leeway)) {
-					ec = error::token_verification_error::token_expired;
-				}
-			};
-		}
-
-		/**
-		 * Set default leeway to use.
-		 * \param leeway Default leeway to use if not specified otherwise
-		 * \return *this to allow chaining
-		 */
-		verifier& leeway(size_t leeway) {
-			default_leeway = leeway;
-			return *this;
-		}
-		/**
-		 * Set leeway for expires at.
-		 * If not specified the default leeway will be used.
-		 * \param leeway Set leeway to use for expires at.
-		 * \return *this to allow chaining
-		 */
-		verifier& expires_at_leeway(size_t leeway) {
-			claims["exp"] = verify_ops::date_before_claim<json_traits>{leeway};
-			return *this;
-		}
-		/**
-		 * Set leeway for not before.
-		 * If not specified the default leeway will be used.
-		 * \param leeway Set leeway to use for not before.
-		 * \return *this to allow chaining
-		 */
-		verifier& not_before_leeway(size_t leeway) {
-			claims["nbf"] = verify_ops::date_after_claim<json_traits>{leeway};
-			return *this;
-		}
-		/**
-		 * Set leeway for issued at.
-		 * If not specified the default leeway will be used.
-		 * \param leeway Set leeway to use for issued at.
-		 * \return *this to allow chaining
-		 */
-		verifier& issued_at_leeway(size_t leeway) {
-			claims["iat"] = verify_ops::date_after_claim<json_traits>{leeway};
-			return *this;
-		}
-
-		/**
-		 * Set an type to check for.
-		 *
-		 * According to [RFC 7519 Section 5.1](https://datatracker.ietf.org/doc/html/rfc7519#section-5.1),
-		 * This parameter is ignored by JWT implementations; any processing of this parameter is performed by the JWT application.
-		 * Check is casesensitive.
-		 *
-		 * \param type Type Header Parameter to check for.
-		 * \param locale Localization functionality to use when comapring
-		 * \return *this to allow chaining
-		 */
-		verifier& with_type(const typename json_traits::string_type& type, std::locale locale = std::locale{}) {
-			return with_claim("typ", verify_ops::insensitive_string_claim<json_traits, true>{type, std::move(locale)});
-		}
-
-		/**
-		 * Set an issuer to check for.
-		 * Check is casesensitive.
-		 * \param iss Issuer to check for.
-		 * \return *this to allow chaining
-		 */
-		verifier& with_issuer(const typename json_traits::string_type& iss) {
-			return with_claim("iss", basic_claim_t(iss));
-		}
-
-		/**
-		 * Set a subject to check for.
-		 * Check is casesensitive.
-		 * \param sub Subject to check for.
-		 * \return *this to allow chaining
-		 */
-		verifier& with_subject(const typename json_traits::string_type& sub) {
-			return with_claim("sub", basic_claim_t(sub));
-		}
-		/**
-		 * Set an audience to check for.
-		 * If any of the specified audiences is not present in the token the check fails.
-		 * \param aud Audience to check for.
-		 * \return *this to allow chaining
-		 */
-		verifier& with_audience(const typename basic_claim_t::set_t& aud) {
-			claims["aud"] = verify_ops::is_subset_claim<json_traits>{aud};
-			return *this;
-		}
-		/**
-		 * Set an audience to check for.
-		 * If the specified audiences is not present in the token the check fails.
-		 * \param aud Audience to check for.
-		 * \return *this to allow chaining
-		 */
-		verifier& with_audience(const typename json_traits::string_type& aud) {
-			typename basic_claim_t::set_t s;
-			s.insert(aud);
-			return with_audience(s);
-		}
-		/**
-		 * Set an id to check for.
-		 * Check is casesensitive.
-		 * \param id ID to check for.
-		 * \return *this to allow chaining
-		 */
-		verifier& with_id(const typename json_traits::string_type& id) { return with_claim("jti", basic_claim_t(id)); }
-
-		/**
-		 * Specify a claim to check for using the specified operation.
-		 * \param name Name of the claim to check for
-		 * \param fn Function to use for verifying the claim
-		 * \return *this to allow chaining
-		 */
-		verifier& with_claim(const typename json_traits::string_type& name, verify_check_fn_t fn) {
-			claims[name] = fn;
-			return *this;
-		}
-
-		/**
-		 * Specify a claim to check for equality (both type & value).
-		 * \param name Name of the claim to check for
-		 * \param c Claim to check for
-		 * \return *this to allow chaining
-		 */
-		verifier& with_claim(const typename json_traits::string_type& name, basic_claim_t c) {
-			return with_claim(name, verify_ops::equals_claim<json_traits>{c});
-		}
-
-		/**
-		 * Add an algorithm available for checking.
-		 * \param alg Algorithm to allow
-		 * \return *this to allow chaining
-		 */
-		template<typename Algorithm>
-		verifier& allow_algorithm(Algorithm alg) {
-			algs[alg.name()] = std::make_shared<algo<Algorithm>>(alg);
-			return *this;
-		}
-
-		/**
-		 * Verify the given token.
-		 * \param jwt Token to check
-		 * \throw token_verification_exception Verification failed
-		 */
-		void verify(const decoded_jwt<json_traits>& jwt) const {
-			std::error_code ec;
-			verify(jwt, ec);
-			error::throw_if_error(ec);
-		}
-		/**
-		 * Verify the given token.
-		 * \param jwt Token to check
-		 * \param ec error_code filled with details on error
-		 */
-		void verify(const decoded_jwt<json_traits>& jwt, std::error_code& ec) const {
-			ec.clear();
-			const typename json_traits::string_type data = jwt.get_header_base64() + "." + jwt.get_payload_base64();
-			const typename json_traits::string_type sig = jwt.get_signature();
-			const std::string algo = jwt.get_algorithm();
-			if (algs.count(algo) == 0) {
-				ec = error::token_verification_error::wrong_algorithm;
-				return;
-			}
-			algs.at(algo)->verify(data, sig, ec);
-			if (ec) return;
-
-			verify_ops::verify_context<json_traits> ctx{clock.now(), jwt, default_leeway};
-			for (auto& c : claims) {
-				ctx.claim_key = c.first;
-				c.second(ctx, ec);
-				if (ec) return;
-			}
-		}
-	};
-
-	/**
 	 * \brief JSON Web Key
 	 *
 	 * https://tools.ietf.org/html/rfc7517
@@ -3308,11 +3133,45 @@ namespace jwt {
 		const details::map_of_claims<json_traits> jwk_claims;
 
 	public:
-		JWT_CLAIM_EXPLICIT jwk(const typename json_traits::string_type& str)
-			: jwk_claims(details::map_of_claims<json_traits>::parse_claims(str)) {}
+		template<typename Decode>
+		jwk(const typename json_traits::string_type& str, Decode&& decode)
+			: jwk(details::map_of_claims<json_traits>::parse_claims(str), decode) {}
 
-		JWT_CLAIM_EXPLICIT jwk(const typename json_traits::value_type& json)
-			: jwk_claims(json_traits::as_object(json)) {}
+		template<typename Decode>
+		jwk(const typename json_traits::value_type& json, Decode&& decode)
+			: jwk(json_traits::as_object(json), decode) {}
+
+		template<typename Decode>
+		jwk(const typename json_traits::object_type& json, Decode&& decode)
+			: jwk_claims(json), k(build_key(jwk_claims, decode)) {}
+
+#ifndef JWT_DISABLE_BASE64
+		JWT_CLAIM_EXPLICIT jwk(const typename json_traits::string_type& str)
+			: jwk(details::map_of_claims<json_traits>::parse_claims(str)) {}
+
+		JWT_CLAIM_EXPLICIT jwk(const typename json_traits::value_type& json) : jwk(json_traits::as_object(json)) {}
+
+		JWT_CLAIM_EXPLICIT jwk(const typename json_traits::object_type& json)
+			: jwk(json, [](const typename json_traits::string_type& str) {
+				  return base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(str));
+			  }) {
+			// https://datatracker.ietf.org/doc/html/rfc7518#section-6.1
+			// * indicate required params
+			// "kty"* : "EC", "RSA", "oct"
+
+			// if "EC", then "crv"*, then "x"*. if "crv" is any of "P-256", "P-384", "P-521", then "y"*
+			// if "EC" and private key, then "d"*
+
+			// if "RSA", then "n"*, "e"*
+			// if "RSA" and private, then "d"*
+			// if "RSA" and any of the following is present, then all must be present
+			//   "p", "q", "dp", "dq", "qi"
+			// "oth" - array of objects consisting of "r"*, "d"*, "t"*
+
+			// if "oct", then "k"*
+			// if "oct", then SHOULD contain "alg"
+		}
+#endif
 
 		/**
 		 * Get key type claim
@@ -3492,11 +3351,430 @@ namespace jwt {
 
 		bool empty() const noexcept { return jwk_claims.empty(); }
 
+		helper::evp_pkey_handle get_pkey() const { return k.get_asymmetric_key(); }
+
+		std::string get_oct_key() const { return k.get_symmetric_key(); }
+
+	private:
+		template<typename Decode>
+		static helper::evp_pkey_handle build_rsa_key(const details::map_of_claims<json_traits>& claims,
+													 Decode&& decode) {
+			EVP_PKEY* evp_key = nullptr;
+			auto n = jwt::helper::raw2bn(decode(claims.get_claim("n").as_string()));
+			auto e = jwt::helper::raw2bn(decode(claims.get_claim("e").as_string()));
+#ifdef JWT_OPENSSL_3_0
+			// https://www.openssl.org/docs/manmaster/man7/EVP_PKEY-RSA.html
+			// see https://www.openssl.org/docs/man3.0/man3/EVP_PKEY_fromdata.html
+			// and https://stackoverflow.com/questions/68465716/how-to-properly-create-an-rsa-key-from-raw-data-in-openssl-3-0-in-c-language
+			std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)> ctx(
+				EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL), EVP_PKEY_CTX_free);
+			if (!ctx) { throw std::runtime_error("EVP_PKEY_CTX_new_from_name failed"); }
+
+			std::unique_ptr<OSSL_PARAM_BLD, decltype(&OSSL_PARAM_BLD_free)> params_build(OSSL_PARAM_BLD_new(),
+																						 OSSL_PARAM_BLD_free);
+			OSSL_PARAM_BLD_push_BN(params_build.get(), "n", n.get());
+			OSSL_PARAM_BLD_push_BN(params_build.get(), "e", e.get());
+
+			std::unique_ptr<OSSL_PARAM, decltype(&OSSL_PARAM_free)> params(OSSL_PARAM_BLD_to_param(params_build.get()),
+																		   OSSL_PARAM_free);
+			EVP_PKEY_fromdata_init(ctx.get());
+			EVP_PKEY_fromdata(ctx.get(), &evp_key, EVP_PKEY_PUBLIC_KEY, params.get());
+			return helper::evp_pkey_handle(evp_key);
+#else
+			RSA* rsa = RSA_new();
+			evp_key = EVP_PKEY_new();
+#if defined(JWT_OPENSSL_1_0_0) && !defined(LIBWOLFSSL_VERSION_HEX)
+			rsa->e = e.release();
+			rsa->n = n.release();
+#else
+			RSA_set0_key(rsa, n.release(), e.release(), nullptr);
+#endif
+			EVP_PKEY_assign_RSA(evp_key, rsa);
+			return helper::evp_pkey_handle(evp_key);
+#endif
+		}
+
+		template<typename Decode>
+		static key build_key(const details::map_of_claims<json_traits>& claims, Decode&& decode) {
+			if (!claims.has_claim("kty")) {
+				// TODO: custom exception or error code
+				throw std::runtime_error("missing required claim \"kty\"");
+			}
+
+			if (claims.get_claim("kty").get_type() != json::type::string) {
+				// TODO: custom exception or error code
+				throw std::runtime_error("\"kty\" claim must be of type 'string'");
+			}
+
+			if (claims.get_claim("kty").as_string() == "RSA") {
+				return key::asymmetric(build_rsa_key(claims, decode));
+			} else if (claims.get_claim("kty").as_string() == "EC") {
+				// TODO: build EC key
+				throw std::runtime_error("not implemented");
+			} else if (claims.get_claim("kty").as_string() == "oct") {
+				return key::symmetric(decode(claims.get_claim("k").as_string()));
+			} else {
+				// TODO: do not build error messages like this
+				throw std::runtime_error("unknown key type (\"kty\"):" + claims.get_claim("kty").as_string());
+			}
+		}
+
+		key k;
+	};
+
+	/**
+	 * Verifier class used to check if a decoded token contains all claims required by your application and has a valid
+	 * signature.
+	 */
+	template<typename Clock, typename json_traits>
+	class verifier {
+	public:
+		using basic_claim_t = basic_claim<json_traits>;
 		/**
-		 * Get all jwk claims
-		 * \return Map of claims
+		 * Verification function
+		 *
+		 * This gets passed the current verifier, a reference to the decoded jwt, a reference to the key of this claim,
+		 * as well as a reference to an error_code.
+		 * The function checks if the actual value matches certain rules (e.g. equality to value x) and sets the error_code if
+		 * it does not. Once a non zero error_code is encountered the verification stops and this error_code becomes the result
+		 * returned from verify
 		 */
-		typename json_traits::object_type get_claims() const { return this->jwk_claims.claims; }
+		using verify_check_fn_t =
+			std::function<void(const verify_ops::verify_context<json_traits>&, std::error_code& ec)>;
+
+	private:
+		struct algo_base {
+			virtual ~algo_base() = default;
+			virtual void verify(const std::string& data, const std::string& sig, std::error_code& ec) = 0;
+		};
+		template<typename T>
+		struct algo : public algo_base {
+			T alg;
+			explicit algo(T a) : alg(a) {}
+			void verify(const std::string& data, const std::string& sig, std::error_code& ec) override {
+				alg.verify(data, sig, ec);
+			}
+		};
+		/// Required claims
+		std::unordered_map<typename json_traits::string_type, verify_check_fn_t> claims;
+		/// Leeway time for exp, nbf and iat
+		size_t default_leeway = 0;
+		/// Instance of clock type
+		Clock clock;
+		/// Supported algorithms
+		std::unordered_map<std::string, std::shared_ptr<algo_base>> algs;
+		using alg_name = std::string;
+		using alg_list = std::vector<alg_name>;
+		using algorithms = std::unordered_map<std::string, alg_list>;
+		algorithms supported_alg = {{"RSA", {"RS256", "RS384", "RS512", "PS256", "PS384", "PS512"}},
+									{"EC", {"ES256", "ES384", "ES512", "ES256K"}},
+									{"oct", {"HS256", "HS384", "HS512"}}};
+
+		typedef std::vector<jwt::jwk<json_traits>> key_list;
+		/// https://datatracker.ietf.org/doc/html/rfc7517#section-4.5 - kid to keys
+		typedef std::unordered_map<std::string, key_list> keysets;
+		keysets keys;
+
+		void verify_claims(const decoded_jwt<json_traits>& jwt, std::error_code& ec) const {
+			verify_ops::verify_context<json_traits> ctx{clock.now(), jwt, default_leeway};
+			for (auto& c : claims) {
+				ctx.claim_key = c.first;
+				c.second(ctx, ec);
+				if (ec) return;
+			}
+		}
+
+		bool is_valid_combination(const jwt::jwk<json_traits>& key, const std::string& alg_name) const {
+			const alg_list& x = supported_alg.find(key.get_key_type())->second;
+			return std::find(x.cbegin(), x.cend(), alg_name) != x.cend();
+		}
+
+		inline std::unique_ptr<algo_base> from_key_and_alg(const jwt::jwk<json_traits>& key,
+														   const std::string& alg_name, std::error_code& ec) const {
+			ec.clear();
+			algorithms::const_iterator it = supported_alg.find(key.get_key_type());
+			if (it == supported_alg.end()) {
+				ec = error::token_verification_error::wrong_algorithm;
+				return nullptr;
+			}
+
+			const alg_list& supported_jwt_algorithms = it->second;
+			if (std::find(supported_jwt_algorithms.begin(), supported_jwt_algorithms.end(), alg_name) ==
+				supported_jwt_algorithms.end()) {
+				ec = error::token_verification_error::wrong_algorithm;
+				return nullptr;
+			}
+
+			if (alg_name == "RS256") {
+				return std::unique_ptr<algo<jwt::algorithm::rs256>>(
+					new algo<jwt::algorithm::rs256>(jwt::algorithm::rs256(key.get_pkey())));
+			} else if (alg_name == "RS384") {
+				return std::unique_ptr<algo<jwt::algorithm::rs384>>(
+					new algo<jwt::algorithm::rs384>(jwt::algorithm::rs384(key.get_pkey())));
+			} else if (alg_name == "RS512") {
+				return std::unique_ptr<algo<jwt::algorithm::rs512>>(
+					new algo<jwt::algorithm::rs512>(jwt::algorithm::rs512(key.get_pkey())));
+			} else if (alg_name == "PS256") {
+				return std::unique_ptr<algo<jwt::algorithm::ps256>>(
+					new algo<jwt::algorithm::ps256>(jwt::algorithm::ps256(key.get_pkey())));
+			} else if (alg_name == "PS384") {
+				return std::unique_ptr<algo<jwt::algorithm::ps384>>(
+					new algo<jwt::algorithm::ps384>(jwt::algorithm::ps384(key.get_pkey())));
+			} else if (alg_name == "PS512") {
+				return std::unique_ptr<algo<jwt::algorithm::ps512>>(
+					new algo<jwt::algorithm::ps512>(jwt::algorithm::ps512(key.get_pkey())));
+			} else if (alg_name == "ES256") {
+				return std::unique_ptr<algo<jwt::algorithm::es256>>(
+					new algo<jwt::algorithm::es256>(jwt::algorithm::es256(key.get_pkey())));
+			} else if (alg_name == "ES384") {
+				return std::unique_ptr<algo<jwt::algorithm::es384>>(
+					new algo<jwt::algorithm::es384>(jwt::algorithm::es384(key.get_pkey())));
+			} else if (alg_name == "ES512") {
+				return std::unique_ptr<algo<jwt::algorithm::es512>>(
+					new algo<jwt::algorithm::es512>(jwt::algorithm::es512(key.get_pkey())));
+			} else if (alg_name == "ES256K") {
+				return std::unique_ptr<algo<jwt::algorithm::es256k>>(
+					new algo<jwt::algorithm::es256k>(jwt::algorithm::es256k(key.get_pkey())));
+			} else if (alg_name == "HS256") {
+				return std::unique_ptr<algo<jwt::algorithm::hs256>>(
+					new algo<jwt::algorithm::hs256>(jwt::algorithm::hs256(key.get_oct_key())));
+			} else if (alg_name == "HS384") {
+				return std::unique_ptr<algo<jwt::algorithm::hs384>>(
+					new algo<jwt::algorithm::hs384>(jwt::algorithm::hs384(key.get_oct_key())));
+			} else if (alg_name == "HS512") {
+				return std::unique_ptr<algo<jwt::algorithm::hs512>>(
+					new algo<jwt::algorithm::hs512>(jwt::algorithm::hs512(key.get_oct_key())));
+			}
+
+			ec = error::token_verification_error::wrong_algorithm;
+			return nullptr;
+		}
+
+	public:
+		/**
+		 * Constructor for building a new verifier instance
+		 * \param c Clock instance
+		 */
+		explicit verifier(Clock c) : clock(c) {
+			claims["exp"] = [](const verify_ops::verify_context<json_traits>& ctx, std::error_code& ec) {
+				if (!ctx.jwt.has_expires_at()) return;
+				auto exp = ctx.jwt.get_expires_at();
+				if (ctx.current_time > exp + std::chrono::seconds(ctx.default_leeway)) {
+					ec = error::token_verification_error::token_expired;
+				}
+			};
+			claims["iat"] = [](const verify_ops::verify_context<json_traits>& ctx, std::error_code& ec) {
+				if (!ctx.jwt.has_issued_at()) return;
+				auto iat = ctx.jwt.get_issued_at();
+				if (ctx.current_time < iat - std::chrono::seconds(ctx.default_leeway)) {
+					ec = error::token_verification_error::token_expired;
+				}
+			};
+			claims["nbf"] = [](const verify_ops::verify_context<json_traits>& ctx, std::error_code& ec) {
+				if (!ctx.jwt.has_not_before()) return;
+				auto nbf = ctx.jwt.get_not_before();
+				if (ctx.current_time < nbf - std::chrono::seconds(ctx.default_leeway)) {
+					ec = error::token_verification_error::token_expired;
+				}
+			};
+		}
+
+		/**
+		 * Set default leeway to use.
+		 * \param leeway Default leeway to use if not specified otherwise
+		 * \return *this to allow chaining
+		 */
+		verifier& leeway(size_t leeway) {
+			default_leeway = leeway;
+			return *this;
+		}
+		/**
+		 * Set leeway for expires at.
+		 * If not specified the default leeway will be used.
+		 * \param leeway Set leeway to use for expires at.
+		 * \return *this to allow chaining
+		 */
+		verifier& expires_at_leeway(size_t leeway) {
+			claims["exp"] = verify_ops::date_before_claim<json_traits>{leeway};
+			return *this;
+		}
+		/**
+		 * Set leeway for not before.
+		 * If not specified the default leeway will be used.
+		 * \param leeway Set leeway to use for not before.
+		 * \return *this to allow chaining
+		 */
+		verifier& not_before_leeway(size_t leeway) {
+			claims["nbf"] = verify_ops::date_after_claim<json_traits>{leeway};
+			return *this;
+		}
+		/**
+		 * Set leeway for issued at.
+		 * If not specified the default leeway will be used.
+		 * \param leeway Set leeway to use for issued at.
+		 * \return *this to allow chaining
+		 */
+		verifier& issued_at_leeway(size_t leeway) {
+			claims["iat"] = verify_ops::date_after_claim<json_traits>{leeway};
+			return *this;
+		}
+
+		/**
+		 * Set an type to check for.
+		 *
+		 * According to [RFC 7519 Section 5.1](https://datatracker.ietf.org/doc/html/rfc7519#section-5.1),
+		 * This parameter is ignored by JWT implementations; any processing of this parameter is performed by the JWT application.
+		 * Check is casesensitive.
+		 *
+		 * \param type Type Header Parameter to check for.
+		 * \param locale Localization functionality to use when comapring
+		 * \return *this to allow chaining
+		 */
+		verifier& with_type(const typename json_traits::string_type& type, std::locale locale = std::locale{}) {
+			return with_claim("typ", verify_ops::insensitive_string_claim<json_traits, true>{type, std::move(locale)});
+		}
+
+		/**
+		 * Set an issuer to check for.
+		 * Check is casesensitive.
+		 * \param iss Issuer to check for.
+		 * \return *this to allow chaining
+		 */
+		verifier& with_issuer(const typename json_traits::string_type& iss) {
+			return with_claim("iss", basic_claim_t(iss));
+		}
+
+		/**
+		 * Set a subject to check for.
+		 * Check is casesensitive.
+		 * \param sub Subject to check for.
+		 * \return *this to allow chaining
+		 */
+		verifier& with_subject(const typename json_traits::string_type& sub) {
+			return with_claim("sub", basic_claim_t(sub));
+		}
+		/**
+		 * Set an audience to check for.
+		 * If any of the specified audiences is not present in the token the check fails.
+		 * \param aud Audience to check for.
+		 * \return *this to allow chaining
+		 */
+		verifier& with_audience(const typename basic_claim_t::set_t& aud) {
+			claims["aud"] = verify_ops::is_subset_claim<json_traits>{aud};
+			return *this;
+		}
+		/**
+		 * Set an audience to check for.
+		 * If the specified audiences is not present in the token the check fails.
+		 * \param aud Audience to check for.
+		 * \return *this to allow chaining
+		 */
+		verifier& with_audience(const typename json_traits::string_type& aud) {
+			typename basic_claim_t::set_t s;
+			s.insert(aud);
+			return with_audience(s);
+		}
+		/**
+		 * Set an id to check for.
+		 * Check is casesensitive.
+		 * \param id ID to check for.
+		 * \return *this to allow chaining
+		 */
+		verifier& with_id(const typename json_traits::string_type& id) { return with_claim("jti", basic_claim_t(id)); }
+
+		/**
+		 * Specify a claim to check for using the specified operation.
+		 * \param name Name of the claim to check for
+		 * \param fn Function to use for verifying the claim
+		 * \return *this to allow chaining
+		 */
+		verifier& with_claim(const typename json_traits::string_type& name, verify_check_fn_t fn) {
+			claims[name] = fn;
+			return *this;
+		}
+
+		/**
+		 * Specify a claim to check for equality (both type & value).
+		 * \param name Name of the claim to check for
+		 * \param c Claim to check for
+		 * \return *this to allow chaining
+		 */
+		verifier& with_claim(const typename json_traits::string_type& name, basic_claim_t c) {
+			return with_claim(name, verify_ops::equals_claim<json_traits>{c});
+		}
+
+		/**
+		 * Add an algorithm available for checking.
+		 * \param alg Algorithm to allow
+		 * \return *this to allow chaining
+		 */
+		template<typename Algorithm>
+		verifier& allow_algorithm(Algorithm alg) {
+			algs[alg.name()] = std::make_shared<algo<Algorithm>>(alg);
+			return *this;
+		}
+
+		verifier& allow_key(const jwt::jwk<json_traits>& key) {
+			std::string keyid = "";
+			if (key.has_key_id()) {
+				keyid = key.get_key_id();
+				auto it = keys.find(keyid);
+				if (it == keys.end()) { keys[keyid] = key_list(); }
+			}
+
+			keys[keyid].push_back(key);
+			return *this;
+		}
+
+		/**
+		 * Verify the given token.
+		 * \param jwt Token to check
+		 * \throw token_verification_exception Verification failed
+		 */
+		void verify(const decoded_jwt<json_traits>& jwt) const {
+			std::error_code ec;
+			verify(jwt, ec);
+			error::throw_if_error(ec);
+		}
+		/**
+		 * Verify the given token.
+		 * \param jwt Token to check
+		 * \param ec error_code filled with details on error
+		 */
+		void verify(const decoded_jwt<json_traits>& jwt, std::error_code& ec) const {
+			ec.clear();
+			const typename json_traits::string_type data = jwt.get_header_base64() + "." + jwt.get_payload_base64();
+			const typename json_traits::string_type sig = jwt.get_signature();
+			const std::string algo = jwt.get_algorithm();
+			std::string kid("");
+			if (jwt.has_header_claim("kid")) { kid = jwt.get_header_claim("kid").as_string(); }
+
+			typename keysets::const_iterator key_set_it = keys.find(kid);
+			bool key_found = false;
+			if (key_set_it != keys.end()) {
+				const key_list& keys = key_set_it->second;
+				for (const auto& key : keys) {
+					if (is_valid_combination(key, algo)) {
+						key_found = true;
+						auto alg = from_key_and_alg(key, algo, ec);
+						alg->verify(data, sig, ec);
+						break;
+					}
+				}
+			}
+
+			if (!key_found) {
+				auto alg = algs.find(algo);
+				if (alg == algs.end()) {
+					ec = error::token_verification_error::wrong_algorithm;
+					return;
+				}
+				alg->second->verify(data, sig, ec);
+			}
+
+			if (ec) return;
+			verify_claims(jwt, ec);
+		}
 	};
 
 	/**
@@ -3517,7 +3795,8 @@ namespace jwt {
 		using iterator = typename jwt_vector_t::iterator;
 		using const_iterator = typename jwt_vector_t::const_iterator;
 
-		JWT_CLAIM_EXPLICIT jwks(const typename json_traits::string_type& str) {
+		template<typename Decode>
+		jwks(const typename json_traits::string_type& str, Decode decode) {
 			typename json_traits::value_type parsed_val;
 			if (!json_traits::parse(parsed_val, str)) throw error::invalid_json_exception();
 
@@ -3526,8 +3805,15 @@ namespace jwt {
 
 			auto jwk_list = jwks_json.get_claim("keys").as_array();
 			std::transform(jwk_list.begin(), jwk_list.end(), std::back_inserter(jwk_claims),
-						   [](const typename json_traits::value_type& val) { return jwk_t{val}; });
+						   [&](const typename json_traits::value_type& val) { return jwk_t(val, decode); });
 		}
+
+#ifndef JWT_DISABLE_BASE64
+		JWT_CLAIM_EXPLICIT jwks(const typename json_traits::string_type& str)
+			: jwks(str, [](const typename json_traits::string_type& str) {
+				  return base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(str));
+			  }) {}
+#endif
 
 		iterator begin() { return jwk_claims.begin(); }
 		iterator end() { return jwk_claims.end(); }
