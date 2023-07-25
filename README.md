@@ -68,7 +68,7 @@ jwt::basic_claim<my_favorite_json_library_traits> claim(json::object({{"json", t
 
 This allows for complete freedom when picking which libraries you want to use. For more information, [read this page](docs/traits.md)).
 
-For your convience there are serval traits implementation which provide some popular JSON libraries. They are:
+For your convenience there are serval traits implementation which provide some popular JSON libraries. They are:
 
 [![picojson][picojson]](https://github.com/kazuho/picojson)
 [![nlohmann][nlohmann]](https://github.com/nlohmann/json)
@@ -82,7 +82,7 @@ For your convience there are serval traits implementation which provide some pop
 
 In order to maintain compatibility, [picojson](https://github.com/kazuho/picojson) is still used to provide a specialized `jwt::claim` along with all helpers. Defining `JWT_DISABLE_PICOJSON` will remove this optional dependency. It's possible to directly include the traits defaults for the other JSON libraries. See the [traits examples](https://github.com/Thalhammer/jwt-cpp/tree/master/example/traits) for details.
 
-As for the base64 requirements of JWTs, this libary provides `base.h` with all the required implentation; However base64 implementations are very common, with varying degrees of performance. When providing your own base64 implementation, you can define `JWT_DISABLE_BASE64` to remove the jwt-cpp implementation.
+As for the base64 requirements of JWTs, this library provides `base.h` with all the required implementation; However base64 implementations are very common, with varying degrees of performance. When providing your own base64 implementation, you can define `JWT_DISABLE_BASE64` to remove the jwt-cpp implementation.
 
 ### Getting Started
 
