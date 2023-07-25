@@ -59,7 +59,7 @@ elseif(${JWT_SSL_LIBRARY} MATCHES "LibreSSL")
 elseif(${JWT_SSL_LIBRARY} MATCHES "wolfSSL")
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(wolfssl REQUIRED IMPORTED_TARGET wolfssl)
-  list(TRANSFORM wolfssl_INCLUDE_DIRS APPEND "/wolfssl") # This is required to access OpenSSL compatability API
+  list(TRANSFORM wolfssl_INCLUDE_DIRS APPEND "/wolfssl") # This is required to access OpenSSL compatibility API
 endif()
 
 if(JWT_EXTERNAL_PICOJSON)
@@ -114,7 +114,7 @@ endif()
 
 if(${JWT_SSL_LIBRARY} MATCHES "wolfSSL")
   target_link_libraries(jwt-cpp INTERFACE PkgConfig::wolfssl)
-  # This is required to access OpenSSL compatability API
+  # This is required to access OpenSSL compatibility API
   target_include_directories(jwt-cpp INTERFACE ${wolfssl_INCLUDE_DIRS})
   target_compile_definitions(jwt-cpp INTERFACE OPENSSL_EXTRA OPENSSL_ALL)
 endif()

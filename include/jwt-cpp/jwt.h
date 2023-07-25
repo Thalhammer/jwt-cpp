@@ -493,7 +493,7 @@ namespace jwt {
 		 *
 		 * \param certstr	String containing the certificate encoded as pem
 		 * \param pw		Password used to decrypt certificate (leave empty if not encrypted)
-		 * \param ec		error_code for error_detection (gets cleared if no error ocurred)
+		 * \param ec		error_code for error_detection (gets cleared if no error occurred)
 		 */
 		inline std::string extract_pubkey_from_cert(const std::string& certstr, const std::string& pw,
 													std::error_code& ec) {
@@ -547,7 +547,7 @@ namespace jwt {
 		 * \brief Convert the certificate provided as DER to PEM.
 		 *
 		 * \param cert_der_str 	String containing the certificate encoded as base64 DER
-		 * \param ec			error_code for error_detection (gets cleared if no error occures)
+		 * \param ec			error_code for error_detection (gets cleared if no error occurs)
 		 */
 		inline std::string convert_der_to_pem(const std::string& cert_der_str, std::error_code& ec) {
 			ec.clear();
@@ -589,7 +589,7 @@ namespace jwt {
 		 *
 		 * \param cert_base64_der_str 	String containing the certificate encoded as base64 DER
 		 * \param decode 				The function to decode the cert
-		 * \param ec					error_code for error_detection (gets cleared if no error occures)
+		 * \param ec					error_code for error_detection (gets cleared if no error occurs)
 		 */
 		template<typename Decode>
 		std::string convert_base64_der_to_pem(const std::string& cert_base64_der_str, Decode decode,
@@ -643,7 +643,7 @@ namespace jwt {
 		 * (here)[https://tools.ietf.org/html/rfc7517#section-4.7]
 		 *
 		 * \param cert_base64_der_str 	String containing the certificate encoded as base64 DER
-		 * \param ec					error_code for error_detection (gets cleared if no error occures)
+		 * \param ec					error_code for error_detection (gets cleared if no error occurs)
 		 */
 		inline std::string convert_base64_der_to_pem(const std::string& cert_base64_der_str, std::error_code& ec) {
 			auto decode = [](const std::string& token) {
@@ -675,7 +675,7 @@ namespace jwt {
 		 *
 		 * \param key		String containing the certificate encoded as pem
 		 * \param password	Password used to decrypt certificate (leave empty if not encrypted)
-		 * \param ec		error_code for error_detection (gets cleared if no error occures)
+		 * \param ec		error_code for error_detection (gets cleared if no error occurs)
 		 */
 		inline evp_pkey_handle load_public_key_from_string(const std::string& key, const std::string& password,
 														   std::error_code& ec) {
@@ -729,7 +729,7 @@ namespace jwt {
 		 *
 		 * \param key		String containing a private key as pem
 		 * \param password	Password used to decrypt key (leave empty if not encrypted)
-		 * \param ec		error_code for error_detection (gets cleared if no error occures)
+		 * \param ec		error_code for error_detection (gets cleared if no error occurs)
 		 */
 		inline evp_pkey_handle load_private_key_from_string(const std::string& key, const std::string& password,
 															std::error_code& ec) {
@@ -770,7 +770,7 @@ namespace jwt {
 		 *
 		 * \param key		String containing the certificate encoded as pem
 		 * \param password	Password used to decrypt certificate (leave empty if not encrypted)
-		 * \param ec		error_code for error_detection (gets cleared if no error occures)
+		 * \param ec		error_code for error_detection (gets cleared if no error occurs)
 		 */
 		inline evp_pkey_handle load_public_ec_key_from_string(const std::string& key, const std::string& password,
 															  std::error_code& ec) {
@@ -825,7 +825,7 @@ namespace jwt {
 		 *
 		 * \param key		String containing a private key as pem
 		 * \param password	Password used to decrypt key (leave empty if not encrypted)
-		 * \param ec		error_code for error_detection (gets cleared if no error occures)
+		 * \param ec		error_code for error_detection (gets cleared if no error occurs)
 		 */
 		inline evp_pkey_handle load_private_ec_key_from_string(const std::string& key, const std::string& password,
 															   std::error_code& ec) {
@@ -1972,7 +1972,7 @@ namespace jwt {
 			// TODO(prince-chrismc): I am not convienced this is meaningful anymore
 			static_assert(
 				value,
-				"object_type must implementate the subscription operator '[]' taking string_type as an arguement");
+				"object_type must implementate the subscription operator '[]' taking string_type as an argument");
 		};
 
 		template<typename object_type, typename value_type, typename string_type>
@@ -2148,14 +2148,14 @@ namespace jwt {
 
 		/**
 		 * Serialize claim to output stream from wrapped JSON value
-		 * \return ouput stream
+		 * \return output stream
 		 */
 		std::ostream& operator<<(std::ostream& os) { return os << val; }
 
 		/**
 		 * Get type of contained JSON value
 		 * \return Type
-		 * \throw std::logic_error An internal error occured
+		 * \throw std::logic_error An internal error occurred
 		 */
 		json::type get_type() const { return json_traits::get_type(val); }
 
@@ -2427,7 +2427,7 @@ namespace jwt {
 	public:
 		using basic_claim_t = basic_claim<json_traits>;
 		/**
-		 * Check if algortihm is present ("alg")
+		 * Check if algorithm is present ("alg")
 		 * \return true if present, false otherwise
 		 */
 		bool has_algorithm() const noexcept { return has_header_claim("alg"); }
@@ -2497,7 +2497,7 @@ namespace jwt {
 	template<typename json_traits>
 	class decoded_jwt : public header<json_traits>, public payload<json_traits> {
 	protected:
-		/// Unmodifed token, as passed to constructor
+		/// Unmodified token, as passed to constructor
 		typename json_traits::string_type token;
 		/// Header part decoded from base64
 		typename json_traits::string_type header;
@@ -2871,7 +2871,7 @@ namespace jwt {
 			// The configured default leeway for this verification
 			size_t default_leeway{0};
 
-			// The claim key to apply this comparision on
+			// The claim key to apply this comparison on
 			typename json_traits::string_type claim_key{};
 
 			// Helper method to get a claim from the jwt in this context
@@ -3171,7 +3171,7 @@ namespace jwt {
 		 * Check is casesensitive.
 		 *
 		 * \param type Type Header Parameter to check for.
-		 * \param locale Localization functionality to use when comapring
+		 * \param locale Localization functionality to use when comparing
 		 * \return *this to allow chaining
 		 */
 		verifier& with_type(const typename json_traits::string_type& type, std::locale locale = std::locale{}) {
@@ -3432,7 +3432,7 @@ namespace jwt {
 		bool has_key_operations() const noexcept { return has_jwk_claim("key_ops"); }
 
 		/**
-		 * Check if algortihm is present ("alg")
+		 * Check if algorithm is present ("alg")
 		 * \return true if present, false otherwise
 		 */
 		bool has_algorithm() const noexcept { return has_jwk_claim("alg"); }
