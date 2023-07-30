@@ -847,6 +847,50 @@ namespace jwt {
 		}
 
 		/**
+		* \brief create public key from modulos and exponent
+		*
+		* \param modulus	string containing base64 encoded modulus
+		* \param exponent	string containing base64 encoded exponent
+		* \return public key in PEM format
+		*/
+		inline std::string create_public_key_from_rsa_components(const std::string& modulus,
+															  const std::string& exponent) {
+			auto decoded_modulus = base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(modulus));
+			auto decoded_exponent = base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(exponent));
+
+			std::unique_ptr<BIGNUM, decltype(&BN_free)> n(
+				BN_bin2bn(reinterpret_cast<const unsigned char*>(decoded_modulus.data()),
+						  static_cast<int>(decoded_modulus.size()),
+							  nullptr),
+						BN_free);
+
+			std::unique_ptr<BIGNUM, decltype(&BN_free)> e(
+				BN_bin2bn(reinterpret_cast<const unsigned char*>(decoded_exponent.data()),
+						  static_cast<int>(decoded_exponent.size()), nullptr),
+				BN_free);
+
+			int r = 0;
+			RSA* rsa = RSA_new();
+			r = RSA_set0_key(rsa, n.get(), e.get(), nullptr);
+
+			auto pubkeybio = make_mem_buf_bio();
+
+			int resp = PEM_write_bio_RSA_PUBKEY(pubkeybio.get(), rsa);
+
+			char* ptr = nullptr;
+			const auto len = BIO_get_mem_data(pubkeybio.get(), &ptr);
+			if (len <= 0 || ptr == nullptr) {
+				return {};
+			}
+
+			std::string pubkey_pem(ptr, static_cast<size_t>(len));
+
+			std::cout << "Encoded pubkey" << std::endl << pubkey_pem << std::endl;
+
+			return pubkey_pem;
+		}
+
+		/**
 		 * \brief Load a private key from a string.
 		 *
 		 * \param key		String containing a private key as pem
@@ -3249,6 +3293,37 @@ namespace jwt {
 		}
 
 		/**
+		 * Specify a set of claims for multiple cliams checking.
+		 * \param json_claims Set of claims in JSON format to add
+		 * \param c Claim to check for
+		 * \return *this to allow chaining
+		 */
+		verifier& with_claims(const typename json_traits::string_type& json_claims) {
+			using std::chrono::system_clock;
+			auto parsed = details::map_of_claims<json_traits>::parse_claims(json_claims);
+			for (auto& c : parsed) {
+				//Special cases handling
+				if (c.first == "aud") {
+					typename basic_claim_t::set_t res;
+					for (const auto& e : json_traits::as_array(c.second)) {
+						res.insert(json_traits::as_string(e));
+					}
+					with_audience(res);
+				}
+				else if (c.first == "exp")
+					expires_at_leeway(json_traits::as_integer(c.second));
+				else if (c.first == "nbf")
+					not_before_leeway(json_traits::as_integer(c.second));
+				else if (c.first == "iat")
+					issued_at_leeway(json_traits::as_integer(c.second));
+				else
+					//General case, including "typ"
+					with_claim(c.first, basic_claim_t(c.second));
+			}
+			return *this;
+		}
+
+		/**
 		 * Add an algorithm available for checking.
 		 * \param alg Algorithm to allow
 		 * \return *this to allow chaining
@@ -3276,6 +3351,17 @@ namespace jwt {
 		 */
 		void verify(const decoded_jwt<json_traits>& jwt, std::error_code& ec) const {
 			ec.clear();
+			verify_signature(jwt, ec);
+			if (ec) return;
+			verify_claims(jwt, ec);
+		}
+
+		/**
+		 * Verify the given token signature
+		 * \param jwt Token to check
+		 * \param ec error_code filled with details on error
+		 */
+		void verify_signature(const decoded_jwt<json_traits>& jwt, std::error_code& ec) const {
 			const typename json_traits::string_type data = jwt.get_header_base64() + "." + jwt.get_payload_base64();
 			const typename json_traits::string_type sig = jwt.get_signature();
 			const std::string algo = jwt.get_algorithm();
@@ -3284,8 +3370,14 @@ namespace jwt {
 				return;
 			}
 			algs.at(algo)->verify(data, sig, ec);
-			if (ec) return;
+		}
 
+		/**
+		 * Verify the given token claims.
+		 * \param jwt Token to check
+		 * \param ec error_code filled with details on error
+		 */
+		void verify_claims(const decoded_jwt<json_traits>& jwt, std::error_code& ec) const {
 			verify_ops::verify_context<json_traits> ctx{clock.now(), jwt, default_leeway};
 			for (auto& c : claims) {
 				ctx.claim_key = c.first;
