@@ -851,43 +851,66 @@ namespace jwt {
 		*
 		* \param modulus	string containing base64 encoded modulus
 		* \param exponent	string containing base64 encoded exponent
+		* \param ec			error_code for error_detection (gets cleared if no error occures)
 		* \return public key in PEM format
 		*/
 		inline std::string create_public_key_from_rsa_components(const std::string& modulus,
-															  const std::string& exponent) {
+																 const std::string& exponent, std::error_code& ec) {
 			auto decoded_modulus = base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(modulus));
 			auto decoded_exponent = base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(exponent));
 
 			std::unique_ptr<BIGNUM, decltype(&BN_free)> n(
 				BN_bin2bn(reinterpret_cast<const unsigned char*>(decoded_modulus.data()),
-						  static_cast<int>(decoded_modulus.size()),
-							  nullptr),
-						BN_free);
+						  static_cast<int>(decoded_modulus.size()), nullptr),
+				BN_free);
 
 			std::unique_ptr<BIGNUM, decltype(&BN_free)> e(
 				BN_bin2bn(reinterpret_cast<const unsigned char*>(decoded_exponent.data()),
 						  static_cast<int>(decoded_exponent.size()), nullptr),
 				BN_free);
 
-			int r = 0;
-			RSA* rsa = RSA_new();
-			r = RSA_set0_key(rsa, n.get(), e.get(), nullptr);
+			std::unique_ptr<RSA, decltype(&RSA_free)> rsa(RSA_new(), RSA_free);
+			if (RSA_set0_key(rsa.get(), n.get(), e.get(), nullptr) != 1){
+				ec = error::rsa_error::set_rsa_failed;
+				return {};
+			}
 
 			auto pubkeybio = make_mem_buf_bio();
+			if (!pubkeybio) {
+				ec = error::rsa_error::create_mem_bio_failed;
+				return {};
+			}
 
-			int resp = PEM_write_bio_RSA_PUBKEY(pubkeybio.get(), rsa);
+			if (PEM_write_bio_RSA_PUBKEY(pubkeybio.get(), rsa.get()) != 1) {
+				ec = error::rsa_error::convert_to_pem_failed;
+				return {};
+			}
 
 			char* ptr = nullptr;
 			const auto len = BIO_get_mem_data(pubkeybio.get(), &ptr);
 			if (len <= 0 || ptr == nullptr) {
+				ec = error::rsa_error::convert_to_pem_failed;
 				return {};
 			}
 
 			std::string pubkey_pem(ptr, static_cast<size_t>(len));
 
-			std::cout << "Encoded pubkey" << std::endl << pubkey_pem << std::endl;
-
 			return pubkey_pem;
+		}
+
+		/**
+		* \brief create public key from modulos and exponent
+		*
+		* \param modulus	string containing base64 encoded modulus
+		* \param exponent	string containing base64 encoded exponent
+		* \return public key in PEM format
+		*/
+		inline std::string create_public_key_from_rsa_components(const std::string& modulus,
+																 const std::string& exponent) {
+			std::error_code ec;
+			auto res = create_public_key_from_rsa_components(modulus, exponent, ec);
+			error::throw_if_error(ec);
+			return res;
 		}
 
 		/**
