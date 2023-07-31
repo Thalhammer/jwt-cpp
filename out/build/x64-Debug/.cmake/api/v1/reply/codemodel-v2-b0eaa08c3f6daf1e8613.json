@@ -1,0 +1,205 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						2
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Debug-6d6ab3470acbddb9898a.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.14"
+					},
+					"projectIndex" : 0,
+					"source" : "."
+				},
+				{
+					"build" : "_deps/nlohmann_json-build",
+					"jsonFile" : "directory-_deps.nlohmann_json-build-Debug-258e108ca37282abadd6.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.1"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 1,
+					"source" : "out/build/x64-Debug/_deps/nlohmann_json-src"
+				},
+				{
+					"build" : "example",
+					"childIndexes" : 
+					[
+						3
+					],
+					"jsonFile" : "directory-example-Debug-8ca0c98ee1efd38c600f.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.8"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 2,
+					"source" : "example",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						3,
+						4,
+						5,
+						6,
+						7
+					]
+				},
+				{
+					"build" : "example/traits",
+					"jsonFile" : "directory-example.traits-Debug-2da4fdca8fdad15d0bfb.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.8"
+					},
+					"parentIndex" : 2,
+					"projectIndex" : 3,
+					"source" : "example/traits",
+					"targetIndexes" : 
+					[
+						2
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"childIndexes" : 
+					[
+						1,
+						2
+					],
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "jwt-cpp"
+				},
+				{
+					"directoryIndexes" : 
+					[
+						1
+					],
+					"name" : "nlohmann_json",
+					"parentIndex" : 0
+				},
+				{
+					"childIndexes" : 
+					[
+						3
+					],
+					"directoryIndexes" : 
+					[
+						2
+					],
+					"name" : "jwt-cpp-examples",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						3,
+						4,
+						5,
+						6,
+						7
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						3
+					],
+					"name" : "jwt-cpp-traits",
+					"parentIndex" : 2,
+					"targetIndexes" : 
+					[
+						2
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 2,
+					"id" : "es256k::@70983d692f648185febe",
+					"jsonFile" : "target-es256k-Debug-de60245adc5c5713ee96.json",
+					"name" : "es256k",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "jwks-verify::@70983d692f648185febe",
+					"jsonFile" : "target-jwks-verify-Debug-60fdb52b704c795f49f6.json",
+					"name" : "jwks-verify",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "nlohmann-json::@08a2d1010fc3f894795c",
+					"jsonFile" : "target-nlohmann-json-Debug-9b3ddc110896016bca41.json",
+					"name" : "nlohmann-json",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "partial-claim-verifier::@70983d692f648185febe",
+					"jsonFile" : "target-partial-claim-verifier-Debug-0b1fe1c0d88445deacac.json",
+					"name" : "partial-claim-verifier",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "print-claims::@70983d692f648185febe",
+					"jsonFile" : "target-print-claims-Debug-efaf4f03799c4eca34c8.json",
+					"name" : "print-claims",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "private-claims::@70983d692f648185febe",
+					"jsonFile" : "target-private-claims-Debug-9fc62abf0658a47dcfa9.json",
+					"name" : "private-claims",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "rsa-create::@70983d692f648185febe",
+					"jsonFile" : "target-rsa-create-Debug-c68c1ef8ec3043eac837.json",
+					"name" : "rsa-create",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "rsa-verify::@70983d692f648185febe",
+					"jsonFile" : "target-rsa-verify-Debug-8fc03c5c3558d8c94b7d.json",
+					"name" : "rsa-verify",
+					"projectIndex" : 2
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "C:/Users/zohargo/source/repos/jwt-cpp/out/build/x64-Debug",
+		"source" : "C:/Users/zohargo/source/repos/jwt-cpp"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 5
+	}
+}

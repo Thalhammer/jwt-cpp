@@ -120,7 +120,8 @@ namespace jwt {
 			load_key_bio_write,
 			load_key_bio_read,
 			create_mem_bio_failed,
-			no_key_provided
+			no_key_provided,
+			set_rsa_failed
 		};
 		/**
 		 * \brief Error category for RSA errors
@@ -141,6 +142,7 @@ namespace jwt {
 					case rsa_error::load_key_bio_read: return "failed to load key: bio read failed";
 					case rsa_error::create_mem_bio_failed: return "failed to create memory bio";
 					case rsa_error::no_key_provided: return "at least one of public or private key need to be present";
+					case rsa_error::set_rsa_failed: return "set modulus and exponent to RSA failed";
 					default: return "unknown RSA error";
 					}
 				}

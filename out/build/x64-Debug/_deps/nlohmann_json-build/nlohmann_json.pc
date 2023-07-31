@@ -1,0 +1,4 @@
+Name: nlohmann_json
+Description: JSON for Modern C++
+Version: 3.11.2
+Cflags: -IC:/Users/zohargo/Source/Repos/jwt-cpp/out/install/x64-Debug/include
