@@ -848,7 +848,6 @@ namespace jwt {
 			return pkey;
 		}
 
-		inline void freem(RSA*){}
 		/**
 		* \brief create public key from modulos and exponent
 		*
@@ -862,19 +861,19 @@ namespace jwt {
 			auto decoded_modulus = base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(modulus));
 			auto decoded_exponent = base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(exponent));
 
-			std::unique_ptr<BIGNUM, decltype(&BN_free)> n(
-				BN_bin2bn(reinterpret_cast<const unsigned char*>(decoded_modulus.data()),
-						  static_cast<int>(decoded_modulus.size()), nullptr),
-				BN_free);
+			BIGNUM* n = BN_bin2bn(reinterpret_cast<const unsigned char*>(decoded_modulus.data()),
+						  static_cast<int>(decoded_modulus.size()), nullptr);
 
-			std::unique_ptr<BIGNUM, decltype(&BN_free)> e(
-				BN_bin2bn(reinterpret_cast<const unsigned char*>(decoded_exponent.data()),
-						  static_cast<int>(decoded_exponent.size()), nullptr),
-				BN_free);
+			BIGNUM* e = BN_bin2bn(reinterpret_cast<const unsigned char*>(decoded_exponent.data()),
+						  static_cast<int>(decoded_exponent.size()), nullptr);
 
-			std::unique_ptr<RSA, decltype(&freem)> rsa(RSA_new(), freem);
-			if (RSA_set0_key(rsa.get(), n.get(), e.get(), nullptr) != 1){
+			std::unique_ptr<RSA, decltype(&RSA_free)> rsa(RSA_new(), RSA_free);
+
+			//This is unlikely to fail, and after this call RSA_free will also free the n and e big numbers
+			if (RSA_set0_key(rsa.get(), n, e, nullptr) != 1){
 				ec = error::rsa_error::set_rsa_failed;
+				BN_free(e);
+				BN_free(n);
 				return {};
 			}
 
