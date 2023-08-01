@@ -52,7 +52,7 @@ TEST(HelperTest, ErrorCodeMessages) {
 			  std::string("token_verification_error"));
 
 	int i = 10;
-	for (i = 10; i < 19; i++) {
+	for (i = 10; i < 20; i++) {
 		ASSERT_NE(std::error_code(static_cast<jwt::error::rsa_error>(i)).message(),
 				  std::error_code(static_cast<jwt::error::rsa_error>(-1)).message());
 	}

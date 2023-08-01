@@ -848,6 +848,7 @@ namespace jwt {
 			return pkey;
 		}
 
+		inline void freem(RSA*){}
 		/**
 		* \brief create public key from modulos and exponent
 		*
@@ -871,7 +872,7 @@ namespace jwt {
 						  static_cast<int>(decoded_exponent.size()), nullptr),
 				BN_free);
 
-			std::unique_ptr<RSA, decltype(&RSA_free)> rsa(RSA_new(), RSA_free);
+			std::unique_ptr<RSA, decltype(&freem)> rsa(RSA_new(), freem);
 			if (RSA_set0_key(rsa.get(), n.get(), e.get(), nullptr) != 1){
 				ec = error::rsa_error::set_rsa_failed;
 				return {};
@@ -3318,37 +3319,6 @@ namespace jwt {
 		}
 
 		/**
-		 * Specify a set of claims for multiple cliams checking.
-		 * \param json_claims Set of claims in JSON format to add
-		 * \param c Claim to check for
-		 * \return *this to allow chaining
-		 */
-		verifier& with_claims(const typename json_traits::string_type& json_claims) {
-			using std::chrono::system_clock;
-			auto parsed = details::map_of_claims<json_traits>::parse_claims(json_claims);
-			for (auto& c : parsed) {
-				//Special cases handling
-				if (c.first == "aud") {
-					typename basic_claim_t::set_t res;
-					for (const auto& e : json_traits::as_array(c.second)) {
-						res.insert(json_traits::as_string(e));
-					}
-					with_audience(res);
-				}
-				else if (c.first == "exp")
-					expires_at_leeway(json_traits::as_integer(c.second));
-				else if (c.first == "nbf")
-					not_before_leeway(json_traits::as_integer(c.second));
-				else if (c.first == "iat")
-					issued_at_leeway(json_traits::as_integer(c.second));
-				else
-					//General case, including "typ"
-					with_claim(c.first, basic_claim_t(c.second));
-			}
-			return *this;
-		}
-
-		/**
 		 * Add an algorithm available for checking.
 		 * \param alg Algorithm to allow
 		 * \return *this to allow chaining
@@ -3376,17 +3346,6 @@ namespace jwt {
 		 */
 		void verify(const decoded_jwt<json_traits>& jwt, std::error_code& ec) const {
 			ec.clear();
-			verify_signature(jwt, ec);
-			if (ec) return;
-			verify_claims(jwt, ec);
-		}
-
-		/**
-		 * Verify the given token signature
-		 * \param jwt Token to check
-		 * \param ec error_code filled with details on error
-		 */
-		void verify_signature(const decoded_jwt<json_traits>& jwt, std::error_code& ec) const {
 			const typename json_traits::string_type data = jwt.get_header_base64() + "." + jwt.get_payload_base64();
 			const typename json_traits::string_type sig = jwt.get_signature();
 			const std::string algo = jwt.get_algorithm();
@@ -3395,14 +3354,9 @@ namespace jwt {
 				return;
 			}
 			algs.at(algo)->verify(data, sig, ec);
-		}
-
-		/**
-		 * Verify the given token claims.
-		 * \param jwt Token to check
-		 * \param ec error_code filled with details on error
-		 */
-		void verify_claims(const decoded_jwt<json_traits>& jwt, std::error_code& ec) const {
+			
+			if (ec) return;
+			
 			verify_ops::verify_context<json_traits> ctx{clock.now(), jwt, default_leeway};
 			for (auto& c : claims) {
 				ctx.claim_key = c.first;
