@@ -3353,9 +3353,8 @@ namespace jwt {
 				return;
 			}
 			algs.at(algo)->verify(data, sig, ec);
-			
 			if (ec) return;
-			
+
 			verify_ops::verify_context<json_traits> ctx{clock.now(), jwt, default_leeway};
 			for (auto& c : claims) {
 				ctx.claim_key = c.first;
