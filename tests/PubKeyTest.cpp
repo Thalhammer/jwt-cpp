@@ -19,7 +19,5 @@ std::string exponent = R"(AQAB)";
 TEST(PubKeyTest,RSAFromComponents){
     auto pubkey = jwt::helper::create_public_key_from_rsa_components(modulus, exponent);
 
-    std::cout << pubkeypem << std::endl;
-    std::cout << pubkey << std::endl;
     ASSERT_EQ(pubkey, pubkeypem);
 }
