@@ -869,6 +869,7 @@ namespace jwt {
 
 			std::unique_ptr<RSA, decltype(&RSA_free)> rsa(RSA_new(), RSA_free);
 
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
 			//This is unlikely to fail, and after this call RSA_free will also free the n and e big numbers
 			if (RSA_set0_key(rsa.get(), n, e, nullptr) != 1){
 				ec = error::rsa_error::set_rsa_failed;
@@ -876,6 +877,11 @@ namespace jwt {
 				BN_free(n);
 				return {};
 			}
+#else
+			rsa.get()->e = e;
+			rsa.get()->n = n;
+			rsa.get()->d = nullptr;
+#endif
 
 			auto pubkeybio = make_mem_buf_bio();
 			if (!pubkeybio) {
