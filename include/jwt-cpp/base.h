@@ -82,8 +82,8 @@ namespace jwt {
 						 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'}};
 					return data;
 				}
-				static const std::initializer_list<std::string>& fill() {
-					static std::initializer_list<std::string> fill{"%3D", "%3d"};
+				static std::initializer_list<std::string> fill() {
+					std::initializer_list<std::string> fill{"%3D", "%3d"};
 					return fill;
 				}
 			};
