@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <climits>
 #include <cmath>
 #include <cstring>
 #include <functional>
@@ -3042,7 +3043,7 @@ namespace jwt {
 				std::string out;
 				out.reserve(wide.size());
 				for (wchar_t wc : wide) {
-					char mb[MB_CUR_MAX];
+					char mb[MB_LEN_MAX];
 					std::size_t n = std::wcrtomb(mb, wc, &state);
 					if (n != static_cast<std::size_t>(-1)) out.append(mb, n);
 				}
