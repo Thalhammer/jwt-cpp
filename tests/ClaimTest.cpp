@@ -1,10 +1,12 @@
 #include "jwt-cpp/jwt.h"
 #include <gtest/gtest.h>
 
+using namespace jwt;
+
 TEST(ClaimTest, AudienceAsString) {
 	std::string token =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0.WZnM3SIiSRHsbO3O7Z2bmIzTJ4EC32HRBKfLznHhrh4";
-	auto decoded = jwt::decode(token);
+	auto decoded = decode(token);
 
 	ASSERT_TRUE(decoded.has_algorithm());
 	ASSERT_TRUE(decoded.has_type());
@@ -26,14 +28,14 @@ TEST(ClaimTest, AudienceAsString) {
 }
 
 TEST(ClaimTest, SetAudienceAsString) {
-	auto token = jwt::create().set_type("JWT").set_audience("test").sign(jwt::algorithm::hs256("test"));
+	auto token = create().set_type("JWT").set_audience("test").sign(algorithm::hs256("test"));
 	ASSERT_EQ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0.ny5Fa0vzAg7tNL95KWg_ecBNd3XP3tdAzq0SFA6diY4",
 			  token);
 }
 
 TEST(ClaimTest, AudienceAsSet) {
 	std::string token = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJhdWQiOlsidGVzdCIsInRlc3QyIl19.";
-	auto decoded = jwt::decode(token);
+	auto decoded = decode(token);
 
 	ASSERT_TRUE(decoded.has_algorithm());
 	ASSERT_TRUE(decoded.has_type());
@@ -56,74 +58,73 @@ TEST(ClaimTest, AudienceAsSet) {
 }
 
 TEST(ClaimTest, SetAudienceAsSet) {
-	auto token = jwt::create()
+	auto token = create()
 					 .set_type("JWT")
 					 .set_audience({{picojson::value("test"), picojson::value("test2")}})
-					 .sign(jwt::algorithm::none{});
+					 .sign(algorithm::none{});
 	ASSERT_EQ("eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJhdWQiOlsidGVzdCIsInRlc3QyIl19.", token);
 }
 
 TEST(ClaimTest, SetArray) {
 	std::vector<int64_t> vect = {100, 20, 10};
-	auto token =
-		jwt::create().set_payload_claim("test", jwt::claim(vect.begin(), vect.end())).sign(jwt::algorithm::none{});
+	auto token = create().set_payload_claim("test", claim(vect.begin(), vect.end())).sign(algorithm::none{});
 	ASSERT_EQ(token, "eyJhbGciOiJub25lIn0.eyJ0ZXN0IjpbMTAwLDIwLDEwXX0.");
 }
 
 TEST(ClaimTest, SetObject) {
 	std::istringstream iss{"{\"api-x\": [1]}"};
-	jwt::claim object;
+	claim object;
 	iss >> object;
-	ASSERT_EQ(object.get_type(), jwt::json::type::object);
+	ASSERT_EQ(object.get_type(), json::type::object);
 
-	auto token = jwt::create().set_payload_claim("namespace", object).sign(jwt::algorithm::hs256("test"));
+	auto token = create().set_payload_claim("namespace", object).sign(algorithm::hs256("test"));
 	ASSERT_EQ(token,
 			  "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lc3BhY2UiOnsiYXBpLXgiOlsxXX19.F8I6I2RcSF98bKa0IpIz09fRZtHr1CWnWKx2za-tFQA");
 }
 
 TEST(ClaimTest, SetAlgorithm) {
-	auto token = jwt::create().set_algorithm("test").sign(jwt::algorithm::none{});
+	auto token = create().set_algorithm("test").sign(algorithm::none{});
 
-	auto decoded_token = jwt::decode(token);
+	auto decoded_token = decode(token);
 	ASSERT_EQ(decoded_token.get_algorithm(), "test");
 }
 
 TEST(ClaimTest, AsInt) {
-	jwt::claim c(picojson::value(static_cast<int64_t>(10)));
+	claim c(picojson::value(static_cast<int64_t>(10)));
 	ASSERT_EQ(c.as_integer(), 10);
 }
 
 TEST(ClaimTest, AsDate) {
-	jwt::claim c(picojson::value(static_cast<int64_t>(10)));
+	claim c(picojson::value(static_cast<int64_t>(10)));
 	ASSERT_EQ(c.as_date(), std::chrono::system_clock::from_time_t(10));
 }
 
 TEST(ClaimTest, PicoJSONTraitsAccessorsThrow) {
-	jwt::traits::kazuho_picojson::value_type val;
-	ASSERT_THROW(jwt::traits::kazuho_picojson::as_array(val), std::bad_cast);
-	ASSERT_THROW(jwt::traits::kazuho_picojson::as_boolean(val), std::bad_cast);
-	ASSERT_THROW(jwt::traits::kazuho_picojson::as_integer(val), std::bad_cast);
-	ASSERT_THROW(jwt::traits::kazuho_picojson::as_number(val), std::bad_cast);
-	ASSERT_THROW(jwt::traits::kazuho_picojson::as_object(val), std::bad_cast);
-	ASSERT_THROW(jwt::traits::kazuho_picojson::as_string(val), std::bad_cast);
-	ASSERT_THROW(jwt::traits::kazuho_picojson::get_type(val), std::logic_error);
+	traits::kazuho_picojson::value_type val;
+	ASSERT_THROW(traits::kazuho_picojson::as_array(val), std::bad_cast);
+	ASSERT_THROW(traits::kazuho_picojson::as_boolean(val), std::bad_cast);
+	ASSERT_THROW(traits::kazuho_picojson::as_integer(val), std::bad_cast);
+	ASSERT_THROW(traits::kazuho_picojson::as_number(val), std::bad_cast);
+	ASSERT_THROW(traits::kazuho_picojson::as_object(val), std::bad_cast);
+	ASSERT_THROW(traits::kazuho_picojson::as_string(val), std::bad_cast);
+	ASSERT_THROW(traits::kazuho_picojson::get_type(val), std::logic_error);
 }
 
 TEST(ClaimTest, PicoJSONTraitsAsBool) {
-	jwt::traits::kazuho_picojson::value_type val(true);
-	ASSERT_EQ(jwt::traits::kazuho_picojson::as_boolean(val), true);
-	ASSERT_EQ(jwt::traits::kazuho_picojson::get_type(val), jwt::json::type::boolean);
+	traits::kazuho_picojson::value_type val(true);
+	ASSERT_EQ(traits::kazuho_picojson::as_boolean(val), true);
+	ASSERT_EQ(traits::kazuho_picojson::get_type(val), json::type::boolean);
 }
 
 TEST(ClaimTest, PicoJSONTraitsAsDouble) {
-	jwt::traits::kazuho_picojson::value_type val(10.0);
-	ASSERT_EQ(jwt::traits::kazuho_picojson::as_number(val), (int)10);
-	ASSERT_EQ(jwt::traits::kazuho_picojson::get_type(val), jwt::json::type::number);
+	traits::kazuho_picojson::value_type val(10.0);
+	ASSERT_EQ(traits::kazuho_picojson::as_number(val), (int)10);
+	ASSERT_EQ(traits::kazuho_picojson::get_type(val), json::type::number);
 }
 
 TEST(ClaimTest, MapOfClaim) {
-	using map = jwt::details::map_of_claims<jwt::traits::kazuho_picojson>;
-	ASSERT_THROW(map::parse_claims(R"##(__ not json __)##"), jwt::error::invalid_json_exception);
+	using map = details::map_of_claims<traits::kazuho_picojson>;
+	ASSERT_THROW(map::parse_claims(R"##(__ not json __)##"), error::invalid_json_exception);
 	const map claims{
 		map::parse_claims(R"##({ "array": [1], "string" : "hello world", "number": 9.9, "bool": true})##")};
 
@@ -137,5 +138,5 @@ TEST(ClaimTest, MapOfClaim) {
 	ASSERT_EQ(claims.get_claim("string").as_string(), "hello world");
 	ASSERT_EQ(claims.get_claim("number").as_number(), 9.9);
 	ASSERT_EQ(claims.get_claim("bool").as_boolean(), true);
-	ASSERT_THROW(claims.get_claim("__missing__"), jwt::error::claim_not_present_exception);
+	ASSERT_THROW(claims.get_claim("__missing__"), error::claim_not_present_exception);
 }

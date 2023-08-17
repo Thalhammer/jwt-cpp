@@ -1,6 +1,7 @@
 #include "jwt-cpp/jwt.h"
 #include <gtest/gtest.h>
 
+using namespace jwt;
 namespace {
 	extern std::string google_cert;
 	extern std::string google_cert_base64_der;
@@ -8,84 +9,83 @@ namespace {
 } // namespace
 
 TEST(HelperTest, Cert2Pubkey) {
-	auto key = jwt::helper::extract_pubkey_from_cert(google_cert);
+	auto key = helper::extract_pubkey_from_cert(google_cert);
 	ASSERT_EQ(google_public_key, key);
 }
 
 TEST(HelperTest, Base64DER2PemCert) {
-	auto cert_pem = jwt::helper::convert_base64_der_to_pem(google_cert_base64_der);
+	auto cert_pem = helper::convert_base64_der_to_pem(google_cert_base64_der);
 	ASSERT_EQ(google_cert, cert_pem);
 }
 
 TEST(HelperTest, DER2PemCert) {
-	auto decoded =
-		jwt::base::decode<jwt::alphabet::base64>(jwt::base::pad<jwt::alphabet::base64>(google_cert_base64_der));
-	auto cert_pem = jwt::helper::convert_der_to_pem(decoded);
+	auto decoded = base::decode<alphabet::base64>(base::pad<alphabet::base64>(google_cert_base64_der));
+	auto cert_pem = helper::convert_der_to_pem(decoded);
 	ASSERT_EQ(google_cert, cert_pem);
 }
 
 TEST(HelperTest, ErrorCodeMessages) {
-	ASSERT_EQ(std::error_code(jwt::error::rsa_error::ok).message(), "no error");
-	ASSERT_EQ(std::error_code(static_cast<jwt::error::rsa_error>(-1)).message(), "unknown RSA error");
-	ASSERT_EQ(std::error_code(jwt::error::rsa_error::ok).category().name(), std::string("rsa_error"));
+	ASSERT_EQ(std::error_code(error::rsa_error::ok).message(), "no error");
+	ASSERT_EQ(std::error_code(static_cast<error::rsa_error>(-1)).message(), "unknown RSA error");
+	ASSERT_EQ(std::error_code(error::rsa_error::ok).category().name(), std::string("rsa_error"));
 
-	ASSERT_EQ(std::error_code(jwt::error::ecdsa_error::ok).message(), "no error");
-	ASSERT_EQ(std::error_code(static_cast<jwt::error::ecdsa_error>(-1)).message(), "unknown ECDSA error");
-	ASSERT_EQ(std::error_code(jwt::error::ecdsa_error::ok).category().name(), std::string("ecdsa_error"));
+	ASSERT_EQ(std::error_code(error::ecdsa_error::ok).message(), "no error");
+	ASSERT_EQ(std::error_code(static_cast<error::ecdsa_error>(-1)).message(), "unknown ECDSA error");
+	ASSERT_EQ(std::error_code(error::ecdsa_error::ok).category().name(), std::string("ecdsa_error"));
 
-	ASSERT_EQ(std::error_code(jwt::error::signature_verification_error::ok).message(), "no error");
-	ASSERT_EQ(std::error_code(static_cast<jwt::error::signature_verification_error>(-1)).message(),
+	ASSERT_EQ(std::error_code(error::signature_verification_error::ok).message(), "no error");
+	ASSERT_EQ(std::error_code(static_cast<error::signature_verification_error>(-1)).message(),
 			  "unknown signature verification error");
-	ASSERT_EQ(std::error_code(jwt::error::signature_verification_error::ok).category().name(),
+	ASSERT_EQ(std::error_code(error::signature_verification_error::ok).category().name(),
 			  std::string("signature_verification_error"));
 
-	ASSERT_EQ(std::error_code(jwt::error::signature_generation_error::ok).message(), "no error");
-	ASSERT_EQ(std::error_code(static_cast<jwt::error::signature_generation_error>(-1)).message(),
+	ASSERT_EQ(std::error_code(error::signature_generation_error::ok).message(), "no error");
+	ASSERT_EQ(std::error_code(static_cast<error::signature_generation_error>(-1)).message(),
 			  "unknown signature generation error");
-	ASSERT_EQ(std::error_code(jwt::error::signature_generation_error::ok).category().name(),
+	ASSERT_EQ(std::error_code(error::signature_generation_error::ok).category().name(),
 			  std::string("signature_generation_error"));
 
-	ASSERT_EQ(std::error_code(jwt::error::token_verification_error::ok).message(), "no error");
-	ASSERT_EQ(std::error_code(static_cast<jwt::error::token_verification_error>(-1)).message(),
+	ASSERT_EQ(std::error_code(error::token_verification_error::ok).message(), "no error");
+	ASSERT_EQ(std::error_code(static_cast<error::token_verification_error>(-1)).message(),
 			  "unknown token verification error");
-	ASSERT_EQ(std::error_code(jwt::error::token_verification_error::ok).category().name(),
+	ASSERT_EQ(std::error_code(error::token_verification_error::ok).category().name(),
 			  std::string("token_verification_error"));
 
 	int i = 10;
 	for (i = 10; i < 19; i++) {
-		ASSERT_NE(std::error_code(static_cast<jwt::error::rsa_error>(i)).message(),
-				  std::error_code(static_cast<jwt::error::rsa_error>(-1)).message());
+		ASSERT_NE(std::error_code(static_cast<error::rsa_error>(i)).message(),
+				  std::error_code(static_cast<error::rsa_error>(-1)).message());
 	}
-	ASSERT_EQ(std::error_code(static_cast<jwt::error::rsa_error>(i)).message(),
-			  std::error_code(static_cast<jwt::error::rsa_error>(-1)).message());
+	ASSERT_EQ(std::error_code(static_cast<error::rsa_error>(i)).message(),
+			  std::error_code(static_cast<error::rsa_error>(-1)).message());
 
 	for (i = 10; i < 17; i++) {
-		ASSERT_NE(std::error_code(static_cast<jwt::error::ecdsa_error>(i)).message(),
-				  std::error_code(static_cast<jwt::error::ecdsa_error>(-1)).message());
+		ASSERT_NE(std::error_code(static_cast<error::ecdsa_error>(i)).message(),
+				  std::error_code(static_cast<error::ecdsa_error>(-1)).message());
 	}
-	ASSERT_EQ(std::error_code(static_cast<jwt::error::ecdsa_error>(i)).message(),
-			  std::error_code(static_cast<jwt::error::ecdsa_error>(-1)).message());
+	ASSERT_EQ(std::error_code(static_cast<error::ecdsa_error>(i)).message(),
+			  std::error_code(static_cast<error::ecdsa_error>(-1)).message());
 
 	for (i = 10; i < 18; i++) {
-		ASSERT_NE(std::error_code(static_cast<jwt::error::signature_verification_error>(i)).message(),
-				  std::error_code(static_cast<jwt::error::signature_verification_error>(-1)).message());
+		ASSERT_NE(std::error_code(static_cast<error::signature_verification_error>(i)).message(),
+				  std::error_code(static_cast<error::signature_verification_error>(-1)).message());
 	}
-	ASSERT_EQ(std::error_code(static_cast<jwt::error::signature_verification_error>(i)).message(),
-			  std::error_code(static_cast<jwt::error::signature_verification_error>(-1)).message());
+	ASSERT_EQ(std::error_code(static_cast<error::signature_verification_error>(i)).message(),
+			  std::error_code(static_cast<error::signature_verification_error>(-1)).message());
 
 	for (i = 10; i < 24; i++) {
-		ASSERT_NE(std::error_code(static_cast<jwt::error::signature_generation_error>(i)).message(),
-				  std::error_code(static_cast<jwt::error::signature_generation_error>(-1)).message());
+		ASSERT_NE(std::error_code(static_cast<error::signature_generation_error>(i)).message(),
+				  std::error_code(static_cast<error::signature_generation_error>(-1)).message());
 	}
-	ASSERT_EQ(std::error_code(static_cast<jwt::error::signature_generation_error>(i)).message(),
-			  std::error_code(static_cast<jwt::error::signature_generation_error>(-1)).message());
+	ASSERT_EQ(std::error_code(static_cast<error::signature_generation_error>(i)).message(),
+			  std::error_code(static_cast<error::signature_generation_error>(-1)).message());
 
 	for (i = 10; i < 16; i++) {
-		ASSERT_NE(std::error_code(static_cast<jwt::error::token_verification_error>(i)).message(),
-				  std::error_code(static_cast<jwt::error::token_verification_error>(-1)).message());
+		ASSERT_NE(std::error_code(static_cast<error::token_verification_error>(i)).message(),
+				  std::error_code(static_cast<error::token_verification_error>(-1)).message());
 	}
-	ASSERT_EQ(std::error_code(static_cast<jwt::error::token_verification_error>(i)).message(),
-			  std::error_code(static_cast<jwt::error::token_verification_error>(-1)).message());
+	ASSERT_EQ(std::error_code(static_cast<error::token_verification_error>(i)).message(),
+			  std::error_code(static_cast<error::token_verification_error>(-1)).message());
 }
 
 namespace {

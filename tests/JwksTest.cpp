@@ -1,6 +1,8 @@
 #include "jwt-cpp/jwt.h"
 #include <gtest/gtest.h>
 
+using namespace jwt;
+
 TEST(JwksTest, OneKeyParse) {
 	std::string public_key = R"({
     "alg": "RS256",
@@ -14,10 +16,10 @@ TEST(JwksTest, OneKeyParse) {
     "kid": "123456789",
     "x5t": "NjVBRjY5MDlCMUIwNzU4RTA2QzZFMDQ4QzQ2MDAyQjVDNjk1RTM2Qg"
   })";
-	ASSERT_THROW(jwt::parse_jwk("__not_json__"), jwt::error::invalid_json_exception);
-	ASSERT_THROW(jwt::parse_jwk(R"##(["not","an","object"])##"), std::bad_cast);
+	ASSERT_THROW(parse_jwk("__not_json__"), error::invalid_json_exception);
+	ASSERT_THROW(parse_jwk(R"##(["not","an","object"])##"), std::bad_cast);
 
-	auto jwk = jwt::parse_jwk(public_key);
+	auto jwk = parse_jwk(public_key);
 
 	ASSERT_TRUE(jwk.has_algorithm());
 	ASSERT_TRUE(jwk.has_key_id());
@@ -52,7 +54,7 @@ TEST(JwksTest, MultiKeysParse) {
 		}
 	]
 })";
-	auto jwks = jwt::parse_jwks(public_key);
+	auto jwks = parse_jwks(public_key);
 	auto jwk = jwks.get_jwk("internal-gateway-jwt");
 
 	ASSERT_TRUE(jwk.has_algorithm());
@@ -63,7 +65,7 @@ TEST(JwksTest, MultiKeysParse) {
 	ASSERT_EQ("RS256", jwk.get_algorithm());
 	ASSERT_EQ("internal-gateway-jwt", jwk.get_key_id());
 
-	ASSERT_THROW(jwks.get_jwk("123456"), jwt::error::claim_not_present_exception);
+	ASSERT_THROW(jwks.get_jwk("123456"), error::claim_not_present_exception);
 }
 
 TEST(JwksTest, Missingx5c) {
@@ -99,18 +101,18 @@ TEST(JwksTest, Missingx5c) {
 	]
 })";
 
-	auto jwks = jwt::parse_jwks(public_key);
+	auto jwks = parse_jwks(public_key);
 	ASSERT_TRUE(jwks.has_jwk("internal-gateway-jwt"));
 	ASSERT_FALSE(jwks.has_jwk("random-jwt"));
 	auto jwk = jwks.get_jwk("internal-gateway-jwt");
 
 	ASSERT_TRUE(jwk.has_algorithm());
-	ASSERT_THROW(jwk.get_x5c(), jwt::error::claim_not_present_exception);
+	ASSERT_THROW(jwk.get_x5c(), error::claim_not_present_exception);
 
 	auto jwk2 = jwks.get_jwk("internal-0");
 
 	ASSERT_EQ(jwk2.get_x5c().size(), 0);
-	ASSERT_THROW(jwk2.get_x5c_key_value(), jwt::error::claim_not_present_exception);
+	ASSERT_THROW(jwk2.get_x5c_key_value(), error::claim_not_present_exception);
 
 	auto jwk3 = jwks.get_jwk("internal-1");
 	ASSERT_EQ(jwk3.get_x5c().size(), 3);
