@@ -122,7 +122,8 @@ namespace jwt {
 			load_key_bio_read,
 			create_mem_bio_failed,
 			no_key_provided,
-			set_rsa_failed
+			set_rsa_failed,
+			create_context_failed
 		};
 		/**
 		 * \brief Error category for RSA errors
@@ -144,6 +145,7 @@ namespace jwt {
 					case rsa_error::create_mem_bio_failed: return "failed to create memory bio";
 					case rsa_error::no_key_provided: return "at least one of public or private key need to be present";
 					case rsa_error::set_rsa_failed: return "set modulus and exponent to RSA failed";
+					case rsa_error::create_context_failed: return "failed to create context";
 					default: return "unknown RSA error";
 					}
 				}
@@ -830,9 +832,25 @@ namespace jwt {
 		 * \return BIGNUM representation
 		 */
 		inline std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw) {
-			return std::unique_ptr<BIGNUM, decltype(&BN_free)>(
-				BN_bin2bn(reinterpret_cast<const unsigned char*>(raw.data()), static_cast<int>(raw.size()), nullptr),
-				BN_free);
+			std::error_code ec;
+			auto res = raw2bn(raw, ec);
+			error::throw_if_error(ec);
+			return res;
+		}
+		/**
+		 * Convert an std::string to a OpenSSL BIGNUM
+		 * \param raw String to convert
+		 * \param ec  error_code for error_detection (gets cleared if no error occurs)
+		 * \return BIGNUM representation
+		 */
+		inline std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw, std::error_code& ec) {
+			auto bn =
+				BN_bin2bn(reinterpret_cast<const unsigned char*>(raw.data()), static_cast<int>(raw.size()), nullptr);
+			if (!bn) {
+				ec = error::rsa_error::set_rsa_failed;
+				return {nullptr, BN_free};
+			}
+			return {bn, BN_free};
 		}
 
 		/**
@@ -896,34 +914,50 @@ namespace jwt {
 			auto e = helper::raw2bn(decoded_exponent);
 
 #if defined(JWT_OPENSSL_3_0)
-
 			// OpenSSL deprecated mutable keys and there is a new way for making them
 			// https://mta.openssl.org/pipermail/openssl-users/2021-July/013994.html
-			// https://www.openssl.org/docs/man3.0/man3/EVP_PKEY_fromdata.html#EXAMPLES
-
-			OSSL_PARAM_BLD* param_bld = OSSL_PARAM_BLD_new();
-			OSSL_PARAM_BLD_push_BN(param_bld, "n", n.get());
-			OSSL_PARAM_BLD_push_BN(param_bld, "e", e.get());
-			OSSL_PARAM_BLD_push_BN(param_bld, "d", 0);
-
-			OSSL_PARAM* params = OSSL_PARAM_BLD_to_param(param_bld);
-
-			std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)> ctx(
-				EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL), EVP_PKEY_CTX_free);
-			if (!ctx) {
-				ec = error::ecdsa_error::create_context_failed;
+			// https://www.openssl.org/docs/man3.1/man3/OSSL_PARAM_BLD_new.html#Example-2
+			std::unique_ptr<OSSL_PARAM_BLD, decltype(&OSSL_PARAM_BLD_free)> param_bld(OSSL_PARAM_BLD_new(),
+																					  OSSL_PARAM_BLD_free);
+			if (!param_bld) {
+				ec = error::rsa_error::create_context_failed;
 				return {};
 			}
 
-			EVP_PKEY* pkey = NULL;
-
-			if (EVP_PKEY_fromdata_init(ctx.get()) < 0 ||
-				EVP_PKEY_fromdata(ctx.get(), &pkey, EVP_PKEY_KEYPAIR, params) < 0) {
-				EVP_PKEY_free(pkey);
-				// EVP_PKEY_CTX_free(ctx);
-				OSSL_PARAM_free(params);
-				OSSL_PARAM_BLD_free(param_bld);
+			if (OSSL_PARAM_BLD_push_BN(param_bld.get(), "n", n.get()) != 1 ||
+				OSSL_PARAM_BLD_push_BN(param_bld.get(), "e", e.get()) != 1) {
+				ec = error::rsa_error::set_rsa_failed;
+				return {};
 			}
+
+			std::unique_ptr<OSSL_PARAM, decltype(&OSSL_PARAM_free)> params(OSSL_PARAM_BLD_to_param(param_bld.get()),
+																		   OSSL_PARAM_free);
+			if (!params) {
+				ec = error::rsa_error::set_rsa_failed;
+				return {};
+			}
+
+			std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)> ctx(
+				EVP_PKEY_CTX_new_from_name(nullptr, "RSA", nullptr), EVP_PKEY_CTX_free);
+			if (!ctx) {
+				ec = error::rsa_error::create_context_failed;
+				return {};
+			}
+
+			// https://www.openssl.org/docs/man3.0/man3/EVP_PKEY_fromdata.html#EXAMPLES
+			EVP_PKEY* pkey = NULL;
+			if (EVP_PKEY_fromdata_init(ctx.get()) < 0 ||
+				EVP_PKEY_fromdata(ctx.get(), &pkey, EVP_PKEY_KEYPAIR, params.get()) < 0) {
+				// It's unclear if this can fail after allocating but free it anyways
+				// https://www.openssl.org/docs/man3.0/man3/EVP_PKEY_fromdata.html
+				EVP_PKEY_free(pkey);
+
+				ec = error::rsa_error::cert_load_failed;
+				return {};
+			}
+
+			// Transfer ownership so we get ref counter and cleanup
+			evp_pkey_handle rsa(pkey);
 
 #else
 			std::unique_ptr<RSA, decltype(&RSA_free)> rsa(RSA_new(), RSA_free);
@@ -948,18 +982,18 @@ namespace jwt {
 				return {};
 			}
 
+			auto write_pem_to_bio =
 #if defined(JWT_OPENSSL_3_0)
-			// https://www.openssl.org/docs/man3.1/man3/PEM_write_bio_RSA_PUBKEY.html
-			if (PEM_write_bio_PUBKEY(pub_key_bio.get(), pkey) != 1) {
-				ec = error::rsa_error::convert_to_pem_failed;
-				return {};
-			}
+				// https://www.openssl.org/docs/man3.1/man3/PEM_write_bio_RSA_PUBKEY.html
+				&PEM_write_bio_PUBKEY;
 #else
-			if (PEM_write_bio_RSA_PUBKEY(pub_key_bio.get(), rsa.get()) != 1) {
-				ec = error::rsa_error::convert_to_pem_failed;
+				&PEM_write_bio_RSA_PUBKEY
+#endif
+			if (write_pem_to_bio(pub_key_bio.get(), rsa.get()) != 1) {
+				ec = error::rsa_error::load_key_bio_write;
 				return {};
 			}
-#endif
+
 			char* ptr = nullptr;
 			const auto len = BIO_get_mem_data(pub_key_bio.get(), &ptr);
 			if (len <= 0 || ptr == nullptr) {
