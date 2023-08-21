@@ -51,6 +51,7 @@
 
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L // 3.0.0
 #define JWT_OPENSSL_3_0
+#include <openssl/param_build.h>
 #elif OPENSSL_VERSION_NUMBER >= 0x10101000L // 1.1.1
 #define JWT_OPENSSL_1_1_1
 #elif OPENSSL_VERSION_NUMBER >= 0x10100000L // 1.1.0
