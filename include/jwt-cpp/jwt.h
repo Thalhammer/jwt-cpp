@@ -628,7 +628,6 @@ namespace jwt {
 		 * \brief Convert the certificate provided as DER to PEM.
 		 *
 		 * \param cert_der_str 	String containing the DER certificate
-		 * \param decode 		The function to decode the cert
 		 * \throw				rsa_exception if an error occurred
 		 */
 		inline std::string convert_der_to_pem(const std::string& cert_der_str) {
@@ -849,17 +848,19 @@ namespace jwt {
 		}
 
 		/**
-		* \brief create public key from modulos and exponent
+		* \brief create public key from modulus and exponent
 		*
 		* \param modulus	string containing base64 encoded modulus
 		* \param exponent	string containing base64 encoded exponent
-		* \param ec			error_code for error_detection (gets cleared if no error occures)
+		* \param decode 				The function to decode the certs)
+		* \param ec			error_code for error_detection (gets cleared if no error occur
 		* \return public key in PEM format
 		*/
-		inline std::string create_public_key_from_rsa_components(const std::string& modulus,
-																 const std::string& exponent, std::error_code& ec) {
-			auto decoded_modulus = base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(modulus));
-			auto decoded_exponent = base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(exponent));
+		template<typename Decode>
+		std::string create_public_key_from_rsa_components(const std::string& modulus, const std::string& exponent,
+														  Decode decode, std::error_code& ec) {
+			auto decoded_modulus = decode(modulus);
+			auto decoded_exponent = decode(exponent);
 
 			BIGNUM* n = BN_bin2bn(reinterpret_cast<const unsigned char*>(decoded_modulus.data()),
 								  static_cast<int>(decoded_modulus.size()), nullptr);
@@ -907,7 +908,40 @@ namespace jwt {
 		}
 
 		/**
-		* \brief create public key from modulos and exponent
+		* \brief create public key from modulus and exponent
+		*
+		* \param modulus	string containing base64 encoded modulus
+		* \param exponent	string containing base64 encoded exponent
+		* \param decode 				The function to decode the certs)
+		* \return public key in PEM format
+		*/
+		template<typename Decode>
+		std::string create_public_key_from_rsa_components(const std::string& modulus, const std::string& exponent,
+														  Decode decode) {
+			std::error_code ec;
+			auto res = create_public_key_from_rsa_components(modulus, exponent, decode, ec);
+			error::throw_if_error(ec);
+			return res;
+		}
+
+#ifndef JWT_DISABLE_BASE64
+		/**
+		* \brief create public key from modulus and exponent
+		*
+		* \param modulus	string containing base64 encoded modulus
+		* \param exponent	string containing base64 encoded exponent
+		* \param ec			error_code for error_detection (gets cleared if no error occur
+		* \return public key in PEM format
+		*/
+		inline std::string create_public_key_from_rsa_components(const std::string& modulus,
+																 const std::string& exponent, std::error_code& ec) {
+			auto decode = [](const std::string& token) {
+				return base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(token));
+			};
+			return create_public_key_from_rsa_components(modulus, exponent, std::move(decode), ec);
+		}
+		/**
+		* \brief create public key from modulus and exponent
 		*
 		* \param modulus	string containing base64 encoded modulus
 		* \param exponent	string containing base64 encoded exponent
@@ -920,6 +954,7 @@ namespace jwt {
 			error::throw_if_error(ec);
 			return res;
 		}
+#endif
 
 		/**
 		 * \brief Load a private key from a string.
