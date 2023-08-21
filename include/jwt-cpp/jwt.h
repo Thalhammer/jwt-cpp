@@ -917,7 +917,8 @@ namespace jwt {
 
 			EVP_PKEY* pkey = NULL;
 
-			if (EVP_PKEY_fromdata_init(ctx.get()) < 0 || EVP_PKEY_fromdata(ctx.get(), &pkey, EVP_PKEY_KEYPAIR, params) < 0) {
+			if (EVP_PKEY_fromdata_init(ctx.get()) < 0 ||
+				EVP_PKEY_fromdata(ctx.get(), &pkey, EVP_PKEY_KEYPAIR, params) < 0) {
 				EVP_PKEY_free(pkey);
 				// EVP_PKEY_CTX_free(ctx);
 				OSSL_PARAM_free(params);
@@ -948,7 +949,7 @@ namespace jwt {
 			}
 
 #if defined(JWT_OPENSSL_3_0)
-  			// https://www.openssl.org/docs/man3.1/man3/PEM_write_bio_RSA_PUBKEY.html
+			// https://www.openssl.org/docs/man3.1/man3/PEM_write_bio_RSA_PUBKEY.html
 			if (PEM_write_bio_PUBKEY(pub_key_bio.get(), pkey) != 1) {
 				ec = error::rsa_error::convert_to_pem_failed;
 				return {};
