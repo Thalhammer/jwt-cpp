@@ -862,49 +862,48 @@ namespace jwt {
 			auto decoded_modulus = decode(modulus);
 			auto decoded_exponent = decode(exponent);
 
-			BIGNUM* n = BN_bin2bn(reinterpret_cast<const unsigned char*>(decoded_modulus.data()),
-								  static_cast<int>(decoded_modulus.size()), nullptr);
-
-			BIGNUM* e = BN_bin2bn(reinterpret_cast<const unsigned char*>(decoded_exponent.data()),
-								  static_cast<int>(decoded_exponent.size()), nullptr);
+			std::unique_ptr<BIGNUM, decltype(&BN_free)> n(
+				BN_bin2bn(reinterpret_cast<const unsigned char*>(decoded_modulus.data()),
+						  static_cast<int>(decoded_modulus.size()), nullptr),
+				BN_free);
+			std::unique_ptr<BIGNUM, decltype(&BN_free)> e(
+				BN_bin2bn(reinterpret_cast<const unsigned char*>(decoded_exponent.data()),
+						  static_cast<int>(decoded_exponent.size()), nullptr),
+				BN_free);
 
 			std::unique_ptr<RSA, decltype(&RSA_free)> rsa(RSA_new(), RSA_free);
 
-#if !defined(JWT_OPENSSL_1_1_0)
+#if !defined(JWT_OPENSSL_1_0_0)
 			//This is unlikely to fail, and after this call RSA_free will also free the n and e big numbers
-			if (RSA_set0_key(rsa.get(), n, e, nullptr) != 1) {
+			if (RSA_set0_key(rsa.get(), n.release(), e.release(), nullptr) != 1) {
 				ec = error::rsa_error::set_rsa_failed;
-				BN_free(e);
-				BN_free(n);
 				return {};
 			}
 #else
-			rsa.get()->e = e;
-			rsa.get()->n = n;
-			rsa.get()->d = nullptr;
+			rsa->e = e.release();
+			rsa->n = n.release();
+			rsa->d = nullptr;
 #endif
 
-			auto pubkeybio = make_mem_buf_bio();
-			if (!pubkeybio) {
+			auto pub_key_bio = make_mem_buf_bio();
+			if (!pub_key_bio) {
 				ec = error::rsa_error::create_mem_bio_failed;
 				return {};
 			}
 
-			if (PEM_write_bio_RSA_PUBKEY(pubkeybio.get(), rsa.get()) != 1) {
+			if (PEM_write_bio_RSA_PUBKEY(pub_key_bio.get(), rsa.get()) != 1) {
 				ec = error::rsa_error::convert_to_pem_failed;
 				return {};
 			}
 
 			char* ptr = nullptr;
-			const auto len = BIO_get_mem_data(pubkeybio.get(), &ptr);
+			const auto len = BIO_get_mem_data(pub_key_bio.get(), &ptr);
 			if (len <= 0 || ptr == nullptr) {
 				ec = error::rsa_error::convert_to_pem_failed;
 				return {};
 			}
 
-			std::string pubkey_pem(ptr, static_cast<size_t>(len));
-
-			return pubkey_pem;
+			return std::string {ptr, static_cast<size_t>(len)};
 		}
 
 		/**
