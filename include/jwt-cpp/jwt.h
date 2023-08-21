@@ -806,6 +806,35 @@ namespace jwt {
 		}
 
 		/**
+		 * Convert a OpenSSL BIGNUM to a std::string
+		 * \param bn BIGNUM to convert
+		 * \return bignum as string
+		 */
+		inline
+#ifdef JWT_OPENSSL_1_0_0
+			std::string
+			bn2raw(BIGNUM* bn)
+#else
+			std::string
+			bn2raw(const BIGNUM* bn)
+#endif
+		{
+			std::string res(BN_num_bytes(bn), '\0');
+			BN_bn2bin(bn, (unsigned char*)res.data()); // NOLINT(google-readability-casting) requires `const_cast`
+			return res;
+		}
+		/**
+		 * Convert an std::string to a OpenSSL BIGNUM
+		 * \param raw String to convert
+		 * \return BIGNUM representation
+		 */
+		inline std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw) {
+			return std::unique_ptr<BIGNUM, decltype(&BN_free)>(
+				BN_bin2bn(reinterpret_cast<const unsigned char*>(raw.data()), static_cast<int>(raw.size()), nullptr),
+				BN_free);
+		}
+
+		/**
 		 * \brief Load a public key from a string.
 		 *
 		 * The string should contain a pem encoded certificate or public key
@@ -862,27 +891,51 @@ namespace jwt {
 			auto decoded_modulus = decode(modulus);
 			auto decoded_exponent = decode(exponent);
 
-			std::unique_ptr<BIGNUM, decltype(&BN_free)> n(
-				BN_bin2bn(reinterpret_cast<const unsigned char*>(decoded_modulus.data()),
-						  static_cast<int>(decoded_modulus.size()), nullptr),
-				BN_free);
-			std::unique_ptr<BIGNUM, decltype(&BN_free)> e(
-				BN_bin2bn(reinterpret_cast<const unsigned char*>(decoded_exponent.data()),
-						  static_cast<int>(decoded_exponent.size()), nullptr),
-				BN_free);
+			auto n = helper::raw2bn(decoded_modulus);
+			auto e = helper::raw2bn(decoded_exponent);
 
+#if defined(JWT_OPENSSL_3_0)
+
+			// OpenSSL deprecated mutable keys and there is a new way for making them
+			// https://mta.openssl.org/pipermail/openssl-users/2021-July/013994.html
+			// https://www.openssl.org/docs/man3.0/man3/EVP_PKEY_fromdata.html#EXAMPLES
+
+			OSSL_PARAM_BLD* param_bld = OSSL_PARAM_BLD_new();
+			OSSL_PARAM_BLD_push_BN(param_bld, "n", n);
+			OSSL_PARAM_BLD_push_BN(param_bld, "e", e);
+			OSSL_PARAM_BLD_push_BN(param_bld, "d", 0);
+
+			OSSL_PARAM* params params = OSSL_PARAM_BLD_to_param(param_bld);
+
+			EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);
+			EVP_PKEY* pkey = NULL;
+
+			if (ctx == NULL || EVP_PKEY_fromdata_init(ctx) <= 0 ||
+				EVP_PKEY_fromdata(ctx, &pkey, EVP_PKEY_KEYPAIR, params) <= 0) {
+				exit(1);
+
+			} else {
+				EVP_PKEY_free(pkey);
+				EVP_PKEY_CTX_free(ctx);
+				OSSL_PARAM_free(params);
+				OSSL_PARAM_BLD_free(param_bld);
+			}
+
+#else
 			std::unique_ptr<RSA, decltype(&RSA_free)> rsa(RSA_new(), RSA_free);
 
-#if !defined(JWT_OPENSSL_1_0_0)
-			//This is unlikely to fail, and after this call RSA_free will also free the n and e big numbers
+			// After this call RSA_free will also free the n and e big numbers
+			// See https://github.com/Thalhammer/jwt-cpp/pull/298#discussion_r1282619186
+#if defined(JWT_OPENSSL_1_1_1) || defined(JWT_OPENSSL_1_1_0)
 			if (RSA_set0_key(rsa.get(), n.release(), e.release(), nullptr) != 1) {
 				ec = error::rsa_error::set_rsa_failed;
 				return {};
 			}
-#else
+#elif defined(JWT_OPENSSL_1_0_0)
 			rsa->e = e.release();
 			rsa->n = n.release();
 			rsa->d = nullptr;
+#endif
 #endif
 
 			auto pub_key_bio = make_mem_buf_bio();
@@ -903,7 +956,7 @@ namespace jwt {
 				return {};
 			}
 
-			return std::string {ptr, static_cast<size_t>(len)};
+			return std::string{ptr, static_cast<size_t>(len)};
 		}
 
 		/**
@@ -968,35 +1021,6 @@ namespace jwt {
 			auto res = load_private_ec_key_from_string(key, password, ec);
 			error::throw_if_error(ec);
 			return res;
-		}
-
-		/**
-		 * Convert a OpenSSL BIGNUM to a std::string
-		 * \param bn BIGNUM to convert
-		 * \return bignum as string
-		 */
-		inline
-#ifdef JWT_OPENSSL_1_0_0
-			std::string
-			bn2raw(BIGNUM* bn)
-#else
-			std::string
-			bn2raw(const BIGNUM* bn)
-#endif
-		{
-			std::string res(BN_num_bytes(bn), '\0');
-			BN_bn2bin(bn, (unsigned char*)res.data()); // NOLINT(google-readability-casting) requires `const_cast`
-			return res;
-		}
-		/**
-		 * Convert an std::string to a OpenSSL BIGNUM
-		 * \param raw String to convert
-		 * \return BIGNUM representation
-		 */
-		inline std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw) {
-			return std::unique_ptr<BIGNUM, decltype(&BN_free)>(
-				BN_bin2bn(reinterpret_cast<const unsigned char*>(raw.data()), static_cast<int>(raw.size()), nullptr),
-				BN_free);
 		}
 	} // namespace helper
 

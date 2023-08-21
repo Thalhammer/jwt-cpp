@@ -728,7 +728,7 @@ TEST(TokenTest, VerifyTokenType) {
 }
 
 TEST(TokenTest, GetClaimThrows) {
-	const auto *token = "eyJhbGciOiJub25lIiwidHlwIjoiSldTIn0.eyJpc3MiOiJhdXRoMCJ9.";
+	const auto* token = "eyJhbGciOiJub25lIiwidHlwIjoiSldTIn0.eyJpc3MiOiJhdXRoMCJ9.";
 	auto decoded_token = jwt::decode(token);
 
 	ASSERT_THROW(decoded_token.get_header_claim("test"), jwt::error::claim_not_present_exception);
