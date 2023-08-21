@@ -902,22 +902,24 @@ namespace jwt {
 			// https://www.openssl.org/docs/man3.0/man3/EVP_PKEY_fromdata.html#EXAMPLES
 
 			OSSL_PARAM_BLD* param_bld = OSSL_PARAM_BLD_new();
-			OSSL_PARAM_BLD_push_BN(param_bld, "n", n);
-			OSSL_PARAM_BLD_push_BN(param_bld, "e", e);
+			OSSL_PARAM_BLD_push_BN(param_bld, "n", n.get());
+			OSSL_PARAM_BLD_push_BN(param_bld, "e", e.get());
 			OSSL_PARAM_BLD_push_BN(param_bld, "d", 0);
 
-			OSSL_PARAM* params params = OSSL_PARAM_BLD_to_param(param_bld);
+			OSSL_PARAM* params = OSSL_PARAM_BLD_to_param(param_bld);
 
-			EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);
+			std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)> ctx(
+				EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL), EVP_PKEY_CTX_free);
+			if (!ctx) {
+				ec = error::ecdsa_error::create_context_failed;
+				return {};
+			}
+
 			EVP_PKEY* pkey = NULL;
 
-			if (ctx == NULL || EVP_PKEY_fromdata_init(ctx) <= 0 ||
-				EVP_PKEY_fromdata(ctx, &pkey, EVP_PKEY_KEYPAIR, params) <= 0) {
-				exit(1);
-
-			} else {
+			if (EVP_PKEY_fromdata_init(ctx.get()) < 0 || EVP_PKEY_fromdata(ctx.get(), &pkey, EVP_PKEY_KEYPAIR, params) < 0) {
 				EVP_PKEY_free(pkey);
-				EVP_PKEY_CTX_free(ctx);
+				// EVP_PKEY_CTX_free(ctx);
 				OSSL_PARAM_free(params);
 				OSSL_PARAM_BLD_free(param_bld);
 			}
@@ -945,11 +947,18 @@ namespace jwt {
 				return {};
 			}
 
+#if defined(JWT_OPENSSL_3_0)
+  			// https://www.openssl.org/docs/man3.1/man3/PEM_write_bio_RSA_PUBKEY.html
+			if (PEM_write_bio_PUBKEY(pub_key_bio.get(), pkey) != 1) {
+				ec = error::rsa_error::convert_to_pem_failed;
+				return {};
+			}
+#else
 			if (PEM_write_bio_RSA_PUBKEY(pub_key_bio.get(), rsa.get()) != 1) {
 				ec = error::rsa_error::convert_to_pem_failed;
 				return {};
 			}
-
+#endif
 			char* ptr = nullptr;
 			const auto len = BIO_get_mem_data(pub_key_bio.get(), &ptr);
 			if (len <= 0 || ptr == nullptr) {
