@@ -829,17 +829,6 @@ namespace jwt {
 		/**
 		 * Convert an std::string to a OpenSSL BIGNUM
 		 * \param raw String to convert
-		 * \return BIGNUM representation
-		 */
-		inline std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw) {
-			std::error_code ec;
-			auto res = raw2bn(raw, ec);
-			error::throw_if_error(ec);
-			return res;
-		}
-		/**
-		 * Convert an std::string to a OpenSSL BIGNUM
-		 * \param raw String to convert
 		 * \param ec  error_code for error_detection (gets cleared if no error occurs)
 		 * \return BIGNUM representation
 		 */
@@ -851,6 +840,17 @@ namespace jwt {
 				return {nullptr, BN_free};
 			}
 			return {bn, BN_free};
+		}
+		/**
+		 * Convert an std::string to a OpenSSL BIGNUM
+		 * \param raw String to convert
+		 * \return BIGNUM representation
+		 */
+		inline std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw) {
+			std::error_code ec;
+			auto res = raw2bn(raw, ec);
+			error::throw_if_error(ec);
+			return res;
 		}
 
 		/**
