@@ -987,7 +987,7 @@ namespace jwt {
 				// https://www.openssl.org/docs/man3.1/man3/PEM_write_bio_RSA_PUBKEY.html
 				&PEM_write_bio_PUBKEY;
 #else
-				&PEM_write_bio_RSA_PUBKEY
+				&PEM_write_bio_RSA_PUBKEY;
 #endif
 			if (write_pem_to_bio(pub_key_bio.get(), rsa.get()) != 1) {
 				ec = error::rsa_error::load_key_bio_write;
