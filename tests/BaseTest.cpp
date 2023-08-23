@@ -1,46 +1,85 @@
 #include "jwt-cpp/base.h"
 #include <gtest/gtest.h>
 
+namespace jwt {
+	namespace base {
+		namespace details {
+			inline bool operator==(const padding& lhs, const padding& rhs) {
+				return lhs.count == rhs.count && lhs.length == rhs.length;
+			}
+		} // namespace details
+	}	  // namespace base
+} // namespace jwt
+namespace {
+	jwt::base::details::padding count_padding(jwt::string_view base, std::initializer_list<std::string> fills) {
+		return jwt::base::details::count_padding(base, fills.begin(), fills.end());
+	}
+} // namespace
+
 TEST(BaseTest, Base64Index) {
-	ASSERT_EQ(0, jwt::alphabet::index(jwt::alphabet::base64::data(), 'A'));
-	ASSERT_EQ(32, jwt::alphabet::index(jwt::alphabet::base64::data(), 'g'));
-	ASSERT_EQ(62, jwt::alphabet::index(jwt::alphabet::base64::data(), '+'));
+#ifdef JWT_HAS_STRING_VIEW
+	ASSERT_EQ(
+		0, jwt::alphabet::index(std::begin(jwt::alphabet::base64::kData), std::end(jwt::alphabet::base64::kData), 'A'));
+	ASSERT_EQ(32, jwt::alphabet::index(std::begin(jwt::alphabet::base64::kData), std::end(jwt::alphabet::base64::kData),
+									   'g'));
+	ASSERT_EQ(62, jwt::alphabet::index(std::begin(jwt::alphabet::base64::kData), std::end(jwt::alphabet::base64::kData),
+									   '+'));
+#else
+	ASSERT_EQ(0, jwt::alphabet::index(std::begin(jwt::alphabet::base64::data()),
+									  std::end(jwt::alphabet::base64::data()), 'A'));
+	ASSERT_EQ(32, jwt::alphabet::index(std::begin(jwt::alphabet::base64::data()),
+									   std::end(jwt::alphabet::base64::data()), 'g'));
+	ASSERT_EQ(62, jwt::alphabet::index(std::begin(jwt::alphabet::base64::data()),
+									   std::end(jwt::alphabet::base64::data()), '+'));
+#endif
 }
 
 TEST(BaseTest, Base64URLIndex) {
-	ASSERT_EQ(0, jwt::alphabet::index(jwt::alphabet::base64url::data(), 'A'));
-	ASSERT_EQ(32, jwt::alphabet::index(jwt::alphabet::base64url::data(), 'g'));
-	ASSERT_EQ(62, jwt::alphabet::index(jwt::alphabet::base64url::data(), '-'));
+#ifdef JWT_HAS_STRING_VIEW
+	ASSERT_EQ(0, jwt::alphabet::index(std::begin(jwt::alphabet::base64url::kData),
+									  std::end(jwt::alphabet::base64url::kData), 'A'));
+	ASSERT_EQ(32, jwt::alphabet::index(std::begin(jwt::alphabet::base64url::kData),
+									   std::end(jwt::alphabet::base64url::kData), 'g'));
+	ASSERT_EQ(62, jwt::alphabet::index(std::begin(jwt::alphabet::base64url::kData),
+									   std::end(jwt::alphabet::base64url::kData), '-'));
+#else
+	ASSERT_EQ(0, jwt::alphabet::index(std::begin(jwt::alphabet::base64url::data()),
+									  std::end(jwt::alphabet::base64url::data()), 'A'));
+	ASSERT_EQ(32, jwt::alphabet::index(std::begin(jwt::alphabet::base64url::data()),
+									   std::end(jwt::alphabet::base64url::data()), 'g'));
+	ASSERT_EQ(62, jwt::alphabet::index(std::begin(jwt::alphabet::base64url::data()),
+									   std::end(jwt::alphabet::base64url::data()), '-'));
+#endif
 }
 
 TEST(BaseTest, BaseDetailsCountPadding) {
 	using jwt::base::details::padding;
-	ASSERT_EQ(padding{}, jwt::base::details::count_padding("ABC", {"~"}));
-	ASSERT_EQ((padding{3, 3}), jwt::base::details::count_padding("ABC~~~", {"~"}));
-	ASSERT_EQ((padding{5, 5}), jwt::base::details::count_padding("ABC~~~~~", {"~"}));
+	ASSERT_EQ(padding{}, count_padding("ABC", {"~"}));
+	ASSERT_EQ((padding{3, 3}), count_padding("ABC~~~", {"~"}));
+	ASSERT_EQ((padding{5, 5}), count_padding("ABC~~~~~", {"~"}));
 
-	ASSERT_EQ(padding{}, jwt::base::details::count_padding("ABC", {"~", "!"}));
-	ASSERT_EQ((padding{1, 1}), jwt::base::details::count_padding("ABC!", {"~", "!"}));
-	ASSERT_EQ((padding{1, 1}), jwt::base::details::count_padding("ABC~", {"~", "!"}));
-	ASSERT_EQ((padding{3, 3}), jwt::base::details::count_padding("ABC~~!", {"~", "!"}));
-	ASSERT_EQ((padding{3, 3}), jwt::base::details::count_padding("ABC!~~", {"~", "!"}));
-	ASSERT_EQ((padding{5, 5}), jwt::base::details::count_padding("ABC~~!~~", {"~", "!"}));
+	ASSERT_EQ(padding{}, count_padding("ABC", {"~", "!"}));
+	ASSERT_EQ((padding{1, 1}), count_padding("ABC!", {"~", "!"}));
+	ASSERT_EQ((padding{1, 1}), count_padding("ABC~", {"~", "!"}));
+	ASSERT_EQ((padding{3, 3}), count_padding("ABC~~!", {"~", "!"}));
+	ASSERT_EQ((padding{3, 3}), count_padding("ABC!~~", {"~", "!"}));
+	ASSERT_EQ((padding{5, 5}), count_padding("ABC~~!~~", {"~", "!"}));
 
-	ASSERT_EQ((padding{2, 6}), jwt::base::details::count_padding("MTIzNA%3d%3d", {"%3d", "%3D"}));
-	ASSERT_EQ((padding{2, 6}), jwt::base::details::count_padding("MTIzNA%3d%3D", {"%3d", "%3D"}));
-	ASSERT_EQ((padding{2, 6}), jwt::base::details::count_padding("MTIzNA%3D%3d", {"%3d", "%3D"}));
-	ASSERT_EQ((padding{2, 6}), jwt::base::details::count_padding("MTIzNA%3D%3D", {"%3d", "%3D"}));
+	ASSERT_EQ((padding{2, 6}), count_padding("MTIzNA%3d%3d", {"%3d", "%3D"}));
+	ASSERT_EQ((padding{2, 6}), count_padding("MTIzNA%3d%3D", {"%3d", "%3D"}));
+	ASSERT_EQ((padding{2, 6}), count_padding("MTIzNA%3D%3d", {"%3d", "%3D"}));
+	ASSERT_EQ((padding{2, 6}), count_padding("MTIzNA%3D%3D", {"%3d", "%3D"}));
 
 	// Some fake scenarios
 
-	ASSERT_EQ(padding{}, jwt::base::details::count_padding("", {"~"}));
-	ASSERT_EQ(padding{}, jwt::base::details::count_padding("ABC", {"~", "~~!"}));
-	ASSERT_EQ(padding{}, jwt::base::details::count_padding("ABC!", {"~", "~~!"}));
-	ASSERT_EQ((padding{1, 1}), jwt::base::details::count_padding("ABC~", {"~", "~~!"}));
-	ASSERT_EQ((padding{1, 3}), jwt::base::details::count_padding("ABC~~!", {"~", "~~!"}));
-	ASSERT_EQ((padding{2, 2}), jwt::base::details::count_padding("ABC!~~", {"~", "~~!"}));
-	ASSERT_EQ((padding{3, 5}), jwt::base::details::count_padding("ABC~~!~~", {"~", "~~!"}));
-	ASSERT_EQ(padding{}, jwt::base::details::count_padding("ABC~~!~~", {}));
+	ASSERT_EQ(padding{}, count_padding("", {"~"}));
+	ASSERT_EQ(padding{}, count_padding("ABC", {"~", "~~!"}));
+	ASSERT_EQ(padding{}, count_padding("ABC!", {"~", "~~!"}));
+	ASSERT_EQ((padding{1, 1}), count_padding("ABC~", {"~", "~~!"}));
+	ASSERT_EQ((padding{1, 3}), count_padding("ABC~~!", {"~", "~~!"}));
+	ASSERT_EQ((padding{2, 2}), count_padding("ABC!~~", {"~", "~~!"}));
+	ASSERT_EQ((padding{3, 5}), count_padding("ABC~~!~~", {"~", "~~!"}));
+	ASSERT_EQ(padding{}, count_padding("ABC~~!~~", {}));
 }
 
 TEST(BaseTest, Base64Decode) {

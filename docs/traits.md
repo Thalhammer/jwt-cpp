@@ -54,7 +54,8 @@ struct my_favorite_json_library_traits {
     static boolean_type as_boolean(const value_type &val);
 
     // serialization and parsing
-    static bool parse(value_type &val, string_type str);
+    template <class string_t> // could be the json string_type, or std::string_view for instance
+    static bool parse(value_type &val, const string_t& str);
     static string_type serialize(const value_type &val); // with no extra whitespace, padding or indentation
 };
 ```

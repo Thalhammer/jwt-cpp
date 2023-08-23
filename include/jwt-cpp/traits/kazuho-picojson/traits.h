@@ -64,7 +64,8 @@ namespace jwt {
 				return val.get<double>();
 			}
 
-			static bool parse(picojson::value& val, const std::string& str) {
+			template<class string_t>
+			static bool parse(picojson::value& val, const string_t& str) {
 				return picojson::parse(val, str).empty();
 			}
 

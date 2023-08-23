@@ -108,7 +108,8 @@ namespace jwt {
 				return val.as_bool();
 			}
 
-			static bool parse(json& val, const std::string& str) {
+			template<class string_t>
+			static bool parse(json& val, const string_t& str) {
 				val = json::parse(str);
 				return true;
 			}
