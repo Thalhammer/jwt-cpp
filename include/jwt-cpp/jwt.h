@@ -502,35 +502,33 @@ namespace jwt {
 			ec.clear();
 			auto certbio = make_mem_buf_bio(certstr);
 			auto keybio = make_mem_buf_bio();
-			std::string res;
 			if (!certbio || !keybio) {
 				ec = error::rsa_error::create_mem_bio_failed;
-				return res;
+				return {};
 			}
 
 			std::unique_ptr<X509, decltype(&X509_free)> cert(
 				PEM_read_bio_X509(certbio.get(), nullptr, nullptr, const_cast<char*>(pw.c_str())), X509_free);
 			if (!cert) {
 				ec = error::rsa_error::cert_load_failed;
-				return res;
+				return {};
 			}
 			std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)> key(X509_get_pubkey(cert.get()), EVP_PKEY_free);
 			if (!key) {
 				ec = error::rsa_error::get_key_failed;
-				return res;
+				return {};
 			}
 			if (PEM_write_bio_PUBKEY(keybio.get(), key.get()) == 0) {
 				ec = error::rsa_error::write_key_failed;
-				return res;
+				return {};
 			}
 			char* ptr = nullptr;
 			auto len = BIO_get_mem_data(keybio.get(), &ptr);
 			if (len <= 0 || ptr == nullptr) {
 				ec = error::rsa_error::convert_to_pem_failed;
-				return res;
+				return {};
 			}
-			res.assign(ptr, static_cast<size_t>(len));
-			return res;
+			return {ptr, static_cast<size_t>(len)};
 		}
 
 		/**
@@ -562,25 +560,23 @@ namespace jwt {
 				d2i_X509(NULL, &c_str, static_cast<int>(cert_der_str.size())), X509_free);
 			auto certbio = make_mem_buf_bio();
 
-			std::string res;
 			if (!cert || !certbio) {
 				ec = error::rsa_error::create_mem_bio_failed;
-				return res;
+				return {};
 			}
 
 			if (!PEM_write_bio_X509(certbio.get(), cert.get())) {
 				ec = error::rsa_error::write_cert_failed;
-				return res;
+				return {};
 			}
 
 			char* ptr = nullptr;
 			const auto len = BIO_get_mem_data(certbio.get(), &ptr);
 			if (len <= 0 || ptr == nullptr) {
 				ec = error::rsa_error::convert_to_pem_failed;
-				return res;
+				return {};
 			}
-			res.assign(ptr, static_cast<size_t>(len));
-			return res;
+			return {ptr, static_cast<size_t>(len)};
 		}
 
 		/**
@@ -877,7 +873,7 @@ namespace jwt {
 #endif
 		{
 			std::string res(BN_num_bytes(bn), '\0');
-			BN_bn2bin(bn, (unsigned char*)res.data()); // NOLINT(google-readability-casting) requires `const_cast`
+			BN_bn2bin(bn, reinterpret_cast<unsigned char*>(&res[0]));
 			return res;
 		}
 		/**
@@ -943,7 +939,8 @@ namespace jwt {
 			 * \param md Pointer to hash function
 			 * \param name Name of the algorithm
 			 */
-			hmacsha(string_view key, const EVP_MD* (*md)(), string_view name) : secret(key), md(md), alg_name(name) {}
+			hmacsha(string_view key, const EVP_MD* (*md)(), std::string name)
+				: secret(key), md(md), alg_name(std::move(name)) {}
 			/**
 			 * Sign jwt data
 			 * \param data The data to sign
@@ -956,8 +953,7 @@ namespace jwt {
 				auto len = static_cast<unsigned int>(res.size());
 				if (HMAC(md(), secret.data(), static_cast<int>(secret.size()),
 						 reinterpret_cast<const unsigned char*>(data.data()), static_cast<int>(data.size()),
-						 (unsigned char*)res.data(), // NOLINT(google-readability-casting) requires `const_cast`
-						 &len) == nullptr) {
+						 reinterpret_cast<unsigned char*>(&res[0]), &len) == nullptr) {
 					ec = error::signature_generation_error::hmac_failed;
 					res.clear();
 					return res;
@@ -1013,8 +1009,8 @@ namespace jwt {
 			 * \param name Name of the algorithm
 			 */
 			rsa(string_view public_key, string_view private_key, const std::string& public_key_password,
-				const std::string& private_key_password, const EVP_MD* (*md)(), string_view name)
-				: md(md), alg_name(name) {
+				const std::string& private_key_password, const EVP_MD* (*md)(), std::string name)
+				: md(md), alg_name(std::move(name)) {
 				if (!private_key.empty()) {
 					pkey = helper::load_private_key_from_string(private_key, private_key_password);
 				} else if (!public_key.empty()) {
@@ -1031,22 +1027,21 @@ namespace jwt {
 			std::string sign(string_view data, std::error_code& ec) const {
 				ec.clear();
 				auto ctx = helper::make_evp_md_ctx();
-				std::string res;
 				if (!ctx) {
 					ec = error::signature_generation_error::create_context_failed;
-					return res;
+					return {};
 				}
 				if (!EVP_SignInit(ctx.get(), md())) {
 					ec = error::signature_generation_error::signinit_failed;
-					return res;
+					return {};
 				}
 				if (!EVP_SignUpdate(ctx.get(), data.data(), data.size())) {
 					ec = error::signature_generation_error::signupdate_failed;
-					return res;
+					return {};
 				}
-				res.assign(EVP_PKEY_size(pkey.get()), '\0');
+				std::string res(EVP_PKEY_size(pkey.get()), '\0');
 				unsigned int len = 0;
-				if (EVP_SignFinal(ctx.get(), (unsigned char*)res.data(), &len, pkey.get()) == 0) {
+				if (EVP_SignFinal(ctx.get(), reinterpret_cast<unsigned char*>(&res[0]), &len, pkey.get()) == 0) {
 					ec = error::signature_generation_error::signfinal_failed;
 					res.clear();
 					return res;
@@ -1113,8 +1108,8 @@ namespace jwt {
 			 * \param siglen The bit length of the signature
 			 */
 			ecdsa(string_view public_key, string_view private_key, const std::string& public_key_password,
-				  const std::string& private_key_password, const EVP_MD* (*md)(), string_view name, size_t siglen)
-				: md(md), alg_name(name), signature_length(siglen) {
+				  const std::string& private_key_password, const EVP_MD* (*md)(), std::string name, size_t siglen)
+				: md(md), alg_name(std::move(name)), signature_length(siglen) {
 				if (!private_key.empty()) {
 					pkey = helper::load_private_ec_key_from_string(private_key, private_key_password);
 					check_private_key(pkey.get());
@@ -1140,27 +1135,26 @@ namespace jwt {
 			std::string sign(string_view data, std::error_code& ec) const {
 				ec.clear();
 				auto ctx = helper::make_evp_md_ctx();
-				std::string res;
 				if (!ctx) {
 					ec = error::signature_generation_error::create_context_failed;
-					return res;
+					return {};
 				}
 				if (!EVP_DigestSignInit(ctx.get(), nullptr, md(), nullptr, pkey.get())) {
 					ec = error::signature_generation_error::signinit_failed;
-					return res;
+					return {};
 				}
 				if (!EVP_DigestUpdate(ctx.get(), data.data(), data.size())) {
 					ec = error::signature_generation_error::digestupdate_failed;
-					return res;
+					return {};
 				}
 
 				size_t len = 0;
 				if (!EVP_DigestSignFinal(ctx.get(), nullptr, &len)) {
 					ec = error::signature_generation_error::signfinal_failed;
-					return res;
+					return {};
 				}
-				res.assign(len, '\0');
-				if (!EVP_DigestSignFinal(ctx.get(), (unsigned char*)res.data(), &len)) {
+				std::string res(len, '\0');
+				if (!EVP_DigestSignFinal(ctx.get(), reinterpret_cast<unsigned char*>(&res[0]), &len)) {
 					ec = error::signature_generation_error::signfinal_failed;
 					res.clear();
 					return res;
@@ -1346,8 +1340,8 @@ namespace jwt {
 			 * \param name Name of the algorithm
 			 */
 			eddsa(string_view public_key, string_view private_key, const std::string& public_key_password,
-				  const std::string& private_key_password, string_view name)
-				: alg_name(name) {
+				  const std::string& private_key_password, std::string name)
+				: alg_name(std::move(name)) {
 				if (!private_key.empty()) {
 					pkey = helper::load_private_key_from_string(private_key, private_key_password);
 				} else if (!public_key.empty()) {
@@ -1364,18 +1358,17 @@ namespace jwt {
 			std::string sign(string_view data, std::error_code& ec) const {
 				ec.clear();
 				auto ctx = helper::make_evp_md_ctx();
-				std::string res;
 				if (!ctx) {
 					ec = error::signature_generation_error::create_context_failed;
-					return res;
+					return {};
 				}
 				if (!EVP_DigestSignInit(ctx.get(), nullptr, nullptr, nullptr, pkey.get())) {
 					ec = error::signature_generation_error::signinit_failed;
-					return res;
+					return {};
 				}
 
 				size_t len = EVP_PKEY_size(pkey.get());
-				res.assign(len, '\0');
+				std::string res(len, '\0');
 
 // LibreSSL is the special kid in the block, as it does not support EVP_DigestSign.
 // OpenSSL on the otherhand does not support using EVP_DigestSignUpdate for eddsa, which is why we end up with this
@@ -1475,8 +1468,8 @@ namespace jwt {
 			 * \param name Name of the algorithm
 			 */
 			pss(string_view public_key, string_view private_key, const std::string& public_key_password,
-				const std::string& private_key_password, const EVP_MD* (*md)(), string_view name)
-				: md(md), alg_name(name) {
+				const std::string& private_key_password, const EVP_MD* (*md)(), std::string name)
+				: md(md), alg_name(std::move(name)) {
 				if (!private_key.empty()) {
 					pkey = helper::load_private_key_from_string(private_key, private_key_password);
 				} else if (!public_key.empty()) {
@@ -1494,39 +1487,35 @@ namespace jwt {
 			std::string sign(string_view data, std::error_code& ec) const {
 				ec.clear();
 				auto md_ctx = helper::make_evp_md_ctx();
-				std::string res;
 				if (!md_ctx) {
 					ec = error::signature_generation_error::create_context_failed;
-					return res;
+					return {};
 				}
 				EVP_PKEY_CTX* ctx = nullptr;
 				if (EVP_DigestSignInit(md_ctx.get(), &ctx, md(), nullptr, pkey.get()) != 1) {
 					ec = error::signature_generation_error::signinit_failed;
-					return res;
+					return {};
 				}
 				if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PSS_PADDING) <= 0) {
 					ec = error::signature_generation_error::rsa_padding_failed;
-					return res;
+					return {};
 				}
 // wolfSSL does not require EVP_PKEY_CTX_set_rsa_pss_saltlen. The default behavior
 // sets the salt length to the hash length. Unlike OpenSSL which exposes this functionality.
 #ifndef LIBWOLFSSL_VERSION_HEX
 				if (EVP_PKEY_CTX_set_rsa_pss_saltlen(ctx, -1) <= 0) {
 					ec = error::signature_generation_error::set_rsa_pss_saltlen_failed;
-					return res;
+					return {};
 				}
 #endif
 				if (EVP_DigestUpdate(md_ctx.get(), data.data(), data.size()) != 1) {
 					ec = error::signature_generation_error::digestupdate_failed;
-					return res;
+					return {};
 				}
 
 				size_t size = EVP_PKEY_size(pkey.get());
-				res.assign(size, 0x00);
-				if (EVP_DigestSignFinal(
-						md_ctx.get(),
-						(unsigned char*)res.data(), // NOLINT(google-readability-casting) requires `const_cast`
-						&size) <= 0) {
+				std::string res(size, '\0');
+				if (EVP_DigestSignFinal(md_ctx.get(), reinterpret_cast<unsigned char*>(&res[0]), &size) <= 0) {
 					ec = error::signature_generation_error::signfinal_failed;
 					res.clear();
 					return res;
