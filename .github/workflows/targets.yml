@@ -18,7 +18,7 @@ jobs:
     name: GCC 4.8
     runs-on: ubuntu-latest
     container:
-      image: ubuntu:18.04
+      image: ubuntu:bionic-20230530 # 18.04
     env:
       CC: /usr/bin/gcc-4.8
       CXX: /usr/bin/g++-4.8
@@ -45,7 +45,9 @@ jobs:
           cmake --build .
 
   gcc-12:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:jammy-20231004 # 22.04 
     env:
       CC: /usr/bin/gcc-12
       CXX: /usr/bin/g++-12
