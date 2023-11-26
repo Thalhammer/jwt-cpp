@@ -60,7 +60,6 @@ jobs:
         with:
           version: "3.26.3"
           url: "https://cmake.org/files/v3.26/cmake-3.26.3.tar.gz"
-      - uses: ./.github/actions/install/gtest
 
       - name: setup
         run: |
@@ -72,5 +71,5 @@ jobs:
       - name: test
         working-directory: tests/cmake
         run: |
-          CC=gcc-12 CXX=g++-12 cmake . -DTEST:STRING="defaults-enabled"
+          CC=gcc-12 CXX=g++-12 cmake . -DCMAKE_CXX_STANDARD=20 -DTEST:STRING="defaults-enabled"
           cmake --build .
