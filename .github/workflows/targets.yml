@@ -43,3 +43,32 @@ jobs:
         run: |
           CC=gcc-4.8 CXX=g++-4.8 cmake . -DTEST:STRING="defaults-enabled"
           cmake --build .
+
+  gcc-12:
+    runs-on: ubuntu-22.04
+    env:
+      CC: /usr/bin/gcc-12
+      CXX: /usr/bin/g++-12
+    steps:
+      - run: |
+          apt-get update
+          apt-get install -y g++-12 wget make libssl-dev
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/install/cmake
+        with:
+          version: "3.26.3"
+          url: "https://cmake.org/files/v3.26/cmake-3.26.3.tar.gz"
+      - uses: ./.github/actions/install/gtest
+
+      - name: setup
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          cmake --install .
+
+      - name: test
+        working-directory: tests/cmake
+        run: |
+          CC=gcc-12 CXX=g++-12 cmake . -DTEST:STRING="defaults-enabled"
+          cmake --build .
