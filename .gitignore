@@ -315,7 +315,6 @@ test
 .cache
 
 doxy/
-doxygen-awesome*.css
 
 build/*
 package-lock.json
