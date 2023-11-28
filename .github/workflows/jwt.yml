@@ -63,10 +63,10 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DJWT_BUILD_TESTS=ON -DCMAKE_CXX_FLAGS="-fsanitize=address  -fsanitize=leak -g" \
-                                        -DCMAKE_C_FLAGS="-fsanitize=address  -fsanitize=leak -g" \
-                                        -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address  -fsanitize=leak" \
-                                        -DCMAKE_MODULE_LINKER_FLAGS="-fsanitize=address  -fsanitize=leak"
+          cmake .. -DJWT_BUILD_TESTS=ON -DCMAKE_CXX_FLAGS="-fsanitize=address -fsanitize=leak -g" \
+                                        -DCMAKE_C_FLAGS="-fsanitize=address -fsanitize=leak -g" \
+                                        -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address -fsanitize=leak" \
+                                        -DCMAKE_MODULE_LINKER_FLAGS="-fsanitize=address -fsanitize=leak"
 
       - name: run
         working-directory: build
@@ -89,10 +89,10 @@ jobs:
           mkdir build
           cd build
           cmake .. -DJWT_BUILD_TESTS=ON -DCMAKE_CXX_STANDARD=20 \
-                                        -DCMAKE_CXX_FLAGS="-fsanitize=undefined -g" \
-                                        -DCMAKE_C_FLAGS="-fsanitize=undefined -g" \
-                                        -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=undefined" \
-                                        -DCMAKE_MODULE_LINKER_FLAGS="-fsanitize=undefined"
+                                        -DCMAKE_CXX_FLAGS="-fsanitize=undefined -fsanitize=return -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize-recover=all -g" \
+                                        -DCMAKE_C_FLAGS="-fsanitize=undefined -fsanitize=return -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize-recover=all -g" \
+                                        -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=undefined -fsanitize=return -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize-recover=all" \
+                                        -DCMAKE_MODULE_LINKER_FLAGS="-fsanitize=undefined -fsanitize=return -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize-recover=all"
 
       - name: run
         working-directory: build
