@@ -16,7 +16,7 @@ jobs:
       - run: sudo apt install graphviz
       - run: | 
           cmake .
-          cmake --build . --target
+          cmake --build . --target build_doxy
       - if: github.event_name == 'push'
         name: deploy
         uses: peaceiris/actions-gh-pages@v3
