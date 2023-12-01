@@ -490,7 +490,7 @@ namespace jwt {
 		}
 
 		/**
-		 * \brief Extract the public key of a pem certificate
+		 * \brief Extract the public key of a PEM certificate
 		 *
 		 * \param certstr	String containing the certificate encoded as pem
 		 * \param pw		Password used to decrypt certificate (leave empty if not encrypted)
@@ -896,14 +896,16 @@ namespace jwt {
 	 * JWT (JSON Web Tokens) signatures are typically used as the payload for a JWS (JSON Web Signature) or
 	 * JWE (JSON Web Encryption). Both of these use various cryptographic as specified by
 	 * [RFC7518](https://tools.ietf.org/html/rfc7518) and are exposed through the a [JOSE
-	 * Header](https://tools.ietf.org/html/rfc7515#section-4) which points to one of the JWA (JSON Web
-	 * Algorithms)(https://tools.ietf.org/html/rfc7518#section-3.1)
+	 * Header](https://tools.ietf.org/html/rfc7515#section-4) which points to one of the JWA [JSON Web
+	 * Algorithms](https://tools.ietf.org/html/rfc7518#section-3.1)
 	 */
 	namespace algorithm {
 		/**
 		 * \brief "none" algorithm.
 		 *
 		 * Returns and empty signature and checks if the given signature is empty.
+		 * See [RFC 7518 Section 3.6](https://datatracker.ietf.org/doc/html/rfc7518#section-3.6)
+		 * for more information.
 		 */
 		struct none {
 			/**
