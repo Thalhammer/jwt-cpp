@@ -314,7 +314,5 @@ test
 # ClangD cache files
 .cache
 
-doxy/
-
 build/*
 package-lock.json
