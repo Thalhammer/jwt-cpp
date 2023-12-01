@@ -584,7 +584,7 @@ namespace jwt {
 		 * This is useful when using with JWKs as x5c claim is encoded as base64 DER. More info
 		 * (here)[https://tools.ietf.org/html/rfc7517#section-4.7]
 		 *
-		 * \tparam Decode is callabled, taking a string_type and returns a string_type.
+		 * \tparam Decode is callable, taking a string_type and returns a string_type.
 		 * It should ensure the padding of the input and then base64 decode and return
 		 * the results.
 		 *
@@ -606,7 +606,7 @@ namespace jwt {
 		 * This is useful when using with JWKs as x5c claim is encoded as base64 DER. More info
 		 * (here)[https://tools.ietf.org/html/rfc7517#section-4.7]
 		 *
-		 * \tparam Decode is callabled, taking a string_type and returns a string_type.
+		 * \tparam Decode is callable, taking a string_type and returns a string_type.
 		 * It should ensure the padding of the input and then base64 decode and return
 		 * the results.
 		 *
@@ -626,7 +626,6 @@ namespace jwt {
 		 * \brief Convert the certificate provided as DER to PEM.
 		 *
 		 * \param cert_der_str 	String containing the DER certificate
-		 * \param decode 		The function to decode the cert
 		 * \throw				rsa_exception if an error occurred
 		 */
 		inline std::string convert_der_to_pem(const std::string& cert_der_str) {
@@ -3617,6 +3616,7 @@ namespace jwt {
 
 	/**
 	 * Decode a token
+	 * \tparam json_traits JSON implementation traits
 	 * \param token Token to decode
 	 * \return Decoded token
 	 * \throw std::invalid_argument Token is not in correct format
@@ -3626,15 +3626,25 @@ namespace jwt {
 	decoded_jwt<json_traits> decode(const typename json_traits::string_type& token) {
 		return decoded_jwt<json_traits>(token);
 	}
-
+	/**
+	 * Parse a single JSON Web Key
+	 * \tparam json_traits JSON implementation traits
+	 * \param jwk_ string buffer containing the JSON object
+	 * \return Decoded jwk
+	 */
 	template<typename json_traits>
-	jwk<json_traits> parse_jwk(const typename json_traits::string_type& token) {
-		return jwk<json_traits>(token);
+	jwk<json_traits> parse_jwk(const typename json_traits::string_type& jwk_) {
+		return jwk<json_traits>(jwk_);
 	}
-
+	/**
+	 * Parse a JSON Web Key Set
+	 * \tparam json_traits JSON implementation traits
+	 * \param jwks_ string buffer containing the JSON object
+	 * \return Decoded jwk
+	 */
 	template<typename json_traits>
-	jwks<json_traits> parse_jwks(const typename json_traits::string_type& token) {
-		return jwks<json_traits>(token);
+	jwks<json_traits> parse_jwks(const typename json_traits::string_type& jwks_) {
+		return jwks<json_traits>(jwks_);
 	}
 } // namespace jwt
 
