@@ -68,7 +68,7 @@ namespace jwt {
 		};
 		namespace helper {
 			/**
-			 * @brief A General purpose base64url alphabet respecting the
+			 * \brief A General purpose base64url alphabet respecting the
 			 * [URI Case Normalization](https://datatracker.ietf.org/doc/html/rfc3986#section-6.2.2.1)
 			 *
 			 * This is useful in situations outside of JWT encoding/decoding and is provided as a helper

@@ -1,10 +1,33 @@
+#ifndef JWT_CPP_ALGORITHMS_H
+#define JWT_CPP_ALGORITHMS_H
+
+#include "errors.h"
+
+#include <openssl/ec.h>
+#include <openssl/ecdsa.h>
+#include <openssl/err.h>
+#include <openssl/evp.h>
+#include <openssl/hmac.h>
+#include <openssl/pem.h>
+#include <openssl/rsa.h>
+#include <openssl/ssl.h>
+
 #include <string>
 #include <system_error>
 
-#include "jwt.h"
+namespace jwt {
 
-namespace jwt
-{
+	namespace details {
+		inline std::unique_ptr<EVP_MD_CTX, void (*)(EVP_MD_CTX*)> make_evp_md_ctx() {
+			return
+#ifdef JWT_OPENSSL_1_0_0
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)>(EVP_MD_CTX_create(), &EVP_MD_CTX_destroy);
+#else
+				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)>(EVP_MD_CTX_new(), &EVP_MD_CTX_free);
+#endif
+		}
+	} // namespace details
+
 	/**
 	 * \brief Various cryptographic algorithms when working with JWT
 	 *
@@ -141,7 +164,7 @@ namespace jwt
 			 */
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
-				auto ctx = helper::make_evp_md_ctx();
+				auto ctx = details::make_evp_md_ctx();
 				if (!ctx) {
 					ec = error::signature_generation_error::create_context_failed;
 					return {};
@@ -174,7 +197,7 @@ namespace jwt
 			 */
 			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
 				ec.clear();
-				auto ctx = helper::make_evp_md_ctx();
+				auto ctx = details::make_evp_md_ctx();
 				if (!ctx) {
 					ec = error::signature_verification_error::create_context_failed;
 					return;
@@ -250,7 +273,7 @@ namespace jwt
 			 */
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
-				auto ctx = helper::make_evp_md_ctx();
+				auto ctx = details::make_evp_md_ctx();
 				if (!ctx) {
 					ec = error::signature_generation_error::create_context_failed;
 					return {};
@@ -290,7 +313,7 @@ namespace jwt
 				std::string der_signature = p1363_to_der_signature(signature, ec);
 				if (ec) { return; }
 
-				auto ctx = helper::make_evp_md_ctx();
+				auto ctx = details::make_evp_md_ctx();
 				if (!ctx) {
 					ec = error::signature_verification_error::create_context_failed;
 					return;
@@ -470,7 +493,7 @@ namespace jwt
 			 */
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
-				auto ctx = helper::make_evp_md_ctx();
+				auto ctx = details::make_evp_md_ctx();
 				if (!ctx) {
 					ec = error::signature_generation_error::create_context_failed;
 					return {};
@@ -518,7 +541,7 @@ namespace jwt
 			 */
 			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
 				ec.clear();
-				auto ctx = helper::make_evp_md_ctx();
+				auto ctx = details::make_evp_md_ctx();
 				if (!ctx) {
 					ec = error::signature_verification_error::create_context_failed;
 					return;
@@ -596,7 +619,7 @@ namespace jwt
 			 */
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
-				auto md_ctx = helper::make_evp_md_ctx();
+				auto md_ctx = details::make_evp_md_ctx();
 				if (!md_ctx) {
 					ec = error::signature_generation_error::create_context_failed;
 					return {};
@@ -645,7 +668,7 @@ namespace jwt
 			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
 				ec.clear();
 
-				auto md_ctx = helper::make_evp_md_ctx();
+				auto md_ctx = details::make_evp_md_ctx();
 				if (!md_ctx) {
 					ec = error::signature_verification_error::create_context_failed;
 					return;
@@ -928,3 +951,5 @@ namespace jwt
 		};
 	} // namespace algorithm
 } // namespace jwt
+
+#endif
