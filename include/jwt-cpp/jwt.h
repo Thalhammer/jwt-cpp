@@ -8,8 +8,8 @@
 #include "picojson/picojson.h"
 #endif
 
-#include "errors.h"
 #include "algorithms.h"
+#include "errors.h"
 
 #ifndef JWT_DISABLE_BASE64
 #include "base.h"
@@ -53,7 +53,7 @@
  * as a part of [RFC7519](https://tools.ietf.org/html/rfc7519), or alternatively for
  * JWS (JSON Web Signature) from [RFC7515](https://tools.ietf.org/html/rfc7515)
  */
-namespace jwt {	/**
+namespace jwt { /**
 	 * \brief A collection for working with certificates
 	 *
 	 * These _helpers_ are usefully when working with certificates OpenSSL APIs.
@@ -1579,8 +1579,7 @@ namespace jwt {	/**
 			void_t<decltype(std::declval<object_type>().operator[](std::declval<string_type>()))>> : std::true_type {
 			// TODO(prince-chrismc): I am not convinced this is meaningful anymore
 			static_assert(
-				value,
-				"object_type must implement the subscription operator '[]' taking string_type as an argument");
+				value, "object_type must implement the subscription operator '[]' taking string_type as an argument");
 		};
 
 		template<typename object_type, typename value_type, typename string_type>
