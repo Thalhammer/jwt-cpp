@@ -7,14 +7,8 @@
 #include "base.h"
 #endif
 
-#include <openssl/ec.h>
-#include <openssl/ecdsa.h>
-#include <openssl/err.h>
 #include <openssl/evp.h>
-#include <openssl/hmac.h>
-#include <openssl/pem.h>
-#include <openssl/rsa.h>
-#include <openssl/ssl.h>
+#include <openssl/opensslv.h>
 
 #include <string>
 
@@ -38,6 +32,12 @@
 
 #if defined(LIBWOLFSSL_VERSION_HEX)
 #define JWT_OPENSSL_1_1_1
+#endif
+
+#ifdef JWT_OPENSSL_1_0_0
+#include <memory>
+#else
+#include <stdexcept>
 #endif
 
 namespace jwt {

@@ -30,6 +30,14 @@
 #include <utility>
 #include <vector>
 
+#include <openssl/ec.h>
+#include <openssl/ecdsa.h>
+#include <openssl/err.h>
+#include <openssl/hmac.h>
+#include <openssl/pem.h>
+#include <openssl/rsa.h>
+#include <openssl/ssl.h>
+
 #if __cplusplus > 201103L
 #include <codecvt>
 #endif
