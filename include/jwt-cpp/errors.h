@@ -64,7 +64,9 @@ namespace jwt {
 			static rsa_error_cat cat;
 			return cat;
 		}
-
+		/**
+		 * \brief Converts JWT-CPP errors into generic STL error_codes
+		 */
 		inline std::error_code make_error_code(rsa_error e) { return {static_cast<int>(e), rsa_error_category()}; }
 		/**
 		 * \brief Errors related to processing of RSA signatures
@@ -104,9 +106,10 @@ namespace jwt {
 			static ecdsa_error_cat cat;
 			return cat;
 		}
-
+		/**
+		 * \brief Converts JWT-CPP errors into generic STL error_codes
+		 */
 		inline std::error_code make_error_code(ecdsa_error e) { return {static_cast<int>(e), ecdsa_error_category()}; }
-
 		/**
 		 * \brief Errors related to verification of signatures
 		 */
@@ -153,11 +156,12 @@ namespace jwt {
 			static verification_error_cat cat;
 			return cat;
 		}
-
+		/**
+		 * \brief Converts JWT-CPP errors into generic STL error_codes
+		 */
 		inline std::error_code make_error_code(signature_verification_error e) {
 			return {static_cast<int>(e), signature_verification_error_category()};
 		}
-
 		/**
 		 * \brief Errors related to signature generation errors
 		 */
@@ -221,11 +225,12 @@ namespace jwt {
 			static signature_generation_error_cat cat = {};
 			return cat;
 		}
-
+		/**
+		 * \brief Converts JWT-CPP errors into generic STL error_codes
+		 */
 		inline std::error_code make_error_code(signature_generation_error e) {
 			return {static_cast<int>(e), signature_generation_error_category()};
 		}
-
 		/**
 		 * \brief Errors related to token verification errors
 		 */
@@ -264,11 +269,15 @@ namespace jwt {
 			static token_verification_error_cat cat = {};
 			return cat;
 		}
-
+		/**
+		 * \brief Converts JWT-CPP errors into generic STL error_codes
+		 */
 		inline std::error_code make_error_code(token_verification_error e) {
 			return {static_cast<int>(e), token_verification_error_category()};
 		}
-
+		/**
+		 * \brief Raises an exception if any JWT-CPP error codes are active
+		 */
 		inline void throw_if_error(std::error_code ec) {
 			if (ec) {
 				if (ec.category() == rsa_error_category()) throw rsa_exception(ec);

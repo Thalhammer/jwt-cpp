@@ -101,7 +101,6 @@ namespace jwt {
 	 * \brief A collection of fellable functions for working with base64 and base64url
 	 */
 	namespace base {
-
 		namespace details {
 			struct padding {
 				size_t count = 0;
@@ -248,6 +247,16 @@ namespace jwt {
 			}
 		} // namespace details
 
+		/**
+		 * \brief Generic base64 encoding
+		 * 
+		 * A Generic base64 encode function that supports any "alphabet"
+		 * such as jwt::alphabet::base64 
+		 * 
+		 * \code
+		 * const auto b64 = jwt::base::encode<jwt::alphabet::base64>("example_data")
+		 * \endcode
+		 */
 		template<typename T>
 		std::string encode(const std::string& bin) {
 			return details::encode(bin, T::data(), T::fill());
