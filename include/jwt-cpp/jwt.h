@@ -191,7 +191,7 @@ namespace jwt {	/**
 		 * \brief Convert the certificate provided as base64 DER to PEM.
 		 *
 		 * This is useful when using with JWKs as x5c claim is encoded as base64 DER. More info
-		 * (here)[https://tools.ietf.org/html/rfc7517#section-4.7]
+		 * [here](https://tools.ietf.org/html/rfc7517#section-4.7)
 		 *
 		 * \tparam Decode is callable, taking a string_type and returns a string_type.
 		 * It should ensure the padding of the input and then base64 decode and return
@@ -227,7 +227,7 @@ namespace jwt {	/**
 		 * \brief Convert the certificate provided as base64 DER to PEM.
 		 *
 		 * This is useful when using with JWKs as x5c claim is encoded as base64 DER. More info
-		 * (here)[https://tools.ietf.org/html/rfc7517#section-4.7]
+		 * [here](https://tools.ietf.org/html/rfc7517#section-4.7)
 		 *
 		 * \param cert_base64_der_str 	String containing the certificate encoded as base64 DER
 		 * \param ec					error_code for error_detection (gets cleared if no error occurs)
@@ -243,7 +243,7 @@ namespace jwt {	/**
 		 * \brief Convert the certificate provided as base64 DER to PEM.
 		 *
 		 * This is useful when using with JWKs as x5c claim is encoded as base64 DER. More info
-		 * (here)[https://tools.ietf.org/html/rfc7517#section-4.7]
+		 * [here](https://tools.ietf.org/html/rfc7517#section-4.7)
 		 *
 		 * \param cert_base64_der_str 	String containing the certificate encoded as base64 DER
 		 * \throw						rsa_exception if an error occurred
@@ -1416,7 +1416,7 @@ namespace jwt {	/**
 				: pss(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "PS512") {}
 		};
 	} // namespace algorithm
-	
+
 	/**
 	 * JSON Abstractions for working with any library
 	 */
