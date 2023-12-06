@@ -42,69 +42,35 @@
 
 namespace jwt {
 	namespace helper {
-#ifdef JWT_OPENSSL_1_0_0
 		/** 
 		 * \brief Handle class for EVP_PKEY structures
          * 
 		 * Starting from OpenSSL 1.1.0, EVP_PKEY has internal reference counting. This handle class allows
 		 * jwt-cpp to leverage that and thus safe an allocation for the control block in std::shared_ptr.
 		 * The handle uses shared_ptr as a fallback on older versions. The behaviour should be identical between both.
-		 */
+         */
 		class evp_pkey_handle {
 		public:
 			constexpr evp_pkey_handle() noexcept = default;
-			/**
-			 * \brief Construct a new handle. The handle takes ownership of the key.
-             * 
-			 * \param key The key to store
-			 */
-			explicit evp_pkey_handle(EVP_PKEY* key) { m_key = std::shared_ptr<EVP_PKEY>(key, EVP_PKEY_free); }
-			/**
-             * Copy another handle and increments the shared reference counter
-             * 
-             * \param other The key to copy
-             */
+			explicit evp_pkey_handle(EVP_PKEY* key) noexcept {
+#ifdef JWT_OPENSSL_1_0_0
+				m_key = std::shared_ptr<EVP_PKEY>(key, EVP_PKEY_free);
+#else
+				m_key = key;
+#endif
+			}
 			evp_pkey_handle(const evp_pkey_handle& other) = default;
 
-			EVP_PKEY* get() const noexcept { return m_key.get(); }
+			EVP_PKEY* get() const noexcept {
+#ifdef JWT_OPENSSL_1_0_0
+				return m_key.get();
+#else
+				return m_key;
+#endif
+			}
 			bool operator!() const noexcept { return m_key == nullptr; }
 			explicit operator bool() const noexcept { return m_key != nullptr; }
 
-		private:
-			std::shared_ptr<EVP_PKEY> m_key{nullptr};
-		};
-#else
-		/** 
-		 * \brief Handle class for EVP_PKEY structures
-         * 
-		 * Starting from OpenSSL 1.1.0, EVP_PKEY has internal reference counting. This handle class allows
-		 * jwt-cpp to leverage that and thus safe an allocation for the control block in std::shared_ptr.
-		 * The handle uses shared_ptr as a fallback on older versions. The behaviour should be identical between both.
-		 */
-		class evp_pkey_handle {
-		public:
-			constexpr evp_pkey_handle() noexcept = default;
-			/**
-			 * \brief Construct a new handle. The handle takes ownership of the key.
-             * 
-			 * \param key The key to store
-			 */
-			explicit constexpr evp_pkey_handle(EVP_PKEY* key) noexcept : m_key{key} {}
-			/**
-             * Copy another handle and increments the shared reference counter
-             * 
-             * \param other The key to copy
-             */
-			evp_pkey_handle(const evp_pkey_handle& other) : m_key{other.m_key} {
-				if (m_key != nullptr && EVP_PKEY_up_ref(m_key) != 1) throw std::runtime_error("EVP_PKEY_up_ref failed");
-			}
-			/**
-             * Move constructor
-             */
-			evp_pkey_handle(evp_pkey_handle&& other) noexcept : m_key{other.m_key} { other.m_key = nullptr; }
-			/**
-             * Assignment operator
-             */
 			evp_pkey_handle& operator=(const evp_pkey_handle& other) {
 				if (&other == this) return *this;
 				decrement_ref_count(m_key);
@@ -127,21 +93,28 @@ namespace jwt {
 			}
 			~evp_pkey_handle() noexcept { decrement_ref_count(m_key); }
 
-			EVP_PKEY* get() const noexcept { return m_key; }
-			bool operator!() const noexcept { return m_key == nullptr; }
-			explicit operator bool() const noexcept { return m_key != nullptr; }
-
 		private:
+#ifdef JWT_OPENSSL_1_0_0
+			std::shared_ptr<EVP_PKEY> m_key{nullptr};
+#else
 			EVP_PKEY* m_key{nullptr};
+#endif
 
 			static void increment_ref_count(EVP_PKEY* key) {
+#ifdef JWT_OPENSSL_1_0_0
+				return;
+#else
 				if (key != nullptr && EVP_PKEY_up_ref(key) != 1) throw std::runtime_error("EVP_PKEY_up_ref failed");
+#endif
 			}
 			static void decrement_ref_count(EVP_PKEY* key) noexcept {
+#ifdef JWT_OPENSSL_1_0_0
+				return;
+#else
 				if (key != nullptr) EVP_PKEY_free(key);
-			}
-		};
 #endif
+			};
+		};
 	} // namespace helper
 } // namespace jwt
 
