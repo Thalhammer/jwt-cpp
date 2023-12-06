@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: ssciwr/doxygen-install@v1
         with:
-          version: "1.9.5"
+          version: "1.9.6"
       - run: sudo apt install graphviz
       - run: | 
           cmake . -DJWT_BUILD_DOC=ON
