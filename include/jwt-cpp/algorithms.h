@@ -63,7 +63,11 @@ namespace jwt {
          */
 		class evp_pkey_handle {
 		public:
+			/// @brief Creates a null key pointer
 			constexpr evp_pkey_handle() noexcept = default;
+			/// @brief Creates a owning handle wrapper around an existing raw key
+			/// @param key Existing key to reference count
+			/// This does not increment the reference count
 			explicit evp_pkey_handle(EVP_PKEY* key) noexcept {
 #ifdef JWT_OPENSSL_1_0_0
 				m_key = std::shared_ptr<EVP_PKEY>(key, EVP_PKEY_free);
@@ -71,7 +75,12 @@ namespace jwt {
 				m_key = key;
 #endif
 			}
-			evp_pkey_handle(const evp_pkey_handle& other) = default;
+			/// @brief Create a new handle incrementing the reference count
+			/// @param other key pointer to copy and increase
+			/// @throws std::runtime_error
+			evp_pkey_handle(const evp_pkey_handle& other) : m_key{other.m_key} { increment_ref_count(m_key); }
+			evp_pkey_handle(evp_pkey_handle&& other) noexcept : m_key{other.m_key} { other.m_key = nullptr; }
+			~evp_pkey_handle() noexcept { decrement_ref_count(m_key); }
 
 			EVP_PKEY* get() const noexcept {
 #ifdef JWT_OPENSSL_1_0_0
@@ -103,7 +112,6 @@ namespace jwt {
 				increment_ref_count(m_key);
 				return *this;
 			}
-			~evp_pkey_handle() noexcept { decrement_ref_count(m_key); }
 
 		private:
 #ifdef JWT_OPENSSL_1_0_0
