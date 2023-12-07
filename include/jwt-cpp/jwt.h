@@ -1889,10 +1889,15 @@ namespace jwt {
 		return jwk<json_traits>(jwk_);
 	}
 	/**
-	 * Parse a JSON Web Key Set
+	 * \brief Parse a JSON Web Key Set
+	 * 
 	 * \tparam json_traits JSON implementation traits
 	 * \param jwks_ string buffer containing the JSON object
-	 * \return Decoded jwk
+	 * \return Parsed JSON object containing the data of the JWK SET string
+	 * \throw std::runtime_error Token is not in correct format
+	 * 
+	 * This can be used to to help access important feild like 'x5c' for verifying tokens
+	 * \example['42'] jwks-verify.cpp
 	 */
 	template<typename json_traits>
 	jwks<json_traits> parse_jwks(const typename json_traits::string_type& jwks_) {

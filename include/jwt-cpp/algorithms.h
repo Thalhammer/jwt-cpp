@@ -1288,11 +1288,15 @@ namespace jwt {
 		 */
 		struct rs256 : public rsa {
 			/**
-			 * Construct new instance of algorithm
+			 * \brief Construct new instance of algorithm
+             * 
 			 * \param public_key RSA public key in PEM format
 			 * \param private_key RSA private key or empty string if not available. If empty, signing will always fail.
 			 * \param public_key_password Password to decrypt public key pem.
 			 * \param private_key_password Password to decrypt private key pem.
+             * 
+             * This data structure is used to describe the RSA256 and can be used to verify JWTs
+             * \example['24'] rsa-verify.cpp
 			 */
 			explicit rs256(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
