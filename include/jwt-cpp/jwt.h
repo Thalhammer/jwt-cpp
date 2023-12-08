@@ -784,7 +784,7 @@ namespace jwt {
 		/**
 		 * \brief Parses a given token
 		 *
-		 * \tparam Decode is callabled, taking a string_type and returns a string_type.
+		 * \tparam Decode is callable, taking a string_type and returns a string_type.
 		 * It should ensure the padding of the input and then base64url decode and
 		 * return the results.
 		 * \param token The token to parse
@@ -1854,7 +1854,12 @@ namespace jwt {
 	}
 
 	/**
-	 * Decode a token
+	 * \brief Decode a token
+	 * 
+	 * \tparam json_traits JSON implementation traits
+	 * \tparam Decode is callable, taking a string_type and returns a string_type.
+	 *         It should ensure the padding of the input and then base64url decode and
+	 *         return the results.
 	 * \param token Token to decode
 	 * \param decode function that will pad and base64url decode the token
 	 * \return Decoded token
@@ -1867,7 +1872,9 @@ namespace jwt {
 	}
 
 	/**
-	 * Decode a token
+	 * Decode a token. This can be used to to help access important feild like 'x5c'
+	 * for verifying tokens. See associated \example rsa-verify.cpp for more details
+	 * 
 	 * \tparam json_traits JSON implementation traits
 	 * \param token Token to decode
 	 * \return Decoded token
@@ -1889,15 +1896,14 @@ namespace jwt {
 		return jwk<json_traits>(jwk_);
 	}
 	/**
-	 * \brief Parse a JSON Web Key Set
+	 * Parse a JSON Web Key Set. This can be used to to help access 
+	 * important feild like 'x5c' for verifying tokens. See example
+	 * jwks-verify.cpp for more information.
 	 * 
 	 * \tparam json_traits JSON implementation traits
 	 * \param jwks_ string buffer containing the JSON object
 	 * \return Parsed JSON object containing the data of the JWK SET string
 	 * \throw std::runtime_error Token is not in correct format
-	 * 
-	 * This can be used to to help access important feild like 'x5c' for verifying tokens
-	 * \example['42'] jwks-verify.cpp
 	 */
 	template<typename json_traits>
 	jwks<json_traits> parse_jwks(const typename json_traits::string_type& jwks_) {

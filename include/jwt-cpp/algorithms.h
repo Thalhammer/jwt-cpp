@@ -1296,7 +1296,6 @@ namespace jwt {
 			 * \param private_key_password Password to decrypt private key pem.
              * 
              * This data structure is used to describe the RSA256 and can be used to verify JWTs
-             * \example['24'] rsa-verify.cpp
 			 */
 			explicit rs256(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
