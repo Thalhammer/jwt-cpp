@@ -13,6 +13,9 @@ runs:
         wget https://github.com/open-source-parsers/jsoncpp/archive/${{ inputs.version }}.tar.gz
         tar -zxf /tmp/${{ inputs.version }}.tar.gz
         cd jsoncpp-${{ inputs.version }}
-        cmake .
+        # https://github.com/open-source-parsers/jsoncpp/blob/69098a18b9af0c47549d9a271c054d13ca92b006/include/PreventInSourceBuilds.cmake#L8
+        mkdir build
+        cd build
+        cmake ..
         sudo cmake --install .
       shell: bash
