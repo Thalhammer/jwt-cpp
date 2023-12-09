@@ -1,9 +1,4 @@
-/**
- * Decoded a token signed with an RSA256 key
- * 
- * @example rsa-verify.cpp
-*/
-
+/// @file rsa-verify.cpp
 #include <iostream>
 #include <jwt-cpp/jwt.h>
 

@@ -47,7 +47,7 @@
 #endif
 
 /**
- * \brief JSON Web Token
+ * \brief JSON Web Token.
  *
  * A namespace to contain everything related to handling JSON Web Tokens, JWT for short,
  * as a part of [RFC7519](https://tools.ietf.org/html/rfc7519), or alternatively for
@@ -62,7 +62,7 @@ namespace jwt {
 		 * \brief categories for the various JSON types used in JWTs
 		 *
 		 * This enum is to abstract the third party underlying types and allows the library
-		 * to identify the different structures and reason about them without needign a "concept"
+		 * to identify the different structures and reason about them without needing a "concept"
 		 * to capture that defintion to compare against a concrete type.
 		 */
 		enum class type { boolean, integer, number, string, array, object };
@@ -345,7 +345,7 @@ namespace jwt {
 	class basic_claim {
 		/**
 		 * The reason behind this is to provide an expressive abstraction without
-		 * over complexifying the API. For more information take the time to read
+		 * over complicating the API. For more information take the time to read
 		 * https://github.com/nlohmann/json/issues/774. It maybe be expanded to
 		 * support custom string types.
 		 */
@@ -1221,7 +1221,7 @@ namespace jwt {
 
 		/**
 		 * Checks if the given set is a subset of the set inside the token.
-		 * If the token value is a string it is traited as a set of a single element.
+		 * If the token value is a string it is treated as a set with a single element.
 		 * The comparison is case sensitive.
 		 */
 		template<typename json_traits, bool in_header = false>
@@ -1313,7 +1313,7 @@ namespace jwt {
 	public:
 		using basic_claim_t = basic_claim<json_traits>;
 		/**
-		 * Verification function
+		 * \brief Verification function data structure.
 		 *
 		 * This gets passed the current verifier, a reference to the decoded jwt, a reference to the key of this claim,
 		 * as well as a reference to an error_code.
@@ -1420,7 +1420,7 @@ namespace jwt {
 		 *
 		 * According to [RFC 7519 Section 5.1](https://datatracker.ietf.org/doc/html/rfc7519#section-5.1),
 		 * This parameter is ignored by JWT implementations; any processing of this parameter is performed by the JWT application.
-		 * Check is casesensitive.
+		 * Check is case sensitive.
 		 *
 		 * \param type Type Header Parameter to check for.
 		 * \param locale Localization functionality to use when comparing
@@ -1432,7 +1432,7 @@ namespace jwt {
 
 		/**
 		 * Set an issuer to check for.
-		 * Check is casesensitive.
+		 * Check is case sensitive.
 		 * \param iss Issuer to check for.
 		 * \return *this to allow chaining
 		 */
@@ -1442,7 +1442,7 @@ namespace jwt {
 
 		/**
 		 * Set a subject to check for.
-		 * Check is casesensitive.
+		 * Check is case sensitive.
 		 * \param sub Subject to check for.
 		 * \return *this to allow chaining
 		 */
@@ -1472,7 +1472,7 @@ namespace jwt {
 		}
 		/**
 		 * Set an id to check for.
-		 * Check is casesensitive.
+		 * Check is case sensitive.
 		 * \param id ID to check for.
 		 * \return *this to allow chaining
 		 */
@@ -1873,7 +1873,7 @@ namespace jwt {
 
 	/**
 	 * Decode a token. This can be used to to help access important feild like 'x5c'
-	 * for verifying tokens. See associated \example rsa-verify.cpp for more details
+	 * for verifying tokens. See associated example rsa-verify.cpp for more details
 	 * 
 	 * \tparam json_traits JSON implementation traits
 	 * \param token Token to decode
