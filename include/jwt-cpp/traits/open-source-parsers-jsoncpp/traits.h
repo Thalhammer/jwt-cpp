@@ -6,7 +6,7 @@
 
 namespace jwt {
 	namespace traits {
-		struct jsoncpp {
+		struct osp_jsoncpp {
             using value_type = Json::Value;
             using string_type = std::string;
             class array_type: public Json::Value {

@@ -75,6 +75,7 @@ jobs:
           - { name: "danielaparker_jsoncons", library: "jsoncons", url: "https://github.com/danielaparker/jsoncons", disable_pico: true }
           - { name: "kazuho_picojson", library: "picojson", url: "https://github.com/kazuho/picojson", disable_pico: false }
           - { name: "nlohmann_json", library: "JSON for Modern C++", url: "https://github.com/nlohmann/json", disable_pico: true }
+          - { name: "osp_jsoncpp", library: "jsoncpp", url: "https://github.com/open-source-parsers/jsoncpp", disable_pico: true }
     name: render-defaults (${{ matrix.traits.name }})
     steps:
       - uses: actions/checkout@v3
@@ -99,6 +100,7 @@ jobs:
           - { name: "danielaparker_jsoncons", suite: "JsonconsTest" }
           # - { name: "kazuho_picojson", suite: "PicoJsonTest" } # Currently the default everything tests against this!
           - { name: "nlohmann_json", suite: "NlohmannTest" }
+          - { name: "osp_jsoncpp", suite: "OspJsoncppTest" }
     name: render-tests (${{ matrix.traits.name }})
     steps:
       - uses: actions/checkout@v3

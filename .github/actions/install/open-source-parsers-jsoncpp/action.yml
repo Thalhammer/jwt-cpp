@@ -1,0 +1,18 @@
+name: Install open-source-parsers/jsoncpp
+description: Install open-source-parsers/jsoncpp for building test application
+inputs:
+  version:
+    description: The desired open-source-parsers/jsoncpp version to install
+    required: false
+    default: "1.9.6"
+runs:
+  using: composite
+  steps:
+    - run: |
+        cd /tmp
+        wget https://github.com/open-source-parsers/jsoncpp/archive/${{ inputs.version }}.tar.gz
+        tar -zxf /tmp/${{ inputs.version }}.tar.gz
+        cd jsoncpp-${{ inputs.version }}
+        cmake .
+        sudo cmake --install .
+      shell: bash
