@@ -17,5 +17,6 @@ runs:
         mkdir build
         cd build
         cmake .. -DJSONCPP_WITH_TESTS=OFF -DBUILD_SHARED_LIBS=OFF
+        cmake --build .
         sudo cmake --install .
       shell: bash
