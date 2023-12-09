@@ -16,7 +16,7 @@ runs:
         # https://github.com/open-source-parsers/jsoncpp/blob/69098a18b9af0c47549d9a271c054d13ca92b006/include/PreventInSourceBuilds.cmake#L8
         mkdir build
         cd build
-        cmake .. -DJSONCPP_WITH_TESTS=OFF -DBUILD_SHARED_LIBS=OFF
+        cmake .. -DJSONCPP_WITH_TESTS=OFF -DBUILD_SHARED_LIBS=OFF -DBUILD_OBJECT_LIBS=OFF
         cmake --build .
         sudo cmake --install .
       shell: bash
