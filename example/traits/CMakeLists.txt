@@ -29,7 +29,7 @@ if(TARGET kazuho_picojson)
   target_link_libraries(kazuho-picojson jwt-cpp::jwt-cpp kazuho_picojson)
 endif()
 
-find_package(jsoncpp REQUIRED)
+find_package(jsoncpp CONFIG)
 if(TARGET jsoncpp)
   add_executable(open-source-parsers-jsoncpp open-source-parsers-jsoncpp.cpp)
   target_link_libraries(open-source-parsers-jsoncpp jsoncpp jwt-cpp::jwt-cpp)
