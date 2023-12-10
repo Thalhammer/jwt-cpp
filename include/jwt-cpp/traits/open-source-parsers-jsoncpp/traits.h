@@ -18,6 +18,14 @@ namespace jwt {
                 explicit array_type(const Json::Value& o) : Json::Value(o) {}
                 array_type(array_type&&) = default;
                 explicit array_type(Json::Value&& o) : Json::Value(o) {}
+                template<typename Iterator>
+                array_type(Iterator begin, Iterator end) {
+                    for (Iterator it = begin; it != end; ++it) {
+                        Json::Value value;
+                        value = *it;
+                        this->append(value);
+                    }
+                }
                 ~array_type() = default;
                 array_type& operator=(const array_type& o) = default;
                 array_type& operator=(array_type&& o) noexcept = default;

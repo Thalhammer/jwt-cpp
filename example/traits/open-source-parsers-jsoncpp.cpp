@@ -27,7 +27,7 @@ int main() {
 						   .set_payload_claim("boolean", true)
 						   .set_payload_claim("integer", 12345)
 						   .set_payload_claim("precision", 12.3456789)
-						   .set_payload_claim("strings", list)
+						   .set_payload_claim("strings", claim(list))
 						   .set_payload_claim("array", {big_numbers.begin(), big_numbers.end()})
 						   .set_payload_claim("object", from_raw_json)
 						   .sign(jwt::algorithm::none{});
