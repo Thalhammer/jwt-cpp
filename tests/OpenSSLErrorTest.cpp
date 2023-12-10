@@ -457,6 +457,14 @@ TEST(OpenSSLErrorTest, ConvertCertBase64DerToPemReference) {
 	ASSERT_EQ(ec.value(), 0);
 }
 
+TEST(OpenSSLErrorTest, ConvertEcdsaCertBase64DerToPemReference) {
+	std::error_code ec;
+	auto res = jwt::helper::convert_base64_der_to_pem(ed25519_certificate_base64_der, ec);
+	ASSERT_EQ(res, sample_cert);
+	ASSERT_FALSE(!(!ec));
+	ASSERT_EQ(ec.value(), 0);
+}
+
 struct multitest_entry {
 	uint64_t* fail_mask_ptr;
 	uint64_t fail_bitmask;
@@ -515,6 +523,19 @@ TEST(OpenSSLErrorTest, ConvertCertBase64DerToPem) {
 	run_multitest(mapping, [](std::error_code& ec) {
 		try {
 			jwt::helper::convert_base64_der_to_pem(sample_cert_base64_der);
+			FAIL(); // Should never reach this
+		} catch (const jwt::error::rsa_exception& e) { ec = e.code(); }
+	});
+}
+
+TEST(OpenSSLErrorTest, ConvertEcdsaCertBase64DerToPem) {
+	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
+										 {&fail_PEM_write_bio_cert, 1, jwt::error::rsa_error::write_cert_failed},
+										 {&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed}};
+
+	run_multitest(mapping, [](std::error_code& ec) {
+		try {
+			jwt::helper::convert_base64_der_to_pem(ed25519_certificate_base64_der);
 			FAIL(); // Should never reach this
 		} catch (const jwt::error::rsa_exception& e) { ec = e.code(); }
 	});
