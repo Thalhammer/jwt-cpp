@@ -165,6 +165,7 @@ namespace jwt {
 			cert_load_failed,
 			get_key_failed,
 			write_key_failed,
+			write_cert_failed,
 			convert_to_pem_failed,
 
 		};
