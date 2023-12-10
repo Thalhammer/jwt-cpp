@@ -436,6 +436,7 @@ inline namespace test_keys {
 	extern std::string ed25519_pub_key;
 	extern std::string ed25519_pub_key_invalid;
 	extern std::string ed25519_certificate;
+	extern std::string ed25519_certificate_base64_der
 	extern std::string ed448_priv_key;
 	extern std::string ed448_pub_key;
 	extern std::string ed448_pub_key_invalid;
