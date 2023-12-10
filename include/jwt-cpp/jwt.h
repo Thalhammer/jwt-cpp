@@ -1111,10 +1111,10 @@ namespace jwt {
 				  const std::string& private_key_password, const EVP_MD* (*md)(), std::string name, size_t siglen)
 				: md(md), alg_name(std::move(name)), signature_length(siglen) {
 				if (!private_key.empty()) {
-					pkey = helper::load_private_ec_key_from_string(private_key, private_key_password);
+					pkey = helper::load_private_key_from_string(private_key, private_key_password);
 					check_private_key(pkey.get());
 				} else if (!public_key.empty()) {
-					pkey = helper::load_public_ec_key_from_string(public_key, public_key_password);
+					pkey = helper::load_public_key_from_string(public_key, public_key_password);
 					check_public_key(pkey.get());
 				} else {
 					throw error::ecdsa_exception(error::ecdsa_error::no_key_provided);
