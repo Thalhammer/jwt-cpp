@@ -461,7 +461,7 @@ TEST(OpenSSLErrorTest, ConvertCertBase64DerToPemReference) {
 TEST(OpenSSLErrorTest, ConvertEcdsaCertBase64DerToPemReference) {
 	std::error_code ec;
 	auto res = jwt::helper::convert_base64_der_to_pem(ed25519_certificate_base64_der, ec);
-	ASSERT_EQ(res, sample_cert);
+	ASSERT_EQ(res, ed25519_certificate);
 	ASSERT_FALSE(!(!ec));
 	ASSERT_EQ(ec.value(), 0);
 }
