@@ -1332,9 +1332,9 @@ namespace jwt {
 				  const std::string& private_key_password, std::string name)
 				: alg_name(std::move(name)) {
 				if (!private_key.empty()) {
-					pkey = helper::load_private_ec_key_from_string(private_key, private_key_password);
+					pkey = helper::load_private_key_from_string(private_key, private_key_password);
 				} else if (!public_key.empty()) {
-					pkey = helper::load_public_ec_key_from_string(public_key, public_key_password);
+					pkey = helper::load_public_key_from_string(public_key, public_key_password);
 				} else
 					throw error::ecdsa_exception(error::ecdsa_error::load_key_bio_read);
 			}
