@@ -541,6 +541,11 @@ TEST(OpenSSLErrorTest, LoadPublicKeyFromStringReferenceWithEcCert) {
 	ASSERT_TRUE(res);
 }
 
+TEST(OpenSSLErrorTest, LoadPublicKeyFromStringReferenceWithEcCertAndErr) {
+	auto res = jwt::helper::load_public_key_from_string<jwt::error::ecdsa_error>(ecdsa256_pub_key, "");
+	ASSERT_TRUE(res);
+}
+
 TEST(OpenSSLErrorTest, LoadPublicKeyFromString) {
 	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
 										 {&fail_BIO_write, 1, jwt::error::rsa_error::load_key_bio_write},
@@ -551,6 +556,19 @@ TEST(OpenSSLErrorTest, LoadPublicKeyFromString) {
 			jwt::helper::load_public_key_from_string(rsa_pub_key, "");
 			FAIL(); // Should never reach this
 		} catch (const jwt::error::rsa_exception& e) { ec = e.code(); }
+	});
+}
+
+TEST(OpenSSLErrorTest, LoadPublicKeyFromStringWithEc) {
+	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::ecdsa_error::create_mem_bio_failed},
+										 {&fail_BIO_write, 1, jwt::error::ecdsa_error::load_key_bio_write},
+										 {&fail_PEM_read_bio_PUBKEY, 1, jwt::error::ecdsa_error::load_key_bio_read}};
+
+	run_multitest(mapping, [](std::error_code& ec) {
+		try {
+			jwt::helper::load_public_key_from_string<jwt::error::ecdsa_error>(ecdsa256_pub_key, "");
+			FAIL(); // Should never reach this
+		} catch (const jwt::error::ecdsa_exception& e) { ec = e.code(); }
 	});
 }
 
@@ -750,11 +768,11 @@ TEST(OpenSSLErrorTest, ECDSACertificate) {
 #endif
 			{&fail_PEM_read_bio_PUBKEY, 1, jwt::error::ecdsa_error::load_key_bio_read},
 			// extract_pubkey_from_cert
-			{&fail_BIO_new, 2, jwt::error::rsa_error::create_mem_bio_failed},
-			{&fail_PEM_read_bio_X509, 1, jwt::error::rsa_error::cert_load_failed},
-			{&fail_X509_get_pubkey, 1, jwt::error::rsa_error::get_key_failed},
-			{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::write_key_failed}, {
-			&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed
+			{&fail_BIO_new, 2, jwt::error::ecdsa_error::create_mem_bio_failed},
+			{&fail_PEM_read_bio_X509, 1, jwt::error::ecdsa_error::cert_load_failed},
+			{&fail_X509_get_pubkey, 1, jwt::error::ecdsa_error::get_key_failed},
+			{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::ecdsa_error::write_key_failed}, {
+			&fail_BIO_ctrl, 1, jwt::error::ecdsa_error::convert_to_pem_failed
 		}
 	};
 
