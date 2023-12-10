@@ -536,6 +536,11 @@ TEST(OpenSSLErrorTest, LoadPublicKeyFromStringReference) {
 	ASSERT_TRUE(res);
 }
 
+TEST(OpenSSLErrorTest, LoadPublicKeyFromStringReferenceWithEcCert) {
+	auto res = jwt::helper::load_public_key_from_string(ecdsa256_pub_key, "");
+	ASSERT_TRUE(res);
+}
+
 TEST(OpenSSLErrorTest, LoadPublicKeyFromString) {
 	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
 										 {&fail_BIO_write, 1, jwt::error::rsa_error::load_key_bio_write},
