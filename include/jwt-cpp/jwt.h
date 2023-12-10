@@ -508,8 +508,7 @@ namespace jwt {
 		 * \param ec				error_code for error_detection (gets cleared if no error occurred)
 		 */
 		template<typename error_category = error::rsa_error>
-		std::string extract_pubkey_from_cert(const std::string& certstr, const std::string& pw,
-													std::error_code& ec) {
+		std::string extract_pubkey_from_cert(const std::string& certstr, const std::string& pw, std::error_code& ec) {
 			ec.clear();
 			auto certbio = make_mem_buf_bio(certstr);
 			auto keybio = make_mem_buf_bio();
@@ -695,7 +694,7 @@ namespace jwt {
 		 */
 		template<typename error_category = error::rsa_error>
 		evp_pkey_handle load_public_key_from_string(const std::string& key, const std::string& password,
-														   std::error_code& ec) {
+													std::error_code& ec) {
 			ec.clear();
 			auto pubkey_bio = make_mem_buf_bio();
 			if (!pubkey_bio) {
