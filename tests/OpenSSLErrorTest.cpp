@@ -509,7 +509,7 @@ TEST(OpenSSLErrorTest, ExtractPubkeyFromCertErrorCode) {
 
 TEST(OpenSSLErrorTest, CreateRsaPublicKeyFromComponents) {
 	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
-										 {&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::write_key_failed}};
+										 {&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_write}};
 
 	run_multitest(mapping, [](std::error_code& ec) {
 		try {
@@ -527,7 +527,7 @@ TEST(OpenSSLErrorTest, CreateRsaPublicKeyFromComponents) {
 
 TEST(OpenSSLErrorTest, CreateRsaPublicKeyFromComponentsErrorCode) {
 	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
-										 {&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::write_key_failed}};
+										 {&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_write}};
 
 	run_multitest(mapping, [](std::error_code& ec) {
 		auto res = jwt::helper::create_public_key_from_rsa_components(
