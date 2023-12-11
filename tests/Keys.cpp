@@ -157,7 +157,8 @@ d3QtY3BwMQ8wDQYDVQQLDAZnaXRodWIxFDASBgNVBAMMC2V4YW1wbGUuY29tMCow
 BQYDK2VwAyEAUdLe1SUWxc/95f39pfmuwe1SLHpFXf5gcRQlMH2sjgwwBQYDK2Vw
 A0EAezYcLIUnyy86uUnAZdAMPn7wTruNKtG36GrTF3PF4dtdoGF1OV5DLnNK0Hbs
 3GyYtaZs6AEHwDXl/INXu2zoCQ==
------END CERTIFICATE-----)";
+-----END CERTIFICATE-----
+)";
 	// openssl x509 -outform der -in ed25519_certificate.pem -out ed25519_certificate.der
 	// openssl base64 -in ed25519_certificate.der -out ed25519_certificate.b64
 	std::string ed25519_certificate_base64_der = "MIIBjzCCAUECFCQlWQxMEMe4c3OOimH4/y+o/HpfMAUGAytlcDBqMQswCQYDVQQG"
