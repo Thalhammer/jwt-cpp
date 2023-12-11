@@ -937,7 +937,8 @@ TEST(OpenSSLErrorTest, EdDSACertificate) {
 }
 
 TEST(OpenSSLErrorTest, Ed25519Reference) {
-	ASSERT_THROW(jwt::algorithm::ed25519 alg{"", ""}, jwt::error:ecdsa_exception);
+	// No keys should throw
+	ASSERT_THROW(jwt::algorithm::ed25519("", ""), jwt::error:ecdsa_exception);
 
 	jwt::algorithm::ed25519 alg{ed25519_pub_key, ed25519_priv_key};
 	std::error_code ec;
