@@ -786,7 +786,7 @@ TEST(OpenSSLErrorTest, ECDSACertificate) {
 #if !defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER < 0x3050300fL
 			{&fail_BIO_write, 1, jwt::error::ecdsa_error::load_key_bio_write},
 #else
-			{&fail_BIO_write, 1, jwt::error::rsa_error::write_key_failed},
+			{&fail_BIO_write, 1, jwt::error::ecdsa_error::write_key_failed},
 #endif
 			{&fail_PEM_read_bio_PUBKEY, 1, jwt::error::ecdsa_error::load_key_bio_read},
 			// extract_pubkey_from_cert
