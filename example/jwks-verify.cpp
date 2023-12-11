@@ -54,4 +54,16 @@ int main() {
 
 		verifier.verify(decoded_jwt);
 	}
+	// else if the optional 'x5c' was not present
+	{
+		const auto modulus = jwk.get_jwk_claim("n").as_string();
+		const auto exponent = jwk.get_jwk_claim("e").as_string();
+		auto verifier = jwt::verify()
+							.allow_algorithm(jwt::algorithm::rs256(
+								jwt::helper::create_public_key_from_rsa_components(modulus, exponent)))
+							.with_issuer(issuer)
+							.leeway(60UL); // value in seconds, add some to compensate timeout
+
+		verifier.verify(decoded_jwt);
+	}
 }

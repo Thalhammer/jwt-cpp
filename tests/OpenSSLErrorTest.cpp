@@ -507,6 +507,39 @@ TEST(OpenSSLErrorTest, ExtractPubkeyFromCertErrorCode) {
 	});
 }
 
+TEST(OpenSSLErrorTest, CreateRsaPublicKeyFromComponents) {
+	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
+										 {&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::write_key_failed}};
+
+	run_multitest(mapping, [](std::error_code& ec) {
+		try {
+			jwt::helper::create_public_key_from_rsa_components(
+				"pjdss8ZaDfEH6K6U7GeW2nxDqR4IP049fk1fK0lndimbMMVBdPv_hSpm8T8EtBDxrUdi1OHZfMhUixGaut-"
+				"3nQ4GG9nM249oxhCtxqqNvEXrmQRGqczyLxuh-fKn9Fg--"
+				"hS9UpazHpfVAFnB5aCfXoNhPuI8oByyFKMKaOVgHNqP5NBEqabiLftZD3W_"
+				"lsFCPGuzr4Vp0YS7zS2hDYScC2oOMu4rGU1LcMZf39p3153Cq7bS2Xh6Y-vw5pwzFYZdjQxDn8x8BG3fJ6j8TGLXQsbKH1218_"
+				"HcUJRvMwdpbUQG5nvA2GXVqLqdwp054Lzk9_B_f1lVrmOKuHjTNHq48w",
+				"AQAB");
+			FAIL(); // Should never reach this
+		} catch (const jwt::error::rsa_exception& e) { ec = e.code(); }
+	});
+}
+
+TEST(OpenSSLErrorTest, CreateRsaPublicKeyFromComponentsErrorCode) {
+	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
+										 {&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::write_key_failed}};
+
+	run_multitest(mapping, [](std::error_code& ec) {
+		auto res = jwt::helper::create_public_key_from_rsa_components(
+			"pjdss8ZaDfEH6K6U7GeW2nxDqR4IP049fk1fK0lndimbMMVBdPv_hSpm8T8EtBDxrUdi1OHZfMhUixGaut-"
+			"3nQ4GG9nM249oxhCtxqqNvEXrmQRGqczyLxuh-fKn9Fg--hS9UpazHpfVAFnB5aCfXoNhPuI8oByyFKMKaOVgHNqP5NBEqabiLftZD3W_"
+			"lsFCPGuzr4Vp0YS7zS2hDYScC2oOMu4rGU1LcMZf39p3153Cq7bS2Xh6Y-vw5pwzFYZdjQxDn8x8BG3fJ6j8TGLXQsbKH1218_"
+			"HcUJRvMwdpbUQG5nvA2GXVqLqdwp054Lzk9_B_f1lVrmOKuHjTNHq48w",
+			"AQAB", ec);
+		ASSERT_EQ(res, "");
+	});
+}
+
 TEST(OpenSSLErrorTest, ConvertCertBase64DerToPem) {
 	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
 										 {&fail_PEM_write_bio_cert, 1, jwt::error::rsa_error::write_cert_failed},
