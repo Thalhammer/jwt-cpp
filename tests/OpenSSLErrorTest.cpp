@@ -433,7 +433,7 @@ OSSL_PARAM_BLD* OSSL_PARAM_BLD_new() {
 }
 
 int OSSL_PARAM_BLD_push_BN(OSSL_PARAM_BLD* bld, const char* key, const BIGNUM* bn) {
-	static OSSL_PARAM_BLD* (*origMethod)(OSSL_PARAM_BLD * bld, const char* key, const BIGNUM* bn) = nullptr;
+	static int (*origMethod)(OSSL_PARAM_BLD * bld, const char* key, const BIGNUM* bn) = nullptr;
 	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "OSSL_PARAM_BLD_push_BN");
 	bool fail = fail_OSSL_PARAM_BLD_push_BN & 1;
 	fail_OSSL_PARAM_BLD_push_BN = fail_OSSL_PARAM_BLD_push_BN >> 1;
