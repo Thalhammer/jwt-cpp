@@ -11,7 +11,20 @@ include(GoogleTest)
 if(HUNTER_ENABLED)
   hunter_add_package(GTest)
 endif()
-find_package(GTest REQUIRED)
+
+find_package(GTest)
+if(NOT TARGET GTest::gtest_main)
+  message(STATUS "jwt-cpp: using FetchContent for GTest")
+  include(FetchContent)
+  FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+  )
+  # https://google.github.io/googletest/quickstart-cmake.html
+  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+  FetchContent_MakeAvailable(googletest)
+
+endif()
 
 set(TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/BaseTest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/ClaimTest.cpp
@@ -30,6 +43,11 @@ if(TARGET boost_json)
   list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/BoostJsonTest.cpp)
 endif()
 
+find_package(jsoncpp CONFIG)
+if(TARGET jsoncpp_static)
+  list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/OspJsoncppTest.cpp)
+endif()
+
 add_executable(jwt-cpp-test ${TEST_SOURCES})
 
 # NOTE: Don't use space inside a generator expression here, because the function prematurely breaks the expression into
@@ -44,7 +62,8 @@ if(HUNTER_ENABLED)
   # Define a compile define to bypass openssl error tests
   target_compile_definitions(jwt-cpp-test PRIVATE HUNTER_ENABLED=1)
 else()
-  target_link_libraries(jwt-cpp-test PRIVATE GTest::GTest GTest::Main)
+  # https://github.com/google/googletest/blob/eb80f759d595874a5e905a3342bd8e2af4c0a12d/googletest/README.md?plain=1#L62-L64
+  target_link_libraries(jwt-cpp-test PRIVATE GTest::gtest_main)
   if(TARGET jsoncons)
     target_link_libraries(jwt-cpp-test PRIVATE jsoncons)
   endif()

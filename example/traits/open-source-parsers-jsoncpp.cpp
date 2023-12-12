@@ -6,7 +6,7 @@
 int main() {
 	using sec = std::chrono::seconds;
 	using min = std::chrono::minutes;
-	using traits = jwt::traits::osp_jsoncpp;
+	using traits = jwt::traits::open_source_parsers_jsoncpp;
 	using claim = jwt::basic_claim<traits>;
 
 	claim from_raw_json;
