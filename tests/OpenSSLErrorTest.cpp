@@ -438,7 +438,7 @@ int OSSL_PARAM_BLD_push_BN(OSSL_PARAM_BLD* bld, const char* key, const BIGNUM* b
 	bool fail = fail_OSSL_PARAM_BLD_push_BN & 1;
 	fail_OSSL_PARAM_BLD_push_BN = fail_OSSL_PARAM_BLD_push_BN >> 1;
 	if (fail)
-		return nullptr;
+		return 0;
 	else
 		return origMethod(bld, key, bn);
 }
@@ -471,7 +471,7 @@ int EVP_PKEY_fromdata_init(EVP_PKEY_CTX* ctx) {
 	bool fail = fail_EVP_PKEY_fromdata_init & 1;
 	fail_EVP_PKEY_fromdata_init = fail_EVP_PKEY_fromdata_init >> 1;
 	if (fail)
-		return nullptr;
+		return 0;
 	else
 		return origMethod(ctx);
 }
@@ -482,7 +482,7 @@ int EVP_PKEY_fromdata(EVP_PKEY_CTX* ctx, EVP_PKEY** ppkey, int selection, OSSL_P
 	bool fail = fail_EVP_PKEY_fromdata & 1;
 	fail_EVP_PKEY_fromdata = fail_EVP_PKEY_fromdata >> 1;
 	if (fail)
-		return nullptr;
+		return 0;
 	else
 		return origMethod(ctx, ppkey, selection, params);
 }
@@ -504,7 +504,7 @@ int RSA_set0_key(RSA* r, BIGNUM* n, BIGNUM* e, BIGNUM* d) {
 	bool fail = fail_RSA_set0_key & 1;
 	fail_RSA_set0_key = fail_RSA_set0_key >> 1;
 	if (fail)
-		return nullptr;
+		return 0;
 	else
 		return origMethod(r, n, e, d);
 }
