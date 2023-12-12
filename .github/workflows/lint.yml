@@ -85,6 +85,7 @@ jobs:
           library_name: ${{ matrix.traits.library }}
           library_url: ${{ matrix.traits.url }}
           disable_default_traits: ${{ matrix.traits.disable_pico }}
+      - run: clang-format -i include/jwt-cpp/traits/**/*.h
       - run: git add include/jwt-cpp/traits/*
       - uses: ./.github/actions/process-linting-results
         with:
