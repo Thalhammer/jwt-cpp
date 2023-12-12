@@ -1,13 +1,14 @@
-#include "jwt-cpp/traits/osp-jsoncpp/traits.h"
+#include "jwt-cpp/traits/open-source-parsers-jsoncpp/traits.h"
 
 #include <gtest/gtest.h>
 
 TEST(OspJsoncppTest, BasicClaims) {
-	const auto string = jwt::basic_claim<jwt::traits::open_source_parsers_jsoncpp>(jwt::traits::open_source_parsers_jsoncpp::string_type("string"));
+	const auto string = jwt::basic_claim<jwt::traits::open_source_parsers_jsoncpp>(
+		jwt::traits::open_source_parsers_jsoncpp::string_type("string"));
 	ASSERT_EQ(string.get_type(), jwt::json::type::string);
 
-	const auto array =
-		jwt::basic_claim<jwt::traits::open_source_parsers_jsoncpp>(std::set<jwt::traits::open_source_parsers_jsoncpp::string_type>{"string", "string"});
+	const auto array = jwt::basic_claim<jwt::traits::open_source_parsers_jsoncpp>(
+		std::set<jwt::traits::open_source_parsers_jsoncpp::string_type>{"string", "string"});
 	ASSERT_EQ(array.get_type(), jwt::json::type::array);
 
 	const auto integer = jwt::basic_claim<jwt::traits::open_source_parsers_jsoncpp>(159816816);
@@ -41,7 +42,8 @@ TEST(OspJsoncppTest, AudienceAsString) {
 TEST(OspJsoncppTest, SetArray) {
 	std::vector<int64_t> vect = {100, 20, 10};
 	auto token = jwt::create<jwt::traits::open_source_parsers_jsoncpp>()
-					 .set_payload_claim("test", jwt::basic_claim<jwt::traits::open_source_parsers_jsoncpp>(vect.begin(), vect.end()))
+					 .set_payload_claim(
+						 "test", jwt::basic_claim<jwt::traits::open_source_parsers_jsoncpp>(vect.begin(), vect.end()))
 					 .sign(jwt::algorithm::none{});
 	ASSERT_EQ(token, "eyJhbGciOiJub25lIn0.eyJ0ZXN0IjpbMTAwLDIwLDEwXX0.");
 }
@@ -64,8 +66,9 @@ TEST(OspJsoncppTest, VerifyTokenHS256) {
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
 
 	const auto decoded_token = jwt::decode<jwt::traits::open_source_parsers_jsoncpp>(token);
-	const auto verify =
-		jwt::verify<jwt::traits::open_source_parsers_jsoncpp>().allow_algorithm(jwt::algorithm::hs256{"secret"}).with_issuer("auth0");
+	const auto verify = jwt::verify<jwt::traits::open_source_parsers_jsoncpp>()
+							.allow_algorithm(jwt::algorithm::hs256{"secret"})
+							.with_issuer("auth0");
 	verify.verify(decoded_token);
 }
 
@@ -77,8 +80,9 @@ TEST(OspJsoncppTest, VerifyTokenExpirationValid) {
 						   .sign(jwt::algorithm::hs256{"secret"});
 
 	const auto decoded_token = jwt::decode<jwt::traits::open_source_parsers_jsoncpp>(token);
-	const auto verify =
-		jwt::verify<jwt::traits::open_source_parsers_jsoncpp>().allow_algorithm(jwt::algorithm::hs256{"secret"}).with_issuer("auth0");
+	const auto verify = jwt::verify<jwt::traits::open_source_parsers_jsoncpp>()
+							.allow_algorithm(jwt::algorithm::hs256{"secret"})
+							.with_issuer("auth0");
 	verify.verify(decoded_token);
 }
 
@@ -90,8 +94,9 @@ TEST(OspJsoncppTest, VerifyTokenExpired) {
 						   .sign(jwt::algorithm::hs256{"secret"});
 
 	const auto decoded_token = jwt::decode<jwt::traits::open_source_parsers_jsoncpp>(token);
-	const auto verify =
-		jwt::verify<jwt::traits::open_source_parsers_jsoncpp>().allow_algorithm(jwt::algorithm::hs256{"secret"}).with_issuer("auth0");
+	const auto verify = jwt::verify<jwt::traits::open_source_parsers_jsoncpp>()
+							.allow_algorithm(jwt::algorithm::hs256{"secret"})
+							.with_issuer("auth0");
 	ASSERT_THROW(verify.verify(decoded_token), jwt::error::token_verification_exception);
 
 	std::error_code ec;
@@ -107,8 +112,9 @@ TEST(OspJsoncppTest, VerifyArray) {
 
 	std::vector<int64_t> vect = {100, 20, 10};
 	jwt::basic_claim<jwt::traits::open_source_parsers_jsoncpp> array_claim(vect.begin(), vect.end());
-	const auto verify =
-		jwt::verify<jwt::traits::open_source_parsers_jsoncpp>().allow_algorithm(jwt::algorithm::none{}).with_claim("test", array_claim);
+	const auto verify = jwt::verify<jwt::traits::open_source_parsers_jsoncpp>()
+							.allow_algorithm(jwt::algorithm::none{})
+							.with_claim("test", array_claim);
 	ASSERT_NO_THROW(verify.verify(decoded_token));
 }
 
