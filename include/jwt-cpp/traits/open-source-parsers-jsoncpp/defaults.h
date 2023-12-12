@@ -9,7 +9,7 @@
 
 namespace jwt {
 	/**
-	 * \brief a class to store a generic [open_source_parsers_jsoncpp](https://github.com/open-source-parsers/open_source_parsers_jsoncpp) value as claim
+	 * \brief a class to store a generic [jsoncpp](https://github.com/open-source-parsers/jsoncpp) value as claim
 	 *
 	 * This type is the specialization of the \ref basic_claim class which
 	 * uses the standard template types.
@@ -27,7 +27,9 @@ namespace jwt {
 	/**
 	 * Return a builder instance to create a new token
 	 */
-	inline builder<traits::open_source_parsers_jsoncpp> create() { return builder<traits::open_source_parsers_jsoncpp>(); }
+	inline builder<traits::open_source_parsers_jsoncpp> create() {
+		return builder<traits::open_source_parsers_jsoncpp>();
+	}
 
 #ifndef JWT_DISABLE_BASE64
 	/**
@@ -64,7 +66,8 @@ namespace jwt {
 	 * \return Parsed JWK
 	 * \throw std::runtime_error Token is not in correct format
 	 */
-	inline jwk<traits::open_source_parsers_jsoncpp> parse_jwk(const traits::open_source_parsers_jsoncpp::string_type& token) {
+	inline jwk<traits::open_source_parsers_jsoncpp>
+	parse_jwk(const traits::open_source_parsers_jsoncpp::string_type& token) {
 		return jwk<traits::open_source_parsers_jsoncpp>(token);
 	}
 
@@ -74,7 +77,8 @@ namespace jwt {
 	 * \return Parsed JWKs
 	 * \throw std::runtime_error Token is not in correct format
 	 */
-	inline jwks<traits::open_source_parsers_jsoncpp> parse_jwks(const traits::open_source_parsers_jsoncpp::string_type& token) {
+	inline jwks<traits::open_source_parsers_jsoncpp>
+	parse_jwks(const traits::open_source_parsers_jsoncpp::string_type& token) {
 		return jwks<traits::open_source_parsers_jsoncpp>(token);
 	}
 
@@ -85,4 +89,4 @@ namespace jwt {
 	using verify_context = verify_ops::verify_context<traits::open_source_parsers_jsoncpp>;
 } // namespace jwt
 
-#endif // JWT_CPP_JSONCPP_DEFAULTS_H
+#endif // JWT_CPP_OPEN_SOURCE_PARSERS_JSONCPP_DEFAULTS_H
