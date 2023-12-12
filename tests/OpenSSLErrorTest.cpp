@@ -59,6 +59,7 @@ static uint64_t fail_EVP_PKEY_CTX_new_from_name = 0;
 static uint64_t fail_EVP_PKEY_fromdata_init = 0;
 static uint64_t fail_EVP_PKEY_fromdata = 0;
 #else
+static uint64_t fail_PEM_write_bio_RSA_PUBKEY = 0;
 static uint64_t fail_RSA_set0_key = 0;
 #endif
 
@@ -486,6 +487,17 @@ int EVP_PKEY_fromdata(EVP_PKEY_CTX* ctx, EVP_PKEY** ppkey, int selection, OSSL_P
 		return origMethod(ctx, ppkey, selection, params);
 }
 #else
+int PEM_write_bio_RSA_PUBKEY(BIO* bp, OPENSSL_CONST EVP_PKEY* x) {
+	static int (*origMethod)(BIO* bp, OPENSSL_CONST EVP_PKEY* x) = nullptr;
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "PEM_write_bio_RSA_PUBKEY");
+	bool fail = fail_PEM_write_bio_RSA_PUBKEY & 1;
+	fail_PEM_write_bio_RSA_PUBKEY = fail_PEM_write_bio_RSA_PUBKEY >> 1;
+	if (fail)
+		return 0;
+	else
+		return origMethod(bp, x);
+}
+
 int RSA_set0_key(RSA* r, BIGNUM* n, BIGNUM* e, BIGNUM* d) {
 	static int (*origMethod)(RSA* r, BIGNUM* n, BIGNUM* e, BIGNUM* d) = nullptr;
 	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "RSA_set0_key");
@@ -600,8 +612,8 @@ TEST(OpenSSLErrorTest, ExtractPubkeyFromCertErrorCode) {
 TEST(OpenSSLErrorTest, CreateRsaPublicKeyFromComponents) {
 	std::vector<multitest_entry> mapping{
 		{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
-		{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_write},
 #ifdef JWT_OPENSSL_3_0
+		{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_write},
 		{&fail_OSSL_PARAM_BLD_new, 1, jwt::error::rsa_error::create_context_failed},
 		{&fail_OSSL_PARAM_BLD_push_BN, 1, jwt::error::rsa_error::set_rsa_failed},
 		{&fail_OSSL_PARAM_BLD_to_param, 1, jwt::error::rsa_error::set_rsa_failed},
@@ -609,6 +621,7 @@ TEST(OpenSSLErrorTest, CreateRsaPublicKeyFromComponents) {
 		{&fail_EVP_PKEY_fromdata_init, 1, jwt::error::rsa_error::cert_load_failed},
 		{&fail_EVP_PKEY_fromdata, 1, jwt::error::rsa_error::cert_load_failed}
 #else
+		{&fail_PEM_write_bio_RSA_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_write},
 		{&fail_RSA_set0_key, 1, jwt::error::rsa_error::set_rsa_failed}
 #endif
 	};
@@ -630,8 +643,8 @@ TEST(OpenSSLErrorTest, CreateRsaPublicKeyFromComponents) {
 TEST(OpenSSLErrorTest, CreateRsaPublicKeyFromComponentsErrorCode) {
 	std::vector<multitest_entry> mapping{
 		{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
-		{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_write},
 #ifdef JWT_OPENSSL_3_0
+		{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_write},
 		{&fail_OSSL_PARAM_BLD_new, 1, jwt::error::rsa_error::create_context_failed},
 		{&fail_OSSL_PARAM_BLD_push_BN, 1, jwt::error::rsa_error::set_rsa_failed},
 		{&fail_OSSL_PARAM_BLD_to_param, 1, jwt::error::rsa_error::set_rsa_failed},
@@ -639,6 +652,7 @@ TEST(OpenSSLErrorTest, CreateRsaPublicKeyFromComponentsErrorCode) {
 		{&fail_EVP_PKEY_fromdata_init, 1, jwt::error::rsa_error::cert_load_failed},
 		{&fail_EVP_PKEY_fromdata, 1, jwt::error::rsa_error::cert_load_failed}
 #else
+		{&fail_PEM_write_bio_RSA_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_write},
 		{&fail_RSA_set0_key, 1, jwt::error::rsa_error::set_rsa_failed}
 #endif
 	};
