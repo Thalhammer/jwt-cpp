@@ -28,7 +28,7 @@ set(JWT_SSL_LIBRARY_OPTIONS OpenSSL LibreSSL wolfSSL)
 set(JWT_SSL_LIBRARY OpenSSL CACHE STRING "Determines which SSL library to build with")
 set_property(CACHE JWT_SSL_LIBRARY PROPERTY STRINGS ${JWT_SSL_LIBRARY_OPTIONS})
 
-set(JWT_JSON_TRAITS_OPTIONS boost-json danielaparker-jsoncons kazuho-picojson nlohmann-json)
+set(JWT_JSON_TRAITS_OPTIONS boost-json danielaparker-jsoncons kazuho-picojson nlohmann-json open-source-parsers-jsoncpp)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
@@ -71,11 +71,9 @@ find_package(nlohmann_json CONFIG)
 if(NOT nlohmann_json_FOUND)
   message(STATUS "jwt-cpp: using FetchContent for nlohmann json")
   include(FetchContent)
-  FetchContent_Declare(nlohmann_json
-      URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz
-      URL_MD5 127794b2c82c0c5693805feaa2a703e2
-  )
-  FetchContent_MakeAvailable(nlohmann_json)
+  fetchcontent_declare(nlohmann_json URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz
+                       URL_MD5 127794b2c82c0c5693805feaa2a703e2)
+  fetchcontent_makeavailable(nlohmann_json)
 endif()
 
 set(JWT_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include)

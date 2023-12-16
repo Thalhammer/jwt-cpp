@@ -47,6 +47,11 @@ runs:
               library_url: LIBRARY_URL,
               disable_default_traits: disableDefault,
           })
-          const outputDir = path.join('include', 'jwt-cpp', 'traits', TRAITS_NAME.replace('_', '-'))
+          // https://dmitripavlutin.com/replace-all-string-occurrences-javascript/
+          function replaceAll(string, search, replace) {
+            return string.split(search).join(replace);
+          }
+
+          const outputDir = path.join('include', 'jwt-cpp', 'traits', replaceAll(TRAITS_NAME, '_', '-'))
           fs.mkdirSync(outputDir, { recursive: true })
           fs.writeFileSync(path.join(outputDir, 'defaults.h'), content)
