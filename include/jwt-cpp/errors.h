@@ -79,7 +79,12 @@ namespace jwt {
 			no_key_provided,
 			invalid_key_size,
 			invalid_key,
-			create_context_failed
+			create_context_failed,
+			cert_load_failed,
+			get_key_failed,
+			write_key_failed,
+			write_cert_failed,
+			convert_to_pem_failed
 		};
 		/**
 		 * \brief Error category for ECDSA errors
@@ -99,6 +104,11 @@ namespace jwt {
 					case ecdsa_error::invalid_key_size: return "invalid key size";
 					case ecdsa_error::invalid_key: return "invalid key";
 					case ecdsa_error::create_context_failed: return "failed to create context";
+					case ecdsa_error::cert_load_failed: return "error loading cert into memory";
+					case ecdsa_error::get_key_failed: return "error getting key from certificate";
+					case ecdsa_error::write_key_failed: return "error writing key data in PEM format";
+					case ecdsa_error::write_cert_failed: return "error writing cert data in PEM format";
+					case ecdsa_error::convert_to_pem_failed: return "failed to convert key to pem";
 					default: return "unknown ECDSA error";
 					}
 				}

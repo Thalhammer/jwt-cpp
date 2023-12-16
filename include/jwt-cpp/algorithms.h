@@ -151,42 +151,44 @@ namespace jwt {
 				);
 			}
 		} // namespace details
+
 		/**
-		 * \brief Extract the public key of a PEM certificate
+		 * \brief Extract the public key of a pem certificate
 		 *
-		 * \param certstr	String containing the certificate encoded as pem
-		 * \param pw		Password used to decrypt certificate (leave empty if not encrypted)
-		 * \param ec		error_code for error_detection (gets cleared if no error occurred)
+		 * \tparam error_category	jwt::error enum category to match with the keys being used
+		 * \param certstr			String containing the certificate encoded as pem
+		 * \param pw				Password used to decrypt certificate (leave empty if not encrypted)
+		 * \param ec				error_code for error_detection (gets cleared if no error occurred)
 		 */
-		inline std::string extract_pubkey_from_cert(const std::string& certstr, const std::string& pw,
-													std::error_code& ec) {
+		template<typename error_category = error::rsa_error>
+		std::string extract_pubkey_from_cert(const std::string& certstr, const std::string& pw, std::error_code& ec) {
 			ec.clear();
 			auto certbio = details::make_mem_buf_bio(certstr);
 			auto keybio = details::make_mem_buf_bio();
 			if (!certbio || !keybio) {
-				ec = error::rsa_error::create_mem_bio_failed;
+				ec = error_category::create_mem_bio_failed;
 				return {};
 			}
 
 			std::unique_ptr<X509, decltype(&X509_free)> cert(
 				PEM_read_bio_X509(certbio.get(), nullptr, nullptr, const_cast<char*>(pw.c_str())), X509_free);
 			if (!cert) {
-				ec = error::rsa_error::cert_load_failed;
+				ec = error_category::cert_load_failed;
 				return {};
 			}
 			std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)> key(X509_get_pubkey(cert.get()), EVP_PKEY_free);
 			if (!key) {
-				ec = error::rsa_error::get_key_failed;
+				ec = error_category::get_key_failed;
 				return {};
 			}
 			if (PEM_write_bio_PUBKEY(keybio.get(), key.get()) == 0) {
-				ec = error::rsa_error::write_key_failed;
+				ec = error_category::write_key_failed;
 				return {};
 			}
 			char* ptr = nullptr;
 			auto len = BIO_get_mem_data(keybio.get(), &ptr);
 			if (len <= 0 || ptr == nullptr) {
-				ec = error::rsa_error::convert_to_pem_failed;
+				ec = error_category::convert_to_pem_failed;
 				return {};
 			}
 			return {ptr, static_cast<size_t>(len)};
@@ -195,13 +197,15 @@ namespace jwt {
 		/**
 		 * \brief Extract the public key of a pem certificate
 		 *
-		 * \param certstr	String containing the certificate encoded as pem
-		 * \param pw		Password used to decrypt certificate (leave empty if not encrypted)
-		 * \throw			rsa_exception if an error occurred
+		 * \tparam error_category	jwt::error enum category to match with the keys being used
+		 * \param certstr			String containing the certificate encoded as pem
+		 * \param pw				Password used to decrypt certificate (leave empty if not encrypted)
+		 * \throw					templated error_category's type exception if an error occurred
 		 */
-		inline std::string extract_pubkey_from_cert(const std::string& certstr, const std::string& pw = "") {
+		template<typename error_category = error::rsa_error>
+		std::string extract_pubkey_from_cert(const std::string& certstr, const std::string& pw = "") {
 			std::error_code ec;
-			auto res = extract_pubkey_from_cert(certstr, pw, ec);
+			auto res = extract_pubkey_from_cert<error_category>(certstr, pw, ec);
 			error::throw_if_error(ec);
 			return res;
 		}
@@ -329,36 +333,37 @@ namespace jwt {
 			error::throw_if_error(ec);
 			return res;
 		}
-#endif
-		/**
+#endif /**
 		 * \brief Load a public key from a string.
 		 *
 		 * The string should contain a pem encoded certificate or public key
 		 *
+		 * \tparam error_category	jwt::error enum category to match with the keys being used
 		 * \param key		String containing the certificate encoded as pem
 		 * \param password	Password used to decrypt certificate (leave empty if not encrypted)
 		 * \param ec		error_code for error_detection (gets cleared if no error occurs)
 		 */
-		inline evp_pkey_handle load_public_key_from_string(const std::string& key, const std::string& password,
-														   std::error_code& ec) {
+		template<typename error_category = error::rsa_error>
+		evp_pkey_handle load_public_key_from_string(const std::string& key, const std::string& password,
+													std::error_code& ec) {
 			ec.clear();
 			auto pubkey_bio = details::make_mem_buf_bio();
 			if (!pubkey_bio) {
-				ec = error::rsa_error::create_mem_bio_failed;
+				ec = error_category::create_mem_bio_failed;
 				return {};
 			}
 			if (key.substr(0, 27) == "-----BEGIN CERTIFICATE-----") {
-				auto epkey = helper::extract_pubkey_from_cert(key, password, ec);
+				auto epkey = helper::extract_pubkey_from_cert<error_category>(key, password, ec);
 				if (ec) return {};
 				const int len = static_cast<int>(epkey.size());
 				if (BIO_write(pubkey_bio.get(), epkey.data(), len) != len) {
-					ec = error::rsa_error::load_key_bio_write;
+					ec = error_category::load_key_bio_write;
 					return {};
 				}
 			} else {
 				const int len = static_cast<int>(key.size());
 				if (BIO_write(pubkey_bio.get(), key.data(), len) != len) {
-					ec = error::rsa_error::load_key_bio_write;
+					ec = error_category::load_key_bio_write;
 					return {};
 				}
 			}
@@ -366,7 +371,7 @@ namespace jwt {
 			evp_pkey_handle pkey(PEM_read_bio_PUBKEY(
 				pubkey_bio.get(), nullptr, nullptr,
 				(void*)password.data())); // NOLINT(google-readability-casting) requires `const_cast`
-			if (!pkey) ec = error::rsa_error::load_key_bio_read;
+			if (!pkey) ec = error_category::load_key_bio_read;
 			return pkey;
 		}
 
@@ -375,13 +380,15 @@ namespace jwt {
 		 *
 		 * The string should contain a pem encoded certificate or public key
 		 *
-		 * \param key		String containing the certificate or key encoded as pem
-		 * \param password	Password used to decrypt certificate or key (leave empty if not encrypted)
-		 * \throw			rsa_exception if an error occurred
+		 * \tparam error_category	jwt::error enum category to match with the keys being used
+		 * \param key				String containing the certificate encoded as pem
+		 * \param password			Password used to decrypt certificate (leave empty if not encrypted)
+		 * \throw					Templated error_category's type exception if an error occurred
 		 */
+		template<typename error_category = error::rsa_error>
 		inline evp_pkey_handle load_public_key_from_string(const std::string& key, const std::string& password = "") {
 			std::error_code ec;
-			auto res = load_public_key_from_string(key, password, ec);
+			auto res = load_public_key_from_string<error_category>(key, password, ec);
 			error::throw_if_error(ec);
 			return res;
 		}
@@ -389,38 +396,43 @@ namespace jwt {
 		/**
 		 * \brief Load a private key from a string.
 		 *
-		 * \param key		String containing a private key as pem
-		 * \param password	Password used to decrypt key (leave empty if not encrypted)
-		 * \param ec		error_code for error_detection (gets cleared if no error occurs)
+		 * \tparam error_category	jwt::error enum category to match with the keys being used
+		 * \param key				String containing a private key as pem
+		 * \param password			Password used to decrypt key (leave empty if not encrypted)
+		 * \param ec				error_code for error_detection (gets cleared if no error occurs)
 		 */
+		template<typename error_category = error::rsa_error>
 		inline evp_pkey_handle load_private_key_from_string(const std::string& key, const std::string& password,
 															std::error_code& ec) {
-			auto privkey_bio = details::make_mem_buf_bio();
-			if (!privkey_bio) {
-				ec = error::rsa_error::create_mem_bio_failed;
+			ec.clear();
+			auto private_key_bio = details::make_mem_buf_bio();
+			if (!private_key_bio) {
+				ec = error_category::create_mem_bio_failed;
 				return {};
 			}
 			const int len = static_cast<int>(key.size());
-			if (BIO_write(privkey_bio.get(), key.data(), len) != len) {
-				ec = error::rsa_error::load_key_bio_write;
+			if (BIO_write(private_key_bio.get(), key.data(), len) != len) {
+				ec = error_category::load_key_bio_write;
 				return {};
 			}
 			evp_pkey_handle pkey(
-				PEM_read_bio_PrivateKey(privkey_bio.get(), nullptr, nullptr, const_cast<char*>(password.c_str())));
-			if (!pkey) ec = error::rsa_error::load_key_bio_read;
+				PEM_read_bio_PrivateKey(private_key_bio.get(), nullptr, nullptr, const_cast<char*>(password.c_str())));
+			if (!pkey) ec = error_category::load_key_bio_read;
 			return pkey;
 		}
 
 		/**
 		 * \brief Load a private key from a string.
 		 *
-		 * \param key		String containing a private key as pem
-		 * \param password	Password used to decrypt key (leave empty if not encrypted)
-		 * \throw			rsa_exception if an error occurred
+		 * \tparam error_category	jwt::error enum category to match with the keys being used
+		 * \param key				String containing a private key as pem
+		 * \param password			Password used to decrypt key (leave empty if not encrypted)
+		 * \throw					Templated error_category's type exception if an error occurred
 		 */
+		template<typename error_category = error::rsa_error>
 		inline evp_pkey_handle load_private_key_from_string(const std::string& key, const std::string& password = "") {
 			std::error_code ec;
-			auto res = load_private_key_from_string(key, password, ec);
+			auto res = load_private_key_from_string<error_category>(key, password, ec);
 			error::throw_if_error(ec);
 			return res;
 		}
@@ -429,6 +441,8 @@ namespace jwt {
 		 * \brief Load a public key from a string.
 		 *
 		 * The string should contain a pem encoded certificate or public key
+		 * 
+		 * \deprecated Use the templated version load_private_key_from_string with error::ecdsa_error
 		 *
 		 * \param key		String containing the certificate encoded as pem
 		 * \param password	Password used to decrypt certificate (leave empty if not encrypted)
@@ -436,33 +450,7 @@ namespace jwt {
 		 */
 		inline evp_pkey_handle load_public_ec_key_from_string(const std::string& key, const std::string& password,
 															  std::error_code& ec) {
-			ec.clear();
-			auto pubkey_bio = details::make_mem_buf_bio();
-			if (!pubkey_bio) {
-				ec = error::ecdsa_error::create_mem_bio_failed;
-				return {};
-			}
-			if (key.substr(0, 27) == "-----BEGIN CERTIFICATE-----") {
-				auto epkey = helper::extract_pubkey_from_cert(key, password, ec);
-				if (ec) return {};
-				const int len = static_cast<int>(epkey.size());
-				if (BIO_write(pubkey_bio.get(), epkey.data(), len) != len) {
-					ec = error::ecdsa_error::load_key_bio_write;
-					return {};
-				}
-			} else {
-				const int len = static_cast<int>(key.size());
-				if (BIO_write(pubkey_bio.get(), key.data(), len) != len) {
-					ec = error::ecdsa_error::load_key_bio_write;
-					return {};
-				}
-			}
-
-			evp_pkey_handle pkey(PEM_read_bio_PUBKEY(
-				pubkey_bio.get(), nullptr, nullptr,
-				(void*)password.data())); // NOLINT(google-readability-casting) requires `const_cast`
-			if (!pkey) ec = error::ecdsa_error::load_key_bio_read;
-			return pkey;
+			return load_public_key_from_string<error::ecdsa_error>(key, password, ec);
 		}
 
 		/**
@@ -470,6 +458,8 @@ namespace jwt {
 		 *
 		 * The string should contain a pem encoded certificate or public key
 		 *
+		 * \deprecated Use the templated version load_private_key_from_string with error::ecdsa_error
+		 * 
 		 * \param key		String containing the certificate or key encoded as pem
 		 * \param password	Password used to decrypt certificate or key (leave empty if not encrypted)
 		 * \throw			ecdsa_exception if an error occurred
@@ -477,13 +467,15 @@ namespace jwt {
 		inline evp_pkey_handle load_public_ec_key_from_string(const std::string& key,
 															  const std::string& password = "") {
 			std::error_code ec;
-			auto res = load_public_ec_key_from_string(key, password, ec);
+			auto res = load_public_key_from_string<error::ecdsa_error>(key, password, ec);
 			error::throw_if_error(ec);
 			return res;
 		}
 
 		/**
 		 * \brief Load a private key from a string.
+		 * 
+		 * \deprecated Use the templated version load_private_key_from_string with error::ecdsa_error
 		 *
 		 * \param key		String containing a private key as pem
 		 * \param password	Password used to decrypt key (leave empty if not encrypted)
@@ -491,25 +483,14 @@ namespace jwt {
 		 */
 		inline evp_pkey_handle load_private_ec_key_from_string(const std::string& key, const std::string& password,
 															   std::error_code& ec) {
-			auto privkey_bio = details::make_mem_buf_bio();
-			if (!privkey_bio) {
-				ec = error::ecdsa_error::create_mem_bio_failed;
-				return {};
-			}
-			const int len = static_cast<int>(key.size());
-			if (BIO_write(privkey_bio.get(), key.data(), len) != len) {
-				ec = error::ecdsa_error::load_key_bio_write;
-				return {};
-			}
-			evp_pkey_handle pkey(
-				PEM_read_bio_PrivateKey(privkey_bio.get(), nullptr, nullptr, const_cast<char*>(password.c_str())));
-			if (!pkey) ec = error::ecdsa_error::load_key_bio_read;
-			return pkey;
+			return load_private_key_from_string<error::ecdsa_error>(key, password, ec);
 		}
 
 		/**
 		 * \brief Load a private key from a string.
 		 *
+		 * \deprecated Use the templated version load_private_key_from_string with error::ecdsa_error
+		 * 
 		 * \param key		String containing a private key as pem
 		 * \param password	Password used to decrypt key (leave empty if not encrypted)
 		 * \throw			ecdsa_exception if an error occurred
@@ -517,7 +498,7 @@ namespace jwt {
 		inline evp_pkey_handle load_private_ec_key_from_string(const std::string& key,
 															   const std::string& password = "") {
 			std::error_code ec;
-			auto res = load_private_ec_key_from_string(key, password, ec);
+			auto res = load_private_key_from_string<error::ecdsa_error>(key, password, ec);
 			error::throw_if_error(ec);
 			return res;
 		}
