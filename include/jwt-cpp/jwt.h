@@ -935,9 +935,10 @@ namespace jwt {
 			}
 
 			// https://www.openssl.org/docs/man3.0/man3/EVP_PKEY_fromdata.html#EXAMPLES
+			// Error codes based on https://www.openssl.org/docs/manmaster/man3/EVP_PKEY_fromdata_init.html#RETURN-VALUES
 			EVP_PKEY* pkey = NULL;
-			if (EVP_PKEY_fromdata_init(ctx.get()) < 0 ||
-				EVP_PKEY_fromdata(ctx.get(), &pkey, EVP_PKEY_KEYPAIR, params.get()) < 0) {
+			if (EVP_PKEY_fromdata_init(ctx.get()) <= 0 ||
+				EVP_PKEY_fromdata(ctx.get(), &pkey, EVP_PKEY_KEYPAIR, params.get()) <= 0) {
 				// It's unclear if this can fail after allocating but free it anyways
 				// https://www.openssl.org/docs/man3.0/man3/EVP_PKEY_fromdata.html
 				EVP_PKEY_free(pkey);

@@ -622,7 +622,7 @@ TEST(OpenSSLErrorTest, CreateRsaPublicKeyFromComponents) {
 	std::vector<multitest_entry> mapping{
 		{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
 #ifdef JWT_OPENSSL_3_0
-		// {&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::cert_load_failed},
+		{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_write},
 		{&fail_OSSL_PARAM_BLD_new, 1, jwt::error::rsa_error::create_context_failed},
 		{&fail_OSSL_PARAM_BLD_push_BN, 1, jwt::error::rsa_error::set_rsa_failed},
 		{&fail_OSSL_PARAM_BLD_to_param, 1, jwt::error::rsa_error::set_rsa_failed},
@@ -653,7 +653,7 @@ TEST(OpenSSLErrorTest, CreateRsaPublicKeyFromComponentsErrorCode) {
 	std::vector<multitest_entry> mapping{
 		{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
 #ifdef JWT_OPENSSL_3_0
-		// {&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_write},
+		{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_write},
 		{&fail_OSSL_PARAM_BLD_new, 1, jwt::error::rsa_error::create_context_failed},
 		{&fail_OSSL_PARAM_BLD_push_BN, 1, jwt::error::rsa_error::set_rsa_failed},
 		{&fail_OSSL_PARAM_BLD_to_param, 1, jwt::error::rsa_error::set_rsa_failed},
