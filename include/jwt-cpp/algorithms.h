@@ -18,6 +18,7 @@
 #include <openssl/ssl.h>
 
 #include <string>
+#include <memory>
 
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L // 3.0.0
 #define JWT_OPENSSL_3_0
