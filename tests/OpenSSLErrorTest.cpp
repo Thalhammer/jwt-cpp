@@ -538,6 +538,7 @@ inline namespace test_keys {
 	extern std::string ed25519_pub_key;
 	extern std::string ed25519_pub_key_invalid;
 	extern std::string ed25519_certificate;
+	extern std::string ed25519_certificate_base64_der;
 	extern std::string ed448_priv_key;
 	extern std::string ed448_pub_key;
 	extern std::string ed448_pub_key_invalid;
@@ -555,6 +556,14 @@ TEST(OpenSSLErrorTest, ConvertCertBase64DerToPemReference) {
 	std::error_code ec;
 	auto res = jwt::helper::convert_base64_der_to_pem(sample_cert_base64_der, ec);
 	ASSERT_EQ(res, sample_cert);
+	ASSERT_FALSE(!(!ec));
+	ASSERT_EQ(ec.value(), 0);
+}
+
+TEST(OpenSSLErrorTest, ConvertEcdsaCertBase64DerToPemReference) {
+	std::error_code ec;
+	auto res = jwt::helper::convert_base64_der_to_pem(ed25519_certificate_base64_der, ec);
+	ASSERT_EQ(res, ed25519_certificate);
 	ASSERT_FALSE(!(!ec));
 	ASSERT_EQ(ec.value(), 0);
 }
@@ -681,6 +690,19 @@ TEST(OpenSSLErrorTest, ConvertCertBase64DerToPem) {
 	});
 }
 
+TEST(OpenSSLErrorTest, ConvertEcdsaCertBase64DerToPem) {
+	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
+										 {&fail_PEM_write_bio_cert, 1, jwt::error::rsa_error::write_cert_failed},
+										 {&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed}};
+
+	run_multitest(mapping, [](std::error_code& ec) {
+		try {
+			jwt::helper::convert_base64_der_to_pem(ed25519_certificate_base64_der);
+			FAIL(); // Should never reach this
+		} catch (const jwt::error::rsa_exception& e) { ec = e.code(); }
+	});
+}
+
 TEST(OpenSSLErrorTest, ConvertCertBase64DerToPemErrorCode) {
 	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
 										 {&fail_PEM_write_bio_cert, 1, jwt::error::rsa_error::write_cert_failed},
@@ -697,6 +719,16 @@ TEST(OpenSSLErrorTest, LoadPublicKeyFromStringReference) {
 	ASSERT_TRUE(res);
 }
 
+TEST(OpenSSLErrorTest, LoadPublicKeyFromStringReferenceWithEcCert) {
+	auto res = jwt::helper::load_public_key_from_string(ecdsa256_pub_key, "");
+	ASSERT_TRUE(res);
+}
+
+TEST(OpenSSLErrorTest, LoadPublicKeyFromStringReferenceWithEcCertAndErr) {
+	auto res = jwt::helper::load_public_key_from_string<jwt::error::ecdsa_error>(ecdsa256_pub_key, "");
+	ASSERT_TRUE(res);
+}
+
 TEST(OpenSSLErrorTest, LoadPublicKeyFromString) {
 	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
 										 {&fail_BIO_write, 1, jwt::error::rsa_error::load_key_bio_write},
@@ -707,6 +739,19 @@ TEST(OpenSSLErrorTest, LoadPublicKeyFromString) {
 			jwt::helper::load_public_key_from_string(rsa_pub_key, "");
 			FAIL(); // Should never reach this
 		} catch (const jwt::error::rsa_exception& e) { ec = e.code(); }
+	});
+}
+
+TEST(OpenSSLErrorTest, LoadPublicKeyFromStringWithEc) {
+	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::ecdsa_error::create_mem_bio_failed},
+										 {&fail_BIO_write, 1, jwt::error::ecdsa_error::load_key_bio_write},
+										 {&fail_PEM_read_bio_PUBKEY, 1, jwt::error::ecdsa_error::load_key_bio_read}};
+
+	run_multitest(mapping, [](std::error_code& ec) {
+		try {
+			jwt::helper::load_public_key_from_string<jwt::error::ecdsa_error>(ecdsa256_pub_key, "");
+			FAIL(); // Should never reach this
+		} catch (const jwt::error::ecdsa_exception& e) { ec = e.code(); }
 	});
 }
 
@@ -902,15 +947,15 @@ TEST(OpenSSLErrorTest, ECDSACertificate) {
 #if !defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER < 0x3050300fL
 			{&fail_BIO_write, 1, jwt::error::ecdsa_error::load_key_bio_write},
 #else
-			{&fail_BIO_write, 1, jwt::error::rsa_error::write_key_failed},
+			{&fail_BIO_write, 1, jwt::error::ecdsa_error::write_key_failed},
 #endif
 			{&fail_PEM_read_bio_PUBKEY, 1, jwt::error::ecdsa_error::load_key_bio_read},
 			// extract_pubkey_from_cert
-			{&fail_BIO_new, 2, jwt::error::rsa_error::create_mem_bio_failed},
-			{&fail_PEM_read_bio_X509, 1, jwt::error::rsa_error::cert_load_failed},
-			{&fail_X509_get_pubkey, 1, jwt::error::rsa_error::get_key_failed},
-			{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::write_key_failed}, {
-			&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed
+			{&fail_BIO_new, 2, jwt::error::ecdsa_error::create_mem_bio_failed},
+			{&fail_PEM_read_bio_X509, 1, jwt::error::ecdsa_error::cert_load_failed},
+			{&fail_X509_get_pubkey, 1, jwt::error::ecdsa_error::get_key_failed},
+			{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::ecdsa_error::write_key_failed}, {
+			&fail_BIO_ctrl, 1, jwt::error::ecdsa_error::convert_to_pem_failed
 		}
 	};
 
@@ -1053,6 +1098,9 @@ TEST(OpenSSLErrorTest, EdDSACertificate) {
 }
 
 TEST(OpenSSLErrorTest, Ed25519Reference) {
+	// No keys should throw
+	ASSERT_THROW(jwt::algorithm::ed25519("", ""), jwt::error::ecdsa_exception);
+
 	jwt::algorithm::ed25519 alg{ed25519_pub_key, ed25519_priv_key};
 	std::error_code ec;
 	auto res = alg.sign("testdata", ec);
