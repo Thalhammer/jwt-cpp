@@ -837,7 +837,7 @@ namespace jwt {
 			// https://www.openssl.org/docs/man1.1.1/man3/BN_bin2bn.html#RETURN-VALUES
 			if (!bn) {
 				ec = error::rsa_error::set_rsa_failed;
-				return {nullptr, BN_free};
+				// return {nullptr, BN_free};
 			}
 			return {bn, BN_free};
 		}
