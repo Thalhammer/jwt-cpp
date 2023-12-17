@@ -834,6 +834,7 @@ namespace jwt {
 		inline std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw, std::error_code& ec) {
 			auto bn =
 				BN_bin2bn(reinterpret_cast<const unsigned char*>(raw.data()), static_cast<int>(raw.size()), nullptr);
+			// https://www.openssl.org/docs/man1.1.1/man3/BN_bin2bn.html#RETURN-VALUES
 			if (!bn) {
 				ec = error::rsa_error::set_rsa_failed;
 				return {nullptr, BN_free};
@@ -890,18 +891,21 @@ namespace jwt {
 		*
 		* \param modulus	string containing base64 encoded modulus
 		* \param exponent	string containing base64 encoded exponent
-		* \param decode 				The function to decode the certs)
+		* \param decode 	The function to decode the certs)
 		* \param ec			error_code for error_detection (gets cleared if no error occur
 		* \return public key in PEM format
 		*/
 		template<typename Decode>
 		std::string create_public_key_from_rsa_components(const std::string& modulus, const std::string& exponent,
 														  Decode decode, std::error_code& ec) {
+			ec.clear();
 			auto decoded_modulus = decode(modulus);
 			auto decoded_exponent = decode(exponent);
 
-			auto n = helper::raw2bn(decoded_modulus);
-			auto e = helper::raw2bn(decoded_exponent);
+			auto n = helper::raw2bn(decoded_modulus, ec);
+			if (ec) return {};
+			auto e = helper::raw2bn(decoded_exponent, ec);
+			if (ec) return {};
 
 #if defined(JWT_OPENSSL_3_0)
 			// OpenSSL deprecated mutable keys and there is a new way for making them
@@ -1442,8 +1446,10 @@ namespace jwt {
 
 			std::string p1363_to_der_signature(const std::string& signature, std::error_code& ec) const {
 				ec.clear();
-				auto r = helper::raw2bn(signature.substr(0, signature.size() / 2));
-				auto s = helper::raw2bn(signature.substr(signature.size() / 2));
+				auto r = helper::raw2bn(signature.substr(0, signature.size() / 2), ec);
+				if (ec) return {};
+				auto s = helper::raw2bn(signature.substr(signature.size() / 2), ec);
+				if (ec) return {};
 
 				ECDSA_SIG* psig;
 #ifdef JWT_OPENSSL_1_0_0
