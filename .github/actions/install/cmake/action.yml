@@ -14,8 +14,7 @@ runs:
     id: cache-cmake
     uses: actions/cache@v3
     with:
-      path: cmake-${{ inputs.version }}
-      key: ${{ runner.name }}-${{ runner.os }}-${{ runner.arch }}-cmake-${{ inputs.version }}
+      path: cmake-${{ inputs.version }}${{ runner.name }}-${{ runner.os }}-${{ runner.arch }}-${{ job.container.id }}-cmake-${{ inputs.version }}
   - name: Build cmake
     if: steps.cache-cmake.outputs.cache-hit != 'true'
     run: |
