@@ -15,6 +15,7 @@ jobs:
       - uses: ./.github/actions/install/gtest
       - uses: ./.github/actions/install/danielaparker-jsoncons
       - uses: ./.github/actions/install/boost-json
+      - uses: ./.github/actions/install/open-source-parsers-jsoncpp
 
       - name: configure
         run: |
@@ -54,10 +55,18 @@ jobs:
 
   asan: ## Based on https://gist.github.com/jlblancoc/44be9d4d466f0a973b1f3808a8e56782
     runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        openssl:
+          - { tag: "openssl-3.0.5", name: "3.0.5" }
+          - { tag: "OpenSSL_1_1_1q", name: "1.1.1q" }
     steps:
       - uses: actions/checkout@v3
       - uses: lukka/get-cmake@latest
       - uses: ./.github/actions/install/gtest
+      - uses: ./.github/actions/install/openssl
+        with:
+          version: ${{ matrix.openssl.tag }}
 
       - name: configure
         run: |
