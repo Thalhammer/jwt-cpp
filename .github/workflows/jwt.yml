@@ -82,6 +82,7 @@ jobs:
         working-directory: build
         run: |
           make
+          export LSAN_OPTIONS=verbosity=1:log_threads=1
           export ASAN_OPTIONS=check_initialization_order=true:detect_stack_use_after_return=true:fast_unwind_on_malloc=0
           ./example/rsa-create
           ./example/rsa-verify
