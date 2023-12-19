@@ -832,18 +832,14 @@ namespace jwt {
 		 * \return BIGNUM representation
 		 */
 		inline std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw, std::error_code& ec) {
-			// auto bn =
-			// 	BN_bin2bn(reinterpret_cast<const unsigned char*>(raw.data()), static_cast<int>(raw.size()), nullptr);
-			// // https://www.openssl.org/docs/man1.1.1/man3/BN_bin2bn.html#RETURN-VALUES
-			// if (!bn) {
-			// 	ec = error::rsa_error::set_rsa_failed;
-			// 	return {nullptr, BN_free};
-			// }
-			// return {bn, BN_free};
-
-			return std::unique_ptr<BIGNUM, decltype(&BN_free)>(
-				BN_bin2bn(reinterpret_cast<const unsigned char*>(raw.data()), static_cast<int>(raw.size()), nullptr),
-				BN_free);
+			auto bn =
+				BN_bin2bn(reinterpret_cast<const unsigned char*>(raw.data()), static_cast<int>(raw.size()), nullptr);
+			// https://www.openssl.org/docs/man1.1.1/man3/BN_bin2bn.html#RETURN-VALUES
+			if (!bn) {
+				ec = error::rsa_error::set_rsa_failed;
+				return {nullptr, BN_free};
+			}
+			return {bn, BN_free};
 		}
 		/**
 		 * Convert an std::string to a OpenSSL BIGNUM
