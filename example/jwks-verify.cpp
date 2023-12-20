@@ -1,7 +1,115 @@
 #include <iostream>
 #include <jwt-cpp/jwt.h>
 
+#include <openssl/rand.h>
+
+std::string write_bio_to_string(std::unique_ptr<BIO, decltype(&BIO_free_all)>& bio_out) {
+	char* ptr = nullptr;
+	auto len = BIO_get_mem_data(bio_out.get(), &ptr);
+	if (len <= 0 || ptr == nullptr) { throw std::exception(); }
+	return {ptr, static_cast<size_t>(len)};
+}
+
 int main() {
+	EVP_PKEY* pkey = NULL;
+	EVP_PKEY_CTX* pctx = EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);
+
+	EVP_PKEY_keygen_init(pctx);
+	EVP_PKEY_generate(pctx, &pkey);
+	std::string pem_public_key = [&]() {
+		auto bio_out = jwt::helper::make_mem_buf_bio();
+		PEM_write_bio_PUBKEY(bio_out.get(), pkey);
+
+		const auto pub_key = write_bio_to_string(bio_out);
+		std::cout << pub_key << std::endl;
+		return pub_key;
+	}();
+
+	// https://stackoverflow.com/questions/69179822/jwk-key-creation-with-x5c-and-x5t-parameters
+	// https://stackoverflow.com/questions/256405/programmatically-create-x509-certificate-using-openssl
+	std::unique_ptr<X509, decltype(&X509_free)> cert{X509_new(), X509_free};
+
+	ASN1_INTEGER* serial_number = X509_get_serialNumber(cert.get());
+	ASN1_INTEGER_set(serial_number, 1); // serial number
+
+	X509_gmtime_adj(X509_get_notBefore(cert.get()), 0);					  // now
+	X509_gmtime_adj(X509_get_notAfter(cert.get()), 10 * 365 * 24 * 3600); // accepts secs
+
+	X509_set_pubkey(cert.get(), pkey);
+	X509_NAME* name = X509_get_subject_name(cert.get());
+
+	X509_NAME_add_entry_by_txt(name, "C", MBSTRING_ASC, (const unsigned char*)"US", -1, -1, 0);
+	X509_NAME_add_entry_by_txt(name, "O", MBSTRING_ASC, (const unsigned char*)"JWT-CPP", -1, -1, 0);
+	X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC, (const unsigned char*)"localhost", -1, -1, 0);
+
+	X509_set_issuer_name(cert.get(), name);
+	X509_sign(cert.get(), pkey, EVP_sha256()); // some hash type here
+
+	std::string base64_x5c = [&]() {
+		// PEM_write_bio_X509(certFile.get(), cert.get());
+		// PEM_write_bio_PrivateKey(keyFile.get(), pkey, nullptr, nullptr, 0, nullptr, nullptr);
+		auto bio_out = jwt::helper::make_mem_buf_bio();
+		i2d_X509_bio(bio_out.get(), cert.get());
+
+		const auto der_cert = write_bio_to_string(bio_out);
+		const auto b64_der_cert = jwt::base::encode<jwt::alphabet::base64>(der_cert);
+		std::cout << b64_der_cert << std::endl;
+		return b64_der_cert;
+	}();
+
+	// https://stackoverflow.com/questions/8135209/open-ssl-certificate-fingerprint-in-c
+
+	// std::string base64_x5c = [&](){
+	// 	auto bio_out = jwt::helper::make_mem_buf_bio();
+	// 	i2d_PUBKEY_bio(bio_out.get(), pkey);
+
+	// 	const auto der_pub_key = write_bio_to_string(bio_out);
+	// 	const auto x5c = jwt::base::encode<jwt::alphabet::base64>(der_pub_key);
+	// 	std::cout << x5c << std::endl;
+	// 	return x5c;
+	// }();
+
+	std::string pem_priv_key = [&]() {
+		auto bio_out = jwt::helper::make_mem_buf_bio();
+		PEM_write_bio_PrivateKey(bio_out.get(), pkey, NULL, NULL, 0, 0, (void*)"");
+
+		const auto priv_key = write_bio_to_string(bio_out);
+		std::cout << priv_key << std::endl;
+		return priv_key;
+	}();
+
+	EVP_PKEY_CTX_free(pctx);
+	EVP_PKEY_free(pkey);
+
+#if defined(JWT_OPENSSL_3_0)
+	BIGNUM* n = nullptr;
+	EVP_PKEY_get_bn_param(pkey, "n", &n);
+	BIGNUM* e = nullptr;
+	EVP_PKEY_get_bn_param(pkey, "e", &e);
+#else
+	EVP_PKEY_get_bn_param RSA* rsa = EVP_PKEY_get1_RSA(pkey);
+	const BIGNUM* n = RSA_get0_n(rsa);
+	const BIGNUM* e = RSA_get0_e(rsa);
+#endif
+
+	const auto modulus =
+		jwt::base::trim<jwt::alphabet::base64url>(jwt::base::encode<jwt::alphabet::base64url>(jwt::helper::bn2raw(n)));
+	const auto exp =
+		jwt::base::trim<jwt::alphabet::base64url>(jwt::base::encode<jwt::alphabet::base64url>(jwt::helper::bn2raw(e)));
+
+#if defined(JWT_OPENSSL_3_0)
+	BN_free(n);
+	BN_free(e);
+#endif
+
+	std::cout << modulus << std::endl;
+	std::cout << exp << std::endl;
+
+	// https://stackoverflow.com/a/30138974
+	unsigned char nonce[24];
+	RAND_bytes(nonce, sizeof(nonce));
+	std::string jti = jwt::base::encode<jwt::alphabet::base64url>(std::string{(const char*)nonce, sizeof(nonce)});
+
 	std::string raw_jwks =
 		R"({"keys": [{
 		"kid":"internal-gateway-jwt.api.sc.net",
@@ -9,11 +117,12 @@ int main() {
     "kty": "RSA",
     "use": "sig",
     "x5c": [
-      "MIIC+DCCAeCgAwIBAgIJBIGjYW6hFpn2MA0GCSqGSIb3DQEBBQUAMCMxITAfBgNVBAMTGGN1c3RvbWVyLWRlbW9zLmF1dGgwLmNvbTAeFw0xNjExMjIyMjIyMDVaFw0zMDA4MDEyMjIyMDVaMCMxITAfBgNVBAMTGGN1c3RvbWVyLWRlbW9zLmF1dGgwLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMnjZc5bm/eGIHq09N9HKHahM7Y31P0ul+A2wwP4lSpIwFrWHzxw88/7Dwk9QMc+orGXX95R6av4GF+Es/nG3uK45ooMVMa/hYCh0Mtx3gnSuoTavQEkLzCvSwTqVwzZ+5noukWVqJuMKNwjL77GNcPLY7Xy2/skMCT5bR8UoWaufooQvYq6SyPcRAU4BtdquZRiBT4U5f+4pwNTxSvey7ki50yc1tG49Per/0zA4O6Tlpv8x7Red6m1bCNHt7+Z5nSl3RX/QYyAEUX1a28VcYmR41Osy+o2OUCXYdUAphDaHo4/8rbKTJhlu8jEcc1KoMXAKjgaVZtG/v5ltx6AXY0CAwEAAaMvMC0wDAYDVR0TBAUwAwEB/zAdBgNVHQ4EFgQUQxFG602h1cG+pnyvJoy9pGJJoCswDQYJKoZIhvcNAQEFBQADggEBAGvtCbzGNBUJPLICth3mLsX0Z4z8T8iu4tyoiuAshP/Ry/ZBnFnXmhD8vwgMZ2lTgUWwlrvlgN+fAtYKnwFO2G3BOCFw96Nm8So9sjTda9CCZ3dhoH57F/hVMBB0K6xhklAc0b5ZxUpCIN92v/w+xZoz1XQBHe8ZbRHaP1HpRM4M7DJk2G5cgUCyu3UBvYS41sHvzrxQ3z7vIePRA4WF4bEkfX12gvny0RsPkrbVMXX1Rj9t6V7QXrbPYBAO+43JvDGYawxYVvLhz+BJ45x50GFQmHszfY3BR9TPK8xmMmQwtIvLu1PMttNCs7niCYkSiUv2sc2mlq1i3IashGkkgmo="
+      ")" +
+		base64_x5c + R"("
     ],
-    "n": "yeNlzlub94YgerT030codqEztjfU_S6X4DbDA_iVKkjAWtYfPHDzz_sPCT1Axz6isZdf3lHpq_gYX4Sz-cbe4rjmigxUxr-FgKHQy3HeCdK6hNq9ASQvMK9LBOpXDNn7mei6RZWom4wo3CMvvsY1w8tjtfLb-yQwJPltHxShZq5-ihC9irpLI9xEBTgG12q5lGIFPhTl_7inA1PFK97LuSLnTJzW0bj096v_TMDg7pOWm_zHtF53qbVsI0e3v5nmdKXdFf9BjIARRfVrbxVxiZHjU6zL6jY5QJdh1QCmENoejj_ytspMmGW7yMRxzUqgxcAqOBpVm0b-_mW3HoBdjQ",
-    "e": "AQAB",
-    "x5t": "NjVBRjY5MDlCMUIwNzU4RTA2QzZFMDQ4QzQ2MDAyQjVDNjk1RTM2Qg"
+    "n": ")" +
+		modulus + R"(",
+    "e": "AQAB"
 	},
 {
 		"kid":"internal-123456",
@@ -27,16 +136,18 @@ int main() {
 	}
 ]})";
 
-	std::string token =
-		"eyJraWQiOiJpbnRlcm5hbC1nYXRld2F5LWp3dC5hcGkuc2MubmV0IiwiYWxnIjoiUlMyNTYiLCJ0eXAiOiJKV1QifQ."
-		"eyJuYmYiOjE1Mzk3NjcwMTUsImlhdCI6MTUzOTc2Njk5MiwiaXNzIjoia29uZyIsImh0dHA6XC9cL3dzbzIub3JnXC9nYXRld2F5XC9zdWJzY3"
-		"JpYmVyIjoidXZ0dXNlcjJAY2FyYm9uLnN1cGVyIiwib3JpZ2luYWxfaXNzIjoiaHR0cDpcL1wvd3NvMi5vcmdcL2dhdGV3YXkiLCJzdWIiOiJ1"
-		"dnR1c2VyMkBjYXJib24uc3VwZXIiLCJodHRwOlwvXC93c28yLm9yZ1wvZ2F0ZXdheVwvZW5kdXNlciI6InV2dHVzZXIyQGNhcmJvbi5zdXBlci"
-		"IsImp0aSI6IjI0NmJkZTlhLWQ4OGQtNGRlZC1hODhmLTRhMTNhOWJmODQ4ZiIsImh0dHA6XC9cL3dzbzIub3JnXC9nYXRld2F5XC9hcHBsaWNh"
-		"dGlvbm5hbWUiOiJ1dnR1c2VyMl9hcHBfMSIsImV4cCI6MTUzOTc2NzkxNX0.foxbo6C30yr_wkF-5EkgtYUMG-4SXNfRsmewdT6MbE-"
-		"RXVkIPkVk8kDP41yRXmnk4OxburCqawiGlzzEhfHoFf0qv0qZEmwEXSdcyRw-czZTs6ACjWYe8kejOCVmpvUrq01NgOhTwgVg6pv93BlcmNY--"
-		"zytjx_9hlVm5SS1lZ0I21n45BIWu5JvBD51TZXEURb_XhL7RcF9I8mfzrRpB2fSHW38gj-nogsdOPA_y3S-hJKylmmaqmaQgTF-jP-"
-		"gYr6eqKyGPVwc6fLZ5zqAup59SefdPEY23-WWmHzj968jlsDSEiCp_YiYTnF3tHVLFWDsrprYKwNb0_p95tBmPA";
+	std::string token = jwt::create()
+							.set_issuer("auth0")
+							.set_type("JWT")
+							.set_id(jti)
+							.set_key_id("internal-gateway-jwt.api.sc.net")
+							.set_subject("jwt-cpp.example.localhost")
+							.set_issued_at(std::chrono::system_clock::now())
+							.set_expires_at(std::chrono::system_clock::now() + std::chrono::seconds{36000})
+							.set_payload_claim("sample", jwt::claim(std::string{"test"}))
+							.sign(jwt::algorithm::rs256("", pem_priv_key, "", ""));
+
+	std::cout << token << std::endl;
 
 	auto decoded_jwt = jwt::decode(token);
 	auto jwks = jwt::parse_jwks(raw_jwks);

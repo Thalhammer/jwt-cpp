@@ -84,6 +84,7 @@ jobs:
           export ASAN_OPTIONS=check_initialization_order=true:detect_stack_use_after_return=true:fast_unwind_on_malloc=0
           ./example/rsa-create
           ./example/rsa-verify
+          ./example/jwks-verify
           ./tests/jwt-cpp-test
 
   ubsan:
