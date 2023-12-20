@@ -893,7 +893,7 @@ namespace jwt {
 		* \param exponent	string containing base64 encoded exponent
 		* \param decode 	The function to decode the certs)
 		* \param ec			error_code for error_detection (gets cleared if no error occur
-		* \return public key in PEM format
+		* \return 			public key in PEM format
 		*/
 		template<typename Decode>
 		std::string create_public_key_from_rsa_components(const std::string& modulus, const std::string& exponent,
