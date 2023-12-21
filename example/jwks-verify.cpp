@@ -47,8 +47,8 @@ int main() {
 	ASN1_INTEGER* serial_number = X509_get_serialNumber(cert.get());
 	ASN1_INTEGER_set(serial_number, 1); // serial number
 
-	X509_gmtime_adj(X509_get_notBefore(cert.get()), 0);					  // now
-	X509_gmtime_adj(X509_get_notAfter(cert.get()), 10 * 365 * 24 * 3600); // accepts secs
+	X509_gmtime_adj(X509_getm_notBefore(cert.get()), 0);					  // now
+	X509_gmtime_adj(X509_getm_notAfter(cert.get()), 10 * 365 * 24 * 3600); // accepts secs
 
 	X509_set_pubkey(cert.get(), pkey);
 	X509_NAME* name = X509_get_subject_name(cert.get());
@@ -106,20 +106,20 @@ int main() {
 	EVP_PKEY_get_bn_param(pkey, "n", &n);
 	BIGNUM* e = nullptr;
 	EVP_PKEY_get_bn_param(pkey, "e", &e);
-#else
+#elif defined(JWT_OPENSSL_1_1_1) && !defined(LIBWOLFSSL_VERSION_HEX)
+// wolfSSL is missing RSA_get0_n and needs RSA_get0_key
 	RSA* r = EVP_PKEY_get1_RSA(pkey);
-#if defined(JWT_OPENSSL_1_1_1)
 	const BIGNUM* n = RSA_get0_n(r);
 	const BIGNUM* e = RSA_get0_e(r);
-#elif defined(JWT_OPENSSL_1_1_0)
-	BIGNUM* n = nullptr;
-	BIGNUM* e = nullptr;
-	BIGNUM* d = nullptr;
-	RSA_get0_key(r, &n, &e, &d);
+#elif defined(JWT_OPENSSL_1_1_0) || defined(LIBWOLFSSL_VERSION_HEX)
+	const BIGNUM* n = nullptr;
+	const BIGNUM* e = nullptr;
+	RSA* r = EVP_PKEY_get1_RSA(pkey);
+	RSA_get0_key(r, &n, &e, nullptr);
 #elif defined(JWT_OPENSSL_1_0_0)
+	RSA* r = EVP_PKEY_get1_RSA(pkey);
 	BIGNUM* n = r->n;
 	BIGNUM* e = r->e;
-#endif
 #endif
 
 	const auto modulus =
