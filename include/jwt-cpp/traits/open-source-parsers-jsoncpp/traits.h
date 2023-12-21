@@ -66,10 +66,11 @@ namespace jwt {
 					return type::array;
 				else if (val.isString())
 					return type::string;
-				else if (val.isNumeric())
-					return type::number;
+				// Order is important https://github.com/Thalhammer/jwt-cpp/pull/320#issuecomment-1865322511
 				else if (val.isInt())
 					return type::integer;
+				else if (val.isNumeric())
+					return type::number;
 				else if (val.isBool())
 					return type::boolean;
 				else if (val.isObject())

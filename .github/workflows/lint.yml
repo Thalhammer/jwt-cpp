@@ -80,13 +80,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/render/defaults
+        id: render
         with:
           traits_name: ${{ matrix.traits.name }}
           library_name: ${{ matrix.traits.library }}
           library_url: ${{ matrix.traits.url }}
           disable_default_traits: ${{ matrix.traits.disable_pico }}
-      - run: clang-format -i include/jwt-cpp/traits/**/*.h
-      - run: git add include/jwt-cpp/traits/*
+      - run: clang-format -i ${{ steps.render.outputs.file_path }}
+      - run: git add ${{ steps.render.outputs.file_path }}
       - uses: ./.github/actions/process-linting-results
         with:
           linter_name: render-defaults
