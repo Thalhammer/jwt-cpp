@@ -47,8 +47,15 @@ int main() {
 	ASN1_INTEGER* serial_number = X509_get_serialNumber(cert.get());
 	ASN1_INTEGER_set(serial_number, 1); // serial number
 
-	X509_gmtime_adj(X509_getm_notBefore(cert.get()), 0);					  // now
-	X509_gmtime_adj(X509_getm_notAfter(cert.get()), 10 * 365 * 24 * 3600); // accepts secs
+#if defined(JWT_OPENSSL_1_0_0)
+	auto x509_not_before = &X509_get_notBefore;
+	auto x509_not_after = &X509_get_notAfter;
+#else
+	auto x509_not_before = &X509_getm_notBefore;
+	auto x509_not_after = &X509_getm_notAfter;
+#endif
+	X509_gmtime_adj(x509_not_before(cert.get()), 0);				   // now
+	X509_gmtime_adj(x509_not_after(cert.get()), 10 * 365 * 24 * 3600); // accepts secs
 
 	X509_set_pubkey(cert.get(), pkey);
 	X509_NAME* name = X509_get_subject_name(cert.get());
@@ -99,19 +106,18 @@ int main() {
 	RSA_free(rsa);
 	BN_free(bne);
 #endif
-	EVP_PKEY_free(pkey);
 
 #if defined(JWT_OPENSSL_3_0)
 	BIGNUM* n = nullptr;
 	EVP_PKEY_get_bn_param(pkey, "n", &n);
 	BIGNUM* e = nullptr;
 	EVP_PKEY_get_bn_param(pkey, "e", &e);
-#elif defined(JWT_OPENSSL_1_1_1) && !defined(LIBWOLFSSL_VERSION_HEX)
-// wolfSSL is missing RSA_get0_n and needs RSA_get0_key
+#elif defined(JWT_OPENSSL_1_1_1) && !defined(LIBWOLFSSL_VERSION_HEX) && !defined(LIBRESSL_VERSION_NUMBER)
+	// wolfSSL is missing RSA_get0_n and needs RSA_get0_key
 	RSA* r = EVP_PKEY_get1_RSA(pkey);
 	const BIGNUM* n = RSA_get0_n(r);
 	const BIGNUM* e = RSA_get0_e(r);
-#elif defined(JWT_OPENSSL_1_1_0) || defined(LIBWOLFSSL_VERSION_HEX)
+#elif defined(JWT_OPENSSL_1_1_0) || defined(LIBWOLFSSL_VERSION_HEX) || defined(LIBRESSL_VERSION_NUMBER)
 	const BIGNUM* n = nullptr;
 	const BIGNUM* e = nullptr;
 	RSA* r = EVP_PKEY_get1_RSA(pkey);
@@ -121,6 +127,8 @@ int main() {
 	BIGNUM* n = r->n;
 	BIGNUM* e = r->e;
 #endif
+
+	EVP_PKEY_free(pkey);
 
 	const auto modulus =
 		jwt::base::trim<jwt::alphabet::base64url>(jwt::base::encode<jwt::alphabet::base64url>(jwt::helper::bn2raw(n)));
