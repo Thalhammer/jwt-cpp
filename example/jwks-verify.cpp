@@ -12,10 +12,15 @@ std::string write_bio_to_string(std::unique_ptr<BIO, decltype(&BIO_free_all)>& b
 
 int main() {
 	EVP_PKEY* pkey = NULL;
-	EVP_PKEY_CTX* pctx = EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);
 
+#if defined(JWT_OPENSSL_3_0)
+	EVP_PKEY_CTX* pctx = EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);
 	EVP_PKEY_keygen_init(pctx);
 	EVP_PKEY_generate(pctx, &pkey);
+#else
+	pkey = EVP_RSA_gen(4096);
+#endif
+
 	std::string pem_public_key = [&]() {
 		auto bio_out = jwt::helper::make_mem_buf_bio();
 		PEM_write_bio_PUBKEY(bio_out.get(), pkey);
@@ -87,7 +92,7 @@ int main() {
 	BIGNUM* e = nullptr;
 	EVP_PKEY_get_bn_param(pkey, "e", &e);
 #else
-	EVP_PKEY_get_bn_param RSA* rsa = EVP_PKEY_get1_RSA(pkey);
+	RSA* rsa = EVP_PKEY_get1_RSA(pkey);
 	const BIGNUM* n = RSA_get0_n(rsa);
 	const BIGNUM* e = RSA_get0_e(rsa);
 #endif
