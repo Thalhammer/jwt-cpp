@@ -1,4 +1,4 @@
-#include "jwt-cpp/traits/open-source-parsers-jsoncpp/traits.h"
+#include "jwt-cpp/traits/open-source_parsers_jsoncpp/traits.h"
 
 #include <gtest/gtest.h>
 
