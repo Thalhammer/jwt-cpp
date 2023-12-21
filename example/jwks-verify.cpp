@@ -16,9 +16,19 @@ int main() {
 #if defined(JWT_OPENSSL_3_0)
 	EVP_PKEY_CTX* pctx = EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);
 	EVP_PKEY_keygen_init(pctx);
+	// https://www.openssl.org/docs/man3.1/man3/EVP_PKEY_keygen_init.html
+	EVP_PKEY_CTX_set_rsa_keygen_bits(pctx, 4096);
 	EVP_PKEY_generate(pctx, &pkey);
 #else
-	pkey = EVP_RSA_gen(4096);
+	pkey = EVP_PKEY_new(); // https://stackoverflow.com/questions/5313855/rsa-sign-openssl
+
+	// https://www.dynamsoft.com/codepool/how-to-use-openssl-generate-rsa-keys-cc.html
+	BIGNUM* bne = BN_new();
+	BN_set_word(bne, e);
+
+	RSA* rsa = RSA_new();
+	RSA_generate_key_ex(rsa, 4096, bne, NULL);
+	EVP_PKEY_set1_RSA(pkey, rsa);
 #endif
 
 	std::string pem_public_key = [&]() {
@@ -83,7 +93,12 @@ int main() {
 		return priv_key;
 	}();
 
+#if defined(JWT_OPENSSL_3_0)
 	EVP_PKEY_CTX_free(pctx);
+#else
+	RSA_free(r);
+	BN_free(bne);
+#endif
 	EVP_PKEY_free(pkey);
 
 #if defined(JWT_OPENSSL_3_0)
