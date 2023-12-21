@@ -108,7 +108,7 @@ int main() {
 	EVP_PKEY_get_bn_param(pkey, "e", &e);
 #else
 	RSA* r = EVP_PKEY_get1_RSA(pkey);
-#if defined(JWT_OPENSSL_1_1_1) 
+#if defined(JWT_OPENSSL_1_1_1)
 	const BIGNUM* n = RSA_get0_n(r);
 	const BIGNUM* e = RSA_get0_e(r);
 #elif defined(JWT_OPENSSL_1_1_0)
