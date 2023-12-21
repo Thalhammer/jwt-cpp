@@ -15,8 +15,8 @@ inputs:
     required: false
     default: "true"
 outputs:
-  traits_folder:
-    description: "Name of the folder which the 'defaults.h' was written to"
+  file_path:
+    description: "Relative path which the 'defaults.h' was written to"
     value: ${{ steps.script.outputs.result }}
 runs:
   using: composite
@@ -58,10 +58,10 @@ runs:
             return string.split(search).join(replace);
           }
 
-          const folder_name = replaceAll(TRAITS_NAME, '_', '-')
-
-          const outputDir = path.join('include', 'jwt-cpp', 'traits', folder_name)
+          const outputDir = path.join('include', 'jwt-cpp', 'traits', replaceAll(TRAITS_NAME, '_', '-'))
           fs.mkdirSync(outputDir, { recursive: true })
-          fs.writeFileSync(path.join(outputDir, 'defaults.h'), content)
+          
+          const filePath = path.join(outputDir, 'defaults.h')
+          fs.writeFileSync(filePath, content)
 
-          return folder_name
+          return filePath
