@@ -24,7 +24,7 @@ int main() {
 
 	// https://www.dynamsoft.com/codepool/how-to-use-openssl-generate-rsa-keys-cc.html
 	BIGNUM* bne = BN_new();
-	BN_set_word(bne, e);
+	BN_set_word(bne, RSA_F4);
 
 	RSA* rsa = RSA_new();
 	RSA_generate_key_ex(rsa, 4096, bne, NULL);
@@ -96,7 +96,7 @@ int main() {
 #if defined(JWT_OPENSSL_3_0)
 	EVP_PKEY_CTX_free(pctx);
 #else
-	RSA_free(r);
+	RSA_free(rsa);
 	BN_free(bne);
 #endif
 	EVP_PKEY_free(pkey);
@@ -107,9 +107,9 @@ int main() {
 	BIGNUM* e = nullptr;
 	EVP_PKEY_get_bn_param(pkey, "e", &e);
 #else
-	RSA* rsa = EVP_PKEY_get1_RSA(pkey);
-	const BIGNUM* n = RSA_get0_n(rsa);
-	const BIGNUM* e = RSA_get0_e(rsa);
+	RSA* \\r = EVP_PKEY_get1_RSA(pkey);
+	const BIGNUM* n = RSA_get0_n(r);
+	const BIGNUM* e = RSA_get0_e(r);
 #endif
 
 	const auto modulus =
