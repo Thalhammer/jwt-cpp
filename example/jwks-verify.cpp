@@ -111,9 +111,14 @@ int main() {
 #if defined(JWT_OPENSSL_1_1_1) 
 	const BIGNUM* n = RSA_get0_n(r);
 	const BIGNUM* e = RSA_get0_e(r);
-#elif defined(JWT_OPENSSL_1_1_0) ||  defined(JWT_OPENSSL_1_0_0)
-	BIGNUM* n = rsa->n;
-	BIGNUM* e = rsa-e;
+#elif defined(JWT_OPENSSL_1_1_0)
+	BIGNUM* n = nullptr;
+	BIGNUM* e = nullptr;
+	BIGNUM* d = nullptr;
+	RSA_get0_key(r, n, e, d);
+#elif defined(JWT_OPENSSL_1_0_0)
+	BIGNUM* n = r->n;
+	BIGNUM* e = r->e;
 #endif
 #endif
 
