@@ -115,7 +115,7 @@ int main() {
 	BIGNUM* n = nullptr;
 	BIGNUM* e = nullptr;
 	BIGNUM* d = nullptr;
-	RSA_get0_key(r, n, e, d);
+	RSA_get0_key(r, &n, &e, &d);
 #elif defined(JWT_OPENSSL_1_0_0)
 	BIGNUM* n = r->n;
 	BIGNUM* e = r->e;
