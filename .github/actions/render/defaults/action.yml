@@ -14,6 +14,10 @@ inputs:
     description: "Set the macro to disable the default traits"
     required: false
     default: "true"
+outputs:
+  traits_folder:
+    description: "Name of the folder which the 'defaults.h' was written to"
+    value: ${{ steps.script.outputs.result }}
 runs:
   using: composite
   steps:
@@ -23,12 +27,14 @@ runs:
     - run: npm install mustache
       shell: bash
     - uses: actions/github-script@v6
+      id: script
       env:
         TRAITS_NAME: ${{ inputs.traits_name }}
         LIBRARY_NAME: ${{ inputs.library_name }}
         LIBRARY_URL: ${{ inputs.library_url }}
         DISABLE_DEFAULT_TRAITS: ${{ inputs.disable_default_traits }}
       with:
+        result-encoding: string
         script: |
           const mustache = require('mustache')
           const path = require('path')
@@ -52,6 +58,10 @@ runs:
             return string.split(search).join(replace);
           }
 
-          const outputDir = path.join('include', 'jwt-cpp', 'traits', replaceAll(TRAITS_NAME, '_', '-'))
+          const folder_name = replaceAll(TRAITS_NAME, '_', '-')
+
+          const outputDir = path.join('include', 'jwt-cpp', 'traits', folder_name)
           fs.mkdirSync(outputDir, { recursive: true })
           fs.writeFileSync(path.join(outputDir, 'defaults.h'), content)
+
+          return folder_name
