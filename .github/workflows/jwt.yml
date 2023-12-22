@@ -15,6 +15,7 @@ jobs:
       - uses: ./.github/actions/install/gtest
       - uses: ./.github/actions/install/danielaparker-jsoncons
       - uses: ./.github/actions/install/boost-json
+      - uses: ./.github/actions/install/open-source-parsers-jsoncpp
 
       - name: configure
         run: |
