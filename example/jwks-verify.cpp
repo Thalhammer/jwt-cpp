@@ -1,153 +1,7 @@
 #include <iostream>
 #include <jwt-cpp/jwt.h>
 
-#include <openssl/rand.h>
-
-std::string write_bio_to_string(std::unique_ptr<BIO, decltype(&BIO_free_all)>& bio_out) {
-	char* ptr = nullptr;
-	auto len = BIO_get_mem_data(bio_out.get(), &ptr);
-	if (len <= 0 || ptr == nullptr) { throw std::exception(); }
-	return {ptr, static_cast<size_t>(len)};
-}
-
 int main() {
-	EVP_PKEY* pkey = NULL;
-
-#if defined(JWT_OPENSSL_3_0)
-	EVP_PKEY_CTX* pctx = EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);
-	EVP_PKEY_keygen_init(pctx);
-	// https://www.openssl.org/docs/man3.1/man3/EVP_PKEY_keygen_init.html
-	EVP_PKEY_CTX_set_rsa_keygen_bits(pctx, 4096);
-	EVP_PKEY_generate(pctx, &pkey);
-#else
-	pkey = EVP_PKEY_new(); // https://stackoverflow.com/questions/5313855/rsa-sign-openssl
-
-	// https://www.dynamsoft.com/codepool/how-to-use-openssl-generate-rsa-keys-cc.html
-	BIGNUM* bne = BN_new();
-	BN_set_word(bne, RSA_F4);
-
-	RSA* rsa = RSA_new();
-	RSA_generate_key_ex(rsa, 4096, bne, NULL);
-	EVP_PKEY_set1_RSA(pkey, rsa);
-#endif
-
-	std::string pem_public_key = [&]() {
-		auto bio_out = jwt::helper::make_mem_buf_bio();
-		PEM_write_bio_PUBKEY(bio_out.get(), pkey);
-
-		const auto pub_key = write_bio_to_string(bio_out);
-		std::cout << pub_key << std::endl;
-		return pub_key;
-	}();
-
-	// https://stackoverflow.com/questions/69179822/jwk-key-creation-with-x5c-and-x5t-parameters
-	// https://stackoverflow.com/questions/256405/programmatically-create-x509-certificate-using-openssl
-	std::unique_ptr<X509, decltype(&X509_free)> cert{X509_new(), X509_free};
-
-	ASN1_INTEGER* serial_number = X509_get_serialNumber(cert.get());
-	ASN1_INTEGER_set(serial_number, 1); // serial number
-
-#if defined(JWT_OPENSSL_1_0_0)
-	auto x509_not_before = &X509_get_notBefore;
-	auto x509_not_after = &X509_get_notAfter;
-#else
-	auto x509_not_before = &X509_getm_notBefore;
-	auto x509_not_after = &X509_getm_notAfter;
-#endif
-	X509_gmtime_adj(x509_not_before(cert.get()), 0);				   // now
-	X509_gmtime_adj(x509_not_after(cert.get()), 10 * 365 * 24 * 3600); // accepts secs
-
-	X509_set_pubkey(cert.get(), pkey);
-	X509_NAME* name = X509_get_subject_name(cert.get());
-
-	X509_NAME_add_entry_by_txt(name, "C", MBSTRING_ASC, (const unsigned char*)"US", -1, -1, 0);
-	X509_NAME_add_entry_by_txt(name, "O", MBSTRING_ASC, (const unsigned char*)"JWT-CPP", -1, -1, 0);
-	X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC, (const unsigned char*)"localhost", -1, -1, 0);
-
-	X509_set_issuer_name(cert.get(), name);
-	X509_sign(cert.get(), pkey, EVP_sha256()); // some hash type here
-
-	std::string base64_x5c = [&]() {
-		// PEM_write_bio_X509(certFile.get(), cert.get());
-		// PEM_write_bio_PrivateKey(keyFile.get(), pkey, nullptr, nullptr, 0, nullptr, nullptr);
-		auto bio_out = jwt::helper::make_mem_buf_bio();
-		i2d_X509_bio(bio_out.get(), cert.get());
-
-		const auto der_cert = write_bio_to_string(bio_out);
-		const auto b64_der_cert = jwt::base::encode<jwt::alphabet::base64>(der_cert);
-		std::cout << b64_der_cert << std::endl;
-		return b64_der_cert;
-	}();
-
-	// https://stackoverflow.com/questions/8135209/open-ssl-certificate-fingerprint-in-c
-
-	// std::string base64_x5c = [&](){
-	// 	auto bio_out = jwt::helper::make_mem_buf_bio();
-	// 	i2d_PUBKEY_bio(bio_out.get(), pkey);
-
-	// 	const auto der_pub_key = write_bio_to_string(bio_out);
-	// 	const auto x5c = jwt::base::encode<jwt::alphabet::base64>(der_pub_key);
-	// 	std::cout << x5c << std::endl;
-	// 	return x5c;
-	// }();
-
-	std::string pem_priv_key = [&]() {
-		auto bio_out = jwt::helper::make_mem_buf_bio();
-		PEM_write_bio_PrivateKey(bio_out.get(), pkey, NULL, NULL, 0, 0, (void*)"");
-
-		const auto priv_key = write_bio_to_string(bio_out);
-		std::cout << priv_key << std::endl;
-		return priv_key;
-	}();
-
-#if defined(JWT_OPENSSL_3_0)
-	EVP_PKEY_CTX_free(pctx);
-#else
-	RSA_free(rsa);
-	BN_free(bne);
-#endif
-
-#if defined(JWT_OPENSSL_3_0)
-	BIGNUM* n = nullptr;
-	EVP_PKEY_get_bn_param(pkey, "n", &n);
-	BIGNUM* e = nullptr;
-	EVP_PKEY_get_bn_param(pkey, "e", &e);
-#elif defined(JWT_OPENSSL_1_1_1) && !defined(LIBWOLFSSL_VERSION_HEX) && !defined(LIBRESSL_VERSION_NUMBER)
-	// wolfSSL is missing RSA_get0_n and needs RSA_get0_key
-	RSA* r = EVP_PKEY_get1_RSA(pkey);
-	const BIGNUM* n = RSA_get0_n(r);
-	const BIGNUM* e = RSA_get0_e(r);
-#elif defined(JWT_OPENSSL_1_1_0) || defined(LIBWOLFSSL_VERSION_HEX) || defined(LIBRESSL_VERSION_NUMBER)
-	const BIGNUM* n = nullptr;
-	const BIGNUM* e = nullptr;
-	RSA* r = EVP_PKEY_get1_RSA(pkey);
-	RSA_get0_key(r, &n, &e, nullptr);
-#elif defined(JWT_OPENSSL_1_0_0)
-	RSA* r = EVP_PKEY_get1_RSA(pkey);
-	BIGNUM* n = r->n;
-	BIGNUM* e = r->e;
-#endif
-
-	EVP_PKEY_free(pkey);
-
-	const auto modulus =
-		jwt::base::trim<jwt::alphabet::base64url>(jwt::base::encode<jwt::alphabet::base64url>(jwt::helper::bn2raw(n)));
-	const auto exp =
-		jwt::base::trim<jwt::alphabet::base64url>(jwt::base::encode<jwt::alphabet::base64url>(jwt::helper::bn2raw(e)));
-
-#if defined(JWT_OPENSSL_3_0)
-	BN_free(n);
-	BN_free(e);
-#endif
-
-	std::cout << modulus << std::endl;
-	std::cout << exp << std::endl;
-
-	// https://stackoverflow.com/a/30138974
-	unsigned char nonce[24];
-	RAND_bytes(nonce, sizeof(nonce));
-	std::string jti = jwt::base::encode<jwt::alphabet::base64url>(std::string{(const char*)nonce, sizeof(nonce)});
-
 	std::string raw_jwks =
 		R"({"keys": [{
 		"kid":"internal-gateway-jwt.api.sc.net",
@@ -155,11 +9,9 @@ int main() {
     "kty": "RSA",
     "use": "sig",
     "x5c": [
-      ")" +
-		base64_x5c + R"("
+      "MIIE2jCCAsICAQEwDQYJKoZIhvcNAQELBQAwMzELMAkGA1UEBhMCVVMxEDAOBgNVBAoMB0pXVC1DUFAxEjAQBgNVBAMMCWxvY2FsaG9zdDAeFw0yMzEyMjIxMzIzNTdaFw0zMzEyMTkxMzIzNTdaMDMxCzAJBgNVBAYTAlVTMRAwDgYDVQQKDAdKV1QtQ1BQMRIwEAYDVQQDDAlsb2NhbGhvc3QwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQDl0gyL9KCpoXsJlvBaBUsJTAgvFhbgsBjpxT6m2xv0fgtGDBwgaiPvuMnClTU/kYkKb8c1GTkMedKp9YcM57HWTk9yqGTy6QBnMMxbAJYNwWQ4Dbr4qKSC6C3KzYws/Bqyv8OC9NAOyqJbtdp4iObRjyaet+PLTXywuu02xtyRg3B+1aAONgUVDyS5u57NSD4rEZ+rw30Ne1doSClWmMDqEd72y8cjx3eAqn0HcAxSQ6MNMmNk7/M8FQD3DTM1Ef0G5oHyJIw7WmY+gxuD8386r/CkswINzadMwObPlTSdAN8BRzedtrqgb+D/K4pi2zhCiuIVujFX6M/hsGvj7g2M9E9MR8iEuHWCY9frQKIR+JTH3D1snoJp60qKoa51qBznsEr9RP2utGniPCq3+JY+ZX0JK8vl5tiSZpy6N0yRbRmY3XLdA5fKRzhcsB3eUrmTtr9ywjZX7Ll6QMvUyicubGTojhqJFQbvuvvops9PoCMXFE3x6cJ2QhPoi8+BvUdYisrtjDFe+YgrgQvPMa/CpOpDJJDEs2SVRcauCZOUdqLCwZylNuW0CgIjWP8l99P7l1zGeT8VJPhmABYyPM+RtNYDamAlUOCqRqgz/gPjEeMeulQTvH1lAqATAAX1oftlq6o4VoqROs2M3eAXqPhvsLBeTmCob+5ca887MkcP6wIDAQABMA0GCSqGSIb3DQEBCwUAA4ICAQBW2kREK4hlzxCDqykxrwfbQpiPwrbFmn+3RDJla+pI4L3wrvYT1nU96guFIU3zKnbMzqwPMRUCUjadr2jKxAmMWxCd/ThHQB+ne5xTvx7/6RVQfGjyMCG/SZtSH8/aO7ILNRtPT+SL5ZZwezaqv6gD89tSXB/w/0pYXy70wDuU17KCrTsKSISWGJ1cKi5l2R/m/ZaGjcV8U8NcFepF2bX3u/i0zhaqOqjiwrSEt7fWGDLabPs6n7GtfibZROEDZ/h0JrDINC+6mSfTOYAMJvGjeHA3H/NvzqR+CJgpXGCqElqVuBF0HdxPmwRRBoZC/BLIEcz0VHmB4rcpfaV47TZT+J+04fHYp4Y1S0u112CDrDe+61cDrnbDHC7aGX0G93pYSBKAB1e3LLc9rXQgf2F0pRtFB3rgZA9MtJ+TL7DUvY4VXJNq3v7UolIdldYRdk21YqAS2Hp0fivvFoEk2P/WbwDEErxR0FkZ/JQoI9FMJ9AvDxa4MsFFtlQVInfD2HUu+nhnuEAA8R6L+F2XqhfLY/H7H31iFBK6UCuqptED71VwWHqfBsAPRhLXAqGco7Ln2dzioyj0QdwJqQQIqigltSYtXxfIMLW0BekQ5yln7QTxnZlobkPHUW9s3NK+OMLuKCzVREzjic/aioQP3cRBMXkG2deMwrk3aX8yJuz4gA=="
     ],
-    "n": ")" +
-		modulus + R"(",
+    "n": "5dIMi_SgqaF7CZbwWgVLCUwILxYW4LAY6cU-ptsb9H4LRgwcIGoj77jJwpU1P5GJCm_HNRk5DHnSqfWHDOex1k5Pcqhk8ukAZzDMWwCWDcFkOA26-Kikgugtys2MLPwasr_DgvTQDsqiW7XaeIjm0Y8mnrfjy018sLrtNsbckYNwftWgDjYFFQ8kubuezUg-KxGfq8N9DXtXaEgpVpjA6hHe9svHI8d3gKp9B3AMUkOjDTJjZO_zPBUA9w0zNRH9BuaB8iSMO1pmPoMbg_N_Oq_wpLMCDc2nTMDmz5U0nQDfAUc3nba6oG_g_yuKYts4QoriFboxV-jP4bBr4-4NjPRPTEfIhLh1gmPX60CiEfiUx9w9bJ6CaetKiqGudagc57BK_UT9rrRp4jwqt_iWPmV9CSvL5ebYkmacujdMkW0ZmN1y3QOXykc4XLAd3lK5k7a_csI2V-y5ekDL1MonLmxk6I4aiRUG77r76KbPT6AjFxRN8enCdkIT6IvPgb1HWIrK7YwxXvmIK4ELzzGvwqTqQySQxLNklUXGrgmTlHaiwsGcpTbltAoCI1j_JffT-5dcxnk_FST4ZgAWMjzPkbTWA2pgJVDgqkaoM_4D4xHjHrpUE7x9ZQKgEwAF9aH7ZauqOFaKkTrNjN3gF6j4b7CwXk5gqG_uXGvPOzJHD-s",
     "e": "AQAB"
 	},
 {
@@ -174,18 +26,17 @@ int main() {
 	}
 ]})";
 
-	std::string token = jwt::create()
-							.set_issuer("auth0")
-							.set_type("JWT")
-							.set_id(jti)
-							.set_key_id("internal-gateway-jwt.api.sc.net")
-							.set_subject("jwt-cpp.example.localhost")
-							.set_issued_at(std::chrono::system_clock::now())
-							.set_expires_at(std::chrono::system_clock::now() + std::chrono::seconds{36000})
-							.set_payload_claim("sample", jwt::claim(std::string{"test"}))
-							.sign(jwt::algorithm::rs256("", pem_priv_key, "", ""));
-
-	std::cout << token << std::endl;
+	std::string token = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImludGVybmFsLWdhdGV3YXktand0LmFwaS5zYy5uZXQiLCJ0eXAiOiJKV1QifQ."
+						"eyJleHAiOjE3MDMyODc0MzcsImlhdCI6MTcwMzI1MTQzNywiaXNzIjoiYXV0aDAiLCJqdGkiOiJ6dENUQnAyT2tWZU9CaU"
+						"FMR1diU3NRQ3d2bVJBQTlzeiIsInNhbXBsZSI6InRlc3QiLCJzdWIiOiJqd3QtY3BwLmV4YW1wbGUubG9jYWxob3N0In0."
+						"lsouv8rqvzcRP869v-iAQlqmsJ9gHIUrm2uyFVEv_Dc_Cvkm4qHSK5s8RCMD9ilIzXMXOjViOUV3lEIOPcjVCR0TOS8w4_"
+						"rVf78P0Dx-sPKjpXGg5NYWvl6wduAttYq6CYE-oXZZRkbQoLyH8zWB6PQO7bBbMz8z5BT86dxtulcI8F3j0lHY6IAemKH_"
+						"wK8LXVvwt8JctUuhlDMPEZ969pIvJHdQAA_iaGFTqvpnDFSIIzH0hjPrv12pLTXm57guqEQZRDfDW3HVjt-rAKi_"
+						"CJvEgdV98bo3ku9W0uv4kLmhJjIMepuZvoGMGQdF8UuJPfAYDZ-fnHPocS_"
+						"hrurBu176y3qq9QeU9MlORZyjXx3BB4uAusFMUtzw5ON12gudzHzkVeimAaKO1AlXc1HiRXw2EdDeK6DVMQdgRWP16jVNY"
+						"TF6iUEa824VltN0ObTw2wRuiGKMPGswdsSUyzw6UF9eHUL2ndSmTIjBL9BOJqCBTC3uD01jeIop3JMhKk0reL_-"
+						"8AiCb3nunt1pIIZ13z1kOfg3BoS4pMgAmAxopSU4YY7vh0UK52IZCPxxntpVfY_8OQ54mVY1mqiht1aMe8L_"
+						"Nmil1TuYi8RWBER1VypJF0uCbHTTrJ0nU61h5XjCz8b28YB2_x0t88dGHtx4s95L-quDLUdF2_BIMzHJhnw";
 
 	auto decoded_jwt = jwt::decode(token);
 	auto jwks = jwt::parse_jwks(raw_jwks);
@@ -195,6 +46,7 @@ int main() {
 	auto x5c = jwk.get_x5c_key_value();
 
 	if (!x5c.empty() && !issuer.empty()) {
+		std::cout << "Verifying with 'x5c' key" << std::endl;
 		auto verifier =
 			jwt::verify()
 				.allow_algorithm(jwt::algorithm::rs256(jwt::helper::convert_base64_der_to_pem(x5c), "", "", ""))
@@ -205,6 +57,7 @@ int main() {
 	}
 	// else if the optional 'x5c' was not present
 	{
+		std::cout << "Verifying with RSA components" << std::endl;
 		const auto modulus = jwk.get_jwk_claim("n").as_string();
 		const auto exponent = jwk.get_jwk_claim("e").as_string();
 		auto verifier = jwt::verify()
