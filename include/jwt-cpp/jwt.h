@@ -887,11 +887,16 @@ namespace jwt {
 		}
 
 		/**
-		* \brief create public key from modulus and exponent
+		* \brief create public key from modulus and exponent. This is defined in
+		* [RFC 7518 Section 6.3](https://www.rfc-editor.org/rfc/rfc7518#section-6.3)
+		* Using the required "n" (Modulus) Parameter and "e" (Exponent) Parameter.
 		*
-		* \param modulus	string containing base64 encoded modulus
-		* \param exponent	string containing base64 encoded exponent
-		* \param decode 	The function to decode the certs)
+		 * \tparam Decode is callable, taking a string_type and returns a string_type.
+		 * It should ensure the padding of the input and then base64url decode and
+		 * return the results.
+		* \param modulus	string containing base64url encoded modulus
+		* \param exponent	string containing base64url encoded exponent
+		* \param decode 	The function to decode the RSA parameters
 		* \param ec			error_code for error_detection (gets cleared if no error occur
 		* \return 			public key in PEM format
 		*/
@@ -1006,11 +1011,16 @@ namespace jwt {
 		}
 
 		/**
-		* \brief create public key from modulus and exponent
+		* Create public key from modulus and exponent. This is defined in
+		* [RFC 7518 Section 6.3](https://www.rfc-editor.org/rfc/rfc7518#section-6.3)
+		* Using the required "n" (Modulus) Parameter and "e" (Exponent) Parameter.
 		*
-		* \param modulus	string containing base64 encoded modulus
-		* \param exponent	string containing base64 encoded exponent
-		* \param decode 				The function to decode the certs)
+		 * \tparam Decode is callable, taking a string_type and returns a string_type.
+		 * It should ensure the padding of the input and then base64url decode and
+		 * return the results.
+		* \param modulus	string containing base64url encoded modulus
+		* \param exponent	string containing base64url encoded exponent
+		* \param decode 	The function to decode the RSA parameters
 		* \return public key in PEM format
 		*/
 		template<typename Decode>
@@ -1024,7 +1034,9 @@ namespace jwt {
 
 #ifndef JWT_DISABLE_BASE64
 		/**
-		* \brief create public key from modulus and exponent
+		* Create public key from modulus and exponent. This is defined in
+		* [RFC 7518 Section 6.3](https://www.rfc-editor.org/rfc/rfc7518#section-6.3)
+		* Using the required "n" (Modulus) Parameter and "e" (Exponent) Parameter.
 		*
 		* \param modulus	string containing base64 encoded modulus
 		* \param exponent	string containing base64 encoded exponent
@@ -1039,10 +1051,12 @@ namespace jwt {
 			return create_public_key_from_rsa_components(modulus, exponent, std::move(decode), ec);
 		}
 		/**
-		* \brief create public key from modulus and exponent
+		* Create public key from modulus and exponent. This is defined in
+		* [RFC 7518 Section 6.3](https://www.rfc-editor.org/rfc/rfc7518#section-6.3)
+		* Using the required "n" (Modulus) Parameter and "e" (Exponent) Parameter.
 		*
-		* \param modulus	string containing base64 encoded modulus
-		* \param exponent	string containing base64 encoded exponent
+		* \param modulus	string containing base64url encoded modulus
+		* \param exponent	string containing base64url encoded exponent
 		* \return public key in PEM format
 		*/
 		inline std::string create_public_key_from_rsa_components(const std::string& modulus,
