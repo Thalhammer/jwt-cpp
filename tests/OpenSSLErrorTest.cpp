@@ -630,7 +630,7 @@ TEST(OpenSSLErrorTest, CreateRsaPublicKeyFromComponents) {
 		{&fail_EVP_PKEY_fromdata_init, 1, jwt::error::rsa_error::cert_load_failed},
 		{&fail_EVP_PKEY_fromdata, 1, jwt::error::rsa_error::cert_load_failed}
 #else
-		// {&fail_PEM_write_bio_RSA_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_write},
+		{&fail_PEM_write_bio_RSA_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_write},
 		{&fail_RSA_set0_key, 1, jwt::error::rsa_error::set_rsa_failed}
 #endif
 	};
@@ -661,7 +661,7 @@ TEST(OpenSSLErrorTest, CreateRsaPublicKeyFromComponentsErrorCode) {
 		{&fail_EVP_PKEY_fromdata_init, 1, jwt::error::rsa_error::cert_load_failed},
 		{&fail_EVP_PKEY_fromdata, 1, jwt::error::rsa_error::cert_load_failed}
 #else
-		// {&fail_PEM_write_bio_RSA_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_write},
+		{&fail_PEM_write_bio_RSA_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_write},
 		{&fail_RSA_set0_key, 1, jwt::error::rsa_error::set_rsa_failed}
 #endif
 	};
