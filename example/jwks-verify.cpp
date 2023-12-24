@@ -83,7 +83,8 @@ ARS9Ln8Wh5RsFuw/Y7Grg8FsoAVzV/Pns4cwjZG75ezXfk4UVpr4oO4B5jzazzCR
 	// https://stackoverflow.com/a/30138974
 	unsigned char nonce[24];
 	RAND_bytes(nonce, sizeof(nonce));
-	std::string jti = jwt::base::encode<jwt::alphabet::base64url>(std::string{reinterpret_cast<const char*>(nonce), sizeof(nonce)});
+	std::string jti =
+		jwt::base::encode<jwt::alphabet::base64url>(std::string{reinterpret_cast<const char*>(nonce), sizeof(nonce)});
 
 	std::string token = jwt::create()
 							.set_issuer("auth0")
