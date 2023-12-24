@@ -1,5 +1,6 @@
 #include <iostream>
 #include <jwt-cpp/jwt.h>
+#include <openssl/rand.h>
 
 int main() {
 	std::string raw_jwks =
@@ -26,17 +27,74 @@ int main() {
 	}
 ]})";
 
-	std::string token = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImludGVybmFsLWdhdGV3YXktand0LmFwaS5zYy5uZXQiLCJ0eXAiOiJKV1QifQ."
-						"eyJleHAiOjE3MDMyODc0MzcsImlhdCI6MTcwMzI1MTQzNywiaXNzIjoiYXV0aDAiLCJqdGkiOiJ6dENUQnAyT2tWZU9CaU"
-						"FMR1diU3NRQ3d2bVJBQTlzeiIsInNhbXBsZSI6InRlc3QiLCJzdWIiOiJqd3QtY3BwLmV4YW1wbGUubG9jYWxob3N0In0."
-						"lsouv8rqvzcRP869v-iAQlqmsJ9gHIUrm2uyFVEv_Dc_Cvkm4qHSK5s8RCMD9ilIzXMXOjViOUV3lEIOPcjVCR0TOS8w4_"
-						"rVf78P0Dx-sPKjpXGg5NYWvl6wduAttYq6CYE-oXZZRkbQoLyH8zWB6PQO7bBbMz8z5BT86dxtulcI8F3j0lHY6IAemKH_"
-						"wK8LXVvwt8JctUuhlDMPEZ969pIvJHdQAA_iaGFTqvpnDFSIIzH0hjPrv12pLTXm57guqEQZRDfDW3HVjt-rAKi_"
-						"CJvEgdV98bo3ku9W0uv4kLmhJjIMepuZvoGMGQdF8UuJPfAYDZ-fnHPocS_"
-						"hrurBu176y3qq9QeU9MlORZyjXx3BB4uAusFMUtzw5ON12gudzHzkVeimAaKO1AlXc1HiRXw2EdDeK6DVMQdgRWP16jVNY"
-						"TF6iUEa824VltN0ObTw2wRuiGKMPGswdsSUyzw6UF9eHUL2ndSmTIjBL9BOJqCBTC3uD01jeIop3JMhKk0reL_-"
-						"8AiCb3nunt1pIIZ13z1kOfg3BoS4pMgAmAxopSU4YY7vh0UK52IZCPxxntpVfY_8OQ54mVY1mqiht1aMe8L_"
-						"Nmil1TuYi8RWBER1VypJF0uCbHTTrJ0nU61h5XjCz8b28YB2_x0t88dGHtx4s95L-quDLUdF2_BIMzHJhnw";
+	std::string pem_priv_key = R"(-----BEGIN PRIVATE KEY-----
+MIIJQgIBADANBgkqhkiG9w0BAQEFAASCCSwwggkoAgEAAoICAQDl0gyL9KCpoXsJ
+lvBaBUsJTAgvFhbgsBjpxT6m2xv0fgtGDBwgaiPvuMnClTU/kYkKb8c1GTkMedKp
+9YcM57HWTk9yqGTy6QBnMMxbAJYNwWQ4Dbr4qKSC6C3KzYws/Bqyv8OC9NAOyqJb
+tdp4iObRjyaet+PLTXywuu02xtyRg3B+1aAONgUVDyS5u57NSD4rEZ+rw30Ne1do
+SClWmMDqEd72y8cjx3eAqn0HcAxSQ6MNMmNk7/M8FQD3DTM1Ef0G5oHyJIw7WmY+
+gxuD8386r/CkswINzadMwObPlTSdAN8BRzedtrqgb+D/K4pi2zhCiuIVujFX6M/h
+sGvj7g2M9E9MR8iEuHWCY9frQKIR+JTH3D1snoJp60qKoa51qBznsEr9RP2utGni
+PCq3+JY+ZX0JK8vl5tiSZpy6N0yRbRmY3XLdA5fKRzhcsB3eUrmTtr9ywjZX7Ll6
+QMvUyicubGTojhqJFQbvuvvops9PoCMXFE3x6cJ2QhPoi8+BvUdYisrtjDFe+Ygr
+gQvPMa/CpOpDJJDEs2SVRcauCZOUdqLCwZylNuW0CgIjWP8l99P7l1zGeT8VJPhm
+ABYyPM+RtNYDamAlUOCqRqgz/gPjEeMeulQTvH1lAqATAAX1oftlq6o4VoqROs2M
+3eAXqPhvsLBeTmCob+5ca887MkcP6wIDAQABAoICAB4P4ILw2DtC25H2OTEX/tK+
+gVY3cNKp9k2jTCi4rJV0ugt1oLrqEhKqJ1TZU60htRK1Fb0aXt4E6XZAnw55wvIi
+LZOf92SBmgM63OBig+j/Ym6lTSR4WtyiJlX1lop5MmeDXL26lvn4WPiKIdkhKfWW
+Nhpjj4aTzOWz7eemZ5/D2RPzjwuM1r6vIRddNXlAzpuvoyVCsw7vvWVEsIjv/lF1
+TlHAzNHJ+8B24gKhDjDh7BLZLoCQ6qOcqRL9RQosyjOm31n0nJX++Io2ItlFzAoP
+OE6ITpJ4/j4KAFHTAJ4w86V6fV9B/HOUGZMHTQOADYHsIjAZZO73jd8bHAx6oobi
+vDDGe9l2l5iEgVJSCb7Zos4h9oURbC4trMkBLF3xQoKRmRwutTekNR+fF0Ot9h0R
+hTZ9fTzOsNZj1xTTlQRCwgLDPfi+QXYTllG3qEF/kB9RoOGbV6rk45gAg+QO7Bme
+AOYvKSHnKZ/DkueE/AcBBLAP9L6MdvOk/QFUTBznfb+LbcN7L15tmS2YAFyLyl6M
+xbnuTlmx9JsUbiTukUL8rnj74qzjhm2pGxhGmLFbCh8SHftj0bIGr1NQUVH1ZDOS
+LOAFj72H6BBU1pdvUahL4wDKhOJybwDj/lBMaK4UvLQAnMoGMXF38MTQ4Rt1OX/I
+eNuRhhV9JatGFV95ZFYRAoIBAQD/PORDVM8NOfBAhUMD2HHIEK/lPmECFRlh1eQl
+65f7bcASHOBIRtF9ldcmPLUYgQxIqzVEBOX/Wmjzh9JM8YoI3pnB68PpaUEJzeVM
+JczSkOdZQgEEV4+Cr75bmrTeq3heuJPa/7KiTmskkg3FQ1rEDl4+yqH+kdDMDack
+6iIgUiVPikUUOkzJ1QtueGH+cyg3HlA881HxIuGkb46grv+ieI4BIRoJReAe/jWW
+quIlvIdAZaEpb6Xnnt+FW32xVCStZtVm92TYT+wk7G53IoUAbdsP2FNs62tRau6y
+JIty4Lf8NwOvqHCeVO92G8Vn0R4LqYQPaxRcjjgcRW+s+I7tAoIBAQDmgbpWdIwg
+iktw2bCjUCOaMv6PE2F1AuCOs9vMhxuexlVDpaYZwilcRdLwIynCYsmGkFRP/DSa
+f5U7fmZQHHtdHXeOBJmaZ5VK+0KD0q+eAz1I4Qc51zDWEME/UdYx/lU3dw0CHwGu
+FNMcE8yCt6fImZjcshTazPFQLexQp73UqVa2bPJW86iLVERKTOUuuuQTPur13GXo
+q6mGlkA3mCWkma6owxxNoyMRMlpyhybct+RBtjhFNOQ6nyoTd14Kz3g542sE3p2k
+YCjVN+5cgL6On0U2kUNY51eW6aQdCUvXYpCerv2yG4huYGJEuw3M0jN28KI7kLud
+0poD/LLZ+2c3AoIBAQCSGL+rzrqpnnVn6R+f7t/KHcshFCCg+YTK3Iy4K++Vyo97
+jq3OkULOeNtrFqquOQfX/LADnC4uiQi0BRWaV1Okmg420wYT79x7iTBr8uMX0Dus
+erxsSNZrfr8eXiKTpmDDDzIK0/vjLbHkf/mD5Xbp7DOEC6bIOZzjgBkhZydbismy
+irnZxzk2+kyN0jh9Vls5mY9iJADOXyH7ZqOkVCcdT5YxDUqC7k1IUEhKUswZv51H
+fiTOvAqh1u2ovuLmgvxviQIz6v39V1obFH5ykP7CbR9MJY4zNVn7g5LXw1VSz1Bg
+/PiOLoMwDfv3hhPrxeZF1KUz0h4YkIuLmy8+OhRNAoIBAAb7TOqLcycVKT3MyiXY
+KovkGYO54YzKvoRz/CdQvExt021OGh7Tm68Yyk/NsNkbZuE1g+g8SleXn6yCopSw
+mCf02YcqqoBbvNDdlWEqw3j0vilz72UYGHmTXlcNooA3JNueNn2m9MUSCmbiTqJy
+75kK1e9xUWJjLLfx/CNhQUWsr1ytJhXuIV+++KaLd7GXpYrTsAgsWcXXVTYnXOCS
+MimvIfQonLXZSBmgPc8UOuAajcZTv5aRCIyh/4NBbU7Eg+607avjFkFBTFtQ615P
+4/Wr60vA0Jpjv2ppvzfF7U8jxB+aS0LWxKYbMz7Dr6JRh4+FsFQ/iP85vsJ6J+yk
+SbcCggEAS7cNib44G/TeTtWpV7s2U0v9IdYKk6a6xHYwQfUNkWnwUkqsnGixKUle
+2BjPxVpClbBh5/nK5tAi4t6I/qoXxEPqUT/tj7yZ8YbbvUPO402EExrjzeSPXRj9
+fkydsRvTpSd+lAF58xROotyjBK+r8yqR5h9jJ3m3zSoHuNogryjvCKJJSxYW94Zt
+ARS9Ln8Wh5RsFuw/Y7Grg8FsoAVzV/Pns4cwjZG75ezXfk4UVpr4oO4B5jzazzCR
+3ijoionumWmfwPmP8KBMSciMtz+dy+NN0vLTocT1nqCdiQ7lbF3o9HMwLVDn7E6q
++grQSrtFfSnickR6i3XrDlspd/khcQ==
+-----END PRIVATE KEY-----)";
+
+	// https://stackoverflow.com/a/30138974
+	unsigned char nonce[24];
+	RAND_bytes(nonce, sizeof(nonce));
+	std::string jti = jwt::base::encode<jwt::alphabet::base64url>(std::string{(const char*)nonce, sizeof(nonce)});
+
+	std::string token = jwt::create()
+							.set_issuer("auth0")
+							.set_type("JWT")
+							.set_id(jti)
+							.set_key_id("internal-gateway-jwt.api.sc.net")
+							.set_subject("jwt-cpp.example.localhost")
+							.set_issued_at(std::chrono::system_clock::now())
+							.set_expires_at(std::chrono::system_clock::now() + std::chrono::seconds{36000})
+							.set_payload_claim("sample", jwt::claim(std::string{"test"}))
+							.sign(jwt::algorithm::rs256("", pem_priv_key, "", ""));
 
 	auto decoded_jwt = jwt::decode(token);
 	auto jwks = jwt::parse_jwks(raw_jwks);
@@ -51,6 +109,7 @@ int main() {
 			jwt::verify()
 				.allow_algorithm(jwt::algorithm::rs256(jwt::helper::convert_base64_der_to_pem(x5c), "", "", ""))
 				.with_issuer(issuer)
+				.with_id(jti)
 				.leeway(60UL); // value in seconds, add some to compensate timeout
 
 		verifier.verify(decoded_jwt);
@@ -64,6 +123,7 @@ int main() {
 							.allow_algorithm(jwt::algorithm::rs256(
 								jwt::helper::create_public_key_from_rsa_components(modulus, exponent)))
 							.with_issuer(issuer)
+							.with_id(jti)
 							.leeway(60UL); // value in seconds, add some to compensate timeout
 
 		verifier.verify(decoded_jwt);
