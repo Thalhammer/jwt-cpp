@@ -957,10 +957,16 @@ namespace jwt {
 #else
 			std::unique_ptr<RSA, decltype(&RSA_free)> rsa(RSA_new(), RSA_free);
 
-			// After this call RSA_free will also free the n and e big numbers
-			// See https://github.com/Thalhammer/jwt-cpp/pull/298#discussion_r1282619186
 #if defined(JWT_OPENSSL_1_1_1) || defined(JWT_OPENSSL_1_1_0)
-			if (RSA_set0_key(rsa.get(), n.release(), e.release(), nullptr) != 1) {
+			// After this RSA_free will also free the n and e big numbers
+			// See https://github.com/Thalhammer/jwt-cpp/pull/298#discussion_r1282619186
+			if (RSA_set0_key(rsa.get(), n.get(), e.get(), nullptr) == 1) {
+				// This can only fail we passed in NULL for `n` or `e`
+				// https://github.com/openssl/openssl/blob/d6e4056805f54bb1a0ef41fa3a6a35b70c94edba/crypto/rsa/rsa_lib.c#L396
+				// So to make sure there is no memory leak, we hold the references
+				n.release();
+				e.release();
+			} else {
 				ec = error::rsa_error::set_rsa_failed;
 				return {};
 			}
