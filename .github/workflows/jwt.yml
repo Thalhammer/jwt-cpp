@@ -53,8 +53,8 @@ jobs:
         ./tests/fuzz/jwt-cpp-fuzz-BaseDecodeFuzz -runs=100000 ../tests/fuzz/decode-corpus
         ./tests/fuzz/jwt-cpp-fuzz-TokenDecodeFuzz -runs=100000 ../tests/fuzz/token-corpus
 
-  asan: ## Based on https://gist.github.com/jlblancoc/44be9d4d466f0a973b1f3808a8e56782
-    runs-on: ubuntu-20.04
+  asan: # Based on https://gist.github.com/jlblancoc/44be9d4d466f0a973b1f3808a8e56782
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
