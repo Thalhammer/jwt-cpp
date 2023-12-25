@@ -50,7 +50,6 @@ static uint64_t fail_EVP_DigestSignFinal = 0;
 static uint64_t fail_EVP_DigestVerifyFinal = 0;
 static uint64_t fail_d2i_ECDSA_SIG = 0;
 static uint64_t fail_i2d_ECDSA_SIG = 0;
-
 #ifdef JWT_OPENSSL_3_0
 static uint64_t fail_OSSL_PARAM_BLD_new = 0;
 static uint64_t fail_OSSL_PARAM_BLD_push_BN = 0;
@@ -62,6 +61,7 @@ static uint64_t fail_EVP_PKEY_fromdata = 0;
 static uint64_t fail_PEM_write_bio_RSA_PUBKEY = 0;
 static uint64_t fail_RSA_set0_key = 0;
 #endif
+static uint64_t fail_BIO_get_mem_data = 0;
 
 BIO* BIO_new(const BIO_METHOD* type) {
 	static BIO* (*origMethod)(const BIO_METHOD*) = nullptr;
@@ -510,6 +510,17 @@ int RSA_set0_key(RSA* r, BIGNUM* n, BIGNUM* e, BIGNUM* d) {
 }
 #endif
 
+long BIO_get_mem_data(BIO* b, char** pp) {
+	static int (*origMethod)(BIO* b, char** pp) = nullptr;
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "BIO_get_mem_data");
+	bool fail = fail_BIO_get_mem_data & 1;
+	fail_BIO_get_mem_data = fail_BIO_get_mem_data >> 1;
+	if (fail)
+		return 0;
+	else
+		return origMethod(b, pp);
+}
+
 /**
  * =========== End of black magic ============
  */
@@ -621,6 +632,7 @@ TEST(OpenSSLErrorTest, ExtractPubkeyFromCertErrorCode) {
 TEST(OpenSSLErrorTest, CreateRsaPublicKeyFromComponents) {
 	std::vector<multitest_entry> mapping{
 		{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
+		{&fail_BIO_get_mem_data, 1, jwt::error::rsa_error::convert_to_pem_failed},
 #ifdef JWT_OPENSSL_3_0
 		{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_write},
 		{&fail_OSSL_PARAM_BLD_new, 1, jwt::error::rsa_error::create_context_failed},
@@ -652,6 +664,7 @@ TEST(OpenSSLErrorTest, CreateRsaPublicKeyFromComponents) {
 TEST(OpenSSLErrorTest, CreateRsaPublicKeyFromComponentsErrorCode) {
 	std::vector<multitest_entry> mapping{
 		{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
+		{&fail_BIO_get_mem_data, 1, jwt::error::rsa_error::convert_to_pem_failed},
 #ifdef JWT_OPENSSL_3_0
 		{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_write},
 		{&fail_OSSL_PARAM_BLD_new, 1, jwt::error::rsa_error::create_context_failed},
@@ -744,6 +757,7 @@ TEST(OpenSSLErrorTest, LoadPublicKeyFromString) {
 
 TEST(OpenSSLErrorTest, LoadPublicKeyFromStringWithEc) {
 	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::ecdsa_error::create_mem_bio_failed},
+										 {&fail_BIO_get_mem_data, 1, jwt::error::rsa_error::convert_to_pem_failed},
 										 {&fail_BIO_write, 1, jwt::error::ecdsa_error::load_key_bio_write},
 										 {&fail_PEM_read_bio_PUBKEY, 1, jwt::error::ecdsa_error::load_key_bio_read}};
 
@@ -757,6 +771,7 @@ TEST(OpenSSLErrorTest, LoadPublicKeyFromStringWithEc) {
 
 TEST(OpenSSLErrorTest, LoadPublicKeyFromStringErrorCode) {
 	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
+										 {&fail_BIO_get_mem_data, 1, jwt::error::rsa_error::convert_to_pem_failed},
 										 {&fail_BIO_write, 1, jwt::error::rsa_error::load_key_bio_write},
 										 {&fail_PEM_read_bio_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_read}};
 
@@ -774,6 +789,7 @@ TEST(OpenSSLErrorTest, LoadPublicKeyCertFromStringReference) {
 TEST(OpenSSLErrorTest, LoadPublicKeyCertFromString) {
 	std::vector<multitest_entry> mapping {
 		{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
+			{&fail_BIO_get_mem_data, 1, jwt::error::rsa_error::convert_to_pem_failed},
 #if !defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER < 0x3050300fL
 			{&fail_BIO_write, 1, jwt::error::rsa_error::load_key_bio_write},
 #else
@@ -795,6 +811,7 @@ TEST(OpenSSLErrorTest, LoadPublicKeyCertFromString) {
 TEST(OpenSSLErrorTest, LoadPublicKeyCertFromStringErrorCode) {
 	std::vector<multitest_entry> mapping {
 		{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
+			{&fail_BIO_get_mem_data, 1, jwt::error::rsa_error::convert_to_pem_failed},
 #if !defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER < 0x3050300fL
 			{&fail_BIO_write, 1, jwt::error::rsa_error::load_key_bio_write},
 #else

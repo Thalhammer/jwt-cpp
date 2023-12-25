@@ -539,7 +539,7 @@ namespace jwt {
 				return {};
 			}
 			char* ptr = nullptr;
-			auto len = BIO_get_mem_data(keybio.get(), &ptr);
+			const auto len = BIO_get_mem_data(keybio.get(), &ptr);
 			if (len <= 0 || ptr == nullptr) {
 				ec = error_category::convert_to_pem_failed;
 				return {};
