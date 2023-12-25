@@ -496,6 +496,17 @@ namespace jwt {
 			);
 		}
 
+		template<typename error_category = error::rsa_error>
+		std::string write_bio_to_string(std::unique_ptr<BIO, decltype(&BIO_free_all)>& bio_out, std::error_code& ec) {
+			char* ptr = nullptr;
+			auto len = BIO_get_mem_data(bio_out.get(), &ptr);
+			if (len <= 0 || ptr == nullptr) {
+				ec = error_category::convert_to_pem_failed;
+				return {};
+			}
+			return {ptr, static_cast<size_t>(len)};
+		}
+
 		inline std::unique_ptr<EVP_MD_CTX, void (*)(EVP_MD_CTX*)> make_evp_md_ctx() {
 			return
 #ifdef JWT_OPENSSL_1_0_0
@@ -538,13 +549,8 @@ namespace jwt {
 				ec = error_category::write_key_failed;
 				return {};
 			}
-			char* ptr = nullptr;
-			const auto len = BIO_get_mem_data(keybio.get(), &ptr);
-			if (len <= 0 || ptr == nullptr) {
-				ec = error_category::convert_to_pem_failed;
-				return {};
-			}
-			return {ptr, static_cast<size_t>(len)};
+
+			return write_bio_to_string<error_category>(keybio, ec);
 		}
 
 		/**
@@ -587,14 +593,7 @@ namespace jwt {
 				return {};
 			}
 
-			char* ptr = nullptr;
-			const auto len = BIO_get_mem_data(certbio.get(), &ptr);
-			if (len <= 0 || ptr == nullptr) {
-				ec = error::rsa_error::convert_to_pem_failed;
-				return {};
-			}
-
-			return {ptr, static_cast<size_t>(len)};
+			return write_bio_to_string(certbio, ec);
 		}
 
 		/**
@@ -603,7 +602,7 @@ namespace jwt {
 		 * This is useful when using with JWKs as x5c claim is encoded as base64 DER. More info
 		 * (here)[https://tools.ietf.org/html/rfc7517#section-4.7]
 		 *
-		 * \tparam Decode is callabled, taking a string_type and returns a string_type.
+		 * \tparam Decode is callable, taking a string_type and returns a string_type.
 		 * It should ensure the padding of the input and then base64 decode and return
 		 * the results.
 		 *
@@ -1000,14 +999,7 @@ namespace jwt {
 				return {};
 			}
 
-			char* ptr = nullptr;
-			const auto len = BIO_get_mem_data(pub_key_bio.get(), &ptr);
-			if (len <= 0 || ptr == nullptr) {
-				ec = error::rsa_error::convert_to_pem_failed;
-				return {};
-			}
-
-			return std::string{ptr, static_cast<size_t>(len)};
+			return write_bio_to_string<error_category>(pub_key_bio, ec);
 		}
 
 		/**
