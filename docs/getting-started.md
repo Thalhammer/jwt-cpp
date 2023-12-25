@@ -45,10 +45,34 @@ When importing these from other sources (e.g `apt` on Ubuntu) you may see known 
 
 See example (needs update)
 
+https://conan.io/center/recipes/jwt-cpp
+
 ### Hunter
 
 Add example?
 
+https://hunter.readthedocs.io/en/latest/packages/pkg/jwt-cpp.html
+
 ### Vcpk
 
 Add example?
+
+https://vcpkg.link/ports/jwt-cpp
+
+### Spack
+
+https://packages.spack.io/package.html?name=jwt-cpp
+
+### Xrepo
+
+https://xrepo.xmake.io/#/packages/linux?id=jwt-cpp-linux
+
+### Nuget
+
+https://www.nuget.org/packages/jwt-cpp/
+
+### Nixpkgs
+
+https://github.com/NixOS/nixpkgs/tree/master/pkgs/development/jwt-cpp (MISSING)
+
+
