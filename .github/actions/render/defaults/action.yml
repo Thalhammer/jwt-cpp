@@ -14,21 +14,27 @@ inputs:
     description: "Set the macro to disable the default traits"
     required: false
     default: "true"
+outputs:
+  file_path:
+    description: "Relative path which the 'defaults.h' was written to"
+    value: ${{ steps.script.outputs.result }}
 runs:
   using: composite
   steps:
-    - uses: actions/setup-node@v2
+    - uses: actions/setup-node@v3
       with:
         node-version: 14
     - run: npm install mustache
       shell: bash
-    - uses: actions/github-script@v5
+    - uses: actions/github-script@v6
+      id: script
       env:
         TRAITS_NAME: ${{ inputs.traits_name }}
         LIBRARY_NAME: ${{ inputs.library_name }}
         LIBRARY_URL: ${{ inputs.library_url }}
         DISABLE_DEFAULT_TRAITS: ${{ inputs.disable_default_traits }}
       with:
+        result-encoding: string
         script: |
           const mustache = require('mustache')
           const path = require('path')
@@ -47,6 +53,15 @@ runs:
               library_url: LIBRARY_URL,
               disable_default_traits: disableDefault,
           })
-          const outputDir = path.join('include', 'jwt-cpp', 'traits', TRAITS_NAME.replace('_', '-'))
+          // https://dmitripavlutin.com/replace-all-string-occurrences-javascript/
+          function replaceAll(string, search, replace) {
+            return string.split(search).join(replace);
+          }
+
+          const outputDir = path.join('include', 'jwt-cpp', 'traits', replaceAll(TRAITS_NAME, '_', '-'))
           fs.mkdirSync(outputDir, { recursive: true })
-          fs.writeFileSync(path.join(outputDir, 'defaults.h'), content)
+          
+          const filePath = path.join(outputDir, 'defaults.h')
+          fs.writeFileSync(filePath, content)
+
+          return filePath

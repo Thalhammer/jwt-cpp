@@ -3,19 +3,24 @@ name: Documentation CI
 on:
   push:
     branches: [master]
+  workflow_dispatch: {}
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      - uses: ssciwr/doxygen-install@v1
+        with:
+          version: "1.9.7"
       - run: sudo apt install graphviz
-      - run: wget https://raw.githubusercontent.com/jothepro/doxygen-awesome-css/v1.6.1/doxygen-awesome.css
-      - run: wget https://raw.githubusercontent.com/jothepro/doxygen-awesome-css/v1.6.1/doxygen-awesome-sidebar-only.css
-      - uses: mattnotmitt/doxygen-action@v1
-      - name: deploy
+      - run: | 
+          cmake . -DJWT_BUILD_DOC=ON
+          cmake --build . --target build_docs
+      - if: github.event_name == 'push'
+        name: deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./doxy/html
+          publish_dir: ./build/html
           force_orphan: true

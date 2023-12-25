@@ -8,7 +8,7 @@ on:
 
 jobs:
   clang-format:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -21,10 +21,10 @@ jobs:
         - "example/**/*.cpp"
     steps:
       - run: |
-          sudo apt-get install clang-format
+          sudo apt-get install clang-format-14
           shopt -s globstar
-      - uses: actions/checkout@v2
-      - run: clang-format -i ${{ matrix.files }}
+      - uses: actions/checkout@v3
+      - run: clang-format-14 -i ${{ matrix.files }}
       - uses: ./.github/actions/process-linting-results
         with:
           linter_name: clang-format
@@ -41,7 +41,7 @@ jobs:
           python-version: "3.x"
       - run: pip install cmakelang
       - run: shopt -s globstar
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: cmake-format -i ${{ matrix.files }}
       - uses: ./.github/actions/process-linting-results
         with:
@@ -52,7 +52,7 @@ jobs:
     steps:
       - run: sudo apt-get install clang-tidy
       - uses: lukka/get-cmake@latest
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: configure
         run: |
           mkdir build
@@ -75,16 +75,19 @@ jobs:
           - { name: "danielaparker_jsoncons", library: "jsoncons", url: "https://github.com/danielaparker/jsoncons", disable_pico: true }
           - { name: "kazuho_picojson", library: "picojson", url: "https://github.com/kazuho/picojson", disable_pico: false }
           - { name: "nlohmann_json", library: "JSON for Modern C++", url: "https://github.com/nlohmann/json", disable_pico: true }
+          - { name: "open_source_parsers_jsoncpp", library: "jsoncpp", url: "https://github.com/open-source-parsers/jsoncpp", disable_pico: true }
     name: render-defaults (${{ matrix.traits.name }})
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./.github/actions/render/defaults
+        id: render
         with:
           traits_name: ${{ matrix.traits.name }}
           library_name: ${{ matrix.traits.library }}
           library_url: ${{ matrix.traits.url }}
           disable_default_traits: ${{ matrix.traits.disable_pico }}
-      - run: git add include/jwt-cpp/traits/*
+      - run: clang-format -i ${{ steps.render.outputs.file_path }}
+      - run: git add ${{ steps.render.outputs.file_path }}
       - uses: ./.github/actions/process-linting-results
         with:
           linter_name: render-defaults
@@ -99,9 +102,10 @@ jobs:
           - { name: "danielaparker_jsoncons", suite: "JsonconsTest" }
           # - { name: "kazuho_picojson", suite: "PicoJsonTest" } # Currently the default everything tests against this!
           - { name: "nlohmann_json", suite: "NlohmannTest" }
+          - { name: "open_source_parsers_jsoncpp", suite: "OspJsoncppTest" }
     name: render-tests (${{ matrix.traits.name }})
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: shopt -s globstar
       - uses: ./.github/actions/render/tests
         with:
@@ -116,7 +120,7 @@ jobs:
   line-ending:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: git add --renormalize .
       - uses: ./.github/actions/process-linting-results
         with:

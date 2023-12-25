@@ -10,12 +10,12 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: actions/setup-node@v2
+    - uses: actions/setup-node@v3
       with:
         node-version: 14
     - run: npm install mustache
       shell: bash
-    - uses: actions/github-script@v5
+    - uses: actions/github-script@v6
       env:
         TRAITS_NAME: ${{ inputs.traits_name }}
         SUITE_NAME: ${{ inputs.test_suite_name }}
@@ -28,10 +28,15 @@ runs:
           const { TRAITS_NAME, SUITE_NAME } = process.env
           console.log(`Rendering ${TRAITS_NAME}!`)
 
+          // https://dmitripavlutin.com/replace-all-string-occurrences-javascript/
+          function replaceAll(string, search, replace) {
+            return string.split(search).join(replace);
+          }
+
           const template = fs.readFileSync(path.join('tests', 'traits', 'TraitsTest.cpp.mustache'), 'utf8')
           const content = mustache.render(template, {
               traits_name: TRAITS_NAME,
-              traits_dir: TRAITS_NAME.replace('_', '-'),
+              traits_dir: replaceAll(TRAITS_NAME, '_', '-'),
               test_suite_name: SUITE_NAME,
           })
           const outputDir = path.join('tests', 'traits')

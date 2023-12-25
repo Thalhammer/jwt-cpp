@@ -50,8 +50,8 @@ struct my_favorite_json_library_traits {
     static array_type as_array(const value_type &val);
     static string_type as_string(const value_type &val);
     static number_type as_number(const value_type &val);
-    static integer_type as_int(const value_type &val);
-    static boolean_type as_bool(const value_type &val);
+    static integer_type as_integer(const value_type &val);
+    static boolean_type as_boolean(const value_type &val);
 
     // serialization and parsing
     static bool parse(value_type &val, string_type str);

@@ -49,12 +49,12 @@ namespace jwt {
 				return val.get<picojson::array>();
 			}
 
-			static int64_t as_int(const picojson::value& val) {
+			static int64_t as_integer(const picojson::value& val) {
 				if (!val.is<int64_t>()) throw std::bad_cast();
 				return val.get<int64_t>();
 			}
 
-			static bool as_bool(const picojson::value& val) {
+			static bool as_boolean(const picojson::value& val) {
 				if (!val.is<bool>()) throw std::bad_cast();
 				return val.get<bool>();
 			}

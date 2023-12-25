@@ -90,7 +90,7 @@ TEST(ClaimTest, SetAlgorithm) {
 
 TEST(ClaimTest, AsInt) {
 	jwt::claim c(picojson::value(static_cast<int64_t>(10)));
-	ASSERT_EQ(c.as_int(), 10);
+	ASSERT_EQ(c.as_integer(), 10);
 }
 
 TEST(ClaimTest, AsDate) {
@@ -101,8 +101,8 @@ TEST(ClaimTest, AsDate) {
 TEST(ClaimTest, PicoJSONTraitsAccessorsThrow) {
 	jwt::traits::kazuho_picojson::value_type val;
 	ASSERT_THROW(jwt::traits::kazuho_picojson::as_array(val), std::bad_cast);
-	ASSERT_THROW(jwt::traits::kazuho_picojson::as_bool(val), std::bad_cast);
-	ASSERT_THROW(jwt::traits::kazuho_picojson::as_int(val), std::bad_cast);
+	ASSERT_THROW(jwt::traits::kazuho_picojson::as_boolean(val), std::bad_cast);
+	ASSERT_THROW(jwt::traits::kazuho_picojson::as_integer(val), std::bad_cast);
 	ASSERT_THROW(jwt::traits::kazuho_picojson::as_number(val), std::bad_cast);
 	ASSERT_THROW(jwt::traits::kazuho_picojson::as_object(val), std::bad_cast);
 	ASSERT_THROW(jwt::traits::kazuho_picojson::as_string(val), std::bad_cast);
@@ -111,7 +111,7 @@ TEST(ClaimTest, PicoJSONTraitsAccessorsThrow) {
 
 TEST(ClaimTest, PicoJSONTraitsAsBool) {
 	jwt::traits::kazuho_picojson::value_type val(true);
-	ASSERT_EQ(jwt::traits::kazuho_picojson::as_bool(val), true);
+	ASSERT_EQ(jwt::traits::kazuho_picojson::as_boolean(val), true);
 	ASSERT_EQ(jwt::traits::kazuho_picojson::get_type(val), jwt::json::type::boolean);
 }
 
@@ -133,9 +133,9 @@ TEST(ClaimTest, MapOfClaim) {
 	ASSERT_TRUE(claims.has_claim("bool"));
 	ASSERT_FALSE(claims.has_claim("__missing__"));
 
-	ASSERT_EQ(map::basic_claim_t{claims.get_claim("array").as_array().at(0)}.as_int(), (int)1);
+	ASSERT_EQ(map::basic_claim_t{claims.get_claim("array").as_array().at(0)}.as_integer(), (int)1);
 	ASSERT_EQ(claims.get_claim("string").as_string(), "hello world");
 	ASSERT_EQ(claims.get_claim("number").as_number(), 9.9);
-	ASSERT_EQ(claims.get_claim("bool").as_bool(), true);
+	ASSERT_EQ(claims.get_claim("bool").as_boolean(), true);
 	ASSERT_THROW(claims.get_claim("__missing__"), jwt::error::claim_not_present_exception);
 }

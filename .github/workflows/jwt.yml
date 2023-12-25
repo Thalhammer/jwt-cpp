@@ -10,11 +10,12 @@ jobs:
   coverage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: lukka/get-cmake@latest
       - uses: ./.github/actions/install/gtest
       - uses: ./.github/actions/install/danielaparker-jsoncons
       - uses: ./.github/actions/install/boost-json
+      - uses: ./.github/actions/install/open-source-parsers-jsoncpp
 
       - name: configure
         run: |
@@ -34,7 +35,7 @@ jobs:
   fuzzing:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - uses: lukka/get-cmake@latest
     - uses: ./.github/actions/install/gtest
       
@@ -55,7 +56,7 @@ jobs:
   asan: ## Based on https://gist.github.com/jlblancoc/44be9d4d466f0a973b1f3808a8e56782
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: lukka/get-cmake@latest
       - uses: ./.github/actions/install/gtest
 
@@ -63,16 +64,42 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DJWT_BUILD_TESTS=ON -DCMAKE_CXX_FLAGS="-fsanitize=address  -fsanitize=leak -g" \
-                                        -DCMAKE_C_FLAGS="-fsanitize=address  -fsanitize=leak -g" \
-                                        -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address  -fsanitize=leak" \
-                                        -DCMAKE_MODULE_LINKER_FLAGS="-fsanitize=address  -fsanitize=leak"
+          cmake .. -DJWT_BUILD_TESTS=ON -DCMAKE_CXX_FLAGS="-fsanitize=address -fsanitize=leak -g" \
+                                        -DCMAKE_C_FLAGS="-fsanitize=address -fsanitize=leak -g" \
+                                        -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address -fsanitize=leak" \
+                                        -DCMAKE_MODULE_LINKER_FLAGS="-fsanitize=address -fsanitize=leak"
 
       - name: run
         working-directory: build
         run: |
           make
-          export ASAN_OPTIONS=fast_unwind_on_malloc=0
+          export ASAN_OPTIONS=check_initialization_order=true:detect_stack_use_after_return=true:fast_unwind_on_malloc=0
+          ./example/rsa-create
+          ./example/rsa-verify
+          ./tests/jwt-cpp-test
+
+  ubsan:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: lukka/get-cmake@latest
+      - uses: ./.github/actions/install/gtest
+
+      - name: configure
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DJWT_BUILD_TESTS=ON -DCMAKE_CXX_STANDARD=20 \
+                                        -DCMAKE_CXX_FLAGS="-fsanitize=undefined -fsanitize=return -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize-recover=all -g" \
+                                        -DCMAKE_C_FLAGS="-fsanitize=undefined -fsanitize=return -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize-recover=all -g" \
+                                        -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=undefined -fsanitize=return -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize-recover=all" \
+                                        -DCMAKE_MODULE_LINKER_FLAGS="-fsanitize=undefined -fsanitize=return -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize-recover=all"
+
+      - name: run
+        working-directory: build
+        run: |
+          make
+          export UBSAN_OPTIONS=print_stacktrace=1
           ./example/rsa-create
           ./example/rsa-verify
           ./tests/jwt-cpp-test
