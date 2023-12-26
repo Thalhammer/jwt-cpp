@@ -6,7 +6,7 @@
     "customizations": {
         "vscode": {
             "extensions": [
-                "dbaeumer.vscode-eslint"
+                "streetsidesoftware.code-spell-checker"
             ]
         }
     }
