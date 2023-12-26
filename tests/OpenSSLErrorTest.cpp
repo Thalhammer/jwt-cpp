@@ -746,7 +746,6 @@ TEST(OpenSSLErrorTest, LoadPublicKeyFromString) {
 
 TEST(OpenSSLErrorTest, LoadPublicKeyFromStringWithEc) {
 	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::ecdsa_error::create_mem_bio_failed},
-										 {&fail_BIO_get_mem_data, 1, jwt::error::rsa_error::convert_to_pem_failed},
 										 {&fail_BIO_write, 1, jwt::error::ecdsa_error::load_key_bio_write},
 										 {&fail_PEM_read_bio_PUBKEY, 1, jwt::error::ecdsa_error::load_key_bio_read}};
 
@@ -760,7 +759,6 @@ TEST(OpenSSLErrorTest, LoadPublicKeyFromStringWithEc) {
 
 TEST(OpenSSLErrorTest, LoadPublicKeyFromStringErrorCode) {
 	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
-										 {&fail_BIO_get_mem_data, 1, jwt::error::rsa_error::convert_to_pem_failed},
 										 {&fail_BIO_write, 1, jwt::error::rsa_error::load_key_bio_write},
 										 {&fail_PEM_read_bio_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_read}};
 
@@ -800,7 +798,7 @@ TEST(OpenSSLErrorTest, LoadPublicKeyCertFromString) {
 TEST(OpenSSLErrorTest, LoadPublicKeyCertFromStringErrorCode) {
 	std::vector<multitest_entry> mapping {
 		{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
-			{&fail_BIO_get_mem_data, 1, jwt::error::rsa_error::convert_to_pem_failed},
+			{&fail_BIO_get_mem_data, 1, jwt::error::rsa_error::convert_to_pem_failed}, // extract_pubkey_from_cert
 #if !defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER < 0x3050300fL
 			{&fail_BIO_write, 1, jwt::error::rsa_error::load_key_bio_write},
 #else
