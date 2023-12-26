@@ -417,11 +417,11 @@ namespace jwt {
 	namespace helper {
 		/** 
 		 * \brief Handle class for EVP_PKEY structures
-         * 
+		 * 
 		 * Starting from OpenSSL 1.1.0, EVP_PKEY has internal reference counting. This handle class allows
 		 * jwt-cpp to leverage that and thus safe an allocation for the control block in std::shared_ptr.
 		 * The handle uses shared_ptr as a fallback on older versions. The behaviour should be identical between both.
-         */
+		 */
 		class evp_pkey_handle {
 		public:
 			/// @brief Creates a null key pointer
@@ -1820,13 +1820,13 @@ namespace jwt {
 		struct rs256 : public rsa {
 			/**
 			 * \brief Construct new instance of algorithm
-             * 
+			 * 
 			 * \param public_key RSA public key in PEM format
 			 * \param private_key RSA private key or empty string if not available. If empty, signing will always fail.
 			 * \param public_key_password Password to decrypt public key pem.
 			 * \param private_key_password Password to decrypt private key pem.
-             * 
-             * This data structure is used to describe the RSA256 and can be used to verify JWTs
+			 * 
+			 * This data structure is used to describe the RSA256 and can be used to verify JWTs
 			 */
 			explicit rs256(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
