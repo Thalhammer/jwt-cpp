@@ -15,3 +15,8 @@ html {
         top: var(--top-nav-height);
     }
 }
+
+.paramname em {
+    font-weight: 600;
+    color: var(--primary-dark-color);
+}
