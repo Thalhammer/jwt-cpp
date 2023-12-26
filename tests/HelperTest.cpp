@@ -24,6 +24,27 @@ TEST(HelperTest, DER2PemCert) {
 	ASSERT_EQ(google_cert, cert_pem);
 }
 
+TEST(HelperTest, RsaFromComponents) {
+	const std::string public_key_expected =
+		R"(-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwoB3iVm4RW+6StkR+nut
+x1fQevu2+t0Fu6KBcbvhfyHSXy7w0nJOdTT4jWLjStpRkNQBPZwMwHH35i+21gdn
+JtDe/xfO8IX9McFmyodlBUcqX8CruIzDv9AXf2OjXPBG+4aq+03XKl5/muATl32+
++301Vw1dXoGYNeoWQqLTsHT3WS3tOOf+ehuzNuZ+rj+ephaD3lMBToEArrtC9R91
+KTTN6YSAOK48NxTA8CfOMFK5itxfIqB5+E9OSQTidXyqLyoeA+xxTKMqYfxvypEe
+k1oueAhY9u67NCBdmuavxtfyvwp7+o6Sd+NsewxAhmRKFexw13KOYzDhC+9aMJcu
+JQIDAQAB
+-----END PUBLIC KEY-----
+)";
+	const std::string modulus =
+		R"(AMKAd4lZuEVvukrZEfp7rcdX0Hr7tvrdBbuigXG74X8h0l8u8NJyTnU0-I1i40raUZDUAT2cDMBx9-YvttYHZybQ3v8XzvCF_THBZsqHZQVHKl_Aq7iMw7_QF39jo1zwRvuGqvtN1ypef5rgE5d9vvt9NVcNXV6BmDXqFkKi07B091kt7Tjn_nobszbmfq4_nqYWg95TAU6BAK67QvUfdSk0zemEgDiuPDcUwPAnzjBSuYrcXyKgefhPTkkE4nV8qi8qHgPscUyjKmH8b8qRHpNaLngIWPbuuzQgXZrmr8bX8r8Ke_qOknfjbHsMQIZkShXscNdyjmMw4QvvWjCXLiU)";
+	const std::string exponent = R"(AQAB)";
+
+	const auto public_key = jwt::helper::create_public_key_from_rsa_components(modulus, exponent);
+
+	ASSERT_EQ(public_key, public_key_expected);
+}
+
 TEST(HelperTest, ErrorCodeMessages) {
 	ASSERT_EQ(std::error_code(jwt::error::rsa_error::ok).message(), "no error");
 	ASSERT_EQ(std::error_code(static_cast<jwt::error::rsa_error>(-1)).message(), "unknown RSA error");
@@ -52,7 +73,7 @@ TEST(HelperTest, ErrorCodeMessages) {
 			  std::string("token_verification_error"));
 
 	int i = 10;
-	for (i = 10; i < 19; i++) {
+	for (i = 10; i < 21; i++) {
 		ASSERT_NE(std::error_code(static_cast<jwt::error::rsa_error>(i)).message(),
 				  std::error_code(static_cast<jwt::error::rsa_error>(-1)).message());
 	}

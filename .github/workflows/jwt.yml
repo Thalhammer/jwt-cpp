@@ -53,12 +53,21 @@ jobs:
         ./tests/fuzz/jwt-cpp-fuzz-BaseDecodeFuzz -runs=100000 ../tests/fuzz/decode-corpus
         ./tests/fuzz/jwt-cpp-fuzz-TokenDecodeFuzz -runs=100000 ../tests/fuzz/token-corpus
 
-  asan: ## Based on https://gist.github.com/jlblancoc/44be9d4d466f0a973b1f3808a8e56782
-    runs-on: ubuntu-20.04
+  asan: # Based on https://gist.github.com/jlblancoc/44be9d4d466f0a973b1f3808a8e56782
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        openssl:
+          - { tag: "openssl-3.0.5", name: "3.0.5" }
+          - { tag: "OpenSSL_1_1_1q", name: "1.1.1q" }
     steps:
       - uses: actions/checkout@v3
       - uses: lukka/get-cmake@latest
       - uses: ./.github/actions/install/gtest
+      - uses: ./.github/actions/install/openssl
+        with:
+          version: ${{ matrix.openssl.tag }}
 
       - name: configure
         run: |
@@ -76,6 +85,7 @@ jobs:
           export ASAN_OPTIONS=check_initialization_order=true:detect_stack_use_after_return=true:fast_unwind_on_malloc=0
           ./example/rsa-create
           ./example/rsa-verify
+          ./example/jwks-verify
           ./tests/jwt-cpp-test
 
   ubsan:
