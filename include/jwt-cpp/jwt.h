@@ -624,7 +624,7 @@ namespace jwt {
 		 * This is useful when using with JWKs as x5c claim is encoded as base64 DER. More info
 		 * (here)[https://tools.ietf.org/html/rfc7517#section-4.7]
 		 *
-		 * \tparam Decode is callabled, taking a string_type and returns a string_type.
+		 * \tparam Decode is callable, taking a string_type and returns a string_type.
 		 * It should ensure the padding of the input and then base64 decode and return
 		 * the results.
 		 *
@@ -999,7 +999,7 @@ namespace jwt {
 				return {};
 			}
 
-			return write_bio_to_string<error_category>(pub_key_bio, ec);
+			return write_bio_to_string<error::rsa_error>(pub_key_bio, ec);
 		}
 
 		/**
@@ -1174,7 +1174,7 @@ namespace jwt {
 			std::string name() const { return alg_name; }
 
 		private:
-			/// HMAC secrect
+			/// HMAC secret
 			const std::string secret;
 			/// HMAC hash generator
 			const EVP_MD* (*md)();
@@ -2722,7 +2722,7 @@ namespace jwt {
 		/**
 		 * \brief Parses a given token
 		 *
-		 * \tparam Decode is callabled, taking a string_type and returns a string_type.
+		 * \tparam Decode is callable, taking a string_type and returns a string_type.
 		 * It should ensure the padding of the input and then base64url decode and
 		 * return the results.
 		 * \param token The token to parse
