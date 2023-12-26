@@ -17,8 +17,8 @@
 #include <openssl/rsa.h>
 #include <openssl/ssl.h>
 
-#include <string>
 #include <memory>
+#include <string>
 
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L // 3.0.0
 #define JWT_OPENSSL_3_0
@@ -42,6 +42,10 @@
 #define JWT_OPENSSL_1_1_1
 #endif
 
+#ifdef JWT_OPENSSL_3_0
+#include <openssl/param_build.h>
+#endif
+
 #ifdef JWT_OPENSSL_1_0_0
 #include <memory>
 #else
@@ -50,6 +54,8 @@
 
 namespace jwt {
 	/**
+	 * \brief A collection for working with certificates
+	 *
 	 * These _helpers_ are usefully when working with certificates OpenSSL APIs.
 	 * For example, when dealing with JWKS (JSON Web Key Set)[https://tools.ietf.org/html/rfc7517]
 	 * you maybe need to extract the modulus and exponent of an RSA Public Key.
@@ -151,6 +157,74 @@ namespace jwt {
 #endif
 				);
 			}
+
+			template<typename error_category = error::rsa_error>
+			std::string write_bio_to_string(std::unique_ptr<BIO, decltype(&BIO_free_all)>& bio_out,
+											std::error_code& ec) {
+				char* ptr = nullptr;
+				auto len = BIO_get_mem_data(bio_out.get(), &ptr);
+				if (len <= 0 || ptr == nullptr) {
+					ec = error_category::convert_to_pem_failed;
+					return {};
+				}
+				return {ptr, static_cast<size_t>(len)};
+			}
+
+			inline std::unique_ptr<EVP_MD_CTX, void (*)(EVP_MD_CTX*)> make_evp_md_ctx() {
+				return
+#ifdef JWT_OPENSSL_1_0_0
+					std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)>(EVP_MD_CTX_create(),
+																			   &EVP_MD_CTX_destroy);
+#else
+					std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)>(EVP_MD_CTX_new(), &EVP_MD_CTX_free);
+#endif
+			}
+
+			/**
+		 * Convert a OpenSSL BIGNUM to a std::string
+		 * \param bn BIGNUM to convert
+		 * \return bignum as string
+		 */
+			inline
+#ifdef JWT_OPENSSL_1_0_0
+				std::string
+				bn2raw(BIGNUM* bn)
+#else
+				std::string
+				bn2raw(const BIGNUM* bn)
+#endif
+			{
+				std::string res(BN_num_bytes(bn), '\0');
+				BN_bn2bin(bn, (unsigned char*)res.data()); // NOLINT(google-readability-casting) requires `const_cast`
+				return res;
+			}
+			/**
+		 * Convert an std::string to a OpenSSL BIGNUM
+		 * \param raw String to convert
+		 * \param ec  error_code for error_detection (gets cleared if no error occurs)
+		 * \return BIGNUM representation
+		 */
+			inline std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw, std::error_code& ec) {
+				auto bn = BN_bin2bn(reinterpret_cast<const unsigned char*>(raw.data()), static_cast<int>(raw.size()),
+									nullptr);
+				// https://www.openssl.org/docs/man1.1.1/man3/BN_bin2bn.html#RETURN-VALUES
+				if (!bn) {
+					ec = error::rsa_error::set_rsa_failed;
+					return {nullptr, BN_free};
+				}
+				return {bn, BN_free};
+			}
+			/**
+		 * Convert an std::string to a OpenSSL BIGNUM
+		 * \param raw String to convert
+		 * \return BIGNUM representation
+		 */
+			inline std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw) {
+				std::error_code ec;
+				auto res = raw2bn(raw, ec);
+				error::throw_if_error(ec);
+				return res;
+			}
 		} // namespace details
 
 		/**
@@ -186,13 +260,8 @@ namespace jwt {
 				ec = error_category::write_key_failed;
 				return {};
 			}
-			char* ptr = nullptr;
-			auto len = BIO_get_mem_data(keybio.get(), &ptr);
-			if (len <= 0 || ptr == nullptr) {
-				ec = error_category::convert_to_pem_failed;
-				return {};
-			}
-			return {ptr, static_cast<size_t>(len)};
+
+			return details::write_bio_to_string<error_category>(keybio, ec);
 		}
 
 		/**
@@ -235,14 +304,7 @@ namespace jwt {
 				return {};
 			}
 
-			char* ptr = nullptr;
-			const auto len = BIO_get_mem_data(certbio.get(), &ptr);
-			if (len <= 0 || ptr == nullptr) {
-				ec = error::rsa_error::convert_to_pem_failed;
-				return {};
-			}
-
-			return {ptr, static_cast<size_t>(len)};
+			return details::write_bio_to_string(certbio, ec);
 		}
 
 		/**
@@ -334,7 +396,8 @@ namespace jwt {
 			error::throw_if_error(ec);
 			return res;
 		}
-#endif /**
+#endif
+		/**
 		 * \brief Load a public key from a string.
 		 *
 		 * The string should contain a pem encoded certificate or public key
@@ -488,6 +551,181 @@ namespace jwt {
 		}
 
 		/**
+		* \brief create public key from modulus and exponent. This is defined in
+		* [RFC 7518 Section 6.3](https://www.rfc-editor.org/rfc/rfc7518#section-6.3)
+		* Using the required "n" (Modulus) Parameter and "e" (Exponent) Parameter.
+		*
+		 * \tparam Decode is callable, taking a string_type and returns a string_type.
+		 * It should ensure the padding of the input and then base64url decode and
+		 * return the results.
+		* \param modulus	string containing base64url encoded modulus
+		* \param exponent	string containing base64url encoded exponent
+		* \param decode 	The function to decode the RSA parameters
+		* \param ec			error_code for error_detection (gets cleared if no error occur
+		* \return 			public key in PEM format
+		*/
+		template<typename Decode>
+		std::string create_public_key_from_rsa_components(const std::string& modulus, const std::string& exponent,
+														  Decode decode, std::error_code& ec) {
+			ec.clear();
+			auto decoded_modulus = decode(modulus);
+			auto decoded_exponent = decode(exponent);
+
+			auto n = details::raw2bn(decoded_modulus, ec);
+			if (ec) return {};
+			auto e = details::raw2bn(decoded_exponent, ec);
+			if (ec) return {};
+
+#if defined(JWT_OPENSSL_3_0)
+			// OpenSSL deprecated mutable keys and there is a new way for making them
+			// https://mta.openssl.org/pipermail/openssl-users/2021-July/013994.html
+			// https://www.openssl.org/docs/man3.1/man3/OSSL_PARAM_BLD_new.html#Example-2
+			std::unique_ptr<OSSL_PARAM_BLD, decltype(&OSSL_PARAM_BLD_free)> param_bld(OSSL_PARAM_BLD_new(),
+																					  OSSL_PARAM_BLD_free);
+			if (!param_bld) {
+				ec = error::rsa_error::create_context_failed;
+				return {};
+			}
+
+			if (OSSL_PARAM_BLD_push_BN(param_bld.get(), "n", n.get()) != 1 ||
+				OSSL_PARAM_BLD_push_BN(param_bld.get(), "e", e.get()) != 1) {
+				ec = error::rsa_error::set_rsa_failed;
+				return {};
+			}
+
+			std::unique_ptr<OSSL_PARAM, decltype(&OSSL_PARAM_free)> params(OSSL_PARAM_BLD_to_param(param_bld.get()),
+																		   OSSL_PARAM_free);
+			if (!params) {
+				ec = error::rsa_error::set_rsa_failed;
+				return {};
+			}
+
+			std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)> ctx(
+				EVP_PKEY_CTX_new_from_name(nullptr, "RSA", nullptr), EVP_PKEY_CTX_free);
+			if (!ctx) {
+				ec = error::rsa_error::create_context_failed;
+				return {};
+			}
+
+			// https://www.openssl.org/docs/man3.0/man3/EVP_PKEY_fromdata.html#EXAMPLES
+			// Error codes based on https://www.openssl.org/docs/manmaster/man3/EVP_PKEY_fromdata_init.html#RETURN-VALUES
+			EVP_PKEY* pkey = NULL;
+			if (EVP_PKEY_fromdata_init(ctx.get()) <= 0 ||
+				EVP_PKEY_fromdata(ctx.get(), &pkey, EVP_PKEY_KEYPAIR, params.get()) <= 0) {
+				// It's unclear if this can fail after allocating but free it anyways
+				// https://www.openssl.org/docs/man3.0/man3/EVP_PKEY_fromdata.html
+				EVP_PKEY_free(pkey);
+
+				ec = error::rsa_error::cert_load_failed;
+				return {};
+			}
+
+			// Transfer ownership so we get ref counter and cleanup
+			evp_pkey_handle rsa(pkey);
+
+#else
+			std::unique_ptr<RSA, decltype(&RSA_free)> rsa(RSA_new(), RSA_free);
+
+#if defined(JWT_OPENSSL_1_1_1) || defined(JWT_OPENSSL_1_1_0)
+			// After this RSA_free will also free the n and e big numbers
+			// See https://github.com/Thalhammer/jwt-cpp/pull/298#discussion_r1282619186
+			if (RSA_set0_key(rsa.get(), n.get(), e.get(), nullptr) == 1) {
+				// This can only fail we passed in NULL for `n` or `e`
+				// https://github.com/openssl/openssl/blob/d6e4056805f54bb1a0ef41fa3a6a35b70c94edba/crypto/rsa/rsa_lib.c#L396
+				// So to make sure there is no memory leak, we hold the references
+				n.release();
+				e.release();
+			} else {
+				ec = error::rsa_error::set_rsa_failed;
+				return {};
+			}
+#elif defined(JWT_OPENSSL_1_0_0)
+			rsa->e = e.release();
+			rsa->n = n.release();
+			rsa->d = nullptr;
+#endif
+#endif
+
+			auto pub_key_bio = details::make_mem_buf_bio();
+			if (!pub_key_bio) {
+				ec = error::rsa_error::create_mem_bio_failed;
+				return {};
+			}
+
+			auto write_pem_to_bio =
+#if defined(JWT_OPENSSL_3_0)
+				// https://www.openssl.org/docs/man3.1/man3/PEM_write_bio_RSA_PUBKEY.html
+				&PEM_write_bio_PUBKEY;
+#else
+				&PEM_write_bio_RSA_PUBKEY;
+#endif
+			if (write_pem_to_bio(pub_key_bio.get(), rsa.get()) != 1) {
+				ec = error::rsa_error::load_key_bio_write;
+				return {};
+			}
+
+			return details::write_bio_to_string<error::rsa_error>(pub_key_bio, ec);
+		}
+
+		/**
+		* Create public key from modulus and exponent. This is defined in
+		* [RFC 7518 Section 6.3](https://www.rfc-editor.org/rfc/rfc7518#section-6.3)
+		* Using the required "n" (Modulus) Parameter and "e" (Exponent) Parameter.
+		*
+		 * \tparam Decode is callable, taking a string_type and returns a string_type.
+		 * It should ensure the padding of the input and then base64url decode and
+		 * return the results.
+		* \param modulus	string containing base64url encoded modulus
+		* \param exponent	string containing base64url encoded exponent
+		* \param decode 	The function to decode the RSA parameters
+		* \return public key in PEM format
+		*/
+		template<typename Decode>
+		std::string create_public_key_from_rsa_components(const std::string& modulus, const std::string& exponent,
+														  Decode decode) {
+			std::error_code ec;
+			auto res = create_public_key_from_rsa_components(modulus, exponent, decode, ec);
+			error::throw_if_error(ec);
+			return res;
+		}
+
+#ifndef JWT_DISABLE_BASE64
+		/**
+		* Create public key from modulus and exponent. This is defined in
+		* [RFC 7518 Section 6.3](https://www.rfc-editor.org/rfc/rfc7518#section-6.3)
+		* Using the required "n" (Modulus) Parameter and "e" (Exponent) Parameter.
+		*
+		* \param modulus	string containing base64 encoded modulus
+		* \param exponent	string containing base64 encoded exponent
+		* \param ec			error_code for error_detection (gets cleared if no error occur
+		* \return public key in PEM format
+		*/
+		inline std::string create_public_key_from_rsa_components(const std::string& modulus,
+																 const std::string& exponent, std::error_code& ec) {
+			auto decode = [](const std::string& token) {
+				return base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(token));
+			};
+			return create_public_key_from_rsa_components(modulus, exponent, std::move(decode), ec);
+		}
+		/**
+		* Create public key from modulus and exponent. This is defined in
+		* [RFC 7518 Section 6.3](https://www.rfc-editor.org/rfc/rfc7518#section-6.3)
+		* Using the required "n" (Modulus) Parameter and "e" (Exponent) Parameter.
+		*
+		* \param modulus	string containing base64url encoded modulus
+		* \param exponent	string containing base64url encoded exponent
+		* \return public key in PEM format
+		*/
+		inline std::string create_public_key_from_rsa_components(const std::string& modulus,
+																 const std::string& exponent) {
+			std::error_code ec;
+			auto res = create_public_key_from_rsa_components(modulus, exponent, ec);
+			error::throw_if_error(ec);
+			return res;
+		}
+#endif
+
+		/**
 		 * \brief Load a private key from a string.
 		 *
 		 * \deprecated Use the templated version load_private_key_from_string with error::ecdsa_error
@@ -504,43 +742,6 @@ namespace jwt {
 			return res;
 		}
 	} // namespace helper
-
-	namespace details {
-		inline std::unique_ptr<EVP_MD_CTX, void (*)(EVP_MD_CTX*)> make_evp_md_ctx() {
-			return
-#ifdef JWT_OPENSSL_1_0_0
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)>(EVP_MD_CTX_create(), &EVP_MD_CTX_destroy);
-#else
-				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)>(EVP_MD_CTX_new(), &EVP_MD_CTX_free);
-#endif
-		}
-		/**
-		 * Convert a OpenSSL BIGNUM to a std::string
-		 * \param bn BIGNUM to convert
-		 * \return bignum as string
-		 */
-		inline std::string bn2raw(
-#ifdef JWT_OPENSSL_1_0_0
-			BIGNUM* bn)
-#else
-			const BIGNUM* bn)
-#endif
-		{
-			std::string res(BN_num_bytes(bn), '\0');
-			BN_bn2bin(bn, (unsigned char*)res.data()); // NOLINT(google-readability-casting) requires `const_cast`
-			return res;
-		}
-		/**
-		 * Convert an std::string to a OpenSSL BIGNUM
-		 * \param raw String to convert
-		 * \return BIGNUM representation
-		 */
-		inline std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw) {
-			return std::unique_ptr<BIGNUM, decltype(&BN_free)>(
-				BN_bin2bn(reinterpret_cast<const unsigned char*>(raw.data()), static_cast<int>(raw.size()), nullptr),
-				BN_free);
-		}
-	} // namespace details
 
 	/**
 	 * \brief Various cryptographic algorithms when working with JWT
@@ -683,7 +884,7 @@ namespace jwt {
 			 */
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
-				auto ctx = details::make_evp_md_ctx();
+				auto ctx = helper::details::make_evp_md_ctx();
 				if (!ctx) {
 					ec = error::signature_generation_error::create_context_failed;
 					return {};
@@ -717,7 +918,7 @@ namespace jwt {
 			 */
 			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
 				ec.clear();
-				auto ctx = details::make_evp_md_ctx();
+				auto ctx = helper::details::make_evp_md_ctx();
 				if (!ctx) {
 					ec = error::signature_verification_error::create_context_failed;
 					return;
@@ -793,7 +994,7 @@ namespace jwt {
 			 */
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
-				auto ctx = details::make_evp_md_ctx();
+				auto ctx = helper::details::make_evp_md_ctx();
 				if (!ctx) {
 					ec = error::signature_generation_error::create_context_failed;
 					return {};
@@ -833,7 +1034,7 @@ namespace jwt {
 				std::string der_signature = p1363_to_der_signature(signature, ec);
 				if (ec) { return; }
 
-				auto ctx = details::make_evp_md_ctx();
+				auto ctx = helper::details::make_evp_md_ctx();
 				if (!ctx) {
 					ec = error::signature_verification_error::create_context_failed;
 					return;
@@ -911,15 +1112,14 @@ namespace jwt {
 				}
 
 #ifdef JWT_OPENSSL_1_0_0
-
-				auto rr = details::bn2raw(sig->r);
-				auto rs = details::bn2raw(sig->s);
+				auto rr = helper::details::bn2raw(sig->r);
+				auto rs = helper::details::bn2raw(sig->s);
 #else
 				const BIGNUM* r;
 				const BIGNUM* s;
 				ECDSA_SIG_get0(sig.get(), &r, &s);
-				auto rr = details::bn2raw(r);
-				auto rs = details::bn2raw(s);
+				auto rr = helper::details::bn2raw(r);
+				auto rs = helper::details::bn2raw(s);
 #endif
 				if (rr.size() > signature_length / 2 || rs.size() > signature_length / 2)
 					throw std::logic_error("bignum size exceeded expected length");
@@ -930,8 +1130,10 @@ namespace jwt {
 
 			std::string p1363_to_der_signature(const std::string& signature, std::error_code& ec) const {
 				ec.clear();
-				auto r = details::raw2bn(signature.substr(0, signature.size() / 2));
-				auto s = details::raw2bn(signature.substr(signature.size() / 2));
+				auto r = helper::details::raw2bn(signature.substr(0, signature.size() / 2), ec);
+				if (ec) return {};
+				auto s = helper::details::raw2bn(signature.substr(signature.size() / 2), ec);
+				if (ec) return {};
 
 				ECDSA_SIG* psig;
 #ifdef JWT_OPENSSL_1_0_0
@@ -1013,7 +1215,7 @@ namespace jwt {
 			 */
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
-				auto ctx = details::make_evp_md_ctx();
+				auto ctx = helper::details::make_evp_md_ctx();
 				if (!ctx) {
 					ec = error::signature_generation_error::create_context_failed;
 					return {};
@@ -1061,7 +1263,7 @@ namespace jwt {
 			 */
 			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
 				ec.clear();
-				auto ctx = details::make_evp_md_ctx();
+				auto ctx = helper::details::make_evp_md_ctx();
 				if (!ctx) {
 					ec = error::signature_verification_error::create_context_failed;
 					return;
@@ -1139,7 +1341,7 @@ namespace jwt {
 			 */
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
-				auto md_ctx = details::make_evp_md_ctx();
+				auto md_ctx = helper::details::make_evp_md_ctx();
 				if (!md_ctx) {
 					ec = error::signature_generation_error::create_context_failed;
 					return {};
@@ -1188,7 +1390,7 @@ namespace jwt {
 			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
 				ec.clear();
 
-				auto md_ctx = details::make_evp_md_ctx();
+				auto md_ctx = helper::details::make_evp_md_ctx();
 				if (!md_ctx) {
 					ec = error::signature_verification_error::create_context_failed;
 					return;

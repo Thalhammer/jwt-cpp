@@ -36,7 +36,9 @@ namespace jwt {
 			load_key_bio_write,
 			load_key_bio_read,
 			create_mem_bio_failed,
-			no_key_provided
+			no_key_provided,
+			set_rsa_failed,
+			create_context_failed
 		};
 		/**
 		 * \brief Error category for RSA errors
@@ -57,6 +59,8 @@ namespace jwt {
 					case rsa_error::load_key_bio_read: return "failed to load key: bio read failed";
 					case rsa_error::create_mem_bio_failed: return "failed to create memory bio";
 					case rsa_error::no_key_provided: return "at least one of public or private key need to be present";
+					case rsa_error::set_rsa_failed: return "set modulus and exponent to RSA failed";
+					case rsa_error::create_context_failed: return "failed to create context";
 					default: return "unknown RSA error";
 					}
 				}
@@ -120,6 +124,7 @@ namespace jwt {
 		 * \brief Converts JWT-CPP errors into generic STL error_codes
 		 */
 		inline std::error_code make_error_code(ecdsa_error e) { return {static_cast<int>(e), ecdsa_error_category()}; }
+
 		/**
 		 * \brief Errors related to verification of signatures
 		 */
@@ -172,6 +177,7 @@ namespace jwt {
 		inline std::error_code make_error_code(signature_verification_error e) {
 			return {static_cast<int>(e), signature_verification_error_category()};
 		}
+
 		/**
 		 * \brief Errors related to signature generation errors
 		 */
@@ -241,6 +247,7 @@ namespace jwt {
 		inline std::error_code make_error_code(signature_generation_error e) {
 			return {static_cast<int>(e), signature_generation_error_category()};
 		}
+
 		/**
 		 * \brief Errors related to token verification errors
 		 */

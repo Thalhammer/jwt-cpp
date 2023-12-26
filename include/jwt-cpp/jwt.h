@@ -55,7 +55,11 @@
  */
 namespace jwt {
 	/**
-	 * JSON Abstractions for working with any library
+	 * Default system time point in UTC
+	 */
+	using date = std::chrono::system_clock::time_point;
+	/**
+	 * \brief JSON Abstractions for working with any library
 	 */
 	namespace json {
 		/**
