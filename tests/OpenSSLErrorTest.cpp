@@ -511,7 +511,7 @@ int RSA_set0_key(RSA* r, BIGNUM* n, BIGNUM* e, BIGNUM* d) {
 #endif
 
 long BIO_get_mem_data(BIO* b, char** pp) {
-	static int (*origMethod)(BIO * b, char** pp) = nullptr;
+	static long (*origMethod)(BIO * b, char** pp) = nullptr;
 	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "BIO_get_mem_data");
 	bool fail = fail_BIO_get_mem_data & 1;
 	fail_BIO_get_mem_data = fail_BIO_get_mem_data >> 1;
