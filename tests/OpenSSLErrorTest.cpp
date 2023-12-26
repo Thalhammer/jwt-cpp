@@ -22,6 +22,7 @@ static uint64_t fail_X509_get_pubkey = 0;
 static uint64_t fail_PEM_write_bio_PUBKEY = 0;
 static uint64_t fail_PEM_write_bio_cert = 0;
 static uint64_t fail_BIO_ctrl = 0;
+#define fail_BIO_get_mem_data fail_BIO_ctrl
 static uint64_t fail_BIO_write = 0;
 static uint64_t fail_PEM_read_bio_PUBKEY = 0;
 static uint64_t fail_PEM_read_bio_PrivateKey = 0;
@@ -61,7 +62,6 @@ static uint64_t fail_EVP_PKEY_fromdata = 0;
 static uint64_t fail_PEM_write_bio_RSA_PUBKEY = 0;
 static uint64_t fail_RSA_set0_key = 0;
 #endif
-static uint64_t fail_BIO_get_mem_data = 0;
 
 BIO* BIO_new(const BIO_METHOD* type) {
 	static BIO* (*origMethod)(const BIO_METHOD*) = nullptr;
@@ -509,17 +509,6 @@ int RSA_set0_key(RSA* r, BIGNUM* n, BIGNUM* e, BIGNUM* d) {
 		return origMethod(r, n, e, d);
 }
 #endif
-
-long BIO_get_mem_data(BIO* b, char** pp) {
-	static long (*origMethod)(BIO * b, char** pp) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "BIO_get_mem_data");
-	bool fail = fail_BIO_get_mem_data & 1;
-	fail_BIO_get_mem_data = fail_BIO_get_mem_data >> 1;
-	if (fail)
-		return 0;
-	else
-		return origMethod(b, pp);
-}
 
 /**
  * =========== End of black magic ============
