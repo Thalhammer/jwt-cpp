@@ -488,7 +488,7 @@ int EVP_PKEY_fromdata(EVP_PKEY_CTX* ctx, EVP_PKEY** ppkey, int selection, OSSL_P
 }
 #else
 int PEM_write_bio_RSA_PUBKEY(BIO* bp, RSA* x) {
-	static int (*origMethod)(BIO * bp, OPENSSL_CONST EVP_PKEY * x) = nullptr;
+	static int (*origMethod)(BIO * bp, RSA * x) = nullptr;
 	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "PEM_write_bio_RSA_PUBKEY");
 	bool fail = fail_PEM_write_bio_RSA_PUBKEY & 1;
 	fail_PEM_write_bio_RSA_PUBKEY = fail_PEM_write_bio_RSA_PUBKEY >> 1;
