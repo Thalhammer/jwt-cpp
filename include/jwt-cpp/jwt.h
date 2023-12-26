@@ -12,6 +12,15 @@
 #include "base.h"
 #endif
 
+#include <openssl/ec.h>
+#include <openssl/ecdsa.h>
+#include <openssl/err.h>
+#include <openssl/evp.h>
+#include <openssl/hmac.h>
+#include <openssl/pem.h>
+#include <openssl/rsa.h>
+#include <openssl/ssl.h>
+
 #include <algorithm>
 #include <chrono>
 #include <climits>
@@ -22,11 +31,11 @@
 #include <locale>
 #include <memory>
 #include <set>
+#include <system_error>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-#include <system_error>
 
 #if __cplusplus > 201103L
 #include <codecvt>
@@ -40,25 +49,9 @@
 #endif
 #endif
 
-#ifndef JWT_CLAIM_EXPLICIT
-#define JWT_CLAIM_EXPLICIT explicit
-#endif
-
-#include <openssl/ec.h>
-#include <openssl/ecdsa.h>
-#include <openssl/err.h>
-#include <openssl/evp.h>
-#include <openssl/hmac.h>
-#include <openssl/opensslv.h>
-#include <openssl/pem.h>
-#include <openssl/rsa.h>
-#include <openssl/ssl.h>
-
-#include <memory>
-#include <string>
-
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L // 3.0.0
 #define JWT_OPENSSL_3_0
+#include <openssl/param_build.h>
 #elif OPENSSL_VERSION_NUMBER >= 0x10101000L // 1.1.1
 #define JWT_OPENSSL_1_1_1
 #elif OPENSSL_VERSION_NUMBER >= 0x10100000L // 1.1.0
@@ -79,14 +72,8 @@
 #define JWT_OPENSSL_1_1_1
 #endif
 
-#ifdef JWT_OPENSSL_3_0
-#include <openssl/param_build.h>
-#endif
-
-#ifdef JWT_OPENSSL_1_0_0
-#include <memory>
-#else
-#include <stdexcept>
+#ifndef JWT_CLAIM_EXPLICIT
+#define JWT_CLAIM_EXPLICIT explicit
 #endif
 
 /**
@@ -97,6 +84,11 @@
  * JWS (JSON Web Signature) from [RFC7515](https://tools.ietf.org/html/rfc7515)
  */
 namespace jwt {
+	/**
+	 * Default system time point in UTC
+	 */
+	using date = std::chrono::system_clock::time_point;
+
 	/**
 	 * \brief Everything related to error codes issued by the library
 	 */
@@ -398,18 +390,6 @@ namespace jwt {
 				if (ec.category() == token_verification_error_category()) throw token_verification_exception(ec);
 			}
 		}
-		/**
-		 * Attempt to parse JSON was unsuccessful
-		 */
-		struct invalid_json_exception : public std::runtime_error {
-			invalid_json_exception() : runtime_error("invalid json") {}
-		};
-		/**
-		 * Attempt to access claim was unsuccessful
-		 */
-		struct claim_not_present_exception : public std::out_of_range {
-			claim_not_present_exception() : out_of_range("claim not found") {}
-		};
 	} // namespace error
 } // namespace jwt
 
@@ -427,7 +407,6 @@ namespace std {
 } // namespace std
 
 namespace jwt {
-
 	/**
 	 * \brief A collection for working with certificates
 	 *
@@ -447,33 +426,36 @@ namespace jwt {
 		public:
 			/// @brief Creates a null key pointer
 			constexpr evp_pkey_handle() noexcept = default;
-			/// @brief Creates a owning handle wrapper around an existing raw key
-			/// @param key Existing key to reference count
-			/// This does not increment the reference count
-			explicit evp_pkey_handle(EVP_PKEY* key) noexcept {
 #ifdef JWT_OPENSSL_1_0_0
-				m_key = std::shared_ptr<EVP_PKEY>(key, EVP_PKEY_free);
-#else
-				m_key = key;
-#endif
-			}
-			/// @brief Create a new handle incrementing the reference count
-			/// @param other key pointer to copy and increase
-			/// @throws std::runtime_error
-			evp_pkey_handle(const evp_pkey_handle& other) : m_key{other.m_key} { increment_ref_count(m_key); }
-			evp_pkey_handle(evp_pkey_handle&& other) noexcept : m_key{other.m_key} { other.m_key = nullptr; }
-			~evp_pkey_handle() noexcept { decrement_ref_count(m_key); }
+			/**
+			 * \brief Construct a new handle. The handle takes ownership of the key.
+			 * \param key The key to store
+			 */
+			explicit evp_pkey_handle(EVP_PKEY* key) { m_key = std::shared_ptr<EVP_PKEY>(key, EVP_PKEY_free); }
 
-			EVP_PKEY* get() const noexcept {
-#ifdef JWT_OPENSSL_1_0_0
-				return m_key.get();
-#else
-				return m_key;
-#endif
-			}
+			EVP_PKEY* get() const noexcept { return m_key.get(); }
 			bool operator!() const noexcept { return m_key == nullptr; }
 			explicit operator bool() const noexcept { return m_key != nullptr; }
 
+		private:
+			std::shared_ptr<EVP_PKEY> m_key{nullptr};
+#else
+			/**
+			 * \brief Construct a new handle. The handle takes ownership of the key.
+			 * \param key The key to store
+			 */
+			explicit constexpr evp_pkey_handle(EVP_PKEY* key) noexcept : m_key{key} {}
+			evp_pkey_handle(const evp_pkey_handle& other) : m_key{other.m_key} {
+				if (m_key != nullptr && EVP_PKEY_up_ref(m_key) != 1) throw std::runtime_error("EVP_PKEY_up_ref failed");
+			}
+// C++11 requires the body of a constexpr constructor to be empty
+#if __cplusplus >= 201402L
+			constexpr
+#endif
+				evp_pkey_handle(evp_pkey_handle&& other) noexcept
+				: m_key{other.m_key} {
+				other.m_key = nullptr;
+			}
 			evp_pkey_handle& operator=(const evp_pkey_handle& other) {
 				if (&other == this) return *this;
 				decrement_ref_count(m_key);
@@ -494,28 +476,22 @@ namespace jwt {
 				increment_ref_count(m_key);
 				return *this;
 			}
+			~evp_pkey_handle() noexcept { decrement_ref_count(m_key); }
+
+			EVP_PKEY* get() const noexcept { return m_key; }
+			bool operator!() const noexcept { return m_key == nullptr; }
+			explicit operator bool() const noexcept { return m_key != nullptr; }
 
 		private:
-#ifdef JWT_OPENSSL_1_0_0
-			std::shared_ptr<EVP_PKEY> m_key{nullptr};
-#else
 			EVP_PKEY* m_key{nullptr};
-#endif
 
 			static void increment_ref_count(EVP_PKEY* key) {
-#ifdef JWT_OPENSSL_1_0_0
-				return;
-#else
 				if (key != nullptr && EVP_PKEY_up_ref(key) != 1) throw std::runtime_error("EVP_PKEY_up_ref failed");
-#endif
 			}
 			static void decrement_ref_count(EVP_PKEY* key) noexcept {
-#ifdef JWT_OPENSSL_1_0_0
-				return;
-#else
 				if (key != nullptr) EVP_PKEY_free(key);
+			}
 #endif
-			};
 		};
 
 		namespace details {
@@ -556,53 +532,6 @@ namespace jwt {
 			}
 
 			/**
-		 * Convert a OpenSSL BIGNUM to a std::string
-		 * \param bn BIGNUM to convert
-		 * \return bignum as string
-		 */
-			inline
-#ifdef JWT_OPENSSL_1_0_0
-				std::string
-				bn2raw(BIGNUM* bn)
-#else
-				std::string
-				bn2raw(const BIGNUM* bn)
-#endif
-			{
-				std::string res(BN_num_bytes(bn), '\0');
-				BN_bn2bin(bn, (unsigned char*)res.data()); // NOLINT(google-readability-casting) requires `const_cast`
-				return res;
-			}
-			/**
-		 * Convert an std::string to a OpenSSL BIGNUM
-		 * \param raw String to convert
-		 * \param ec  error_code for error_detection (gets cleared if no error occurs)
-		 * \return BIGNUM representation
-		 */
-			inline std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw, std::error_code& ec) {
-				auto bn = BN_bin2bn(reinterpret_cast<const unsigned char*>(raw.data()), static_cast<int>(raw.size()),
-									nullptr);
-				// https://www.openssl.org/docs/man1.1.1/man3/BN_bin2bn.html#RETURN-VALUES
-				if (!bn) {
-					ec = error::rsa_error::set_rsa_failed;
-					return {nullptr, BN_free};
-				}
-				return {bn, BN_free};
-			}
-			/**
-		 * Convert an std::string to a OpenSSL BIGNUM
-		 * \param raw String to convert
-		 * \return BIGNUM representation
-		 */
-			inline std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw) {
-				std::error_code ec;
-				auto res = raw2bn(raw, ec);
-				error::throw_if_error(ec);
-				return res;
-			}
-		} // namespace details
-
-		/**
 		 * \brief Extract the public key of a pem certificate
 		 *
 		 * \tparam error_category	jwt::error enum category to match with the keys being used
@@ -613,8 +542,8 @@ namespace jwt {
 		template<typename error_category = error::rsa_error>
 		std::string extract_pubkey_from_cert(const std::string& certstr, const std::string& pw, std::error_code& ec) {
 			ec.clear();
-			auto certbio = details::make_mem_buf_bio(certstr);
-			auto keybio = details::make_mem_buf_bio();
+			auto certbio = make_mem_buf_bio(certstr);
+			auto keybio = make_mem_buf_bio();
 			if (!certbio || !keybio) {
 				ec = error_category::create_mem_bio_failed;
 				return {};
@@ -636,7 +565,7 @@ namespace jwt {
 				return {};
 			}
 
-			return details::write_bio_to_string<error_category>(keybio, ec);
+			return write_bio_to_string<error_category>(keybio, ec);
 		}
 
 		/**
@@ -668,7 +597,7 @@ namespace jwt {
 
 			std::unique_ptr<X509, decltype(&X509_free)> cert(
 				d2i_X509(NULL, &c_str, static_cast<int>(cert_der_str.size())), X509_free);
-			auto certbio = details::make_mem_buf_bio();
+			auto certbio = make_mem_buf_bio();
 			if (!cert || !certbio) {
 				ec = error::rsa_error::create_mem_bio_failed;
 				return {};
@@ -679,7 +608,7 @@ namespace jwt {
 				return {};
 			}
 
-			return details::write_bio_to_string(certbio, ec);
+			return write_bio_to_string(certbio, ec);
 		}
 
 		/**
@@ -786,7 +715,7 @@ namespace jwt {
 		evp_pkey_handle load_public_key_from_string(const std::string& key, const std::string& password,
 													std::error_code& ec) {
 			ec.clear();
-			auto pubkey_bio = details::make_mem_buf_bio();
+			auto pubkey_bio = make_mem_buf_bio();
 			if (!pubkey_bio) {
 				ec = error_category::create_mem_bio_failed;
 				return {};
@@ -844,7 +773,7 @@ namespace jwt {
 		inline evp_pkey_handle load_private_key_from_string(const std::string& key, const std::string& password,
 															std::error_code& ec) {
 			ec.clear();
-			auto private_key_bio = details::make_mem_buf_bio();
+			auto private_key_bio = make_mem_buf_bio();
 			if (!private_key_bio) {
 				ec = error_category::create_mem_bio_failed;
 				return {};
@@ -890,6 +819,52 @@ namespace jwt {
 		inline evp_pkey_handle load_public_ec_key_from_string(const std::string& key, const std::string& password,
 															  std::error_code& ec) {
 			return load_public_key_from_string<error::ecdsa_error>(key, password, ec);
+		}
+
+		/**
+		 * Convert a OpenSSL BIGNUM to a std::string
+		 * \param bn BIGNUM to convert
+		 * \return bignum as string
+		 */
+		inline
+#ifdef JWT_OPENSSL_1_0_0
+			std::string
+			bn2raw(BIGNUM* bn)
+#else
+			std::string
+			bn2raw(const BIGNUM* bn)
+#endif
+		{
+			std::string res(BN_num_bytes(bn), '\0');
+			BN_bn2bin(bn, (unsigned char*)res.data()); // NOLINT(google-readability-casting) requires `const_cast`
+			return res;
+		}
+		/**
+		 * Convert an std::string to a OpenSSL BIGNUM
+		 * \param raw String to convert
+		 * \param ec  error_code for error_detection (gets cleared if no error occurs)
+		 * \return BIGNUM representation
+		 */
+		inline std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw, std::error_code& ec) {
+			auto bn =
+				BN_bin2bn(reinterpret_cast<const unsigned char*>(raw.data()), static_cast<int>(raw.size()), nullptr);
+			// https://www.openssl.org/docs/man1.1.1/man3/BN_bin2bn.html#RETURN-VALUES
+			if (!bn) {
+				ec = error::rsa_error::set_rsa_failed;
+				return {nullptr, BN_free};
+			}
+			return {bn, BN_free};
+		}
+		/**
+		 * Convert an std::string to a OpenSSL BIGNUM
+		 * \param raw String to convert
+		 * \return BIGNUM representation
+		 */
+		inline std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw) {
+			std::error_code ec;
+			auto res = raw2bn(raw, ec);
+			error::throw_if_error(ec);
+			return res;
 		}
 
 		/**
@@ -946,9 +921,9 @@ namespace jwt {
 			auto decoded_modulus = decode(modulus);
 			auto decoded_exponent = decode(exponent);
 
-			auto n = details::raw2bn(decoded_modulus, ec);
+			auto n = helper::raw2bn(decoded_modulus, ec);
 			if (ec) return {};
-			auto e = details::raw2bn(decoded_exponent, ec);
+			auto e = helper::raw2bn(decoded_exponent, ec);
 			if (ec) return {};
 
 #if defined(JWT_OPENSSL_3_0)
@@ -1021,7 +996,7 @@ namespace jwt {
 #endif
 #endif
 
-			auto pub_key_bio = details::make_mem_buf_bio();
+			auto pub_key_bio = make_mem_buf_bio();
 			if (!pub_key_bio) {
 				ec = error::rsa_error::create_mem_bio_failed;
 				return {};
@@ -1039,7 +1014,7 @@ namespace jwt {
 				return {};
 			}
 
-			return details::write_bio_to_string<error::rsa_error>(pub_key_bio, ec);
+			return write_bio_to_string<error::rsa_error>(pub_key_bio, ec);
 		}
 
 		/**
@@ -1259,7 +1234,7 @@ namespace jwt {
 			 */
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
-				auto ctx = helper::details::make_evp_md_ctx();
+				auto ctx = helper::make_evp_md_ctx();
 				if (!ctx) {
 					ec = error::signature_generation_error::create_context_failed;
 					return {};
@@ -1293,7 +1268,7 @@ namespace jwt {
 			 */
 			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
 				ec.clear();
-				auto ctx = helper::details::make_evp_md_ctx();
+				auto ctx = helper::make_evp_md_ctx();
 				if (!ctx) {
 					ec = error::signature_verification_error::create_context_failed;
 					return;
@@ -1369,7 +1344,7 @@ namespace jwt {
 			 */
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
-				auto ctx = helper::details::make_evp_md_ctx();
+				auto ctx = helper::make_evp_md_ctx();
 				if (!ctx) {
 					ec = error::signature_generation_error::create_context_failed;
 					return {};
@@ -1409,7 +1384,7 @@ namespace jwt {
 				std::string der_signature = p1363_to_der_signature(signature, ec);
 				if (ec) { return; }
 
-				auto ctx = helper::details::make_evp_md_ctx();
+				auto ctx = helper::make_evp_md_ctx();
 				if (!ctx) {
 					ec = error::signature_verification_error::create_context_failed;
 					return;
@@ -1487,14 +1462,14 @@ namespace jwt {
 				}
 
 #ifdef JWT_OPENSSL_1_0_0
-				auto rr = helper::details::bn2raw(sig->r);
-				auto rs = helper::details::bn2raw(sig->s);
+				auto rr = helper::bn2raw(sig->r);
+				auto rs = helper::bn2raw(sig->s);
 #else
 				const BIGNUM* r;
 				const BIGNUM* s;
 				ECDSA_SIG_get0(sig.get(), &r, &s);
-				auto rr = helper::details::bn2raw(r);
-				auto rs = helper::details::bn2raw(s);
+				auto rr = helper::bn2raw(r);
+				auto rs = helper::bn2raw(s);
 #endif
 				if (rr.size() > signature_length / 2 || rs.size() > signature_length / 2)
 					throw std::logic_error("bignum size exceeded expected length");
@@ -1505,9 +1480,9 @@ namespace jwt {
 
 			std::string p1363_to_der_signature(const std::string& signature, std::error_code& ec) const {
 				ec.clear();
-				auto r = helper::details::raw2bn(signature.substr(0, signature.size() / 2), ec);
+				auto r = helper::raw2bn(signature.substr(0, signature.size() / 2), ec);
 				if (ec) return {};
-				auto s = helper::details::raw2bn(signature.substr(signature.size() / 2), ec);
+				auto s = helper::raw2bn(signature.substr(signature.size() / 2), ec);
 				if (ec) return {};
 
 				ECDSA_SIG* psig;
@@ -1590,7 +1565,7 @@ namespace jwt {
 			 */
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
-				auto ctx = helper::details::make_evp_md_ctx();
+				auto ctx = helper::make_evp_md_ctx();
 				if (!ctx) {
 					ec = error::signature_generation_error::create_context_failed;
 					return {};
@@ -1638,7 +1613,7 @@ namespace jwt {
 			 */
 			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
 				ec.clear();
-				auto ctx = helper::details::make_evp_md_ctx();
+				auto ctx = helper::make_evp_md_ctx();
 				if (!ctx) {
 					ec = error::signature_verification_error::create_context_failed;
 					return;
@@ -1716,7 +1691,7 @@ namespace jwt {
 			 */
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
-				auto md_ctx = helper::details::make_evp_md_ctx();
+				auto md_ctx = helper::make_evp_md_ctx();
 				if (!md_ctx) {
 					ec = error::signature_generation_error::create_context_failed;
 					return {};
@@ -1765,7 +1740,7 @@ namespace jwt {
 			void verify(const std::string& data, const std::string& signature, std::error_code& ec) const {
 				ec.clear();
 
-				auto md_ctx = helper::details::make_evp_md_ctx();
+				auto md_ctx = helper::make_evp_md_ctx();
 				if (!md_ctx) {
 					ec = error::signature_verification_error::create_context_failed;
 					return;
@@ -2052,10 +2027,6 @@ namespace jwt {
 	} // namespace algorithm
 
 	/**
-	 * Default system time point in UTC
-	 */
-	using date = std::chrono::system_clock::time_point;
-	/**
 	 * \brief JSON Abstractions for working with any library
 	 */
 	namespace json {
@@ -2215,9 +2186,10 @@ namespace jwt {
 		struct is_subcription_operator_signature<
 			object_type, string_type,
 			void_t<decltype(std::declval<object_type>().operator[](std::declval<string_type>()))>> : std::true_type {
-			// TODO(prince-chrismc): I am not convinced this is meaningful anymore
+			// TODO(prince-chrismc): I am not convienced this is meaningful anymore
 			static_assert(
-				value, "object_type must implement the subscription operator '[]' taking string_type as an argument");
+				value,
+				"object_type must implementate the subscription operator '[]' taking string_type as an argument");
 		};
 
 		template<typename object_type, typename value_type, typename string_type>
@@ -2329,11 +2301,6 @@ namespace jwt {
 										  is_valid_json_boolean<value_type, boolean_type>::value;
 		};
 	} // namespace details
-
-	/**
-	 * Default system time point in UTC
-	 */
-	using date = std::chrono::system_clock::time_point;
 
 	/**
 	 * \brief a class to store a generic JSON value as claim
@@ -2474,6 +2441,21 @@ namespace jwt {
 		 */
 		typename json_traits::number_type as_number() const { return json_traits::as_number(val); }
 	};
+
+	namespace error {
+		/**
+		 * Attempt to parse JSON was unsuccessful
+		 */
+		struct invalid_json_exception : public std::runtime_error {
+			invalid_json_exception() : runtime_error("invalid json") {}
+		};
+		/**
+		 * Attempt to access claim was unsuccessful
+		 */
+		struct claim_not_present_exception : public std::out_of_range {
+			claim_not_present_exception() : out_of_range("claim not found") {}
+		};
+	} // namespace error
 
 	namespace details {
 		template<typename json_traits>
@@ -3096,7 +3078,7 @@ namespace jwt {
 
 	namespace verify_ops {
 		/**
-		 * \brief This is the base container which holds the token that need to be verified
+		 * This is the base container which holds the token that need to be verified
 		 */
 		template<typename json_traits>
 		struct verify_context {
