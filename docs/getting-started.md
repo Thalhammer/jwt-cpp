@@ -1,8 +1,8 @@
-# Getting started
-
-## Installation
+# Getting Started
 
 There's a number of options to choice from.
+
+## Installation
 
 It's strongly recommended to use a package manager, as JWT-CPP has dependencies for both 
 cryptography and JSON libraries, having a tool to do the heavily lifting can be ideal.
@@ -13,11 +13,11 @@ When manually adding this dependency, and the dependencies this has, check the G
 ### Package Manager
 
 - Conan: https://conan.io/center/recipes/jwt-cpp
-- Hunter: https://hunter.readthedocs.io/en/latest/packages/pkg/jwt-cpp.html
 - vcpkg: https://vcpkg.link/ports/jwt-cpp
+- Nuget: https://www.nuget.org/packages/jwt-cpp/
+- Hunter: https://hunter.readthedocs.io/en/latest/packages/pkg/jwt-cpp.html
 - Spack: https://packages.spack.io/package.html?name=jwt-cpp
 - Xrepo: https://xrepo.xmake.io/#/packages/linux?id=jwt-cpp-linux
-- Nuget: https://www.nuget.org/packages/jwt-cpp/
 
 Looking for ways to contribute? Help by adding JWT-CPP to your favorite package manager!
 [Nixpkgs](https://github.com/NixOS/nixpkgs) for example. Currently many are behind the latest.
@@ -28,7 +28,7 @@ Simply downloading the `include/` directory is possible.
 Make sure the `jwt-cpp/` subdirectories is visible during compilation.
 This **does require** correctly linking to OpenSSL or alternative cryptography library.
 
-:information_source: The minimum is `jwt.h` but you will need to add the defines:
+The minimum is `jwt.h` but you will need to add the defines:
 
 - [`JWT_DISABLE_BASE64`](https://github.com/Thalhammer/jwt-cpp/blob/c9a511f436eaa13857336ebeb44dbc5b7860fe01/include/jwt-cpp/jwt.h#L11)
 - [`JWT_DISABLE_PICOJSON`](https://github.com/Thalhammer/jwt-cpp/blob/c9a511f436eaa13857336ebeb44dbc5b7860fe01/include/jwt-cpp/jwt.h#L4)
@@ -53,6 +53,8 @@ There's also the possibility of using [`FetchContent`](https://cmake.org/cmake/h
 include(FetchContent)
 fetchcontent_declare(jwt-cpp GIT_REPOSITORY https://github.com/Thalhammer/jwt-cpp.git GIT_TAG v0.7.0)
 fetchcontent_makeavailable(jwt-cpp)
+
+target_link_libraries(my_app PRIVATE jwt-cpp::jwt-cpp)
 ```
 
 Lastly, you can use `add_subdirectory` is untested but should work.
