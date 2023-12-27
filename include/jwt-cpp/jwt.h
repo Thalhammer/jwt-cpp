@@ -3495,7 +3495,7 @@ namespace jwt {
 		 * which the authorization server is provided. For example a small system
 		 * where only a single RSA key-pair is used to sign tokens
 		 * 
-		 * \snippet example/rsa-verify.cpp input
+		 * \snippet{trimleft} example/rsa-verify.cpp allow rsa algorithm
 		 * 
 		 * \tparam Algorithm any algorithm such as those provided by jwt::algorithm
 		 * \param alg Algorithm to allow
