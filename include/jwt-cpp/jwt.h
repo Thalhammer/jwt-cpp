@@ -809,7 +809,7 @@ namespace jwt {
 		 *
 		 * The string should contain a pem encoded certificate or public key
 		 * 
-		 * \deprecated Use the templated version load_private_key_from_string with error::ecdsa_error
+		 * \deprecated Use the templated version helper::load_private_key_from_string with error::ecdsa_error
 		 *
 		 * \param key		String containing the certificate encoded as pem
 		 * \param password	Password used to decrypt certificate (leave empty if not encrypted)
@@ -871,7 +871,7 @@ namespace jwt {
 		 *
 		 * The string should contain a pem encoded certificate or public key
 		 *
-		 * \deprecated Use the templated version load_private_key_from_string with error::ecdsa_error
+		 * \deprecated Use the templated version helper::load_private_key_from_string with error::ecdsa_error
 		 * 
 		 * \param key		String containing the certificate or key encoded as pem
 		 * \param password	Password used to decrypt certificate or key (leave empty if not encrypted)
@@ -888,7 +888,7 @@ namespace jwt {
 		/**
 		 * \brief Load a private key from a string.
 		 * 
-		 * \deprecated Use the templated version load_private_key_from_string with error::ecdsa_error
+		 * \deprecated Use the templated version helper::load_private_key_from_string with error::ecdsa_error
 		 *
 		 * \param key		String containing a private key as pem
 		 * \param password	Password used to decrypt key (leave empty if not encrypted)
@@ -1073,11 +1073,10 @@ namespace jwt {
 			return res;
 		}
 #endif
-
 		/**
 		 * \brief Load a private key from a string.
 		 *
-		 * \deprecated Use the templated version load_private_key_from_string with error::ecdsa_error
+		 * \deprecated Use the templated version helper::load_private_key_from_string with error::ecdsa_error
 		 * 
 		 * \param key		String containing a private key as pem
 		 * \param password	Password used to decrypt key (leave empty if not encrypted)
