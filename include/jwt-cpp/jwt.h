@@ -3490,7 +3490,15 @@ namespace jwt {
 		}
 
 		/**
-		 * Add an algorithm available for checking.
+		 * \brief Add an algorithm available for checking.
+		 * 
+		 * This is used to handle incomming tokens for predefined algorithms
+		 * which the authorization server is provided. For example a small system
+		 * where only a single RSA key-pair is used to sign tokens
+		 * 
+		 * \snippet example/rsa-verify.cpp input
+		 * 
+		 * \tparam Algorithm any algorithm such as those provided by jwt::algorithm
 		 * \param alg Algorithm to allow
 		 * \return *this to allow chaining
 		 */

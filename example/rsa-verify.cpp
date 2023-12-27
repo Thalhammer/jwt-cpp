@@ -1,4 +1,4 @@
-/// @file rsa-verify.cpp
+/// \file rsa-verify.cpp
 #include <iostream>
 #include <jwt-cpp/jwt.h>
 
@@ -22,8 +22,10 @@ YwIDAQAB
 						"sGQxiVqtRHKXZR9RbfvjrErY1KGiCp9M5i2bsUHadZEY44FE2jiOmx-"
 						"uc2z5c05CCXqVSpfCjWbh9gQ";
 
+	/* [input] */
 	auto verify = jwt::verify().allow_algorithm(jwt::algorithm::rs256(rsa_pub_key, "", "", "")).with_issuer("auth0");
-
+	/* [input] */
+	
 	auto decoded = jwt::decode(token);
 
 	verify.verify(decoded);
