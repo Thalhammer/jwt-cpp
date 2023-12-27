@@ -306,11 +306,7 @@ $RECYCLE.BIN/
 test
 *.o
 *.o.d
-
-# IDE-specific files
-.vscode/
-.vscode/!extensions.json # Allow to provide recommended extensions
-
+.vscode
 # ClangD cache files
 .cache
 
