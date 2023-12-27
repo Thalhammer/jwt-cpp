@@ -67,7 +67,6 @@ See [#6](https://github.com/Thalhammer/jwt-cpp/issues/6) for more details.
 
 ### Building on windows fails with syntax errors
 
-
 The header `<Windows.h>`, which is often included in Windows projects, defines macros for MIN and MAX which conflicts
 with `std::numeric_limits`. See [#5](https://github.com/Thalhammer/jwt-cpp/issues/5) for more details or 
 [this StackOverflow thread](https://stackoverflow.com/questions/13416418/define-nominmax-using-stdmin-max). 
