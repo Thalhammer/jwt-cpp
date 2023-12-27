@@ -261,14 +261,44 @@ namespace jwt {
 		std::string encode(const std::string& bin) {
 			return details::encode(bin, T::data(), T::fill());
 		}
+		/**
+		 * \brief Generic base64 decoding
+		 * 
+		 * A Generic base64 decoding function that supports any "alphabet"
+		 * such as jwt::alphabet::base64 
+		 * 
+		 * \code
+		 * const auto b64 = jwt::base::decode<jwt::alphabet::base64>("ZXhhbXBsZV9kYXRh")
+		 * \endcode
+		 */
 		template<typename T>
 		std::string decode(const std::string& base) {
 			return details::decode(base, T::data(), T::fill());
 		}
+		/**
+		 * \brief Generic base64 padding
+		 * 
+		 * A Generic base64 pad function that supports any "alphabet"
+		 * such as jwt::alphabet::base64 
+		 * 
+		 * \code
+		 * const auto b64 = jwt::base::pad<jwt::alphabet::base64>("ZXhhbXBsZV9kYQ")
+		 * \endcode
+		 */
 		template<typename T>
 		std::string pad(const std::string& base) {
 			return details::pad(base, T::fill());
 		}
+		/**
+		 * \brief Generic base64 trimming
+		 * 
+		 * A Generic base64 trim function that supports any "alphabet"
+		 * such as jwt::alphabet::base64 
+		 * 
+		 * \code
+		 * const auto b64 = jwt::base::trim<jwt::alphabet::base64>("ZXhhbXBsZV9kYQ==")
+		 * \endcode
+		 */
 		template<typename T>
 		std::string trim(const std::string& base) {
 			return details::trim(base, T::fill());

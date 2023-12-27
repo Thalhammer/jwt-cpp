@@ -424,7 +424,9 @@ namespace jwt {
 		 */
 		class evp_pkey_handle {
 		public:
-			/// @brief Creates a null key pointer
+			/**
+			 * \brief Creates a null key pointer.
+			 */
 			constexpr evp_pkey_handle() noexcept = default;
 #ifdef JWT_OPENSSL_1_0_0
 			/**
@@ -3081,17 +3083,22 @@ namespace jwt {
 		struct verify_context {
 			verify_context(date ctime, const decoded_jwt<json_traits>& j, size_t l)
 				: current_time(ctime), jwt(j), default_leeway(l) {}
-			// Current time, retrieved from the verifiers clock and cached for performance and consistency
+			/// Current time, retrieved from the verifiers clock and cached for performance and consistency
 			date current_time;
-			// The jwt passed to the verifier
+			/// The jwt passed to the verifier
 			const decoded_jwt<json_traits>& jwt;
-			// The configured default leeway for this verification
+			/// The configured default leeway for this verification
 			size_t default_leeway{0};
 
-			// The claim key to apply this comparison on
+			/// The claim key to apply this comparison on
 			typename json_traits::string_type claim_key{};
 
-			// Helper method to get a claim from the jwt in this context
+			/**
+			 * \brief Helper method to get a claim from the jwt in this context
+			 * \param in_header check JWT header or payload sections
+			 * \param ec std::error_code which will indicate if any error occure
+			 * \return basic_claim if it was present otherwise empty
+			 */
 			basic_claim<json_traits> get_claim(bool in_header, std::error_code& ec) const {
 				if (in_header) {
 					if (!jwt.has_header_claim(claim_key)) {
@@ -3107,6 +3114,13 @@ namespace jwt {
 					return jwt.get_payload_claim(claim_key);
 				}
 			}
+			/**
+			 * Helper method to get a claim of a specific type from the jwt in this context
+			 * \param in_header check JWT header or payload sections
+			 * \param t the expected type of the claim
+			 * \param ec std::error_code which will indicate if any error occure
+			 * \return basic_claim if it was present otherwise empty
+		 	 */
 			basic_claim<json_traits> get_claim(bool in_header, json::type t, std::error_code& ec) const {
 				auto c = get_claim(in_header, ec);
 				if (ec) return {};
@@ -3116,7 +3130,18 @@ namespace jwt {
 				}
 				return c;
 			}
+			/**
+			 * \brief Helper method to get a payload claim from the jwt
+			 * \param ec std::error_code which will indicate if any error occure
+			 * \return basic_claim if it was present otherwise empty
+		 	 */
 			basic_claim<json_traits> get_claim(std::error_code& ec) const { return get_claim(false, ec); }
+			/**
+			 * \brief Helper method to get a payload claim of a specific type from the jwt
+			 * \param t the expected type of the claim
+			 * \param ec std::error_code which will indicate if any error occure
+			 * \return basic_claim if it was present otherwise empty
+		 	 */
 			basic_claim<json_traits> get_claim(json::type t, std::error_code& ec) const {
 				return get_claim(false, t, ec);
 			}
@@ -3691,7 +3716,7 @@ namespace jwt {
 		bool has_x5t_sha256() const noexcept { return has_jwk_claim("x5t#S256"); }
 
 		/**
-		 * Check if a jwks claim is present
+		 * Check if a jwk claim is present
 		 * \return true if claim was present, false otherwise
 		 */
 		bool has_jwk_claim(const typename json_traits::string_type& name) const noexcept {
@@ -3699,7 +3724,7 @@ namespace jwt {
 		}
 
 		/**
-		 * Get jwks claim
+		 * Get jwk claim by name
 		 * \return Requested claim
 		 * \throw std::runtime_error If claim was not present
 		 */
@@ -3707,6 +3732,10 @@ namespace jwt {
 			return jwk_claims.get_claim(name);
 		}
 
+		/**
+		* Check if the jwk has any claims
+		* \return true is any claim is present
+		 */
 		bool empty() const noexcept { return jwk_claims.empty(); }
 
 		/**
@@ -3729,11 +3758,19 @@ namespace jwt {
 	template<typename json_traits>
 	class jwks {
 	public:
-		using jwk_t = jwk<json_traits>;
-		using jwt_vector_t = std::vector<jwk_t>;
-		using iterator = typename jwt_vector_t::iterator;
-		using const_iterator = typename jwt_vector_t::const_iterator;
+		/// JWK instance template specialization
+		using jwks_t = jwk<json_traits>;
+		/// Type specialization for the vector of JWK
+		using jwks_vector_t = std::vector<jwks_t>;
+		using iterator = typename jwks_vector_t::iterator;
+		using const_iterator = typename jwks_vector_t::const_iterator;
 
+		/**
+		 * Parses a string buffer to extract the JWKS.
+		 * @param str buffer containing JSON object representing a JWKS
+		 * @throw error::invalid_json_exception or underlying JSON implation error if the JSON is
+		 *        invalid with regards to the JWKS specification
+		*/
 		JWT_CLAIM_EXPLICIT jwks(const typename json_traits::string_type& str) {
 			typename json_traits::value_type parsed_val;
 			if (!json_traits::parse(parsed_val, str)) throw error::invalid_json_exception();
@@ -3797,6 +3834,10 @@ namespace jwt {
 	 * Default clock class using std::chrono::system_clock as a backend.
 	 */
 	struct default_clock {
+		/** 
+		 * Gets the current system time
+		 * @return time_point of the host system 
+		 */
 		date now() const { return date::clock::now(); }
 	};
 
