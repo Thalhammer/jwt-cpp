@@ -42,7 +42,8 @@ Using `find_package` is recommended. Step you environment but configuring and in
 A simple installation may look like
 
 ```sh
-cmake . -DJWT_BUILD_EXAMPLES=OFF
+cmake .
+cmake --build . # Make sure everything compiles and links together
 cmake --install .
 ```
 
@@ -52,11 +53,14 @@ find_package(jwt-cpp CONFIG REQUIRED)
 target_link_libraries(my_app PRIVATE jwt-cpp::jwt-cpp)
 ```
 
+#### Unsupported Alternatives
+
 There's also the possibility of using [`FetchContent`](https://cmake.org/cmake/help/latest/module/FetchContent.html#examples) in pull this this project to your build tree.
 
 ```cmake
 include(FetchContent)
 fetchcontent_declare(jwt-cpp GIT_REPOSITORY https://github.com/Thalhammer/jwt-cpp.git GIT_TAG v0.7.0)
+set(JWT_BUILD_EXAMPLES OFF CACHE BOOL "disable building examples" FORCE)
 fetchcontent_makeavailable(jwt-cpp)
 
 target_link_libraries(my_app PRIVATE jwt-cpp::jwt-cpp)
