@@ -1,0 +1,13 @@
+{
+    "name": "Ubuntu 22.04 with OpenSSL 3.0",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "streetsidesoftware.code-spell-checker"
+            ]
+        }
+    }
+}
