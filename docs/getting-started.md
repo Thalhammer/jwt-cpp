@@ -4,11 +4,23 @@
 
 There's a number of options to choice from.
 
-It's strongly recommended to use a package manager. Currently Conan, Hunter, and Vcpkg are support.
-If the version is out of date please check with their respective communities before opening and issue here.
+It's strongly recommended to use a package manager, as JWT-CPP has dependencies for both 
+cryptography and JSON libraries, having a tool to do the heavily lifting can be ideal.
+Examples of a C and C++ package manager are [Conan](https://conan.io/) and [vcpkg](https://vcpkg.io/). If the version is out of date please check with their respective communities before opening and issue here.
 
-When manually adding this dependency, and the dependencies this has, check the examples or automated tests.
-For some inspiration about how to go about it.
+When manually adding this dependency, and the dependencies this has, check the GitHub Actions and Workflows for some inspiration about how to go about it.
+
+### Package Manager
+
+- Conan: https://conan.io/center/recipes/jwt-cpp
+- Hunter: https://hunter.readthedocs.io/en/latest/packages/pkg/jwt-cpp.html
+- vcpkg: https://vcpkg.link/ports/jwt-cpp
+- Spack: https://packages.spack.io/package.html?name=jwt-cpp
+- Xrepo: https://xrepo.xmake.io/#/packages/linux?id=jwt-cpp-linux
+- Nuget: https://www.nuget.org/packages/jwt-cpp/
+
+Looking for ways to contribute? Help by adding JWT-CPP to your favorite package manager!
+[Nixpkgs](https://github.com/NixOS/nixpkgs) for example. Currently many are behind the latest.
 
 ### Header Only
 
@@ -16,7 +28,12 @@ Simply downloading the `include/` directory is possible.
 Make sure the `jwt-cpp/` subdirectories is visible during compilation.
 This **does require** correctly linking to OpenSSL or alternative cryptography library.
 
-:information_source: The minimum is `jwt.h` but you will need to add the defines [`JWT_DISABLE_BASE64`](https://github.com/Thalhammer/jwt-cpp/blob/c9a511f436eaa13857336ebeb44dbc5b7860fe01/include/jwt-cpp/jwt.h#L11) and [`JWT_DISABLE_PICOJSON`](https://github.com/Thalhammer/jwt-cpp/blob/c9a511f436eaa13857336ebeb44dbc5b7860fe01/include/jwt-cpp/jwt.h#L4).
+:information_source: The minimum is `jwt.h` but you will need to add the defines:
+
+- [`JWT_DISABLE_BASE64`](https://github.com/Thalhammer/jwt-cpp/blob/c9a511f436eaa13857336ebeb44dbc5b7860fe01/include/jwt-cpp/jwt.h#L11)
+- [`JWT_DISABLE_PICOJSON`](https://github.com/Thalhammer/jwt-cpp/blob/c9a511f436eaa13857336ebeb44dbc5b7860fe01/include/jwt-cpp/jwt.h#L4)
+
+In addition to providing your own JSON traits implementation, see [traits.md](traits.ms) for more information.
 
 ### CMake
 
@@ -30,49 +47,12 @@ cmake .
 cmake --install .
 ```
 
-Using `add_subdirectory` is untested but should work.
+There's also the possibility of using [`FetchContent`](https://cmake.org/cmake/help/latest/module/FetchContent.html#examples) in pull this this project to your build tree.
 
-There's also the possibility of using `FetchContent` in pull this this project to your build tree.
+```cmake
+include(FetchContent)
+fetchcontent_declare(jwt-cpp GIT_REPOSITORY https://github.com/Thalhammer/jwt-cpp.git GIT_TAG v0.7.0)
+fetchcontent_makeavailable(jwt-cpp)
+```
 
-## External JSON dependencies
-
-### System Package
-
-The `include/` currently include both PicoJSON and if not detected with `find_package` will use `FetchContent` to add `nlohmman_json`.
-When importing these from other sources (e.g `apt` on Ubuntu) you may see known bugs (add link)
-
-### Conan
-
-See example (needs update)
-
-https://conan.io/center/recipes/jwt-cpp
-
-### Hunter
-
-Add example?
-
-https://hunter.readthedocs.io/en/latest/packages/pkg/jwt-cpp.html
-
-### Vcpk
-
-Add example?
-
-https://vcpkg.link/ports/jwt-cpp
-
-### Spack
-
-https://packages.spack.io/package.html?name=jwt-cpp
-
-### Xrepo
-
-https://xrepo.xmake.io/#/packages/linux?id=jwt-cpp-linux
-
-### Nuget
-
-https://www.nuget.org/packages/jwt-cpp/
-
-### Nixpkgs
-
-https://github.com/NixOS/nixpkgs/tree/master/pkgs/development/jwt-cpp (MISSING)
-
-
+Lastly, you can use `add_subdirectory` is untested but should work.
