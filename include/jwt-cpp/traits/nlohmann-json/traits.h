@@ -5,7 +5,11 @@
 #include "nlohmann/json.hpp"
 
 namespace jwt {
+	/**
+	 * \brief Namespace containing all the json_trait implementations for a jwt::basic_claim.
+	*/
 	namespace traits {
+		/// basic_claim's JSON trait implementation for Modern C++ JSON 
 		struct nlohmann_json {
 			using json = nlohmann::json;
 			using value_type = json;

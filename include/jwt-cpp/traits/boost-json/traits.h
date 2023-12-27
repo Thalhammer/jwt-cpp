@@ -8,8 +8,12 @@
 // if not boost JSON standalone then error...
 
 namespace jwt {
+	/**
+	 * \brief Namespace containing all the json_trait implementations for a jwt::basic_claim.
+	*/
 	namespace traits {
 		namespace json = boost::json;
+		/// basic_claim's JSON trait implementation for Boost.JSON
 		struct boost_json {
 			using value_type = json::value;
 			using object_type = json::object;
