@@ -37,15 +37,17 @@ In addition to providing your own JSON traits implementation, see [traits.md](tr
 
 ### CMake
 
-Using `find_package` is recommended. Step you environment but configuring and installing the `jwt-cpp` target. This will automatically select the the same SSL library when detected with `find_package`.
+Using `find_package` is recommended. Step you environment by [installing OpenSSL](https://github.com/openssl/openssl/blob/master/INSTALL.md). Once complete, configure and install the `jwt-cpp` target using CMake.
 
-A simple installation may look like
+A simple installation of JWT-CPP may look like
 
 ```sh
 cmake .
 cmake --build . # Make sure everything compiles and links together
 cmake --install .
 ```
+
+Then from your own project
 
 ```cmake
 find_package(jwt-cpp CONFIG REQUIRED)
@@ -59,7 +61,10 @@ There's also the possibility of using [`FetchContent`](https://cmake.org/cmake/h
 
 ```cmake
 include(FetchContent)
-fetchcontent_declare(jwt-cpp GIT_REPOSITORY https://github.com/Thalhammer/jwt-cpp.git GIT_TAG v0.7.0)
+fetchcontent_declare(jwt-cpp 
+    GIT_REPOSITORY https://github.com/Thalhammer/jwt-cpp.git
+    GIT_TAG 08bcf77a687fb06e34138e9e9fa12a4ecbe12332 # v0.7.0 release
+)
 set(JWT_BUILD_EXAMPLES OFF CACHE BOOL "disable building examples" FORCE)
 fetchcontent_makeavailable(jwt-cpp)
 
