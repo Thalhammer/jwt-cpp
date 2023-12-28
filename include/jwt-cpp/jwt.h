@@ -2750,17 +2750,13 @@ namespace jwt {
 		 */
 		builder& set_expires_at(const date& d) { return set_payload_claim("exp", basic_claim<json_traits>(d)); }
 		/**
-		 * Set expires at claim to @p d after the issued at claim
-		 * MUST be called after set_issued_at or set_issued_now
+		 * Set expires at claim to @p d from the current moment
 		 * \param d token expiration timeout
 		 * \return *this to allow for method chaining
-         * \throw std::runtime_error If issued at claim was not present
-         * \throw std::bad_cast Claim was present but not a date (Should not happen in a valid token)
 		 */
 		template<class Rep>
 		builder& set_expires_in(const std::chrono::duration<Rep>& d) {
-			date iat = payload_claims["iat"].as_date();
-			return set_payload_claim("exp", basic_claim<json_traits>(iat + d));
+			return set_payload_claim("exp", basic_claim<json_traits>(clock.now() + d));
 		}
 		/**
 		 * Set not before claim
@@ -2775,7 +2771,7 @@ namespace jwt {
 		 */
 		builder& set_issued_at(const date& d) { return set_payload_claim("iat", basic_claim<json_traits>(d)); }
 		/**
-		 * Set issued at claim to current time, as determined by std::chrono::system_clock::now()
+		 * Set issued at claim to the current moment
 		 * \return *this to allow for method chaining
 		 */
 		builder& set_issued_now() { return set_issued_at(clock.now()); }
