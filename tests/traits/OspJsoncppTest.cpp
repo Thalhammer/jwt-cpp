@@ -86,6 +86,20 @@ TEST(OspJsoncppTest, VerifyTokenExpirationValid) {
 	verify.verify(decoded_token);
 }
 
+TEST(OspJsoncppTest, VerifyTokenExpirationInValid) {
+	const auto token = jwt::create<jwt::traits::open_source_parsers_jsoncpp>()
+						   .set_issuer("auth0")
+						   .set_issued_now()
+						   .set_expires_in(std::chrono::seconds{3600})
+						   .sign(jwt::algorithm::hs256{"secret"});
+
+	const auto decoded_token = jwt::decode<jwt::traits::open_source_parsers_jsoncpp>(token);
+	const auto verify = jwt::verify<jwt::traits::open_source_parsers_jsoncpp>()
+							.allow_algorithm(jwt::algorithm::hs256{"secret"})
+							.with_issuer("auth0");
+	verify.verify(decoded_token);
+}
+
 TEST(OspJsoncppTest, VerifyTokenExpired) {
 	const auto token = jwt::create<jwt::traits::open_source_parsers_jsoncpp>()
 						   .set_issuer("auth0")
