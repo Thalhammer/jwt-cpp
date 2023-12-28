@@ -2622,13 +2622,19 @@ namespace jwt {
 	 * Builder class to build and sign a new token
 	 * Use jwt::create() to get an instance of this class.
 	 */
-	template<typename json_traits>
+	template<typename Clock, typename json_traits>
 	class builder {
 		typename json_traits::object_type header_claims;
 		typename json_traits::object_type payload_claims;
 
+		/// Instance of clock type
+		Clock clock;
 	public:
-		builder() = default;
+		/**
+		 * Constructor for building a new builder instance
+		 * \param c Clock instance
+		 */
+		explicit builder(Clock c) : clock(c) {}
 		/**
 		 * Set a header claim.
 		 * \param id Name of the claim
@@ -2772,7 +2778,7 @@ namespace jwt {
 		 * Set issued at claim to current time, as determined by std::chrono::system_clock::now()
 		 * \return *this to allow for method chaining
 		 */
-		builder& set_issued_now() { return set_issued_at(std::chrono::system_clock::now()); }
+		builder& set_issued_now() { return set_issued_at(clock.now()); }
 		/**
 		 * Set id claim
 		 * \param str ID to set
@@ -3608,8 +3614,8 @@ namespace jwt {
 	 * Return a builder instance to create a new token
 	 */
 	template<typename json_traits>
-	builder<json_traits> create() {
-		return builder<json_traits>();
+	builder<default_clock, json_traits> create(default_clock c = {}) {
+		return builder<default_clock, json_traits>(c);
 	}
 
 	/**
