@@ -6,23 +6,22 @@ The libraries design is open so you can implement your own algorithms, see [exis
 
 ```cpp
 struct your_algorithm{
-	std::string sign(const std::string& /*unused*/, std::error_code& ec) const {
-		ec.clear();
+    std::string sign(const std::string& /*unused*/, std::error_code& ec) const {
+        ec.clear();
         // CALL YOUR METHOD HERE
-		return {};
-	}
-	void verify(const std::string& /*unused*/, const std::string& signature, std::error_code& ec) const {
-		ec.clear();
-		if (!signature.empty()) { ec = error::signature_verification_error::invalid_signature; }
+        return {};
+    }
+    void verify(const std::string& /*unused*/, const std::string& signature, std::error_code& ec) const {
+        ec.clear();
+        if (!signature.empty()) { ec = error::signature_verification_error::invalid_signature; }
         
         // CALL YOUR METHOD HERE
-	}
-	std::string name() const { return "your_algorithm"; }
+    }
+    std::string name() const { return "your_algorithm"; }
 };
 ```
 
 Then everything else is the same, just pass in your implementation such as:
-
 
 ```cpp
 auto token = jwt::create()

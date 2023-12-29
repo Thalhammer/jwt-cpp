@@ -26,24 +26,24 @@ In order to maintain compatibility, [picojson](https://github.com/kazuho/picojso
 
 int main() {
     // All the provided traits are in jwt::traits namespace
-	using traits = jwt::traits::nlohmann_json;
+    using traits = jwt::traits::nlohmann_json;
 
     const auto time = jwt::date::clock::now();
-	const auto token = jwt::create<traits>()
-						   .set_type("JWT")
-						   .set_issuer("auth.mydomain.io")
-						   .set_audience("mydomain.io")
-						   .set_issued_at(time)
-						   .set_not_before(time)
-						   .set_expires_at(time + std::chrono::minutes{2} + std::chrono::seconds{15})
-						   .sign(jwt::algorithm::none{});
-	const auto decoded = jwt::decode<traits>(token);
+    const auto token = jwt::create<traits>()
+                           .set_type("JWT")
+                           .set_issuer("auth.mydomain.io")
+                           .set_audience("mydomain.io")
+                           .set_issued_at(time)
+                           .set_not_before(time)
+                           .set_expires_at(time + std::chrono::minutes{2} + std::chrono::seconds{15})
+                           .sign(jwt::algorithm::none{});
+    const auto decoded = jwt::decode<traits>(token);
 
-	jwt::verify<traits>()
-		.allow_algorithm(jwt::algorithm::none{})
-		.with_issuer("auth.mydomain.io")
-		.with_audience("mydomain.io")
-		.verify(decoded);
+    jwt::verify<traits>()
+        .allow_algorithm(jwt::algorithm::none{})
+        .with_issuer("auth.mydomain.io")
+        .with_audience("mydomain.io")
+        .verify(decoded);
 ```
 
 ## Providing your own JSON Traits

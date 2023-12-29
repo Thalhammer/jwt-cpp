@@ -32,7 +32,7 @@ jwt-cpp supports all the algorithms defined by the specifications. The modular d
 For completeness, here is a list of all supported algorithms:
 
 | HMSC  | RSA   | ECDSA  | PSS   | EdDSA   |
-|-------|-------|--------|-------|---------|
+| ----- | ----- | ------ | ----- | ------- |
 | HS256 | RS256 | ES256  | PS256 | Ed25519 |
 | HS384 | RS384 | ES384  | PS384 | Ed448   |
 | HS512 | RS512 | ES512  | PS512 |         |
@@ -101,7 +101,7 @@ Building on the goal of providing flexibility.
 
 #### SSL Compatibility
 
-In the name of flexibility and extensibility, jwt-cpp supports [OpenSSL](https://github.com/openssl/openssl), [LibreSSL](https://github.com/libressl-portable/portable), and [wolfSSL](https://github.com/wolfSSL/wolfssl). For a listed of tested versions, check [this page](docs/ssl.md) for more details. 
+jwt-cpp supports [OpenSSL](https://github.com/openssl/openssl), [LibreSSL](https://github.com/libressl-portable/portable), and [wolfSSL](https://github.com/wolfSSL/wolfssl). For a listed of tested versions, check [this page](docs/ssl.md) for more details.
 
 #### JSON Implementation
 
@@ -144,4 +144,5 @@ In order to build the test cases you also need
 See the [FAQs](docs/faqs.md) for tips.
 
 ## Conference Coverage
+
 [![CppCon](https://img.youtube.com/vi/Oq4NW5idmiI/0.jpg)](https://www.youtube.com/watch?v=Oq4NW5idmiI)

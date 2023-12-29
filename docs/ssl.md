@@ -1,7 +1,6 @@
 # Cryptography Libraries
 
-The underlying cryptography libraries describe [here](../README.md#ssl-compatibility) can be selected when 
-configuring CMake by explicitly setting `JWT_SSL_LIBRARY` to one of three values. The default is to use OpenSSL.
+The underlying cryptography libraries describe [here](../README.md#ssl-compatibility) can be selected when configuring CMake by explicitly setting `JWT_SSL_LIBRARY` to one of three values. The default is to use OpenSSL.
 
 - OpenSSL
 - LibreSSL
@@ -18,7 +17,7 @@ cmake . -DJWT_SSL_LIBRARY:STRING=wolfSSL
 These are the version which are currently being tested:
 
 | OpenSSL           | LibreSSL       | wolfSSL        |
-|-------------------|----------------|----------------|
+| ----------------- | -------------- | -------------- |
 | ![1.0.2u][o1.0.2] | ![3.3.6][l3.3] | ![5.1.1][w5.1] |
 | ![1.1.0i][o1.1.0] | ![3.4.3][l3.4] | ![5.2.0][w5.2] |
 | ![1.1.1q][o1.1.1] | ![3.5.3][l3.5] | ![5.3.0][w5.3] |

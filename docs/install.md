@@ -12,12 +12,12 @@ When manually adding this dependency, and the dependencies this has, check the G
 
 ### Package Manager
 
-- Conan: https://conan.io/center/recipes/jwt-cpp
-- vcpkg: https://vcpkg.link/ports/jwt-cpp
-- Nuget: https://www.nuget.org/packages/jwt-cpp/
-- Hunter: https://hunter.readthedocs.io/en/latest/packages/pkg/jwt-cpp.html
-- Spack: https://packages.spack.io/package.html?name=jwt-cpp
-- Xrepo: https://xrepo.xmake.io/#/packages/linux?id=jwt-cpp-linux
+- Conan: <https://conan.io/center/recipes/jwt-cpp>
+- vcpkg: <https://vcpkg.link/ports/jwt-cpp>
+- Nuget: <https://www.nuget.org/packages/jwt-cpp/>
+- Hunter: <https://hunter.readthedocs.io/en/latest/packages/pkg/jwt-cpp.html>
+- Spack: <https://packages.spack.io/package.html?name=jwt-cpp>
+- Xrepo: <https://xrepo.xmake.io/#/packages/linux?id=jwt-cpp-linux>
 
 Looking for ways to contribute? Help by adding JWT-CPP to your favorite package manager!
 [Nixpkgs](https://github.com/NixOS/nixpkgs) for example. Currently many are behind the latest.
