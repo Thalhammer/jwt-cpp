@@ -3787,7 +3787,7 @@ namespace jwt {
 
 			auto jwk_list = jwks_json.get_claim("keys").as_array();
 			std::transform(jwk_list.begin(), jwk_list.end(), std::back_inserter(jwk_claims),
-						   [](const typename json_traits::value_type& val) { return jwk_t{val}; });
+						   [](const typename json_traits::value_type& val) { return jwks_t{val}; });
 		}
 
 		iterator begin() { return jwk_claims.begin(); }
@@ -3810,17 +3810,17 @@ namespace jwt {
 		 * \return Requested jwk by key_id
 		 * \throw std::runtime_error If jwk was not present
 		 */
-		jwk_t get_jwk(const typename json_traits::string_type& key_id) const {
+		jwks_t get_jwk(const typename json_traits::string_type& key_id) const {
 			const auto maybe = find_by_kid(key_id);
 			if (maybe == end()) throw error::claim_not_present_exception();
 			return *maybe;
 		}
 
 	private:
-		jwt_vector_t jwk_claims;
+		jwks_vector_t jwk_claims;
 
 		const_iterator find_by_kid(const typename json_traits::string_type& key_id) const noexcept {
-			return std::find_if(cbegin(), cend(), [key_id](const jwk_t& jwk) {
+			return std::find_if(cbegin(), cend(), [key_id](const jwks_t& jwk) {
 				if (!jwk.has_key_id()) { return false; }
 				return jwk.get_key_id() == key_id;
 			});
