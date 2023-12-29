@@ -38,8 +38,8 @@ Here is a simple example of creating a token that will expire in one hour:
 
 ```cpp
 auto token = jwt::create()
-    .set_issued_at(std::chrono::system_clock::now())
-    .set_expires_at(std::chrono::system_clock::now() + std::chrono::seconds{3600})
+	.set_issued_now()
+	.set_expires_in(std::chrono::seconds{3600})
     .sign(jwt::algorithm::hs256{"secret"});
 ```
 
