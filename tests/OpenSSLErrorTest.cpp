@@ -22,6 +22,7 @@ static uint64_t fail_X509_get_pubkey = 0;
 static uint64_t fail_PEM_write_bio_PUBKEY = 0;
 static uint64_t fail_PEM_write_bio_cert = 0;
 static uint64_t fail_BIO_ctrl = 0;
+#define fail_BIO_get_mem_data fail_BIO_ctrl
 static uint64_t fail_BIO_write = 0;
 static uint64_t fail_PEM_read_bio_PUBKEY = 0;
 static uint64_t fail_PEM_read_bio_PrivateKey = 0;
@@ -50,6 +51,17 @@ static uint64_t fail_EVP_DigestSignFinal = 0;
 static uint64_t fail_EVP_DigestVerifyFinal = 0;
 static uint64_t fail_d2i_ECDSA_SIG = 0;
 static uint64_t fail_i2d_ECDSA_SIG = 0;
+#ifdef JWT_OPENSSL_3_0
+static uint64_t fail_OSSL_PARAM_BLD_new = 0;
+static uint64_t fail_OSSL_PARAM_BLD_push_BN = 0;
+static uint64_t fail_OSSL_PARAM_BLD_to_param = 0;
+static uint64_t fail_EVP_PKEY_CTX_new_from_name = 0;
+static uint64_t fail_EVP_PKEY_fromdata_init = 0;
+static uint64_t fail_EVP_PKEY_fromdata = 0;
+#else
+static uint64_t fail_PEM_write_bio_RSA_PUBKEY = 0;
+static uint64_t fail_RSA_set0_key = 0;
+#endif
 
 BIO* BIO_new(const BIO_METHOD* type) {
 	static BIO* (*origMethod)(const BIO_METHOD*) = nullptr;
@@ -408,6 +420,96 @@ ECDSA_SIG* d2i_ECDSA_SIG(ECDSA_SIG** psig, const unsigned char** ppin, long len)
 		return origMethod(psig, ppin, len);
 }
 
+#ifdef JWT_OPENSSL_3_0
+OSSL_PARAM_BLD* OSSL_PARAM_BLD_new() {
+	static OSSL_PARAM_BLD* (*origMethod)() = nullptr;
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "OSSL_PARAM_BLD_new");
+	bool fail = fail_OSSL_PARAM_BLD_new & 1;
+	fail_OSSL_PARAM_BLD_new = fail_OSSL_PARAM_BLD_new >> 1;
+	if (fail)
+		return nullptr;
+	else
+		return origMethod();
+}
+
+int OSSL_PARAM_BLD_push_BN(OSSL_PARAM_BLD* bld, const char* key, const BIGNUM* bn) {
+	static int (*origMethod)(OSSL_PARAM_BLD * bld, const char* key, const BIGNUM* bn) = nullptr;
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "OSSL_PARAM_BLD_push_BN");
+	bool fail = fail_OSSL_PARAM_BLD_push_BN & 1;
+	fail_OSSL_PARAM_BLD_push_BN = fail_OSSL_PARAM_BLD_push_BN >> 1;
+	if (fail)
+		return 0;
+	else
+		return origMethod(bld, key, bn);
+}
+
+OSSL_PARAM* OSSL_PARAM_BLD_to_param(OSSL_PARAM_BLD* bld) {
+	static OSSL_PARAM* (*origMethod)(OSSL_PARAM_BLD * bld) = nullptr;
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "OSSL_PARAM_BLD_to_param");
+	bool fail = fail_OSSL_PARAM_BLD_to_param & 1;
+	fail_OSSL_PARAM_BLD_to_param = fail_OSSL_PARAM_BLD_to_param >> 1;
+	if (fail)
+		return nullptr;
+	else
+		return origMethod(bld);
+}
+
+EVP_PKEY_CTX* EVP_PKEY_CTX_new_from_name(OSSL_LIB_CTX* libctx, const char* name, const char* propquery) {
+	static EVP_PKEY_CTX* (*origMethod)(OSSL_LIB_CTX * libctx, const char* name, const char* propquery) = nullptr;
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_PKEY_CTX_new_from_name");
+	bool fail = fail_EVP_PKEY_CTX_new_from_name & 1;
+	fail_EVP_PKEY_CTX_new_from_name = fail_EVP_PKEY_CTX_new_from_name >> 1;
+	if (fail)
+		return nullptr;
+	else
+		return origMethod(libctx, name, propquery);
+}
+
+int EVP_PKEY_fromdata_init(EVP_PKEY_CTX* ctx) {
+	static int (*origMethod)(EVP_PKEY_CTX * ctx) = nullptr;
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_PKEY_fromdata_init");
+	bool fail = fail_EVP_PKEY_fromdata_init & 1;
+	fail_EVP_PKEY_fromdata_init = fail_EVP_PKEY_fromdata_init >> 1;
+	if (fail)
+		return 0;
+	else
+		return origMethod(ctx);
+}
+
+int EVP_PKEY_fromdata(EVP_PKEY_CTX* ctx, EVP_PKEY** ppkey, int selection, OSSL_PARAM params[]) {
+	static int (*origMethod)(EVP_PKEY_CTX * ctx, EVP_PKEY * *ppkey, int selection, OSSL_PARAM params[]) = nullptr;
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_PKEY_fromdata");
+	bool fail = fail_EVP_PKEY_fromdata & 1;
+	fail_EVP_PKEY_fromdata = fail_EVP_PKEY_fromdata >> 1;
+	if (fail)
+		return 0;
+	else
+		return origMethod(ctx, ppkey, selection, params);
+}
+#else
+int PEM_write_bio_RSA_PUBKEY(BIO* bp, RSA* x) {
+	static int (*origMethod)(BIO * bp, RSA * x) = nullptr;
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "PEM_write_bio_RSA_PUBKEY");
+	bool fail = fail_PEM_write_bio_RSA_PUBKEY & 1;
+	fail_PEM_write_bio_RSA_PUBKEY = fail_PEM_write_bio_RSA_PUBKEY >> 1;
+	if (fail)
+		return 0;
+	else
+		return origMethod(bp, x);
+}
+
+int RSA_set0_key(RSA* r, BIGNUM* n, BIGNUM* e, BIGNUM* d) {
+	static int (*origMethod)(RSA * r, BIGNUM * n, BIGNUM * e, BIGNUM * d) = nullptr;
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "RSA_set0_key");
+	bool fail = fail_RSA_set0_key & 1;
+	fail_RSA_set0_key = fail_RSA_set0_key >> 1;
+	if (fail)
+		return 0;
+	else
+		return origMethod(r, n, e, d);
+}
+#endif
+
 /**
  * =========== End of black magic ============
  */
@@ -516,6 +618,67 @@ TEST(OpenSSLErrorTest, ExtractPubkeyFromCertErrorCode) {
 	});
 }
 
+TEST(OpenSSLErrorTest, CreateRsaPublicKeyFromComponents) {
+	std::vector<multitest_entry> mapping{
+		{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
+		{&fail_BIO_get_mem_data, 1, jwt::error::rsa_error::convert_to_pem_failed},
+#ifdef JWT_OPENSSL_3_0
+		{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_write},
+		{&fail_OSSL_PARAM_BLD_new, 1, jwt::error::rsa_error::create_context_failed},
+		{&fail_OSSL_PARAM_BLD_push_BN, 1, jwt::error::rsa_error::set_rsa_failed},
+		{&fail_OSSL_PARAM_BLD_to_param, 1, jwt::error::rsa_error::set_rsa_failed},
+		{&fail_EVP_PKEY_CTX_new_from_name, 1, jwt::error::rsa_error::create_context_failed},
+		{&fail_EVP_PKEY_fromdata_init, 1, jwt::error::rsa_error::cert_load_failed},
+		{&fail_EVP_PKEY_fromdata, 1, jwt::error::rsa_error::cert_load_failed}
+#else
+		{&fail_PEM_write_bio_RSA_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_write},
+		{&fail_RSA_set0_key, 1, jwt::error::rsa_error::set_rsa_failed}
+#endif
+	};
+
+	run_multitest(mapping, [](std::error_code& ec) {
+		try {
+			jwt::helper::create_public_key_from_rsa_components(
+				"pjdss8ZaDfEH6K6U7GeW2nxDqR4IP049fk1fK0lndimbMMVBdPv_hSpm8T8EtBDxrUdi1OHZfMhUixGaut-"
+				"3nQ4GG9nM249oxhCtxqqNvEXrmQRGqczyLxuh-fKn9Fg--"
+				"hS9UpazHpfVAFnB5aCfXoNhPuI8oByyFKMKaOVgHNqP5NBEqabiLftZD3W_"
+				"lsFCPGuzr4Vp0YS7zS2hDYScC2oOMu4rGU1LcMZf39p3153Cq7bS2Xh6Y-vw5pwzFYZdjQxDn8x8BG3fJ6j8TGLXQsbKH1218_"
+				"HcUJRvMwdpbUQG5nvA2GXVqLqdwp054Lzk9_B_f1lVrmOKuHjTNHq48w",
+				"AQAB");
+			FAIL(); // Should never reach this
+		} catch (const jwt::error::rsa_exception& e) { ec = e.code(); }
+	});
+}
+
+TEST(OpenSSLErrorTest, CreateRsaPublicKeyFromComponentsErrorCode) {
+	std::vector<multitest_entry> mapping{
+		{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
+		{&fail_BIO_get_mem_data, 1, jwt::error::rsa_error::convert_to_pem_failed},
+#ifdef JWT_OPENSSL_3_0
+		{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_write},
+		{&fail_OSSL_PARAM_BLD_new, 1, jwt::error::rsa_error::create_context_failed},
+		{&fail_OSSL_PARAM_BLD_push_BN, 1, jwt::error::rsa_error::set_rsa_failed},
+		{&fail_OSSL_PARAM_BLD_to_param, 1, jwt::error::rsa_error::set_rsa_failed},
+		{&fail_EVP_PKEY_CTX_new_from_name, 1, jwt::error::rsa_error::create_context_failed},
+		{&fail_EVP_PKEY_fromdata_init, 1, jwt::error::rsa_error::cert_load_failed},
+		{&fail_EVP_PKEY_fromdata, 1, jwt::error::rsa_error::cert_load_failed}
+#else
+		{&fail_PEM_write_bio_RSA_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_write},
+		{&fail_RSA_set0_key, 1, jwt::error::rsa_error::set_rsa_failed}
+#endif
+	};
+
+	run_multitest(mapping, [](std::error_code& ec) {
+		auto res = jwt::helper::create_public_key_from_rsa_components(
+			"pjdss8ZaDfEH6K6U7GeW2nxDqR4IP049fk1fK0lndimbMMVBdPv_hSpm8T8EtBDxrUdi1OHZfMhUixGaut-"
+			"3nQ4GG9nM249oxhCtxqqNvEXrmQRGqczyLxuh-fKn9Fg--hS9UpazHpfVAFnB5aCfXoNhPuI8oByyFKMKaOVgHNqP5NBEqabiLftZD3W_"
+			"lsFCPGuzr4Vp0YS7zS2hDYScC2oOMu4rGU1LcMZf39p3153Cq7bS2Xh6Y-vw5pwzFYZdjQxDn8x8BG3fJ6j8TGLXQsbKH1218_"
+			"HcUJRvMwdpbUQG5nvA2GXVqLqdwp054Lzk9_B_f1lVrmOKuHjTNHq48w",
+			"AQAB", ec);
+		ASSERT_EQ(res, "");
+	});
+}
+
 TEST(OpenSSLErrorTest, ConvertCertBase64DerToPem) {
 	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
 										 {&fail_PEM_write_bio_cert, 1, jwt::error::rsa_error::write_cert_failed},
@@ -613,6 +776,7 @@ TEST(OpenSSLErrorTest, LoadPublicKeyCertFromStringReference) {
 TEST(OpenSSLErrorTest, LoadPublicKeyCertFromString) {
 	std::vector<multitest_entry> mapping {
 		{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
+			{&fail_BIO_get_mem_data, 1, jwt::error::rsa_error::convert_to_pem_failed},
 #if !defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER < 0x3050300fL
 			{&fail_BIO_write, 1, jwt::error::rsa_error::load_key_bio_write},
 #else
@@ -634,6 +798,7 @@ TEST(OpenSSLErrorTest, LoadPublicKeyCertFromString) {
 TEST(OpenSSLErrorTest, LoadPublicKeyCertFromStringErrorCode) {
 	std::vector<multitest_entry> mapping {
 		{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
+			{&fail_BIO_get_mem_data, 1, jwt::error::rsa_error::convert_to_pem_failed}, // extract_pubkey_from_cert
 #if !defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER < 0x3050300fL
 			{&fail_BIO_write, 1, jwt::error::rsa_error::load_key_bio_write},
 #else

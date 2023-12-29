@@ -49,7 +49,7 @@ add_executable(jwt-cpp-test ${TEST_SOURCES})
 
 # NOTE: Don't use space inside a generator expression here, because the function prematurely breaks the expression into
 # multiple lines. https://cmake.org/pipermail/cmake/2018-April/067422.html
-set(JWT_TESTER_GCC_FLAGS -Wall -Wextra -Wpedantic)
+set(JWT_TESTER_GCC_FLAGS -Wall -Wextra -Wpedantic -ggdb)
 set(JWT_TESTER_CLANG_FLAGS -Weverything -Wno-c++98-compat -Wno-global-constructors -Wno-weak-vtables)
 target_compile_options(
   jwt-cpp-test PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/W4> $<$<CXX_COMPILER_ID:GNU>:${JWT_TESTER_GCC_FLAGS}>
@@ -74,7 +74,7 @@ endif()
 target_link_libraries(jwt-cpp-test PRIVATE jwt-cpp nlohmann_json::nlohmann_json
                                            $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:${CMAKE_DL_LIBS}>)
 
-gtest_add_tests(TARGET jwt-cpp-test)
+gtest_discover_tests(jwt-cpp-test)
 
 if(JWT_ENABLE_COVERAGE)
   include("code-coverage")
