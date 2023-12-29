@@ -2634,7 +2634,7 @@ namespace jwt {
 		 * Constructor for building a new builder instance
 		 * \param c Clock instance
 		 */
-		explicit builder(Clock c) : clock(c) {}
+		JWT_CLAIM_EXPLICIT builder(Clock c) : clock(c) {}
 		/**
 		 * Set a header claim.
 		 * \param id Name of the claim
