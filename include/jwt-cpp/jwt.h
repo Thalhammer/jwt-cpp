@@ -3590,6 +3590,16 @@ namespace jwt {
 	}
 
 	/**
+	 * Create a builder using the given clock
+	 * \param c Clock instance to use
+	 * \return builder instance
+	 */
+	template<typename Clock, typename json_traits>
+	builder<Clock, json_traits> create(Clock c) {
+		return builder<Clock, json_traits>(c);
+	}
+
+	/**
 	 * Default clock class using std::chrono::system_clock as a backend.
 	 */
 	struct default_clock {
