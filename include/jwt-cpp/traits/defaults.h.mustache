@@ -28,10 +28,10 @@ namespace jwt {
 
 	/**
 	 * Create a builder using the default clock
-	 * \return builder instance
+	 * \return builder instance to create a new token
 	 */
 	inline builder<default_clock, traits::{{traits_name}}> create() {
-		return builder<default_clock, traits::{{traits_name}}>();
+		return builder<default_clock, traits::{{traits_name}}>(default_clock{});
 	}
 
 #ifndef JWT_DISABLE_BASE64
