@@ -2629,6 +2629,7 @@ namespace jwt {
 
 		/// Instance of clock type
 		Clock clock;
+
 	public:
 		/**
 		 * Constructor for building a new builder instance
