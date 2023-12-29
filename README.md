@@ -86,6 +86,8 @@ As for the base64 requirements of JWTs, this library provides `base.h` with all 
 
 ### Getting Started
 
+Installation instructions can be found [here](docs/getting-started.md#installation).
+
 Simple example of decoding a token and printing all [claims](https://tools.ietf.org/html/rfc7519#section-4) ([try it out](https://github.com/Thalhammer/jwt-cpp/tree/master/example/print-claims.cpp)):
 
 ```cpp
