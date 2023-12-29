@@ -40,7 +40,7 @@ For completeness, here is a list of all supported algorithms:
 
 ## Getting Started
 
-Installation instructions can be found [here](docs/getting-started.md#installation).
+Installation instructions can be found [here](docs/install.md).
 
 A simple example of decoding a token and printing all [claims](https://tools.ietf.org/html/rfc7519#section-4) ([try it out](https://jwt.io/#debugger-io?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCIsInNhbXBsZSI6InRlc3QifQ.lQm3N2bVlqt2-1L-FsOjtR6uE-L4E9zJutMWKIe1v1M)):
 
@@ -57,7 +57,7 @@ int main() {
 }
 ```
 
-You can build and run [this example](example/print-claims.cpp) after cloning the repository.
+You can build and run [this example](example/print-claims.cpp) locally after cloning the repository.
 
 ```sh
 cmake .

@@ -1,8 +1,8 @@
-# Getting Started
+# Installation
 
 There's a number of options to choice from.
 
-## Installation
+## Overview
 
 It's strongly recommended to use a package manager, as JWT-CPP has dependencies for both 
 cryptography and JSON libraries, having a tool to do the heavily lifting can be ideal.
