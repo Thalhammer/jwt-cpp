@@ -23,11 +23,11 @@
 
 A header only library for creating and validating [JSON Web Tokens](https://tools.ietf.org/html/rfc7519) in C++11. For a great introduction, [read this](https://jwt.io/introduction/).
 
-The goal is to provide a modular and generic set of algorithms, class, and data structures to allow flexibility and to integration other libraries you are likely already using.
+The objective is to deliver a versatile and universally applicable collection of algorithms, classes, and data structures, fostering adaptability and seamless integration with other libraries that you may already be employing.
 
 ## Signature algorithms
 
-jwt-cpp supports all the algorithms defined by the specifications. The modular design allows to easily add additional algorithms without any problems. If you need any feel free to create a pull request or [open an issue](https://github.com/Thalhammer/jwt-cpp/issues/new).
+jwt-cpp supports all the algorithms defined by the specifications. The modular design allows to easily [add additional algorithms](docs/signing.md#custom-signature-algorithms) without any problems. If you need any feel free to create a pull request or [open an issue](https://github.com/Thalhammer/jwt-cpp/issues/new).
 
 For completeness, here is a list of all supported algorithms:
 
