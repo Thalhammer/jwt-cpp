@@ -78,10 +78,13 @@ YwIDAQAB
 			ec = error::claim_type_missmatch;
 	};
 
+	/* [verifier check custom claim] */
 	auto verifier = jwt::verify()
 						.allow_algorithm(jwt::algorithm::rs256(rsa_pub_key, "", "", ""))
 						.with_issuer("auth0")
+						// Check for "foo" in /my-service/role
 						.with_claim("resource-access", role_verifier);
+	/* [verifier check custom claim] */
 
 	try {
 		verifier.verify(decoded);

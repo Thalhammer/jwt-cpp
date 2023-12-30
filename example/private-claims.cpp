@@ -36,12 +36,14 @@ int main() {
 	const auto api_array = decoded.get_payload_claim("object").to_json().get("api").get("array");
 	std::cout << "api array = " << api_array << std::endl;
 
+	/* [verify exact claim] */
 	jwt::verify()
 		.allow_algorithm(jwt::algorithm::none{})
 		.with_issuer("auth.mydomain.io")
 		.with_audience("mydomain.io")
-		.with_claim("object", from_raw_json)
+		.with_claim("object", from_raw_json) // Match the exact JSON content
 		.verify(decoded);
+	/* [verify exact claim] */
 
 	return 0;
 }

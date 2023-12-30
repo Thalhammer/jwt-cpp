@@ -3469,6 +3469,11 @@ namespace jwt {
 
 		/**
 		 * Specify a claim to check for using the specified operation.
+		 * This is helpful for implementating application specific authentication checks
+		 * such as the one seen in partial-claim-verifier.cpp
+		 * 
+		 * \snippet{trimleft} partial-claim-verifier.cpp verifier check custom claim
+		 * 
 		 * \param name Name of the claim to check for
 		 * \param fn Function to use for verifying the claim
 		 * \return *this to allow chaining
@@ -3480,6 +3485,10 @@ namespace jwt {
 
 		/**
 		 * Specify a claim to check for equality (both type & value).
+		 * See the private-claims.cpp example.
+		 * 
+		 * \snippet{trimleft} private-claims.cpp verify exact claim
+		 * 
 		 * \param name Name of the claim to check for
 		 * \param c Claim to check for
 		 * \return *this to allow chaining
@@ -3849,7 +3858,10 @@ namespace jwt {
 	};
 
 	/**
-	 * Create a verifier using the given clock
+	 * Create a verifier using the default_clock.
+	 * 
+	 * 
+	 * 
 	 * \param c Clock instance to use
 	 * \return verifier instance
 	 */
@@ -3867,7 +3879,8 @@ namespace jwt {
 	}
 
 	/**
-	 * \brief Decode a token
+	 * \brief Decode a token. This can be used to to help access important feild like 'x5c'
+	 * for verifying tokens. See associated example rsa-verify.cpp for more details.
 	 * 
 	 * \tparam json_traits JSON implementation traits
 	 * \tparam Decode is callable, taking a string_type and returns a string_type.
@@ -3886,7 +3899,7 @@ namespace jwt {
 
 	/**
 	 * Decode a token. This can be used to to help access important feild like 'x5c'
-	 * for verifying tokens. See associated example rsa-verify.cpp for more details
+	 * for verifying tokens. See associated example rsa-verify.cpp for more details.
 	 * 
 	 * \tparam json_traits JSON implementation traits
 	 * \param token Token to decode
