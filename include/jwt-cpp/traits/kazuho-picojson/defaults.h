@@ -21,9 +21,12 @@ namespace jwt {
 	}
 
 	/**
-	 * Return a builder instance to create a new token
+	 * Create a builder using the default clock
+	 * \return builder instance to create a new token
 	 */
-	inline builder<traits::kazuho_picojson> create() { return builder<traits::kazuho_picojson>(); }
+	inline builder<default_clock, traits::kazuho_picojson> create() {
+		return builder<default_clock, traits::kazuho_picojson>(default_clock{});
+	}
 
 #ifndef JWT_DISABLE_BASE64
 	/**

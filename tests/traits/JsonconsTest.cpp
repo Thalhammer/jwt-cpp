@@ -86,6 +86,20 @@ TEST(JsonconsTest, VerifyTokenExpirationValid) {
 	verify.verify(decoded_token);
 }
 
+TEST(JsonconsTest, VerifyTokenExpirationInValid) {
+	const auto token = jwt::create<jwt::traits::danielaparker_jsoncons>()
+						   .set_issuer("auth0")
+						   .set_issued_now()
+						   .set_expires_in(std::chrono::seconds{3600})
+						   .sign(jwt::algorithm::hs256{"secret"});
+
+	const auto decoded_token = jwt::decode<jwt::traits::danielaparker_jsoncons>(token);
+	const auto verify = jwt::verify<jwt::traits::danielaparker_jsoncons>()
+							.allow_algorithm(jwt::algorithm::hs256{"secret"})
+							.with_issuer("auth0");
+	verify.verify(decoded_token);
+}
+
 TEST(JsonconsTest, VerifyTokenExpired) {
 	const auto token = jwt::create<jwt::traits::danielaparker_jsoncons>()
 						   .set_issuer("auth0")

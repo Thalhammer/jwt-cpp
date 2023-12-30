@@ -26,8 +26,8 @@ Then everything else is the same, just pass in your implementation such as:
 ```cpp
 auto token = jwt::create()
                 .set_id("custom-algo-example")
-                .set_issued_at(std::chrono::system_clock::now())
-                .set_expires_at(std::chrono::system_clock::now() + std::chrono::seconds{36000})
+                .set_issued_now()
+                .set_expires_in(std::chrono::seconds{36000})
                 .set_payload_claim("sample", jwt::claim(std::string{"test"}))
                 .sign(your_algorithm{/* what ever you want */});
 ```
