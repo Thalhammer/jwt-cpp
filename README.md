@@ -27,7 +27,7 @@ The objective is to deliver a versatile and universally applicable collection of
 
 ## Signature algorithms
 
-jwt-cpp supports all the algorithms defined by the specifications. The modular design allows to easily [add additional algorithms](docs/signing.md#custom-signature-algorithms) without any problems. If you need any feel free to create a pull request or [open an issue](https://github.com/Thalhammer/jwt-cpp/issues/new).
+jwt-cpp comprehensively supports all algorithms specified in the standard. Its modular design facilitates the seamless [inclusion of additional algorithms](docs/signing.md#custom-signature-algorithms) without encountering any complications. Should you wish to contribute new algorithms, feel free to initiate a pull request or [open an issue](https://github.com/Thalhammer/jwt-cpp/issues/new).
 
 For completeness, here is a list of all supported algorithms:
 
@@ -42,7 +42,7 @@ For completeness, here is a list of all supported algorithms:
 
 Installation instructions can be found [here](docs/install.md).
 
-A simple example of decoding a token and printing all [claims](https://tools.ietf.org/html/rfc7519#section-4) ([try it out](https://jwt.io/#debugger-io?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCIsInNhbXBsZSI6InRlc3QifQ.lQm3N2bVlqt2-1L-FsOjtR6uE-L4E9zJutMWKIe1v1M)):
+A simple example is decoding a token and printing all of its [claims](https://tools.ietf.org/html/rfc7519#section-4) let's ([try it out](https://jwt.io/#debugger-io?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCIsInNhbXBsZSI6InRlc3QifQ.lQm3N2bVlqt2-1L-FsOjtR6uE-L4E9zJutMWKIe1v1M)):
 
 ```cpp
 #include <jwt-cpp/jwt.h>
@@ -58,6 +58,7 @@ int main() {
 ```
 
 You can build and run [this example](example/print-claims.cpp) locally after cloning the repository.
+Running some commands, we can see the contents of the [JWT payload](https://datatracker.ietf.org/doc/html/rfc7519#section-3)
 
 ```sh
 cmake .
@@ -75,8 +76,8 @@ In order to verify a token you first build a verifier and use it to verify a dec
 ```cpp
 auto verifier = jwt::verify()
     .with_issuer("auth0")
-    .allow_algorithm(jwt::algorithm::hs256{"secret"})
     .with_claim("sample", jwt::claim(std::string("test")));
+    .allow_algorithm(jwt::algorithm::hs256{"secret"})
 
 verifier.verify(decoded_token);
 ```
@@ -93,7 +94,7 @@ auto token = jwt::create()
     .sign(jwt::algorithm::hs256{"secret"});
 ```
 
-If you are looking to issue more unique tokens, checkout out the [examples](https://github.com/Thalhammer/jwt-cpp/tree/master/example) working with RSA public and private keys, elliptic curve tokens, and much more!
+If you are looking to issue or verify more unique tokens, checkout out the [examples](https://github.com/Thalhammer/jwt-cpp/tree/master/example) working with RSA public and private keys, elliptic curve tokens, and much more!
 
 ### Configuration Options
 
@@ -107,7 +108,7 @@ jwt-cpp supports [OpenSSL](https://github.com/openssl/openssl), [LibreSSL](https
 
 There is no hard dependency on a JSON library. Instead, there's a generic `jwt::basic_claim` which is templated around type traits, which described the semantic [JSON types](https://json-schema.org/understanding-json-schema/reference/type.html) for a value, object, array, string, number, integer and boolean, as well as methods to translate between them.
 
-This allows for complete freedom when picking which libraries you want to use. To use one of the provided JSON trait's, see [docs/traits.md](docs/traits.md#selecting-a-json-library) for more information.
+This allows for freedom when picking which libraries you want to use. To use one of the provided JSON trait's, see [docs/traits.md](docs/traits.md#selecting-a-json-library) for more information.
 
 ##### Providing your own JSON Traits
 
@@ -119,11 +120,11 @@ To learn how to writes a trait's implementation, checkout the [these instruction
 
 #### Base64 Options
 
-As for the base64 requirements of JWTs, this library provides `base.h` with all the required implementation; However base64 implementations are very common, with varying degrees of performance. When providing your own base64 implementation, you can define `JWT_DISABLE_BASE64` to remove the jwt-cpp implementation.
+With regard to the base64 specifications for JWTs, this library includes `base.h` encompassing all necessary variants. While the library itself offers a proficient base64 implementation, it's worth noting that base64 implementations are widely available, exhibiting diverse performance levels. If you prefer to use your own base64 implementation, you have the option to define `JWT_DISABLE_BASE64` to exclude the jwt-cpp implementation.
 
 ## Contributing
 
-If you have an improvement or found a bug feel free to [open an issue](https://github.com/Thalhammer/jwt-cpp/issues/new) or add the change and create a pull request. If you file a bug please make sure to include as much information about your environment (compiler version, etc.) as possible to help reproduce the issue. If you add a new feature please make sure to also include test cases for it.
+If you have suggestions for improvement or if you've identified a bug, please don't hesitate to [open an issue](https://github.com/Thalhammer/jwt-cpp/issues/new) or contribute by creating a pull request. When reporting a bug, provide comprehensive details about your environment, including compiler version and other relevant information, to facilitate issue reproduction. Additionally, if you're introducing a new feature, ensure that you include corresponding test cases to validate its functionality.
 
 ### Dependencies
 
