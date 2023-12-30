@@ -58,7 +58,8 @@ There are several key items that need to be provided to a `jwt::basic_claim` in 
 
 If ever you are not sure, the traits are heavily checked against static asserts to make sure you provide everything that's required.
 
-> :warning: Not all JSON libraries are a like, you may need to extend certain types such that it can be used. See this [provided implementation](https://github.com/Thalhammer/jwt-cpp/blob/e6b92cca0b7088027269c481fa244e5c39df88ff/include/jwt-cpp/traits/danielaparker-jsoncons/traits.h#L18).
+> [!important]
+> Not all JSON libraries are a like, you may need to extend certain types such that it can be used. See this [provided implementation](https://github.com/Thalhammer/jwt-cpp/blob/e6b92cca0b7088027269c481fa244e5c39df88ff/include/jwt-cpp/traits/danielaparker-jsoncons/traits.h#L18).
 
 ```cpp
 struct my_favorite_json_library_traits {
