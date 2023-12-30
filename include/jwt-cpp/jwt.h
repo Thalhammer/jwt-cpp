@@ -415,9 +415,9 @@ namespace jwt {
 	 * you maybe need to extract the modulus and exponent of an RSA Public Key.
 	 */
 	namespace helper {
-		/** 
+		/**
 		 * \brief Handle class for EVP_PKEY structures
-		 * 
+		 *
 		 * Starting from OpenSSL 1.1.0, EVP_PKEY has internal reference counting. This handle class allows
 		 * jwt-cpp to leverage that and thus safe an allocation for the control block in std::shared_ptr.
 		 * The handle uses shared_ptr as a fallback on older versions. The behaviour should be identical between both.
@@ -1816,7 +1816,9 @@ namespace jwt {
 			explicit hs512(std::string key) : hmacsha(std::move(key), EVP_sha512, "HS512") {}
 		};
 		/**
-		 * RS256 algorithm
+		 * RS256 algorithm.
+		 * 
+		 * This data structure is used to describe the RSA256 and can be used to verify JWTs
 		 */
 		struct rs256 : public rsa {
 			/**
@@ -1826,8 +1828,6 @@ namespace jwt {
 			 * \param private_key RSA private key or empty string if not available. If empty, signing will always fail.
 			 * \param public_key_password Password to decrypt public key pem.
 			 * \param private_key_password Password to decrypt private key pem.
-			 * 
-			 * This data structure is used to describe the RSA256 and can be used to verify JWTs
 			 */
 			explicit rs256(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
@@ -2029,7 +2029,7 @@ namespace jwt {
 	 */
 	namespace json {
 		/**
-		 * \brief categories for the various JSON types used in JWTs
+		 * \brief Categories for the various JSON types used in JWTs
 		 *
 		 * This enum is to abstract the third party underlying types and allows the library
 		 * to identify the different structures and reason about them without needing a "concept"
@@ -3804,8 +3804,8 @@ namespace jwt {
 
 		/**
 		 * Parses a string buffer to extract the JWKS.
-		 * @param str buffer containing JSON object representing a JWKS
-		 * @throw error::invalid_json_exception or underlying JSON implation error if the JSON is
+		 * \param str buffer containing JSON object representing a JWKS
+		 * \throw error::invalid_json_exception or underlying JSON implation error if the JSON is
 		 *        invalid with regards to the JWKS specification
 		*/
 		JWT_CLAIM_EXPLICIT jwks(const typename json_traits::string_type& str) {
@@ -3883,7 +3883,7 @@ namespace jwt {
 	struct default_clock {
 		/** 
 		 * Gets the current system time
-		 * @return time_point of the host system 
+		 * \return time_point of the host system 
 		 */
 		date now() const { return date::clock::now(); }
 	};
