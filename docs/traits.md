@@ -10,11 +10,13 @@ For your convenience there are serval traits implementation which provide some p
 [![nlohmann][nlohmann]](https://github.com/nlohmann/json)
 [![jsoncons][jsoncons]](https://github.com/danielaparker/jsoncons)
 [![boostjson][boostjson]](https://github.com/boostorg/json)
+[![jsoncpp][jsoncpp]](https://github.com/open-source-parsers/jsoncpp)
 
 [picojson]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/traits/kazuho-picojson/shields.json
 [nlohmann]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/traits/nlohmann-json/shields.json
 [jsoncons]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/traits/danielaparker-jsoncons/shields.json
 [boostjson]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/traits/boost-json/shields.json
+[jsoncpp]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/traits/open-source-parsers-jsoncpp/shields.json
 
 In order to maintain compatibility, [picojson](https://github.com/kazuho/picojson) is still used to provide a specialized `jwt::claim` along with all helpers. Defining `JWT_DISABLE_PICOJSON` will remove this optional dependency. It's possible to directly include the traits defaults for the other JSON libraries. See the [traits examples](https://github.com/Thalhammer/jwt-cpp/tree/master/example/traits) for details.
 

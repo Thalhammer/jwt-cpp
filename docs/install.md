@@ -4,9 +4,7 @@ There's a number of options to choice from.
 
 ## Overview
 
-It's strongly recommended to use a package manager, as JWT-CPP has dependencies for both 
-cryptography and JSON libraries, having a tool to do the heavily lifting can be ideal.
-Examples of a C and C++ package manager are [Conan](https://conan.io/) and [vcpkg](https://vcpkg.io/). If the version is out of date please check with their respective communities before opening and issue here.
+It's strongly recommended to use a package manager, as JWT-CPP has dependencies for both cryptography and JSON libraries, having a tool to do the heavily lifting can be ideal. Examples of a C and C++ package manager are [Conan](https://conan.io/) and [vcpkg](https://vcpkg.io/). If the version is out of date please check with their respective communities before opening and issue here.
 
 When manually adding this dependency, and the dependencies this has, check the GitHub Actions and Workflows for some inspiration about how to go about it.
 
