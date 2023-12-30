@@ -14,7 +14,7 @@ jobs:
           version: "1.10.0"
       - run: sudo apt install graphviz
       - run: | 
-          cmake . -DJWT_BUILD_DOC=ON
+          cmake . -DJWT_BUILD_DOCS=ON
           cmake --build . --target build_docs
       - if: github.event_name == 'push'
         name: deploy
