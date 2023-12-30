@@ -86,6 +86,20 @@ TEST({{test_suite_name}}, VerifyTokenExpirationValid) {
 	verify.verify(decoded_token);
 }
 
+TEST({{test_suite_name}}, VerifyTokenExpirationInValid) {
+	const auto token = jwt::create<jwt::traits::{{traits_name}}>()
+						   .set_issuer("auth0")
+						   .set_issued_now()
+						   .set_expires_in(std::chrono::seconds{3600})
+						   .sign(jwt::algorithm::hs256{"secret"});
+
+	const auto decoded_token = jwt::decode<jwt::traits::{{traits_name}}>(token);
+	const auto verify = jwt::verify<jwt::traits::{{traits_name}}>()
+							.allow_algorithm(jwt::algorithm::hs256{"secret"})
+							.with_issuer("auth0");
+	verify.verify(decoded_token);
+}
+
 TEST({{test_suite_name}}, VerifyTokenExpired) {
 	const auto token = jwt::create<jwt::traits::{{traits_name}}>()
 						   .set_issuer("auth0")

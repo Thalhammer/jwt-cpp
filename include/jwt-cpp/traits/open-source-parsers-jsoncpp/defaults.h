@@ -25,10 +25,11 @@ namespace jwt {
 	}
 
 	/**
-	 * Return a builder instance to create a new token
+	 * Create a builder using the default clock
+	 * \return builder instance to create a new token
 	 */
-	inline builder<traits::open_source_parsers_jsoncpp> create() {
-		return builder<traits::open_source_parsers_jsoncpp>();
+	inline builder<default_clock, traits::open_source_parsers_jsoncpp> create() {
+		return builder<default_clock, traits::open_source_parsers_jsoncpp>(default_clock{});
 	}
 
 #ifndef JWT_DISABLE_BASE64

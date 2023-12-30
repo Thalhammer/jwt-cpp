@@ -38,8 +38,8 @@ rK0/Ikt5ybqUzKCMJZg2VKGTxg==
 					 .set_issuer("auth0")
 					 .set_type("JWT")
 					 .set_id("rsa-create-example")
-					 .set_issued_at(std::chrono::system_clock::now())
-					 .set_expires_at(std::chrono::system_clock::now() + std::chrono::seconds{36000})
+					 .set_issued_now()
+					 .set_expires_in(std::chrono::seconds{36000})
 					 .set_payload_claim("resource-access", role_claim)
 					 .sign(jwt::algorithm::rs256("", rsa_priv_key, "", ""));
 

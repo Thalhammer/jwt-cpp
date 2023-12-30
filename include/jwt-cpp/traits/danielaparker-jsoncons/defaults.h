@@ -25,9 +25,12 @@ namespace jwt {
 	}
 
 	/**
-	 * Return a builder instance to create a new token
+	 * Create a builder using the default clock
+	 * \return builder instance to create a new token
 	 */
-	inline builder<traits::danielaparker_jsoncons> create() { return builder<traits::danielaparker_jsoncons>(); }
+	inline builder<default_clock, traits::danielaparker_jsoncons> create() {
+		return builder<default_clock, traits::danielaparker_jsoncons>(default_clock{});
+	}
 
 #ifndef JWT_DISABLE_BASE64
 	/**
