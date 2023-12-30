@@ -106,9 +106,9 @@ jwt-cpp supports [OpenSSL](https://github.com/openssl/openssl), [LibreSSL](https
 
 #### JSON Implementation
 
-There is no hard dependency on a JSON library. Instead, there's a generic `jwt::basic_claim` which is templated around type traits, which described the semantic [JSON types](https://json-schema.org/understanding-json-schema/reference/type.html) for a value, object, array, string, number, integer and boolean, as well as methods to translate between them.
+There is no strict reliance on a specific JSON library in this context. Instead, the jwt-cpp utilizes a generic `jwt::basic_claim` that is templated based on type trait. This trait provides the semantic [JSON types](https://json-schema.org/understanding-json-schema/reference/type.html) for values, objects, arrays, strings, numbers, integers, and booleans, along with methods to seamlessly translate between them.
 
-This allows for freedom when picking which libraries you want to use. To use one of the provided JSON trait's, see [docs/traits.md](docs/traits.md#selecting-a-json-library) for more information.
+This design offers flexibility in choosing the JSON library that best suits your needs. To leverage one of the provided JSON traits, refer to [docs/traits.md](docs/traits.md#selecting-a-json-library) for detailed guidance.
 
 ##### Providing your own JSON Traits
 
