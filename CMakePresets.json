@@ -63,6 +63,7 @@
                 "rhs": "Linux"
             },
             "cacheVariables": {
+                "JWT_BUILD_TESTS": "ON",
                 "JWT_ENABLE_COVERAGE": "ON"
             }
         }
@@ -89,7 +90,17 @@
         },
         {
             "name": "dev",
-            "configurePreset": "dev"
+            "configurePreset": "dev",
+            "configuration": "Debug"
+        },
+        {
+            "name": "coverage",
+            "configurePreset": "coverage",
+            "configuration": "Debug",
+            "targets": [
+                "jwt-cpp-test",
+                "coverage"
+            ]
         }
     ]
 }
