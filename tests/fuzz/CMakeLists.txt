@@ -15,8 +15,8 @@ endfunction()
 add_fuzzing_executable(BaseEncodeFuzz)
 add_custom_target(jwt-cpp-fuzz-BaseEncodeFuzz-run COMMAND jwt-cpp-fuzz-BaseEncodeFuzz -runs=100000)
 add_fuzzing_executable(BaseDecodeFuzz)
-add_custom_target(jwt-cpp-fuzz-BaseDecodeFuzz-run COMMAND jwt-cpp-fuzz-BaseDecodeFuzz -runs=100000
-                                                          ../tests/fuzz/decode-corpus)
+add_custom_target(jwt-cpp-fuzz-BaseDecodeFuzz-run COMMAND jwt-cpp-fuzz-BaseDecodeFuzz -runs=100000 decode-corpus
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
 add_fuzzing_executable(TokenDecodeFuzz)
-add_custom_target(jwt-cpp-fuzz-TokenDecodeFuzz-run COMMAND jwt-cpp-fuzz-TokenDecodeFuzz -runs=100000
-                                                           ../tests/fuzz/token-corpus)
+add_custom_target(jwt-cpp-fuzz-TokenDecodeFuzz-run COMMAND jwt-cpp-fuzz-TokenDecodeFuzz -runs=100000 token-corpus
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
