@@ -37,15 +37,16 @@ jobs:
       
     - name: configure
       run: cmake --preset ci-fuzzing
+    - name: build
+      run: cmake --build --preset ci-fuzzing
         
     - name: run
       run: |
-        cmake --build --preset ci-fuzzing
         cmake --build --preset ci-fuzzing --target jwt-cpp-fuzz-BaseEncodeFuzz-run
         cmake --build --preset ci-fuzzing --target jwt-cpp-fuzz-BaseDecodeFuzz-run
         cmake --build --preset ci-fuzzing --target jwt-cpp-fuzz-TokenDecodeFuzz-run
 
-  asan: # Based on https://gist.github.com/jlblancoc/44be9d4d466f0a973b1f3808a8e56782
+  asan:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -63,37 +64,31 @@ jobs:
 
       - name: configure
         run: cmake --preset ci-asan
+      - name: build
+        run: cmake --build --preset ci-asan
 
       - name: run
         run: |
-          cmake --build --preset ci-asan
           cmake --build --preset ci-asan --target rsa-create-run
           cmake --build --preset ci-asan --target rsa-verify-run
           cmake --build --preset ci-asan --target jwks-verify-run
           cmake --build --preset ci-asan --target jwt-cpp-test-run
 
   ubsan:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
       - uses: ./.github/actions/install/gtest
 
       - name: configure
-        run: |
-          mkdir build
-          cd build
-          cmake .. -DJWT_BUILD_TESTS=ON -DCMAKE_CXX_STANDARD=20 \
-                                        -DCMAKE_CXX_FLAGS="-fsanitize=undefined -fsanitize=return -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize-recover=all -g" \
-                                        -DCMAKE_C_FLAGS="-fsanitize=undefined -fsanitize=return -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize-recover=all -g" \
-                                        -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=undefined -fsanitize=return -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize-recover=all" \
-                                        -DCMAKE_MODULE_LINKER_FLAGS="-fsanitize=undefined -fsanitize=return -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize-recover=all"
+        run: cmake --preset ci-ubsan
+      - name: build
+        run: cmake --build --preset ci-ubsan -DCMAKE_CXX_STANDARD=20
 
       - name: run
-        working-directory: build
         run: |
-          make
-          export UBSAN_OPTIONS=print_stacktrace=1
-          ./example/rsa-create
-          ./example/rsa-verify
-          ./tests/jwt-cpp-test
+          cmake --build --preset ci-ubsan --target rsa-create-run
+          cmake --build --preset ci-ubsan --target rsa-verify-run
+          cmake --build --preset ci-ubsan --target jwks-verify-run
+          cmake --build --preset ci-ubsan --target jwt-cpp-test-run

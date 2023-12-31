@@ -55,6 +55,22 @@
                 "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address -fsanitize=leak",
                 "CMAKE_MODULE_LINKER_FLAGS": "-fsanitize=address -fsanitize=leak"
             }
+        },
+        {
+            "name": "ci-ubsan",
+            "inherits": "debug",
+            "displayName": "Undefined Behavior Sanitizer",
+            "environment": {
+                "UBSAN_OPTIONS": "print_stacktrace=1"
+            },
+            "cacheVariables": {
+                "JWT_BUILD_EXAMPLES": "ON",
+                "JWT_BUILD_TESTS": "ON",
+                "CMAKE_C_FLAGS": "-fsanitize=undefined -fsanitize=return -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize-recover=all -g",
+                "CMAKE_CXX_FLAGS": "-fsanitize=undefined -fsanitize=return -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize-recover=all -g",
+                "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=undefined -fsanitize=return -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize-recover=all",
+                "CMAKE_MODULE_LINKER_FLAGS": "-fsanitize=undefined -fsanitize=return -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize-recover=all"
+            }
         }
     ],
     "buildPresets": [
@@ -79,6 +95,16 @@
         {
             "name": "ci-asan",
             "configurePreset": "ci-asan",
+            "targets": [
+                "rsa-create",
+                "rsa-verify",
+                "jwks-verify",
+                "jwt-cpp-test"
+            ]
+        },
+        {
+            "name": "ci-ubsan",
+            "configurePreset": "ci-ubsan",
             "targets": [
                 "rsa-create",
                 "rsa-verify",
