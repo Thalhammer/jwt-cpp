@@ -1,0 +1,23 @@
+if(NOT TRAITS_NAME)
+  message(FATAL_ERROR "Missing '-DTRAITS_NAME' for this script to work")
+endif()
+if(NOT LIBRARY_NAME)
+  message(FATAL_ERROR "Missing '-DLIBRARY_NAME' for this script to work")
+endif()
+if(NOT LIBRARY_URL)
+  message(FATAL_ERROR "Missing '-DLIBRARY_URL' for this script to work")
+endif()
+if(NOT JWT_DISABLE_PICOJSON)
+  message(FATAL_ERROR "Missing '-DJWT_DISABLE_PICOJSON' for this script to work")
+endif()
+message(STATUS "Rendering ${TRAITS_NAME}!")
+string(TOUPPER "${TRAITS_NAME}" TRAITS_NAME_UPPER)
+string(REPLACE "_" "-" TRAITS_DIR_FOLDER "${TRAITS_NAME}")
+
+cmake_path(GET CMAKE_SCRIPT_MODE_FILE PARENT_PATH SCRIPT_DIR)
+set(OUTPUT_DIR "${SCRIPT_DIR}/../include/jwt-cpp/traits/${TRAITS_DIR_FOLDER}")
+file(MAKE_DIRECTORY "${OUTPUT_DIR}")
+
+configure_file("${SCRIPT_DIR}/../include/jwt-cpp/traits/defaults.h.in" "${OUTPUT_DIR}/defaults.h" @ONLY)
+
+set(ENV{OUTPUT_FILE} "${OUTPUT_DIR}/defaults.h")
