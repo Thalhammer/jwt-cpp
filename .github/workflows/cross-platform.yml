@@ -13,36 +13,24 @@ jobs:
         os: [macos-latest, windows-latest, ubuntu-latest]
 
     steps:
+      # Setup Dependencies
+      - if: matrix.os == 'windows-latest'
+        run: choco install openssl
       - if: matrix.os == 'macos-latest'
         run: sudo cp /usr/local/opt/openssl@1.1/lib/pkgconfig/*.pc /usr/local/lib/pkgconfig/
 
-      - uses: actions/checkout@v4
-      - run: cmake -E make_directory ${{ github.workspace }}/build
+      - uses: actions/checkout@v3
 
       - name: configure
-        shell: bash # access regardless of the host operating system
-        working-directory: ${{ github.workspace }}/build
-        run: cmake $GITHUB_WORKSPACE -DJWT_BUILD_EXAMPLES=ON
+        run: cmake --preset ci-examples
 
       - name: build
-        working-directory: ${{ github.workspace }}/build
-        shell: bash
-        run: cmake --build .
+        run: cmake --build --preset ci-examples
 
-      - if: matrix.os != 'windows-latest'
-        name: test
-        working-directory: ${{ github.workspace }}/build
-        shell: bash
+      - name: test
         run: |
-          ./example/rsa-create
-          ./example/rsa-verify
-
-      - if: matrix.os == 'windows-latest'
-        name: test
-        working-directory: ${{ github.workspace }}/build
-        run: |
-          example\Debug\rsa-create.exe
-          example\Debug\rsa-verify.exe
+          cmake --build --preset ci-examples --target rsa-create-run
+          cmake --build --preset ci-examples --target rsa-verify-run
 
       - if: github.event_name == 'push' && always()
         uses: ./.github/actions/badge
