@@ -1,0 +1,61 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 25,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "coverage",
+            "inherits": "debug",
+            "displayName": "Coverage",
+            "description": "This is only available on Linux",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            },
+            "cacheVariables": {
+                "JWT_BUILD_TESTS": "ON",
+                "JWT_ENABLE_COVERAGE": "ON"
+            }
+        },
+        {
+            "name": "ci-fuzzing",
+            "inherits": "debug",
+            "displayName": "Fuzz Testing",
+            "description": "This is only available on Linux with Clang",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            },
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_CXX_COMPILER": "clang++",
+                "JWT_ENABLE_FUZZING": "ON"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "coverage",
+            "configurePreset": "coverage",
+            "configuration": "Debug",
+            "targets": [
+                "jwt-cpp-test",
+                "coverage"
+            ]
+        },
+        {
+            "name": "ci-fuzzing",
+            "configurePreset": "ci-fuzzing",
+            "targets": [
+                "jwt-cpp-fuzz-BaseEncodeFuzz",
+                "jwt-cpp-fuzz-BaseDecodeFuzz",
+                "jwt-cpp-fuzz-TokenDecodeFuzz"
+            ]
+        }
+    ]
+}

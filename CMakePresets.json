@@ -5,6 +5,10 @@
         "minor": 25,
         "patch": 0
     },
+    "include": [
+      "example/CMakePresets.json",
+      "tests/CMakePresets.json"
+    ],
     "configurePresets": [
         {
             "name": "default",
@@ -33,14 +37,6 @@
             }
         },
         {
-            "name": "ci-examples",
-            "displayName": "Build Examples",
-            "inherits": "release",
-            "cacheVariables": {
-                "JWT_BUILD_EXAMPLES": "ON"
-            }
-        },
-        {
             "name": "dev",
             "displayName": "Development",
             "inherits": "debug",
@@ -50,37 +46,6 @@
             "cacheVariables": {
                 "JWT_BUILD_EXAMPLES": "ON",
                 "JWT_BUILD_TESTS": "ON"
-            }
-        },
-        {
-            "name": "coverage",
-            "inherits": "debug",
-            "displayName": "Coverage",
-            "description": "This is only available on Linux",
-            "condition": {
-                "type": "equals",
-                "lhs": "${hostSystemName}",
-                "rhs": "Linux"
-            },
-            "cacheVariables": {
-                "JWT_BUILD_TESTS": "ON",
-                "JWT_ENABLE_COVERAGE": "ON"
-            }
-        },
-        {
-            "name": "ci-fuzzing",
-            "inherits": "debug",
-            "displayName": "Fuzz Testing",
-            "description": "This is only available on Linux with Clang",
-            "condition": {
-                "type": "equals",
-                "lhs": "${hostSystemName}",
-                "rhs": "Linux"
-            },
-            "cacheVariables": {
-                "CMAKE_C_COMPILER": "clang",
-                "CMAKE_CXX_COMPILER": "clang++",
-                "JWT_ENABLE_FUZZING": "ON"
             }
         }
     ],
@@ -96,36 +61,9 @@
             "configuration": "Release"
         },
         {
-            "name": "ci-examples",
-            "configurePreset": "ci-examples",
-            "configuration": "Release",
-            "targets": [
-                "rsa-create",
-                "rsa-verify"
-            ]
-        },
-        {
             "name": "dev",
             "configurePreset": "dev",
             "configuration": "Debug"
-        },
-        {
-            "name": "coverage",
-            "configurePreset": "coverage",
-            "configuration": "Debug",
-            "targets": [
-                "jwt-cpp-test",
-                "coverage"
-            ]
-        },
-        {
-            "name": "ci-fuzzing",
-            "configurePreset": "ci-fuzzing",
-            "targets": [
-                "jwt-cpp-fuzz-BaseEncodeFuzz",
-                "jwt-cpp-fuzz-BaseDecodeFuzz",
-                "jwt-cpp-fuzz-TokenDecodeFuzz"
-            ]
         }
     ]
 }
