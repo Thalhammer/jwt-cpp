@@ -77,6 +77,10 @@
                 "lhs": "${hostSystemName}",
                 "rhs": "Linux"
             },
+            "environment": {
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_CXX_COMPILER": "clang++"
+            },
             "cacheVariables": {
                 "JWT_ENABLE_FUZZING": "ON"
             }

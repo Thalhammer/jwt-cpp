@@ -34,13 +34,11 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: lukka/get-cmake@latest
-    - uses: ./.github/actions/install/gtest
       
     - name: configure
-      run: cmake --preset ci-fuzzing -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+      run: cmake --preset ci-fuzzing
         
     - name: run
-      working-directory: build
       run: |
         cmake --build --preset ci-fuzzing
         cmake --build --preset ci-fuzzing --target jwt-cpp-fuzz-BaseEncodeFuzz-run
