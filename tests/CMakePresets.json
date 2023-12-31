@@ -53,7 +53,7 @@
                 "CMAKE_C_FLAGS": "-fsanitize=address -fsanitize=leak -g",
                 "CMAKE_CXX_FLAGS": "-fsanitize=address -fsanitize=leak -g",
                 "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address -fsanitize=leak",
-                "CMAKE_MODULE_LINKER_FLAGS": "-fsanitize=address -fsanitize=leak",
+                "CMAKE_MODULE_LINKER_FLAGS": "-fsanitize=address -fsanitize=leak"
             }
         }
     ],
