@@ -54,7 +54,7 @@
         },
         {
             "name": "coverage",
-            "inherits": "dev",
+            "inherits": "debug",
             "displayName": "Coverage",
             "description": "This is only available on Linux with GCC",
             "condition": {
@@ -65,6 +65,20 @@
             "cacheVariables": {
                 "JWT_BUILD_TESTS": "ON",
                 "JWT_ENABLE_COVERAGE": "ON"
+            }
+        },
+        {
+            "name": "ci-fuzzing",
+            "inherits": "debug",
+            "displayName": "Fuzz Testing",
+            "description": "This is only available on Linux with Clang",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            },
+            "cacheVariables": {
+                "JWT_ENABLE_FUZZING": "ON"
             }
         }
     ],
@@ -100,6 +114,15 @@
             "targets": [
                 "jwt-cpp-test",
                 "coverage"
+            ]
+        },
+        {
+            "name": "ci-fuzzing",
+            "configurePreset": "ci-fuzzing",
+            "targets": [
+                "jwt-cpp-fuzz-BaseEncodeFuzz",
+                "jwt-cpp-fuzz-BaseDecodeFuzz",
+                "jwt-cpp-fuzz-TokenDecodeFuzz"
             ]
         }
     ]

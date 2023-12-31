@@ -37,18 +37,15 @@ jobs:
     - uses: ./.github/actions/install/gtest
       
     - name: configure
-      run: |
-        mkdir build
-        cd build
-        cmake .. -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DJWT_ENABLE_FUZZING=ON
+      run: cmake --preset ci-fuzzing -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
         
     - name: run
       working-directory: build
       run: |
-        make jwt-cpp-fuzz-BaseEncodeFuzz jwt-cpp-fuzz-BaseDecodeFuzz jwt-cpp-fuzz-TokenDecodeFuzz
-        ./tests/fuzz/jwt-cpp-fuzz-BaseEncodeFuzz -runs=100000
-        ./tests/fuzz/jwt-cpp-fuzz-BaseDecodeFuzz -runs=100000 ../tests/fuzz/decode-corpus
-        ./tests/fuzz/jwt-cpp-fuzz-TokenDecodeFuzz -runs=100000 ../tests/fuzz/token-corpus
+        cmake --build --preset ci-fuzzing
+        cmake --build --preset ci-fuzzing --target jwt-cpp-fuzz-BaseEncodeFuzz-run
+        cmake --build --preset ci-fuzzing --target jwt-cpp-fuzz-BaseDecodeFuzz-run
+        cmake --build --preset ci-fuzzing --target jwt-cpp-fuzz-TokenDecodeFuzz-run
 
   asan: # Based on https://gist.github.com/jlblancoc/44be9d4d466f0a973b1f3808a8e56782
     runs-on: ubuntu-latest
