@@ -20,7 +20,7 @@
             "name": "debug",
             "displayName": "Debug",
             "inherits": "default",
-            "environment": {
+            "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug"
             }
         },
@@ -28,7 +28,7 @@
             "name": "release",
             "displayName": "Release",
             "inherits": "default",
-            "environment": {
+            "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
             }
         },
@@ -56,7 +56,7 @@
             "name": "coverage",
             "inherits": "debug",
             "displayName": "Coverage",
-            "description": "This is only available on Linux with GCC",
+            "description": "This is only available on Linux",
             "condition": {
                 "type": "equals",
                 "lhs": "${hostSystemName}",
@@ -77,11 +77,9 @@
                 "lhs": "${hostSystemName}",
                 "rhs": "Linux"
             },
-            "environment": {
-                "CMAKE_C_COMPILER": "clang",
-                "CMAKE_CXX_COMPILER": "clang++"
-            },
             "cacheVariables": {
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_CXX_COMPILER": "clang++",
                 "JWT_ENABLE_FUZZING": "ON"
             }
         }
