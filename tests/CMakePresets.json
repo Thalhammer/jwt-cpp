@@ -75,6 +75,16 @@
                 "jwt-cpp-fuzz-BaseDecodeFuzz",
                 "jwt-cpp-fuzz-TokenDecodeFuzz"
             ]
+        },
+        {
+            "name": "ci-asan",
+            "configurePreset": "ci-asan",
+            "targets": [
+                "rsa-create",
+                "rsa-verify",
+                "jwks-verify",
+                "jwt-cpp-test"
+            ]
         }
     ]
 }
