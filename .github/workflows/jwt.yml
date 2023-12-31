@@ -62,23 +62,15 @@ jobs:
           version: ${{ matrix.openssl.tag }}
 
       - name: configure
-        run: |
-          mkdir build
-          cd build
-          cmake .. -DJWT_BUILD_TESTS=ON -DCMAKE_CXX_FLAGS="-fsanitize=address -fsanitize=leak -g" \
-                                        -DCMAKE_C_FLAGS="-fsanitize=address -fsanitize=leak -g" \
-                                        -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address -fsanitize=leak" \
-                                        -DCMAKE_MODULE_LINKER_FLAGS="-fsanitize=address -fsanitize=leak"
+        run: cmake --preset ci-asan
 
       - name: run
-        working-directory: build
         run: |
-          make
-          export ASAN_OPTIONS=check_initialization_order=true:detect_stack_use_after_return=true:fast_unwind_on_malloc=0
-          ./example/rsa-create
-          ./example/rsa-verify
-          ./example/jwks-verify
-          ./tests/jwt-cpp-test
+          cmake --build --preset ci-asan
+          cmake --build --preset ci-asan --target rsa-create-run
+          cmake --build --preset ci-asan --target rsa-verify-run
+          cmake --build --preset ci-asan --target jwks-verify-run
+          cmake --build --preset ci-asan --target jwt-cpp-test-run
 
   ubsan:
     runs-on: ubuntu-20.04

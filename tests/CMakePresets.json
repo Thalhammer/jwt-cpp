@@ -39,6 +39,22 @@
                 "CMAKE_CXX_COMPILER": "clang++",
                 "JWT_ENABLE_FUZZING": "ON"
             }
+        },
+        {
+            "name": "ci-asan",
+            "inherits": "debug",
+            "displayName": "Address/Leak Sanitizer",
+            "environment": {
+                "ASAN_OPTIONS": "check_initialization_order=true:detect_stack_use_after_return=true:fast_unwind_on_malloc=0"
+            },
+            "cacheVariables": {
+                "JWT_BUILD_EXAMPLES": "ON",
+                "JWT_BUILD_TESTS": "ON",
+                "CMAKE_C_FLAGS": "-fsanitize=address -fsanitize=leak -g",
+                "CMAKE_CXX_FLAGS": "-fsanitize=address -fsanitize=leak -g",
+                "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address -fsanitize=leak",
+                "CMAKE_MODULE_LINKER_FLAGS": "-fsanitize=address -fsanitize=leak",
+            }
         }
     ],
     "buildPresets": [

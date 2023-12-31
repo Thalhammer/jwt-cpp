@@ -28,6 +28,7 @@ add_custom_target(rsa-verify-run COMMAND rsa-verify)
 
 add_executable(jwks-verify jwks-verify.cpp)
 target_link_libraries(jwks-verify jwt-cpp::jwt-cpp)
+add_custom_target(jwks-verify-run COMMAND jwks-verify)
 
 add_executable(es256k es256k.cpp)
 target_link_libraries(es256k jwt-cpp::jwt-cpp)
