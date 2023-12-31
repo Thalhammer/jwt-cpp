@@ -316,3 +316,5 @@ test
 
 build/*
 package-lock.json
+
+CMakeUserPresets.json
