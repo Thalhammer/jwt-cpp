@@ -11,32 +11,6 @@
     ],
     "configurePresets": [
         {
-            "name": "default",
-            "displayName": "Default Config",
-            "hidden": true,
-            "binaryDir": "${sourceDir}/build",
-            "cacheVariables": {
-                "JWT_BUILD_EXAMPLES": "OFF",
-                "JWT_BUILD_TESTS": "OFF"
-            }
-        },
-        {
-            "name": "debug",
-            "displayName": "Debug",
-            "inherits": "default",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
-            }
-        },
-        {
-            "name": "release",
-            "displayName": "Release",
-            "inherits": "default",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
-            }
-        },
-        {
             "name": "dev",
             "displayName": "Development",
             "inherits": "debug",

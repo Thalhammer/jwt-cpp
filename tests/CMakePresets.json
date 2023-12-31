@@ -5,6 +5,9 @@
         "minor": 25,
         "patch": 0
     },
+    "include": [
+        "../cmake/CMakePresets.json"
+    ],
     "configurePresets": [
         {
             "name": "coverage",
