@@ -78,17 +78,17 @@ jobs:
           - { name: "open_source_parsers_jsoncpp", library: "jsoncpp", url: "https://github.com/open-source-parsers/jsoncpp", disable_pico: true }
     name: render-defaults (${{ matrix.traits.name }})
     steps:
-      - uses: actions/checkout@v4
-      - run: |
-          sudo apt-get install clang-format-14
-      - uses: ./.github/actions/render/defaults
-        id: render
-        with:
-          traits_name: ${{ matrix.traits.name }}
-          library_name: ${{ matrix.traits.library }}
-          library_url: ${{ matrix.traits.url }}
-          disable_default_traits: ${{ matrix.traits.disable_pico }}
-      - run: clang-format-14 -i ${{ steps.render.outputs.file_path }}
+      - uses: actions/checkout@v3
+      - uses: lukka/get-cmake@latest
+      - id: render
+        run: |
+          cmake -DTRAITS_NAME="${{ matrix.traits.name }}" \
+                -DLIBRARY_NAME="${{ matrix.traits.library }}" \
+                -DLIBRARY_URL="${{ matrix.traits.url }}" \
+                -DJWT_DISABLE_PICOJSON=${{ matrix.traits.disable_pico }} \
+                -P cmake/render-defaults.cmake
+          echo "file_path=$(echo $OUTPUT_FILE)" >> $GITHUB_OUTPUT
+      - run: clang-format -i ${{ steps.render.outputs.file_path }}
       - run: git add ${{ steps.render.outputs.file_path }}
       - uses: ./.github/actions/process-linting-results
         with:
