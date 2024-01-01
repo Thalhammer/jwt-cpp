@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.20)
+
 if(NOT TRAITS_NAME)
   message(FATAL_ERROR "Missing '-DTRAITS_NAME' for this script to work")
 endif()

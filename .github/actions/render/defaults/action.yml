@@ -21,6 +21,7 @@ outputs:
 runs:
   using: composite
   steps:
+    - uses: lukka/get-cmake@latest
     - shell: bash
       id: script
       run: |
