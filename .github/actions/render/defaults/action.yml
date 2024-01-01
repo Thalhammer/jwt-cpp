@@ -25,7 +25,9 @@ runs:
     - shell: bash
       id: script
       run: |
-        cmake -P cmake/render-defaults.cmake -DTRAITS_NAME=${{ inputs.traits_name }} \
-        -DLIBRARY_NAME=${{ inputs.library_name }} -DLIBRARY_URL="${{ inputs.library_url }}" \
-        -DJWT_DISABLE_PICOJSON=${{ inputs.disable_default_traits }}
+        cmake -DTRAITS_NAME=${{ inputs.traits_name }} \
+              -DLIBRARY_NAME=${{ inputs.library_name }} \
+              -DLIBRARY_URL="${{ inputs.library_url }}" \
+              -DJWT_DISABLE_PICOJSON=${{ inputs.disable_default_traits }} \
+              -P cmake/render-defaults.cmake
         echo "result=$(echo $OUTPUT_FILE)" >> $GITHUB_OUTPUT
