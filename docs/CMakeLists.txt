@@ -20,4 +20,4 @@ add_custom_target(jwt-docs COMMAND doxygen ${CMAKE_CURRENT_LIST_DIR}/Doxyfile WO
                   SOURCES ${CMAKE_CURRENT_LIST_DIR}/Doxyfile BYPRODUCTS ${CMAKE_BINARY_DIR}/html/index.html)
 add_custom_command(
   TARGET jwt-docs POST_BUILD COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan
-                                       "You can prview the documentation: ${CMAKE_BINARY_DIR}/html/index.html")
+                                     "You can prview the documentation: ${CMAKE_BINARY_DIR}/html/index.html")
