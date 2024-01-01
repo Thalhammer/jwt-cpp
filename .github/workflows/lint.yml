@@ -87,6 +87,7 @@ jobs:
                 -DLIBRARY_URL="${{ matrix.traits.url }}" \
                 -DJWT_DISABLE_PICOJSON=${{ matrix.traits.disable_pico }} \
                 -P cmake/render-defaults.cmake
+          echo $OUTPUT_FILE
           echo "file_path=$(echo $OUTPUT_FILE)" >> $GITHUB_OUTPUT
       - run: clang-format -i ${{ steps.render.outputs.file_path }}
       - run: git add ${{ steps.render.outputs.file_path }}
