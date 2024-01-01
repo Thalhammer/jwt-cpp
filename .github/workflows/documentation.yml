@@ -15,7 +15,7 @@ jobs:
       - run: sudo apt install graphviz
       - run: | 
           cmake . -DJWT_BUILD_DOCS=ON
-          cmake --build . --target build_docs
+          cmake --build . --target jwt-docs
       - if: github.event_name == 'push'
         name: deploy
         uses: peaceiris/actions-gh-pages@v3
