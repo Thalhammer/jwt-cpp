@@ -12,7 +12,6 @@ endif()
 if(NOT DEFINED JWT_DISABLE_PICOJSON)
   message(FATAL_ERROR "Missing '-DJWT_DISABLE_PICOJSON' for this script to work")
 endif()
-message(STATUS "Rendering ${TRAITS_NAME}!")
 string(TOUPPER "${TRAITS_NAME}" TRAITS_NAME_UPPER)
 string(REPLACE "_" "-" TRAITS_DIR_FOLDER "${TRAITS_NAME}")
 
@@ -22,4 +21,4 @@ file(MAKE_DIRECTORY "${OUTPUT_DIR}")
 
 configure_file("${SCRIPT_DIR}/../include/jwt-cpp/traits/defaults.h.in" "${OUTPUT_DIR}/defaults.h" @ONLY)
 
-set(ENV{OUTPUT_FILE} "${OUTPUT_DIR}/defaults.h")
+message(STATUS "${OUTPUT_DIR}/defaults.h")
