@@ -52,6 +52,23 @@ jobs:
           cmake . -DTEST:STRING="defaults-enabled"
           cmake --build .
 
+  presets-linux-with-examples:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: lukka/get-cmake@latest
+
+      - name: setup
+        run: |
+          cmake --preset release
+          sudo cmake --install . --preset release
+
+      - name: test
+        working-directory: tests/cmake
+        run: |
+          cmake . -DTEST:STRING="defaults-enabled"
+          cmake --build .
+
   default-win:
     runs-on: windows-latest
     steps:
