@@ -10,7 +10,7 @@
     ],
     "configurePresets": [
         {
-            "name": "ci-examples",
+            "name": "examples",
             "displayName": "Build Examples",
             "inherits": "release",
             "cacheVariables": {
@@ -20,8 +20,8 @@
     ],
     "buildPresets": [
         {
-            "name": "ci-examples",
-            "configurePreset": "ci-examples",
+            "name": "examples",
+            "configurePreset": "examples",
             "configuration": "Release",
             "targets": [
                 "rsa-create",
