@@ -137,6 +137,25 @@ jobs:
           cmake . -DCMAKE_PREFIX_PATH="/opt/jwt-cpp" -DTEST:STRING="defaults-enabled" -DCMAKE_FIND_DEBUG_MODE=1
           cmake --build .
 
+  root-hint-install-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: lukka/get-cmake@latest
+
+      - name: setup
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_INSTALL_PREFIX:STRING="/opt/jwt-cpp" -DJWT_BUILD_EXAMPLES=OFF
+          make install
+
+      - name: test
+        run: |
+          cd tests/cmake
+          cmake . -Djwt-cpp_ROOT="/opt/jwt-cpp" -DTEST:STRING="defaults-enabled" -DCMAKE_FIND_DEBUG_MODE=1
+          cmake --build .
+
   custom-install-win:
     runs-on: windows-latest
     steps:
