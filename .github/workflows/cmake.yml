@@ -95,6 +95,29 @@ jobs:
           cmake . -DTEST:STRING="defaults-enabled"
           cmake --build .
 
+  preset-support-but-not-enough:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/install/cmake
+        with:
+          version: "3.24.4"
+          url: "https://cmake.org/files/v3.24/cmake-3.24.4.tar.gz"
+      - uses: ./.github/actions/install/gtest
+
+      - name: setup
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DJWT_BUILD_EXAMPLES=ON -DJWT_BUILD_TESTS=ON
+          sudo make install
+
+      - name: test
+        run: |
+          cd tests/cmake
+          cmake . -DTEST:STRING="defaults-enabled"
+          cmake --build .
+
   custom-install-linux:
     runs-on: ubuntu-latest
     steps:
