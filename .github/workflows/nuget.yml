@@ -1,4 +1,4 @@
-name: Release CD
+name: Nuget CD
 
 on:
   # Allows you to run this workflow manually from the Actions tab
@@ -9,6 +9,7 @@ on:
 
 jobs:
   nuget:
+    if: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
