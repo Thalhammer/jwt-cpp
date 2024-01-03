@@ -23,7 +23,7 @@ jobs:
       - run: |
           sudo apt-get install clang-format-14
           shopt -s globstar
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: clang-format-14 -i ${{ matrix.files }}
       - uses: ./.github/actions/process-linting-results
         with:
@@ -41,7 +41,7 @@ jobs:
           python-version: "3.x"
       - run: pip install cmakelang
       - run: shopt -s globstar
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: cmake-format -i ${{ matrix.files }}
       - uses: ./.github/actions/process-linting-results
         with:
@@ -52,7 +52,7 @@ jobs:
     steps:
       - run: sudo apt-get install clang-tidy
       - uses: lukka/get-cmake@latest
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: configure
         run: |
           mkdir build
@@ -78,7 +78,9 @@ jobs:
           - { name: "open_source_parsers_jsoncpp", library: "jsoncpp", url: "https://github.com/open-source-parsers/jsoncpp", disable_pico: true }
     name: render-defaults (${{ matrix.traits.name }})
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - run: |
+          sudo apt-get install clang-format-14
       - uses: ./.github/actions/render/defaults
         id: render
         with:
@@ -86,7 +88,7 @@ jobs:
           library_name: ${{ matrix.traits.library }}
           library_url: ${{ matrix.traits.url }}
           disable_default_traits: ${{ matrix.traits.disable_pico }}
-      - run: clang-format -i ${{ steps.render.outputs.file_path }}
+      - run: clang-format-14 -i ${{ steps.render.outputs.file_path }}
       - run: git add ${{ steps.render.outputs.file_path }}
       - uses: ./.github/actions/process-linting-results
         with:
@@ -105,13 +107,15 @@ jobs:
           - { name: "open_source_parsers_jsoncpp", suite: "OspJsoncppTest" }
     name: render-tests (${{ matrix.traits.name }})
     steps:
-      - uses: actions/checkout@v3
-      - run: shopt -s globstar
+      - uses: actions/checkout@v4
+      - run: |
+          sudo apt-get install clang-format-14
+          shopt -s globstar
       - uses: ./.github/actions/render/tests
         with:
           traits_name: ${{ matrix.traits.name }}
           test_suite_name: ${{ matrix.traits.suite }}
-      - run: clang-format -i tests/**/*.cpp
+      - run: clang-format-14 -i tests/**/*.cpp
       - run: git add tests/traits/*
       - uses: ./.github/actions/process-linting-results
         with:
@@ -120,7 +124,7 @@ jobs:
   line-ending:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: git add --renormalize .
       - uses: ./.github/actions/process-linting-results
         with:

@@ -19,7 +19,7 @@ jobs:
           - { name: "kazuho-picojson", tag: "111c9be5188f7350c2eac9ddaedd8cca3d7bf394", version: "111c9be" }
           - { name: "open-source-parsers-jsoncpp", tag: "1.9.5", version: "v1.9.5" }
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
       - name: setup
         run: |

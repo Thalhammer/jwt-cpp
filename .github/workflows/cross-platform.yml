@@ -19,7 +19,7 @@ jobs:
       - if: matrix.os == 'macos-latest'
         run: sudo cp /usr/local/opt/openssl@1.1/lib/pkgconfig/*.pc /usr/local/lib/pkgconfig/
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: cmake -E make_directory ${{ github.workspace }}/build
 
       - name: configure
