@@ -29,14 +29,13 @@
             "inherits": "debug",
             "displayName": "Fuzz Testing",
             "description": "This is only available on Linux with Clang",
+            "toolchain": "../cmake/ci-fuzzing-toolchain.cmake",
             "condition": {
                 "type": "equals",
                 "lhs": "${hostSystemName}",
                 "rhs": "Linux"
             },
             "cacheVariables": {
-                "CMAKE_C_COMPILER": "clang",
-                "CMAKE_CXX_COMPILER": "clang++",
                 "JWT_ENABLE_FUZZING": "ON"
             }
         },
