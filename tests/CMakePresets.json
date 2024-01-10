@@ -10,15 +10,20 @@
     ],
     "configurePresets": [
         {
-            "name": "coverage",
-            "inherits": "debug",
-            "displayName": "Coverage",
+            "name": "linux",
+            "hidden": true,
             "description": "This is only available on Linux",
             "condition": {
                 "type": "equals",
                 "lhs": "${hostSystemName}",
                 "rhs": "Linux"
-            },
+            }
+        },
+        {
+            "name": "coverage",
+            "inherits": ["debug", "linux"],
+            "displayName": "Coverage",
+            "description": "This is only available on Linux",
             "cacheVariables": {
                 "JWT_BUILD_TESTS": "ON",
                 "JWT_ENABLE_COVERAGE": "ON"
@@ -26,14 +31,9 @@
         },
         {
             "name": "ci-fuzzing",
-            "inherits": "debug",
+            "inherits": ["debug", "linux"],
             "displayName": "Fuzz Testing",
             "description": "This is only available on Linux with Clang",
-            "condition": {
-                "type": "equals",
-                "lhs": "${hostSystemName}",
-                "rhs": "Linux"
-            },
             "cacheVariables": {
                 "JWT_ENABLE_FUZZING": "ON",
                 "CMAKE_C_COMPILER": "clang",
@@ -42,14 +42,9 @@
         },
         {
             "name": "ci-asan",
-            "inherits": "debug",
+            "inherits": ["debug", "linux"],
             "displayName": "Address/Leak Sanitizer",
             "description": "This is only available on Linux",
-            "condition": {
-                "type": "equals",
-                "lhs": "${hostSystemName}",
-                "rhs": "Linux"
-            },
             "environment": {
                 "ASAN_FLAGS": "-fsanitize=address -fsanitize=leak",
                 "ASAN_OPTIONS": "check_initialization_order=true:detect_stack_use_after_return=true:fast_unwind_on_malloc=0"
@@ -65,14 +60,9 @@
         },
         {
             "name": "ci-ubsan",
-            "inherits": "debug",
+            "inherits": ["debug", "linux"],
             "displayName": "Undefined Behavior Sanitizer",
             "description": "This is only available on Linux",
-            "condition": {
-                "type": "equals",
-                "lhs": "${hostSystemName}",
-                "rhs": "Linux"
-            },
             "environment": {
                 "UBSAN_FLAGS": "-fsanitize=undefined -fsanitize=return -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize-recover=all",
                 "UBSAN_OPTIONS": "print_stacktrace=1"
