@@ -54,13 +54,9 @@ jobs:
       - uses: lukka/get-cmake@latest
       - uses: actions/checkout@v4
       - name: configure
-        run: |
-          mkdir build
-          cd build
-          cmake .. -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-fix"
+        run: cmake --preset dev -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-fix"
       - name: run
-        working-directory: build
-        run: make
+        run: cmake --build --preset dev --target all
       - uses: ./.github/actions/process-linting-results
         with:
           linter_name: clang-tidy
