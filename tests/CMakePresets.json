@@ -29,12 +29,12 @@
             "inherits": "debug",
             "displayName": "Fuzz Testing",
             "description": "This is only available on Linux with Clang",
-            "toolchainFile": "${sourceParentDir}/cmake/ci-fuzzing-toolchain.cmake",
             "condition": {
                 "type": "equals",
                 "lhs": "${hostSystemName}",
                 "rhs": "Linux"
             },
+            "toolchainFile": "${sourceDir}/cmake/ci-fuzzing-toolchain.cmake",
             "cacheVariables": {
                 "JWT_ENABLE_FUZZING": "ON"
             }
@@ -43,6 +43,12 @@
             "name": "ci-asan",
             "inherits": "debug",
             "displayName": "Address/Leak Sanitizer",
+            "description": "This is only available on Linux",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            },
             "environment": {
                 "ASAN_OPTIONS": "check_initialization_order=true:detect_stack_use_after_return=true:fast_unwind_on_malloc=0"
             },
@@ -59,6 +65,12 @@
             "name": "ci-ubsan",
             "inherits": "debug",
             "displayName": "Undefined Behavior Sanitizer",
+            "description": "This is only available on Linux",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            },
             "environment": {
                 "UBSAN_OPTIONS": "print_stacktrace=1"
             },

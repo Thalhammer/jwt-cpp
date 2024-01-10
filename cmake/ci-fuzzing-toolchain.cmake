@@ -1,4 +1,4 @@
-include("linux-clang-toolchain.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/linux-clang-toolchain.cmake")
 
 set(CMAKE_BUILD_TYPE "Debug")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O1 -fsanitize=fuzzer,address,signed-integer-overflow,undefined -fno-omit-frame-pointer")
