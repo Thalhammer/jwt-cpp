@@ -40,6 +40,8 @@
             },
             "cacheVariables": {
                 "JWT_ENABLE_FUZZING": "ON",
+                "CMAKE_C_COMPILER_WORKS": "ON",
+                "CMAKE_CXX_COMPILER_WORKS": "ON",
                 "CMAKE_C_FLAGS": "$env{FUZZING_FLAGS} -g -O1",
                 "CMAKE_CXX_FLAGS": "$env{FUZZING_FLAGS} -g -O1",
                 "CMAKE_EXE_LINKER_FLAGS": "$env{FUZZING_FLAGS}",
