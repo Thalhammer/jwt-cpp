@@ -22,14 +22,12 @@ jobs:
 
       - name: setup
         run: |
-          mkdir build
-          cd build
-          cmake .. -DJWT_BUILD_EXAMPLES=OFF
-          sudo make install
+          cmake --preset release
+          sudo cmake --build --preset release --target install
 
       - name: test
+        working-directory: tests/cmake
         run: |
-          cd tests/cmake
           cmake . -DTEST:STRING="defaults-enabled" -DCMAKE_FIND_DEBUG_MODE=1
           cmake --build .
 
