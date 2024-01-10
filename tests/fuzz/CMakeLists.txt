@@ -4,6 +4,8 @@ endif()
 
 function(ADD_FUZZING_EXECUTABLE TARGET)
   add_executable(jwt-cpp-fuzz-${TARGET} "${TARGET}.cpp")
+  target_compile_options(jwt-cpp-fuzz-${TARGET} PRIVATE -g -O1 $ENV{FUZZING_FLAGS})
+  target_link_options(jwt-cpp-fuzz-${TARGET} PRIVATE $ENV{FUZZING_FLAGS})
   target_link_libraries(jwt-cpp-fuzz-${TARGET} PRIVATE jwt-cpp::jwt-cpp)
 endfunction()
 

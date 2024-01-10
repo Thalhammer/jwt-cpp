@@ -34,18 +34,13 @@
                 "lhs": "${hostSystemName}",
                 "rhs": "Linux"
             },
-            "toolchainFile": "${sourceDir}/cmake/linux-clang-toolchain.cmake",
             "environment": {
                 "FUZZING_FLAGS": "-fsanitize=fuzzer,address,signed-integer-overflow,undefined -fno-omit-frame-pointer"
             },
             "cacheVariables": {
                 "JWT_ENABLE_FUZZING": "ON",
-                "CMAKE_C_COMPILER_WORKS": "ON",
-                "CMAKE_CXX_COMPILER_WORKS": "ON",
-                "CMAKE_C_FLAGS": "$env{FUZZING_FLAGS} -g -O1",
-                "CMAKE_CXX_FLAGS": "$env{FUZZING_FLAGS} -g -O1",
-                "CMAKE_EXE_LINKER_FLAGS": "$env{FUZZING_FLAGS}",
-                "CMAKE_MODULE_LINKER_FLAGS": "$env{FUZZING_FLAGS}"
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_CXX_COMPILER": "clang++"
             }
         },
         {
