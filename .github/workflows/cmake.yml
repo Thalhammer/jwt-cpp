@@ -41,14 +41,8 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake ..
+          cmake .. -DJWT_BUILD_EXAMPLES=ON
           sudo cmake --install .
-
-      - name: test
-        run: |
-          cd tests/cmake
-          cmake . -DTEST:STRING="defaults-enabled"
-          cmake --build .
 
       - name: test
         working-directory: tests/cmake
