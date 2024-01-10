@@ -29,7 +29,7 @@
             "inherits": "debug",
             "displayName": "Fuzz Testing",
             "description": "This is only available on Linux with Clang",
-            "toolchain": "../cmake/ci-fuzzing-toolchain.cmake",
+            "toolchainFile": "${sourceParentDir}/cmake/ci-fuzzing-toolchain.cmake",
             "condition": {
                 "type": "equals",
                 "lhs": "${hostSystemName}",
