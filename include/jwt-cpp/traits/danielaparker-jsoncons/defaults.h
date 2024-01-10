@@ -47,7 +47,7 @@ namespace jwt {
 
 	/**
 	 * Decode a token
-	 * \tparam Decode is callabled, taking a string_type and returns a string_type.
+	 * \tparam Decode is callable, taking a string_type and returns a string_type.
 	 * It should ensure the padding of the input and then base64url decode and
 	 * return the results.
 	 * \param token Token to decode

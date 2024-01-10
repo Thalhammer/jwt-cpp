@@ -2,6 +2,52 @@
 
 Traits define the compatibility mapping for JWT-CPP required functionality to the JSON implementation of choice.
 
+## Selecting a JSON library
+
+For your convenience there are serval traits implementation which provide some popular JSON libraries. They are:
+
+[![picojson][picojson]](https://github.com/kazuho/picojson)
+[![nlohmann][nlohmann]](https://github.com/nlohmann/json)
+[![jsoncons][jsoncons]](https://github.com/danielaparker/jsoncons)
+[![boostjson][boostjson]](https://github.com/boostorg/json)
+[![jsoncpp][jsoncpp]](https://github.com/open-source-parsers/jsoncpp)
+
+[picojson]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/traits/kazuho-picojson/shields.json
+[nlohmann]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/traits/nlohmann-json/shields.json
+[jsoncons]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/traits/danielaparker-jsoncons/shields.json
+[boostjson]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/traits/boost-json/shields.json
+[jsoncpp]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/traits/open-source-parsers-jsoncpp/shields.json
+
+In order to maintain compatibility, [picojson](https://github.com/kazuho/picojson) is still used to provide a specialized `jwt::claim` along with all helpers. Defining `JWT_DISABLE_PICOJSON` will remove this optional dependency. It's possible to directly include the traits defaults for the other JSON libraries. See the [traits examples](https://github.com/Thalhammer/jwt-cpp/tree/master/example/traits) for details.
+
+```cpp
+//include "jwt-cpp/traits/author-library/traits.h"
+#include "jwt-cpp/traits/nlohmann-json/traits.h"
+// There is also a "defaults.h" if you's like to skip providing the
+// template specializations for the JSON traits
+
+int main() {
+    // All the provided traits are in jwt::traits namespace
+    using traits = jwt::traits::nlohmann_json;
+
+    const auto time = jwt::date::clock::now();
+    const auto token = jwt::create<traits>()
+                           .set_type("JWT")
+                           .set_issuer("auth.mydomain.io")
+                           .set_audience("mydomain.io")
+                           .set_issued_at(time)
+                           .set_not_before(time)
+                           .set_expires_at(time + std::chrono::minutes{2} + std::chrono::seconds{15})
+                           .sign(jwt::algorithm::none{});
+    const auto decoded = jwt::decode<traits>(token);
+
+    jwt::verify<traits>()
+        .allow_algorithm(jwt::algorithm::none{})
+        .with_issuer("auth.mydomain.io")
+        .with_audience("mydomain.io")
+        .verify(decoded);
+```
+
 ## Providing your own JSON Traits
 
 There are several key items that need to be provided to a `jwt::basic_claim` in order for it to be interoperable with you JSON library of choice.
@@ -12,7 +58,8 @@ There are several key items that need to be provided to a `jwt::basic_claim` in 
 
 If ever you are not sure, the traits are heavily checked against static asserts to make sure you provide everything that's required.
 
-> :warning: Not all JSON libraries are a like, you may need to extend certain types such that it can be used. See this [provided implementation](https://github.com/Thalhammer/jwt-cpp/blob/e6b92cca0b7088027269c481fa244e5c39df88ff/include/jwt-cpp/traits/danielaparker-jsoncons/traits.h#L18).
+> [!important]
+> Not all JSON libraries are a like, you may need to extend certain types such that it can be used. See this [provided implementation](https://github.com/Thalhammer/jwt-cpp/blob/e6b92cca0b7088027269c481fa244e5c39df88ff/include/jwt-cpp/traits/danielaparker-jsoncons/traits.h#L18).
 
 ```cpp
 struct my_favorite_json_library_traits {

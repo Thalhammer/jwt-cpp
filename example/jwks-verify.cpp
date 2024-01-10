@@ -1,3 +1,9 @@
+/** 
+ * \file jwks-verify.cpp
+ * 
+ * Novel example using a JWT's "key ID" to match with a JWK Set
+ * and using the corresponding x5c from the JWK to verify the token
+ */
 #include <iostream>
 #include <jwt-cpp/jwt.h>
 #include <openssl/rand.h>

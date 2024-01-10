@@ -68,7 +68,7 @@ namespace jwt {
 		};
 		namespace helper {
 			/**
-			 * @brief A General purpose base64url alphabet respecting the
+			 * \brief A General purpose base64url alphabet respecting the
 			 * [URI Case Normalization](https://datatracker.ietf.org/doc/html/rfc3986#section-6.2.2.1)
 			 *
 			 * This is useful in situations outside of JWT encoding/decoding and is provided as a helper
@@ -101,7 +101,6 @@ namespace jwt {
 	 * \brief A collection of fellable functions for working with base64 and base64url
 	 */
 	namespace base {
-
 		namespace details {
 			struct padding {
 				size_t count = 0;
@@ -248,18 +247,58 @@ namespace jwt {
 			}
 		} // namespace details
 
+		/**
+		 * \brief Generic base64 encoding
+		 * 
+		 * A Generic base64 encode function that supports any "alphabet"
+		 * such as jwt::alphabet::base64 
+		 * 
+		 * \code
+		 * const auto b64 = jwt::base::encode<jwt::alphabet::base64>("example_data")
+		 * \endcode
+		 */
 		template<typename T>
 		std::string encode(const std::string& bin) {
 			return details::encode(bin, T::data(), T::fill());
 		}
+		/**
+		 * \brief Generic base64 decoding
+		 * 
+		 * A Generic base64 decoding function that supports any "alphabet"
+		 * such as jwt::alphabet::base64 
+		 * 
+		 * \code
+		 * const auto b64 = jwt::base::decode<jwt::alphabet::base64>("ZXhhbXBsZV9kYXRh")
+		 * \endcode
+		 */
 		template<typename T>
 		std::string decode(const std::string& base) {
 			return details::decode(base, T::data(), T::fill());
 		}
+		/**
+		 * \brief Generic base64 padding
+		 * 
+		 * A Generic base64 pad function that supports any "alphabet"
+		 * such as jwt::alphabet::base64 
+		 * 
+		 * \code
+		 * const auto b64 = jwt::base::pad<jwt::alphabet::base64>("ZXhhbXBsZV9kYQ")
+		 * \endcode
+		 */
 		template<typename T>
 		std::string pad(const std::string& base) {
 			return details::pad(base, T::fill());
 		}
+		/**
+		 * \brief Generic base64 trimming
+		 * 
+		 * A Generic base64 trim function that supports any "alphabet"
+		 * such as jwt::alphabet::base64 
+		 * 
+		 * \code
+		 * const auto b64 = jwt::base::trim<jwt::alphabet::base64>("ZXhhbXBsZV9kYQ==")
+		 * \endcode
+		 */
 		template<typename T>
 		std::string trim(const std::string& base) {
 			return details::trim(base, T::fill());

@@ -5,7 +5,11 @@
 #include "json/json.h"
 
 namespace jwt {
+	/**
+	 * \brief Namespace containing all the json_trait implementations for a jwt::basic_claim.
+	*/
 	namespace traits {
+		/// basic_claim's JSON trait implementation for jsoncpp
 		struct open_source_parsers_jsoncpp {
 			using value_type = Json::Value;
 			using string_type = std::string;

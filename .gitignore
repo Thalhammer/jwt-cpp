@@ -310,8 +310,5 @@ test
 # ClangD cache files
 .cache
 
-doxy/
-doxygen-awesome*.css
-
 build/*
 package-lock.json

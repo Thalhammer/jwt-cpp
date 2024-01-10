@@ -77,7 +77,7 @@
 #endif
 
 /**
- * \brief JSON Web Token
+ * \brief JSON Web Token.
  *
  * A namespace to contain everything related to handling JSON Web Tokens, JWT for short,
  * as a part of [RFC7519](https://tools.ietf.org/html/rfc7519), or alternatively for
@@ -153,7 +153,9 @@ namespace jwt {
 			static rsa_error_cat cat;
 			return cat;
 		}
-
+		/**
+		 * \brief Converts JWT-CPP errors into generic STL error_codes
+		 */
 		inline std::error_code make_error_code(rsa_error e) { return {static_cast<int>(e), rsa_error_category()}; }
 		/**
 		 * \brief Errors related to processing of RSA signatures
@@ -171,8 +173,7 @@ namespace jwt {
 			get_key_failed,
 			write_key_failed,
 			write_cert_failed,
-			convert_to_pem_failed,
-
+			convert_to_pem_failed
 		};
 		/**
 		 * \brief Error category for ECDSA errors
@@ -204,7 +205,9 @@ namespace jwt {
 			static ecdsa_error_cat cat;
 			return cat;
 		}
-
+		/**
+		 * \brief Converts JWT-CPP errors into generic STL error_codes
+		 */
 		inline std::error_code make_error_code(ecdsa_error e) { return {static_cast<int>(e), ecdsa_error_category()}; }
 
 		/**
@@ -253,7 +256,9 @@ namespace jwt {
 			static verification_error_cat cat;
 			return cat;
 		}
-
+		/**
+		 * \brief Converts JWT-CPP errors into generic STL error_codes
+		 */
 		inline std::error_code make_error_code(signature_verification_error e) {
 			return {static_cast<int>(e), signature_verification_error_category()};
 		}
@@ -321,7 +326,9 @@ namespace jwt {
 			static signature_generation_error_cat cat = {};
 			return cat;
 		}
-
+		/**
+		 * \brief Converts JWT-CPP errors into generic STL error_codes
+		 */
 		inline std::error_code make_error_code(signature_generation_error e) {
 			return {static_cast<int>(e), signature_generation_error_category()};
 		}
@@ -364,11 +371,15 @@ namespace jwt {
 			static token_verification_error_cat cat = {};
 			return cat;
 		}
-
+		/**
+		 * \brief Converts JWT-CPP errors into generic STL error_codes
+		 */
 		inline std::error_code make_error_code(token_verification_error e) {
 			return {static_cast<int>(e), token_verification_error_category()};
 		}
-
+		/**
+		 * \brief Raises an exception if any JWT-CPP error codes are active
+		 */
 		inline void throw_if_error(std::error_code ec) {
 			if (ec) {
 				if (ec.category() == rsa_error_category()) throw rsa_exception(ec);
@@ -413,6 +424,9 @@ namespace jwt {
 		 */
 		class evp_pkey_handle {
 		public:
+			/**
+			 * \brief Creates a null key pointer.
+			 */
 			constexpr evp_pkey_handle() noexcept = default;
 #ifdef JWT_OPENSSL_1_0_0
 			/**
@@ -600,7 +614,7 @@ namespace jwt {
 		 * \brief Convert the certificate provided as base64 DER to PEM.
 		 *
 		 * This is useful when using with JWKs as x5c claim is encoded as base64 DER. More info
-		 * (here)[https://tools.ietf.org/html/rfc7517#section-4.7]
+		 * [here](https://tools.ietf.org/html/rfc7517#section-4.7).
 		 *
 		 * \tparam Decode is callable, taking a string_type and returns a string_type.
 		 * It should ensure the padding of the input and then base64 decode and return
@@ -622,7 +636,7 @@ namespace jwt {
 		 * \brief Convert the certificate provided as base64 DER to PEM.
 		 *
 		 * This is useful when using with JWKs as x5c claim is encoded as base64 DER. More info
-		 * (here)[https://tools.ietf.org/html/rfc7517#section-4.7]
+		 * [here](https://tools.ietf.org/html/rfc7517#section-4.7)
 		 *
 		 * \tparam Decode is callable, taking a string_type and returns a string_type.
 		 * It should ensure the padding of the input and then base64 decode and return
@@ -658,7 +672,7 @@ namespace jwt {
 		 * \brief Convert the certificate provided as base64 DER to PEM.
 		 *
 		 * This is useful when using with JWKs as x5c claim is encoded as base64 DER. More info
-		 * (here)[https://tools.ietf.org/html/rfc7517#section-4.7]
+		 * [here](https://tools.ietf.org/html/rfc7517#section-4.7)
 		 *
 		 * \param cert_base64_der_str 	String containing the certificate encoded as base64 DER
 		 * \param ec					error_code for error_detection (gets cleared if no error occurs)
@@ -674,7 +688,7 @@ namespace jwt {
 		 * \brief Convert the certificate provided as base64 DER to PEM.
 		 *
 		 * This is useful when using with JWKs as x5c claim is encoded as base64 DER. More info
-		 * (here)[https://tools.ietf.org/html/rfc7517#section-4.7]
+		 * [here](https://tools.ietf.org/html/rfc7517#section-4.7)
 		 *
 		 * \param cert_base64_der_str 	String containing the certificate encoded as base64 DER
 		 * \throw						rsa_exception if an error occurred
@@ -795,7 +809,7 @@ namespace jwt {
 		 *
 		 * The string should contain a pem encoded certificate or public key
 		 * 
-		 * \deprecated Use the templated version load_private_key_from_string with error::ecdsa_error
+		 * \deprecated Use the templated version helper::load_private_key_from_string with error::ecdsa_error
 		 *
 		 * \param key		String containing the certificate encoded as pem
 		 * \param password	Password used to decrypt certificate (leave empty if not encrypted)
@@ -857,7 +871,7 @@ namespace jwt {
 		 *
 		 * The string should contain a pem encoded certificate or public key
 		 *
-		 * \deprecated Use the templated version load_private_key_from_string with error::ecdsa_error
+		 * \deprecated Use the templated version helper::load_private_key_from_string with error::ecdsa_error
 		 * 
 		 * \param key		String containing the certificate or key encoded as pem
 		 * \param password	Password used to decrypt certificate or key (leave empty if not encrypted)
@@ -874,7 +888,7 @@ namespace jwt {
 		/**
 		 * \brief Load a private key from a string.
 		 * 
-		 * \deprecated Use the templated version load_private_key_from_string with error::ecdsa_error
+		 * \deprecated Use the templated version helper::load_private_key_from_string with error::ecdsa_error
 		 *
 		 * \param key		String containing a private key as pem
 		 * \param password	Password used to decrypt key (leave empty if not encrypted)
@@ -1059,11 +1073,10 @@ namespace jwt {
 			return res;
 		}
 #endif
-
 		/**
 		 * \brief Load a private key from a string.
 		 *
-		 * \deprecated Use the templated version load_private_key_from_string with error::ecdsa_error
+		 * \deprecated Use the templated version helper::load_private_key_from_string with error::ecdsa_error
 		 * 
 		 * \param key		String containing a private key as pem
 		 * \param password	Password used to decrypt key (leave empty if not encrypted)
@@ -1084,14 +1097,16 @@ namespace jwt {
 	 * JWT (JSON Web Tokens) signatures are typically used as the payload for a JWS (JSON Web Signature) or
 	 * JWE (JSON Web Encryption). Both of these use various cryptographic as specified by
 	 * [RFC7518](https://tools.ietf.org/html/rfc7518) and are exposed through the a [JOSE
-	 * Header](https://tools.ietf.org/html/rfc7515#section-4) which points to one of the JWA (JSON Web
-	 * Algorithms)(https://tools.ietf.org/html/rfc7518#section-3.1)
+	 * Header](https://tools.ietf.org/html/rfc7515#section-4) which points to one of the JWA [JSON Web
+	 * Algorithms](https://tools.ietf.org/html/rfc7518#section-3.1)
 	 */
 	namespace algorithm {
 		/**
 		 * \brief "none" algorithm.
 		 *
 		 * Returns and empty signature and checks if the given signature is empty.
+		 * See [RFC 7518 Section 3.6](https://datatracker.ietf.org/doc/html/rfc7518#section-3.6)
+		 * for more information.
 		 */
 		struct none {
 			/**
@@ -1121,6 +1136,7 @@ namespace jwt {
 		struct hmacsha {
 			/**
 			 * Construct new hmac algorithm
+			 * 
 			 * \param key Key to use for HMAC
 			 * \param md Pointer to hash function
 			 * \param name Name of the algorithm
@@ -1129,6 +1145,7 @@ namespace jwt {
 				: secret(std::move(key)), md(md), alg_name(std::move(name)) {}
 			/**
 			 * Sign jwt data
+			 * 
 			 * \param data The data to sign
 			 * \param ec error_code filled with details on error
 			 * \return HMAC signature for the given data
@@ -1149,6 +1166,7 @@ namespace jwt {
 			}
 			/**
 			 * Check if signature is valid
+			 * 
 			 * \param data The data to check signature against
 			 * \param signature Signature provided by the jwt
 			 * \param ec Filled with details about failure.
@@ -1169,6 +1187,7 @@ namespace jwt {
 			}
 			/**
 			 * Returns the algorithm name provided to the constructor
+			 * 
 			 * \return algorithm's name
 			 */
 			std::string name() const { return alg_name; }
@@ -1187,6 +1206,7 @@ namespace jwt {
 		struct rsa {
 			/**
 			 * Construct new rsa algorithm
+			 * 
 			 * \param public_key RSA public key in PEM format
 			 * \param private_key RSA private key or empty string if not available. If empty, signing will always fail.
 			 * \param public_key_password Password to decrypt public key pem.
@@ -1239,6 +1259,7 @@ namespace jwt {
 			}
 			/**
 			 * Check if signature is valid
+			 * 
 			 * \param data The data to check signature against
 			 * \param signature Signature provided by the jwt
 			 * \param ec Filled with details on failure
@@ -1439,7 +1460,6 @@ namespace jwt {
 				}
 
 #ifdef JWT_OPENSSL_1_0_0
-
 				auto rr = helper::bn2raw(sig->r);
 				auto rs = helper::bn2raw(sig->s);
 #else
@@ -1796,11 +1816,14 @@ namespace jwt {
 			explicit hs512(std::string key) : hmacsha(std::move(key), EVP_sha512, "HS512") {}
 		};
 		/**
-		 * RS256 algorithm
+		 * RS256 algorithm.
+		 * 
+		 * This data structure is used to describe the RSA256 and can be used to verify JWTs
 		 */
 		struct rs256 : public rsa {
 			/**
-			 * Construct new instance of algorithm
+			 * \brief Construct new instance of algorithm
+			 * 
 			 * \param public_key RSA public key in PEM format
 			 * \param private_key RSA private key or empty string if not available. If empty, signing will always fail.
 			 * \param public_key_password Password to decrypt public key pem.
@@ -2006,9 +2029,11 @@ namespace jwt {
 	 */
 	namespace json {
 		/**
-		 * \brief Generic JSON types used in JWTs
+		 * \brief Categories for the various JSON types used in JWTs
 		 *
-		 * This enum is to abstract the third party underlying types
+		 * This enum is to abstract the third party underlying types and allows the library
+		 * to identify the different structures and reason about them without needing a "concept"
+		 * to capture that defintion to compare against a concrete type.
 		 */
 		enum class type { boolean, integer, number, string, array, object };
 	} // namespace json
@@ -2286,7 +2311,7 @@ namespace jwt {
 	class basic_claim {
 		/**
 		 * The reason behind this is to provide an expressive abstraction without
-		 * over complexifying the API. For more information take the time to read
+		 * over complicating the API. For more information take the time to read
 		 * https://github.com/nlohmann/json/issues/774. It maybe be expanded to
 		 * support custom string types.
 		 */
@@ -2300,12 +2325,15 @@ namespace jwt {
 										 typename json_traits::array_type, typename json_traits::string_type,
 										 typename json_traits::number_type, typename json_traits::integer_type,
 										 typename json_traits::boolean_type>::value,
-			"must staisfy json container requirements");
+			"must satisfy json container requirements");
 		static_assert(details::is_valid_traits<json_traits>::value, "traits must satisfy requirements");
 
 		typename json_traits::value_type val;
 
 	public:
+		/**
+		 * Order list of strings
+		 */
 		using set_t = std::set<typename json_traits::string_type>;
 
 		basic_claim() = default;
@@ -3075,17 +3103,22 @@ namespace jwt {
 		struct verify_context {
 			verify_context(date ctime, const decoded_jwt<json_traits>& j, size_t l)
 				: current_time(ctime), jwt(j), default_leeway(l) {}
-			// Current time, retrieved from the verifiers clock and cached for performance and consistency
+			/// Current time, retrieved from the verifiers clock and cached for performance and consistency
 			date current_time;
-			// The jwt passed to the verifier
+			/// The jwt passed to the verifier
 			const decoded_jwt<json_traits>& jwt;
-			// The configured default leeway for this verification
+			/// The configured default leeway for this verification
 			size_t default_leeway{0};
 
-			// The claim key to apply this comparison on
+			/// The claim key to apply this comparison on
 			typename json_traits::string_type claim_key{};
 
-			// Helper method to get a claim from the jwt in this context
+			/**
+			 * \brief Helper method to get a claim from the jwt in this context
+			 * \param in_header check JWT header or payload sections
+			 * \param ec std::error_code which will indicate if any error occure
+			 * \return basic_claim if it was present otherwise empty
+			 */
 			basic_claim<json_traits> get_claim(bool in_header, std::error_code& ec) const {
 				if (in_header) {
 					if (!jwt.has_header_claim(claim_key)) {
@@ -3101,6 +3134,13 @@ namespace jwt {
 					return jwt.get_payload_claim(claim_key);
 				}
 			}
+			/**
+			 * Helper method to get a claim of a specific type from the jwt in this context
+			 * \param in_header check JWT header or payload sections
+			 * \param t the expected type of the claim
+			 * \param ec std::error_code which will indicate if any error occure
+			 * \return basic_claim if it was present otherwise empty
+		 	 */
 			basic_claim<json_traits> get_claim(bool in_header, json::type t, std::error_code& ec) const {
 				auto c = get_claim(in_header, ec);
 				if (ec) return {};
@@ -3110,7 +3150,18 @@ namespace jwt {
 				}
 				return c;
 			}
+			/**
+			 * \brief Helper method to get a payload claim from the jwt
+			 * \param ec std::error_code which will indicate if any error occure
+			 * \return basic_claim if it was present otherwise empty
+		 	 */
 			basic_claim<json_traits> get_claim(std::error_code& ec) const { return get_claim(false, ec); }
+			/**
+			 * \brief Helper method to get a payload claim of a specific type from the jwt
+			 * \param t the expected type of the claim
+			 * \param ec std::error_code which will indicate if any error occure
+			 * \return basic_claim if it was present otherwise empty
+		 	 */
 			basic_claim<json_traits> get_claim(json::type t, std::error_code& ec) const {
 				return get_claim(false, t, ec);
 			}
@@ -3180,7 +3231,7 @@ namespace jwt {
 
 		/**
 		 * Checks if the given set is a subset of the set inside the token.
-		 * If the token value is a string it is traited as a set of a single element.
+		 * If the token value is a string it is treated as a set with a single element.
 		 * The comparison is case sensitive.
 		 */
 		template<typename json_traits, bool in_header = false>
@@ -3272,7 +3323,7 @@ namespace jwt {
 	public:
 		using basic_claim_t = basic_claim<json_traits>;
 		/**
-		 * Verification function
+		 * \brief Verification function data structure.
 		 *
 		 * This gets passed the current verifier, a reference to the decoded jwt, a reference to the key of this claim,
 		 * as well as a reference to an error_code.
@@ -3379,7 +3430,7 @@ namespace jwt {
 		 *
 		 * According to [RFC 7519 Section 5.1](https://datatracker.ietf.org/doc/html/rfc7519#section-5.1),
 		 * This parameter is ignored by JWT implementations; any processing of this parameter is performed by the JWT application.
-		 * Check is casesensitive.
+		 * Check is case sensitive.
 		 *
 		 * \param type Type Header Parameter to check for.
 		 * \param locale Localization functionality to use when comparing
@@ -3391,7 +3442,7 @@ namespace jwt {
 
 		/**
 		 * Set an issuer to check for.
-		 * Check is casesensitive.
+		 * Check is case sensitive.
 		 * \param iss Issuer to check for.
 		 * \return *this to allow chaining
 		 */
@@ -3401,7 +3452,7 @@ namespace jwt {
 
 		/**
 		 * Set a subject to check for.
-		 * Check is casesensitive.
+		 * Check is case sensitive.
 		 * \param sub Subject to check for.
 		 * \return *this to allow chaining
 		 */
@@ -3431,7 +3482,7 @@ namespace jwt {
 		}
 		/**
 		 * Set an id to check for.
-		 * Check is casesensitive.
+		 * Check is case sensitive.
 		 * \param id ID to check for.
 		 * \return *this to allow chaining
 		 */
@@ -3439,6 +3490,11 @@ namespace jwt {
 
 		/**
 		 * Specify a claim to check for using the specified operation.
+		 * This is helpful for implementating application specific authentication checks
+		 * such as the one seen in partial-claim-verifier.cpp
+		 * 
+		 * \snippet{trimleft} partial-claim-verifier.cpp verifier check custom claim
+		 * 
 		 * \param name Name of the claim to check for
 		 * \param fn Function to use for verifying the claim
 		 * \return *this to allow chaining
@@ -3450,6 +3506,10 @@ namespace jwt {
 
 		/**
 		 * Specify a claim to check for equality (both type & value).
+		 * See the private-claims.cpp example.
+		 * 
+		 * \snippet{trimleft} private-claims.cpp verify exact claim
+		 * 
 		 * \param name Name of the claim to check for
 		 * \param c Claim to check for
 		 * \return *this to allow chaining
@@ -3459,7 +3519,15 @@ namespace jwt {
 		}
 
 		/**
-		 * Add an algorithm available for checking.
+		 * \brief Add an algorithm available for checking.
+		 * 
+		 * This is used to handle incomming tokens for predefined algorithms
+		 * which the authorization server is provided. For example a small system
+		 * where only a single RSA key-pair is used to sign tokens
+		 * 
+		 * \snippet{trimleft} example/rsa-verify.cpp allow rsa algorithm
+		 * 
+		 * \tparam Algorithm any algorithm such as those provided by jwt::algorithm
 		 * \param alg Algorithm to allow
 		 * \return *this to allow chaining
 		 */
@@ -3685,7 +3753,7 @@ namespace jwt {
 		bool has_x5t_sha256() const noexcept { return has_jwk_claim("x5t#S256"); }
 
 		/**
-		 * Check if a jwks claim is present
+		 * Check if a jwk claim is present
 		 * \return true if claim was present, false otherwise
 		 */
 		bool has_jwk_claim(const typename json_traits::string_type& name) const noexcept {
@@ -3693,7 +3761,7 @@ namespace jwt {
 		}
 
 		/**
-		 * Get jwks claim
+		 * Get jwk claim by name
 		 * \return Requested claim
 		 * \throw std::runtime_error If claim was not present
 		 */
@@ -3701,6 +3769,10 @@ namespace jwt {
 			return jwk_claims.get_claim(name);
 		}
 
+		/**
+		* Check if the jwk has any claims
+		* \return true is any claim is present
+		 */
 		bool empty() const noexcept { return jwk_claims.empty(); }
 
 		/**
@@ -3723,11 +3795,19 @@ namespace jwt {
 	template<typename json_traits>
 	class jwks {
 	public:
-		using jwk_t = jwk<json_traits>;
-		using jwt_vector_t = std::vector<jwk_t>;
-		using iterator = typename jwt_vector_t::iterator;
-		using const_iterator = typename jwt_vector_t::const_iterator;
+		/// JWK instance template specialization
+		using jwks_t = jwk<json_traits>;
+		/// Type specialization for the vector of JWK
+		using jwks_vector_t = std::vector<jwks_t>;
+		using iterator = typename jwks_vector_t::iterator;
+		using const_iterator = typename jwks_vector_t::const_iterator;
 
+		/**
+		 * Parses a string buffer to extract the JWKS.
+		 * \param str buffer containing JSON object representing a JWKS
+		 * \throw error::invalid_json_exception or underlying JSON implation error if the JSON is
+		 *        invalid with regards to the JWKS specification
+		*/
 		JWT_CLAIM_EXPLICIT jwks(const typename json_traits::string_type& str) {
 			typename json_traits::value_type parsed_val;
 			if (!json_traits::parse(parsed_val, str)) throw error::invalid_json_exception();
@@ -3737,7 +3817,7 @@ namespace jwt {
 
 			auto jwk_list = jwks_json.get_claim("keys").as_array();
 			std::transform(jwk_list.begin(), jwk_list.end(), std::back_inserter(jwk_claims),
-						   [](const typename json_traits::value_type& val) { return jwk_t{val}; });
+						   [](const typename json_traits::value_type& val) { return jwks_t{val}; });
 		}
 
 		iterator begin() { return jwk_claims.begin(); }
@@ -3760,17 +3840,17 @@ namespace jwt {
 		 * \return Requested jwk by key_id
 		 * \throw std::runtime_error If jwk was not present
 		 */
-		jwk_t get_jwk(const typename json_traits::string_type& key_id) const {
+		jwks_t get_jwk(const typename json_traits::string_type& key_id) const {
 			const auto maybe = find_by_kid(key_id);
 			if (maybe == end()) throw error::claim_not_present_exception();
 			return *maybe;
 		}
 
 	private:
-		jwt_vector_t jwk_claims;
+		jwks_vector_t jwk_claims;
 
 		const_iterator find_by_kid(const typename json_traits::string_type& key_id) const noexcept {
-			return std::find_if(cbegin(), cend(), [key_id](const jwk_t& jwk) {
+			return std::find_if(cbegin(), cend(), [key_id](const jwks_t& jwk) {
 				if (!jwk.has_key_id()) { return false; }
 				return jwk.get_key_id() == key_id;
 			});
@@ -3801,11 +3881,18 @@ namespace jwt {
 	 * Default clock class using std::chrono::system_clock as a backend.
 	 */
 	struct default_clock {
+		/** 
+		 * Gets the current system time
+		 * \return time_point of the host system 
+		 */
 		date now() const { return date::clock::now(); }
 	};
 
 	/**
-	 * Create a verifier using the given clock
+	 * Create a verifier using the default_clock.
+	 * 
+	 * 
+	 * 
 	 * \param c Clock instance to use
 	 * \return verifier instance
 	 */
@@ -3823,7 +3910,13 @@ namespace jwt {
 	}
 
 	/**
-	 * Decode a token
+	 * \brief Decode a token. This can be used to to help access important feild like 'x5c'
+	 * for verifying tokens. See associated example rsa-verify.cpp for more details.
+	 * 
+	 * \tparam json_traits JSON implementation traits
+	 * \tparam Decode is callable, taking a string_type and returns a string_type.
+	 *         It should ensure the padding of the input and then base64url decode and
+	 *         return the results.
 	 * \param token Token to decode
 	 * \param decode function that will pad and base64url decode the token
 	 * \return Decoded token
@@ -3836,7 +3929,10 @@ namespace jwt {
 	}
 
 	/**
-	 * Decode a token
+	 * Decode a token. This can be used to to help access important feild like 'x5c'
+	 * for verifying tokens. See associated example rsa-verify.cpp for more details.
+	 * 
+	 * \tparam json_traits JSON implementation traits
 	 * \param token Token to decode
 	 * \return Decoded token
 	 * \throw std::invalid_argument Token is not in correct format
@@ -3846,15 +3942,29 @@ namespace jwt {
 	decoded_jwt<json_traits> decode(const typename json_traits::string_type& token) {
 		return decoded_jwt<json_traits>(token);
 	}
-
+	/**
+	 * Parse a single JSON Web Key
+	 * \tparam json_traits JSON implementation traits
+	 * \param jwk_ string buffer containing the JSON object
+	 * \return Decoded jwk
+	 */
 	template<typename json_traits>
-	jwk<json_traits> parse_jwk(const typename json_traits::string_type& token) {
-		return jwk<json_traits>(token);
+	jwk<json_traits> parse_jwk(const typename json_traits::string_type& jwk_) {
+		return jwk<json_traits>(jwk_);
 	}
-
+	/**
+	 * Parse a JSON Web Key Set. This can be used to to help access 
+	 * important feild like 'x5c' for verifying tokens. See example
+	 * jwks-verify.cpp for more information.
+	 * 
+	 * \tparam json_traits JSON implementation traits
+	 * \param jwks_ string buffer containing the JSON object
+	 * \return Parsed JSON object containing the data of the JWK SET string
+	 * \throw std::runtime_error Token is not in correct format
+	 */
 	template<typename json_traits>
-	jwks<json_traits> parse_jwks(const typename json_traits::string_type& token) {
-		return jwks<json_traits>(token);
+	jwks<json_traits> parse_jwks(const typename json_traits::string_type& jwks_) {
+		return jwks<json_traits>(jwks_);
 	}
 } // namespace jwt
 

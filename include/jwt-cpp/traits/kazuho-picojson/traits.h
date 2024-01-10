@@ -12,7 +12,11 @@
 #include "jwt-cpp/jwt.h"
 
 namespace jwt {
+	/**
+	 * \brief Namespace containing all the json_trait implementations for a jwt::basic_claim.
+	*/
 	namespace traits {
+		/// basic_claim's JSON trait implementation for picojson
 		struct kazuho_picojson {
 			using value_type = picojson::value;
 			using object_type = picojson::object;

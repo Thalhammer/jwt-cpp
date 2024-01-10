@@ -8,7 +8,11 @@
 #include <sstream>
 
 namespace jwt {
+	/**
+	 * \brief Namespace containing all the json_trait implementations for a jwt::basic_claim.
+	*/
 	namespace traits {
+		/// basic_claim's JSON trait implementation for jsoncons.
 		struct danielaparker_jsoncons {
 			// Needs at least https://github.com/danielaparker/jsoncons/commit/28c56b90ec7337f98a5b8942574590111a5e5831
 			static_assert(jsoncons::version().minor >= 167, "A higher version of jsoncons is required!");
