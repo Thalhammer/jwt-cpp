@@ -254,7 +254,7 @@ jobs:
           cmake . -DTEST:STRING="wolfssl-is-used"
           cmake --build .
 
-  with-hunter:
+  with-hunter: # This is actually testing the integration with the package management
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
