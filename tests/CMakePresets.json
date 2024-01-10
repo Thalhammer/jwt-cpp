@@ -34,9 +34,16 @@
                 "lhs": "${hostSystemName}",
                 "rhs": "Linux"
             },
-            "toolchainFile": "${sourceDir}/cmake/ci-fuzzing-toolchain.cmake",
+            "toolchainFile": "${sourceDir}/cmake/linux-clang-toolchain.cmake",
+            "environment": {
+                "FUZZING_FLAGS": "-fsanitize=fuzzer,address,signed-integer-overflow,undefined -fno-omit-frame-pointer"
+            },
             "cacheVariables": {
-                "JWT_ENABLE_FUZZING": "ON"
+                "JWT_ENABLE_FUZZING": "ON",
+                "CMAKE_C_FLAGS": "$env{FUZZING_FLAGS} -g -O1",
+                "CMAKE_CXX_FLAGS": "$env{FUZZING_FLAGS} -g -O1",
+                "CMAKE_EXE_LINKER_FLAGS": "$env{FUZZING_FLAGS}",
+                "CMAKE_MODULE_LINKER_FLAGS": "$env{FUZZING_FLAGS}"
             }
         },
         {
@@ -50,15 +57,16 @@
                 "rhs": "Linux"
             },
             "environment": {
+                "ASAN_FLAGS": "-fsanitize=address -fsanitize=leak",
                 "ASAN_OPTIONS": "check_initialization_order=true:detect_stack_use_after_return=true:fast_unwind_on_malloc=0"
             },
             "cacheVariables": {
                 "JWT_BUILD_EXAMPLES": "ON",
                 "JWT_BUILD_TESTS": "ON",
-                "CMAKE_C_FLAGS": "-fsanitize=address -fsanitize=leak -g",
-                "CMAKE_CXX_FLAGS": "-fsanitize=address -fsanitize=leak -g",
-                "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address -fsanitize=leak",
-                "CMAKE_MODULE_LINKER_FLAGS": "-fsanitize=address -fsanitize=leak"
+                "CMAKE_C_FLAGS": "$env{ASAN_FLAGS}",
+                "CMAKE_CXX_FLAGS": "$env{ASAN_FLAGS}",
+                "CMAKE_EXE_LINKER_FLAGS": "$env{ASAN_FLAGS}",
+                "CMAKE_MODULE_LINKER_FLAGS": "$env{ASAN_FLAGS}"
             }
         },
         {
@@ -72,15 +80,16 @@
                 "rhs": "Linux"
             },
             "environment": {
+                "UBSAN_FLAGS": "-fsanitize=undefined -fsanitize=return -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize-recover=all",
                 "UBSAN_OPTIONS": "print_stacktrace=1"
             },
             "cacheVariables": {
                 "JWT_BUILD_EXAMPLES": "ON",
                 "JWT_BUILD_TESTS": "ON",
-                "CMAKE_C_FLAGS": "-fsanitize=undefined -fsanitize=return -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize-recover=all -g",
-                "CMAKE_CXX_FLAGS": "-fsanitize=undefined -fsanitize=return -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize-recover=all -g",
-                "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=undefined -fsanitize=return -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize-recover=all",
-                "CMAKE_MODULE_LINKER_FLAGS": "-fsanitize=undefined -fsanitize=return -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize-recover=all"
+                "CMAKE_C_FLAGS": "$env{UBSAN_FLAGS}",
+                "CMAKE_CXX_FLAGS": "$env{UBSAN_FLAGS}",
+                "CMAKE_EXE_LINKER_FLAGS": "$env{UBSAN_FLAGS}",
+                "CMAKE_MODULE_LINKER_FLAGS": "$env{UBSAN_FLAGS}"
             }
         }
     ],
