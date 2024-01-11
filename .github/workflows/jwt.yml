@@ -97,5 +97,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: docker build -t default -f .devcontainer/Dockerfile
-      - run: docker build -t wolfssl -f .devcontainer/wolfssl/Dockerfile
+      - run: docker build -t default -f .devcontainer/Dockerfile .
+      - run: docker build -t wolfssl -f .devcontainer/wolfssl/Dockerfile .
