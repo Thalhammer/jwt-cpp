@@ -46,7 +46,7 @@ jobs:
           cmake --build .
 
   gcc-12:
-    name: GCC 18
+    name: GCC 12
     runs-on: ubuntu-latest
     container:
       image: ubuntu:jammy-20231004 # 22.04 
