@@ -12,7 +12,7 @@ autoreconf -fiv
 make
 
 # Depending if we run in on a GitHub Actions or from within a Docker image we have different permissions
-if [[ $EUID > 0 ]]; then
+if [ "$(id -u)" -ne 0 ]; then
     # If we are not root then we need to sudo
     sudo make install
 else
