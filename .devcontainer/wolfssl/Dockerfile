@@ -2,6 +2,8 @@ FROM ubuntu:22.04
 
 RUN export DEBIAN_FRONTEND=noninteractive \
     && apt-get update && apt-get -y install \
+    autoconf \
+    build-essential \
     clang-format \
     clang-tidy \
     cmake \
@@ -9,11 +11,15 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     graphviz \
     git \
     g++ \
-    libssl-dev \
     libgtest-dev \
+    libtool \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
-ENV CMAKE_C_FLAGS="-DOPENSSL_NO_DEPRECATED=1"
-ENV CMAKE_CXX_FLAGS="-DOPENSSL_NO_DEPRECATED=1" 
+# https://www.warp.dev/terminus/dockerfile-run-sh
+COPY ./.github/actions/install/wolfssl/install.sh /wolfssl/install.sh
+RUN /wolfssl/install.sh
+
+ENV JWT_SSL_LIBRARY="wolfSSL"
 ENV CMAKE_C_CLANG_TIDY="clang-tidy;-fix"
 ENV CMAKE_CXX_CLANG_TIDY="clang-tidy;-fix"

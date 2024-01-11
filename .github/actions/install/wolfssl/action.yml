@@ -9,14 +9,6 @@ runs:
   using: composite
   steps:
     - run: |
-        cd /tmp
-        wget -O wolfssl.tar.gz https://github.com/wolfSSL/wolfssl/archive/${{ inputs.version }}.tar.gz
-        tar -zxf /tmp/wolfssl.tar.gz
-        cd wolfssl-*
-        autoreconf -fiv
-        ./configure --enable-opensslall --enable-opensslextra --disable-examples --disable-crypttests --enable-harden --enable-all --enable-all-crypto
-        make
-        sudo make install
-      shell: bash
-    - run: sudo rm -rf /usr/include/openssl
+        ./.github/actions/install/wolfssl/install.sh
+        sudo rm -rf /usr/include/openssl
       shell: bash
