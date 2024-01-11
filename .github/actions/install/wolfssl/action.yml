@@ -9,6 +9,6 @@ runs:
   using: composite
   steps:
     - run: |
-        ./.github/actions/install/wolfssl/install.sh
+        ./.github/actions/install/wolfssl/install.sh ${{ input.version }}
         sudo rm -rf /usr/include/openssl
       shell: bash
