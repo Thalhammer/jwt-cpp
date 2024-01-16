@@ -28,25 +28,17 @@ jobs:
         
   release-asset:
     runs-on: ubuntu-latest
-    env:
-      NAME: jwt-cpp-${{ github.event.release.tag_name }}
     steps:
       - uses: actions/checkout@v4
 
-      - run: |
-          FILE=/tmp/$NAME.tar.gz
-          tar -czf $FILE .
-          [ ! -f $FILE ] && "error:: title=Missing File::File $FILE does not exist."
+      - run: tar -vczf /tmp/jwt-cpp-${{ github.event.release.tag_name }}.tar.gz .
       - uses: shogo82148/actions-upload-release-asset@v1
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: /tmp/$NAME.tar.gz
+          asset_path: /tmp/jwt-cpp-${{ github.event.release.tag_name }}.tar.gz
           
-      - run: |
-          FILE=/tmp/$NAME.zip
-          zip -r $FILE .
-          [ ! -f $FILE ] && "error:: title=Missing File::File $FILE does not exist."
+      - run: zip -r /tmp/jwt-cpp-${{ github.event.release.tag_name }}.zip .
       - uses: shogo82148/actions-upload-release-asset@v1
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: /tmp/$NAME.zip
+          asset_path: /tmp/jwt-cpp-${{ github.event.release.tag_name }}.zip
