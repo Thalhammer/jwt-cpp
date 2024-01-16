@@ -31,13 +31,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - run: tar -vczf /tmp/jwt-cpp-${{ github.event.release.tag_name }}.tar.gz .
+      - run: tar -vczf --exclude='./.git' /tmp/jwt-cpp-${{ github.event.release.tag_name }}.tar.gz .
       - uses: shogo82148/actions-upload-release-asset@v1
         with:
           upload_url: ${{ github.event.release.upload_url }}
           asset_path: /tmp/jwt-cpp-${{ github.event.release.tag_name }}.tar.gz
           
-      - run: zip -r /tmp/jwt-cpp-${{ github.event.release.tag_name }}.zip .
+      - run: zip -r -x "./.git/*" /tmp/jwt-cpp-${{ github.event.release.tag_name }}.zip .
       - uses: shogo82148/actions-upload-release-asset@v1
         with:
           upload_url: ${{ github.event.release.upload_url }}
