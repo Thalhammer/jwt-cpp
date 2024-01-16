@@ -36,11 +36,7 @@ jobs:
       - run: |
           FILE=/tmp/$NAME.tar.gz
           tar -czf $FILE .
-          if [ -f $FILE ]; then
-             echo "File $FILE exists."
-          else
-             echo "error:: title=Missing File::File $FILE does not exist."
-          fi
+          [ ! -f $FILE ] "error:: title=Missing File::File $FILE does not exist."
       - uses: shogo82148/actions-upload-release-asset@v1
         with:
           upload_url: ${{ github.event.release.upload_url }}
@@ -49,11 +45,7 @@ jobs:
       - run: |
           FILE=/tmp/$NAME.zip
           zip -r $FILE .
-          if [ -f $FILE ]; then
-             echo "File $FILE exists."
-          else
-             echo "error:: title=Missing File::File $FILE does not exist."
-          fi
+          [ ! -f $FILE ] "error:: title=Missing File::File $FILE does not exist."
       - uses: shogo82148/actions-upload-release-asset@v1
         with:
           upload_url: ${{ github.event.release.upload_url }}
