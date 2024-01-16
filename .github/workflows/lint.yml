@@ -66,7 +66,7 @@ jobs:
           linter_name: clang-tidy
 
   render-defaults:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -95,7 +95,7 @@ jobs:
           linter_name: render-defaults
 
   render-tests:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
