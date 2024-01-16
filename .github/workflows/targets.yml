@@ -30,7 +30,8 @@ jobs:
 
           echo "Intalling NodeJS 20 for Github Actions..."
           wget https://raw.githubusercontent.com/nodesource/distributions/master/scripts/deb/setup_20.x
-          source setup_20.x
+          chmod +x setup_20.x
+          ./setup_20.x
           apt-get install nodejs
           node -v
       - uses: actions/checkout@v4
