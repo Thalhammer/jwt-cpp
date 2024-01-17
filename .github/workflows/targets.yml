@@ -23,8 +23,7 @@ jobs:
       CC: /usr/bin/gcc-4.8
       CXX: /usr/bin/g++-4.8
     steps:
-      - working-directory: /tmp
-        run: |
+      - run: |
           apt-get update
           apt-get install -y g++-4.8 wget make libssl-dev
       - uses: actions/checkout@v3 # Can not be upgrade as v4 needs NodeJS 20 doesn't exist next to gcc-4.8 
