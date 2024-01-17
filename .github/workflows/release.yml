@@ -9,7 +9,6 @@ on:
 
 jobs:
   nuget:
-    if: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,6 +26,7 @@ jobs:
         run: nuget push *.nupkg -Source 'https://api.nuget.org/v3/index.json'
         
   release-asset:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
