@@ -17,7 +17,7 @@ jobs:
   default-linux:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
 
       - name: setup
@@ -36,7 +36,7 @@ jobs:
   default-linux-with-examples:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
 
       - name: setup
@@ -55,7 +55,7 @@ jobs:
   default-win:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
       - run: choco install openssl
 
@@ -75,7 +75,7 @@ jobs:
   min-req:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/install/cmake
         with:
           version: "3.14.7"
@@ -98,7 +98,7 @@ jobs:
   custom-install-linux:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
 
       - name: setup
@@ -117,7 +117,7 @@ jobs:
   custom-install-win:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
       - run: choco install openssl
 
@@ -137,7 +137,7 @@ jobs:
   no-pico:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
 
       - name: setup
@@ -156,7 +156,7 @@ jobs:
   no-base64:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
 
       - name: setup
@@ -175,7 +175,7 @@ jobs:
   with-libressl:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
       - uses: ./.github/actions/install/libressl
 
@@ -195,7 +195,7 @@ jobs:
   with-wolfssl:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
       - uses: ./.github/actions/install/wolfssl
         with:
@@ -217,7 +217,7 @@ jobs:
   with-hunter:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
 
       - name: setup
