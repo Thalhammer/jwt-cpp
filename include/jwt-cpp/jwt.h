@@ -37,10 +37,6 @@
 #include <utility>
 #include <vector>
 
-#if __cplusplus > 201103L
-#include <codecvt>
-#endif
-
 #if __cplusplus >= 201402L
 #ifdef __has_include
 #if __has_include(<experimental/type_traits>)
