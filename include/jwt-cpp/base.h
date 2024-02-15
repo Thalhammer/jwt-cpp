@@ -93,7 +93,7 @@ namespace jwt {
 			auto itr = std::find_if(alphabet.cbegin(), alphabet.cend(), [symbol](char c) { return c == symbol; });
 			if (itr == alphabet.cend()) { throw std::runtime_error("Invalid input: not within alphabet"); }
 
-			return std::distance(alphabet.cbegin(), itr);
+			return static_cast<uint32_t>(std::distance(alphabet.cbegin(), itr));
 		}
 	} // namespace alphabet
 
