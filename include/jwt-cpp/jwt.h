@@ -2879,6 +2879,27 @@ namespace jwt {
 			return *this;
 		}
 		/**
+		 * Set payload.
+		 * \param content Json value
+		 * \return *this to allow for method chaining
+		 */
+		builder& set_payload(const typename json_traits::value_type value) {
+			payload_claims = value.template get<typename json_traits::object_type>();
+			return *this;
+		}
+		/**
+		 * Set payload.
+		 * \param content Json content
+		 * \return *this to allow for method chaining
+		 */
+		builder& set_payload(const std::string content) {
+			typename json_traits::value_type val;
+			if(!json_traits::parse(val, content))
+				throw error::invalid_json_exception();
+			set_payload(val);
+			return *this;
+		}
+		/**
 		 * Set a payload claim.
 		 * \param id Name of the claim
 		 * \param c Claim to add
