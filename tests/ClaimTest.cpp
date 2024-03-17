@@ -55,6 +55,20 @@ TEST(ClaimTest, AudienceAsSet) {
 	ASSERT_TRUE(aud.count("test2") > 0);
 }
 
+TEST(ClaimTest, SetPayload) {
+	std::string complex_json = R"({"iat": 1710706773, "exp": 1710716773, "foo": {"bar": "baz", "nums": [1,2,3], "mix": [{"prop": "val"}, {"pi": 3.14},0,"str"]}})";
+	std::string invalid_json = R"({"iat": 1710706773, "exp: 1710716773})";
+
+	ASSERT_EQ(
+		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MTA3MTY3NzMsImZvbyI6eyJiYXIiOiJiYXoiLCJtaXgiOlt7InByb3AiOiJ2YWwifSx7InBpIjozLjE0MDAwMDAwMDAwMDAwMDF9LDAsInN0ciJdLCJudW1zIjpbMSwyLDNdfSwiaWF0IjoxNzEwNzA2NzczfQ.ihpsSaqIBC0IQ-9zs9NWAroshrAHEpNdOkRCiP4cRqo",
+		jwt::create().set_type("JWT").set_payload(complex_json).sign(jwt::algorithm::hs256("test"))
+	);
+	ASSERT_THROW(
+		jwt::create().set_type("JWT").set_payload(invalid_json).sign(jwt::algorithm::hs256("test")),
+		jwt::error::invalid_json_exception
+	);
+}
+
 TEST(ClaimTest, SetAudienceAsSet) {
 	auto token = jwt::create()
 					 .set_type("JWT")

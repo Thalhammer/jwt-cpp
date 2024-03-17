@@ -2880,7 +2880,7 @@ namespace jwt {
 		}
 		/**
 		 * Set payload.
-		 * \param content Json value
+		 * \param value Json value
 		 * \return *this to allow for method chaining
 		 */
 		builder& set_payload(const typename json_traits::value_type value) {
