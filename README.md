@@ -76,8 +76,8 @@ In order to verify a token you first build a verifier and use it to verify a dec
 ```cpp
 auto verifier = jwt::verify()
     .with_issuer("auth0")
-    .with_claim("sample", jwt::claim(std::string("test")));
-    .allow_algorithm(jwt::algorithm::hs256{"secret"})
+    .with_claim("sample", jwt::claim(std::string("test")))
+    .allow_algorithm(jwt::algorithm::hs256{"secret"});
 
 verifier.verify(decoded_token);
 ```
