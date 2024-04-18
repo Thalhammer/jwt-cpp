@@ -67,14 +67,16 @@ if(JWT_EXTERNAL_PICOJSON)
   find_package(picojson 1.3.0 REQUIRED)
 endif()
 
-find_package(nlohmann_json CONFIG)
+if(JWT_BUILD_EXAMPLES OR JWT_BUILD_TESTS)
+  find_package(nlohmann_json CONFIG)
 
-if(NOT nlohmann_json_FOUND)
-  message(STATUS "jwt-cpp: using FetchContent for nlohmann json")
-  include(FetchContent)
-  fetchcontent_declare(nlohmann_json URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz
-                       URL_MD5 127794b2c82c0c5693805feaa2a703e2)
-  fetchcontent_makeavailable(nlohmann_json)
+  if(NOT nlohmann_json_FOUND)
+    message(STATUS "jwt-cpp: using FetchContent for nlohmann json")
+    include(FetchContent)
+    fetchcontent_declare(nlohmann_json URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz
+                         URL_MD5 127794b2c82c0c5693805feaa2a703e2)
+    fetchcontent_makeavailable(nlohmann_json)
+  endif()
 endif()
 
 set(JWT_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include)
