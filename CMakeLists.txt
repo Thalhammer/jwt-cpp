@@ -25,6 +25,11 @@ option(JWT_EXTERNAL_PICOJSON "Use find_package() to locate picojson, provided to
 option(JWT_DISABLE_BASE64 "Do not include the base64 implementation from this library" OFF)
 option(JWT_DISABLE_PICOJSON "Do not provide the picojson template specialiaze" OFF)
 
+include(CMakeDependentOption)
+cmake_dependent_option(JWT_EXTERNAL_TEST_NLOHMANN_JSON
+  "Use find_package() to locate nlohman-json required for tests and examples" ON
+  "JWT_BUILD_EXAMPLES OR JWT_BUILD_TESTS" ON)
+
 set(JWT_SSL_LIBRARY_OPTIONS OpenSSL LibreSSL wolfSSL)
 set(JWT_SSL_LIBRARY OpenSSL CACHE STRING "Determines which SSL library to build with")
 set_property(CACHE JWT_SSL_LIBRARY PROPERTY STRINGS ${JWT_SSL_LIBRARY_OPTIONS})
@@ -68,13 +73,15 @@ if(JWT_EXTERNAL_PICOJSON)
 endif()
 
 if(JWT_BUILD_EXAMPLES OR JWT_BUILD_TESTS)
-  find_package(nlohmann_json CONFIG)
-
-  if(NOT nlohmann_json_FOUND)
-    message(STATUS "jwt-cpp: using FetchContent for nlohmann json")
+  if(JWT_EXTERNAL_TEST_NLOHMANN_JSON)
+    message(STATUS "jwt-cpp: using find_package for nlohmann-json required for tests")
+    find_package(nlohmann_json CONFIG REQUIRED)
+  else()
+    message(STATUS "jwt-cpp: using FetchContent for nlohmann-json required for tests")
     include(FetchContent)
-    fetchcontent_declare(nlohmann_json URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz
-                         URL_MD5 127794b2c82c0c5693805feaa2a703e2)
+    fetchcontent_declare(nlohmann_json
+      URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz
+      URL_MD5 127794b2c82c0c5693805feaa2a703e2)
     fetchcontent_makeavailable(nlohmann_json)
   endif()
 endif()
