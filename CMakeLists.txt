@@ -27,7 +27,7 @@ include(CMakeDependentOption)
 cmake_dependent_option(JWT_EXTERNAL_PICOJSON
   "Use find_package() to locate picojson, provided to integrate with package managers" OFF
   "NOT JWT_DISABLE_PICOJSON" OFF)
-cmake_dependent_option(JWT_EXTERNAL_TEST_NLOHMANN_JSON
+cmake_dependent_option(JWT_EXTERNAL_NLOHMANN_JSON
   "Use find_package() to locate nlohman-json required for tests and examples" OFF
   "JWT_BUILD_EXAMPLES OR JWT_BUILD_TESTS" OFF)
 
@@ -74,7 +74,7 @@ if(NOT JWT_DISABLE_PICOJSON AND JWT_EXTERNAL_PICOJSON)
 endif()
 
 if(JWT_BUILD_EXAMPLES OR JWT_BUILD_TESTS)
-  if(JWT_EXTERNAL_TEST_NLOHMANN_JSON)
+  if(JWT_EXTERNAL_NLOHMANN_JSON)
     message(STATUS "jwt-cpp: using find_package for nlohmann-json required for tests")
     find_package(nlohmann_json CONFIG REQUIRED)
   else()
