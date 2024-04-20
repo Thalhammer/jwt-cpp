@@ -32,7 +32,7 @@ jobs:
       - name: test
         run: |
           cmake --build build/ --target rsa-create-run
-          cmake --build build/ examples --target rsa-verify-run
+          cmake --build build/ --target rsa-verify-run
 
       - if: github.event_name == 'push' && always()
         uses: ./.github/actions/badge
