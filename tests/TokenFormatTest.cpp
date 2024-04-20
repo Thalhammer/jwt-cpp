@@ -18,7 +18,9 @@ TEST(TokenFormatTest, InvalidJSON) {
 #include "jwt-cpp/traits/nlohmann-json/traits.h"
 
 TEST(TokenFormatTest, GitHubIssue341) {
-	std::string token = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjYXV0aDAiLCJleHAiOjE3MTMzODgxNjgsInN1YiI6InRlc3RfdXNlciJ9.dlAk0mSWk1Clzfi1PMq7Omxun3EyEqh-AAu-fTkpabA67ZKenawAQhZO8glY93flukpJCqHLVtukaes6ZSOjGw";
+	std::string token =
+		"eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjYXV0aDAiLCJleHAiOjE3MTMzODgxNjgsInN1YiI6InRlc3RfdXNlciJ9."
+		"dlAk0mSWk1Clzfi1PMq7Omxun3EyEqh-AAu-fTkpabA67ZKenawAQhZO8glY93flukpJCqHLVtukaes6ZSOjGw";
 	auto decoded = jwt::decoded_jwt<jwt::traits::nlohmann_json>(token);
 
 	ASSERT_TRUE(decoded.has_algorithm());
