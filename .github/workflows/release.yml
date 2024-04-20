@@ -1,4 +1,4 @@
-name: Nuget CD
+name: Release CD
 
 on:
   # Allows you to run this workflow manually from the Actions tab
