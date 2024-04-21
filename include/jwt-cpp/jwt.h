@@ -3801,7 +3801,7 @@ namespace jwt {
 		/**
 		 * Default constructor producing an empty object without any keys
 		 */
-		 jwks() = default;
+		jwks() = default;
 
 		/**
 		 * Parses a string buffer to extract the JWKS.
