@@ -3799,7 +3799,7 @@ namespace jwt {
 		using const_iterator = typename jwks_vector_t::const_iterator;
 
 		/**
-		 * Default constructs JWKS, producing an empty object without any keys
+		 * Default constructor producing an empty object without any keys
 		 */
 		 jwks() = default;
 
