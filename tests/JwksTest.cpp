@@ -159,4 +159,3 @@ TEST(JwksTest, CachingBasedOnKid) {
 
 	ASSERT_EQ(xs.size(), 2);
 }
-
