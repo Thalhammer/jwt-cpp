@@ -29,20 +29,10 @@ jobs:
         shell: bash
         run: cmake --build .
 
-      - if: matrix.os != 'windows-latest'
-        name: test
-        working-directory: ${{ github.workspace }}/build
-        shell: bash
+      - name: test
         run: |
-          ./example/rsa-create
-          ./example/rsa-verify
-
-      - if: matrix.os == 'windows-latest'
-        name: test
-        working-directory: ${{ github.workspace }}/build
-        run: |
-          example\Debug\rsa-create.exe
-          example\Debug\rsa-verify.exe
+          cmake --build build/ --target rsa-create-run
+          cmake --build build/ --target rsa-verify-run
 
       - if: github.event_name == 'push' && always()
         uses: ./.github/actions/badge
