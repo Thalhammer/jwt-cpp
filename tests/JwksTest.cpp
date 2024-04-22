@@ -1,5 +1,4 @@
 #include "jwt-cpp/jwt.h"
-#include <type_traits>
 #include <gtest/gtest.h>
 
 TEST(JwksTest, OneKeyParse) {
@@ -160,3 +159,4 @@ TEST(JwksTest, CachingBasedOnKid) {
 
 	ASSERT_EQ(xs.size(), 2);
 }
+
