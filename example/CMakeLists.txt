@@ -13,18 +13,22 @@ endif()
 
 add_executable(print-claims print-claims.cpp)
 target_link_libraries(print-claims jwt-cpp::jwt-cpp)
+add_custom_target(print-claims-run COMMAND print-claims)
 
 add_executable(private-claims private-claims.cpp)
 target_link_libraries(private-claims jwt-cpp::jwt-cpp)
 
 add_executable(rsa-create rsa-create.cpp)
 target_link_libraries(rsa-create jwt-cpp::jwt-cpp)
+add_custom_target(rsa-create-run COMMAND rsa-create)
 
 add_executable(rsa-verify rsa-verify.cpp)
 target_link_libraries(rsa-verify jwt-cpp::jwt-cpp)
+add_custom_target(rsa-verify-run COMMAND rsa-verify)
 
 add_executable(jwks-verify jwks-verify.cpp)
 target_link_libraries(jwks-verify jwt-cpp::jwt-cpp)
+add_custom_target(jwks-verify-run COMMAND jwks-verify)
 
 add_executable(es256k es256k.cpp)
 target_link_libraries(es256k jwt-cpp::jwt-cpp)
