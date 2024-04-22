@@ -1,4 +1,5 @@
 #include "jwt-cpp/jwt.h"
+#include <type_traits>
 #include <gtest/gtest.h>
 
 TEST(JwksTest, OneKeyParse) {
@@ -115,4 +116,15 @@ TEST(JwksTest, Missingx5c) {
 	auto jwk3 = jwks.get_jwk("internal-1");
 	ASSERT_EQ(jwk3.get_x5c().size(), 3);
 	ASSERT_EQ(jwk3.get_x5c_key_value(), "1");
+}
+
+
+
+TEST(JwksTest, DefaultConstructor) {
+	using Jwks = decltype(jwt::parse_jwks(std::declval<std::string>()));
+
+	Jwks keys{};
+	ASSERT_EQ(keys.begin(), keys.end());
+	ASSERT_FALSE(keys.has_jwk(""));
+	ASSERT_FALSE(keys.has_jwk("random-jwt"));
 }
