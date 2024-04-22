@@ -75,6 +75,7 @@ target_link_libraries(jwt-cpp-test PRIVATE jwt-cpp nlohmann_json::nlohmann_json
                                            $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:${CMAKE_DL_LIBS}>)
 
 gtest_discover_tests(jwt-cpp-test)
+add_custom_target(jwt-cpp-test-run COMMAND jwt-cpp-test)
 
 if(JWT_ENABLE_COVERAGE)
   include("code-coverage")
