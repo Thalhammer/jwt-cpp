@@ -31,7 +31,7 @@ The minimum is `jwt.h` but you will need to add the defines:
 - [`JWT_DISABLE_BASE64`](https://github.com/Thalhammer/jwt-cpp/blob/c9a511f436eaa13857336ebeb44dbc5b7860fe01/include/jwt-cpp/jwt.h#L11)
 - [`JWT_DISABLE_PICOJSON`](https://github.com/Thalhammer/jwt-cpp/blob/c9a511f436eaa13857336ebeb44dbc5b7860fe01/include/jwt-cpp/jwt.h#L4)
 
-In addition to providing your own JSON traits implementation, see [traits.md](traits.ms) for more information.
+In addition to providing your own JSON traits implementation, see [traits.md](traits.md) for more information.
 
 ### CMake
 

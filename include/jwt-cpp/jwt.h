@@ -3799,6 +3799,11 @@ namespace jwt {
 		using const_iterator = typename jwks_vector_t::const_iterator;
 
 		/**
+		 * Default constructor producing an empty object without any keys
+		 */
+		jwks() = default;
+
+		/**
 		 * Parses a string buffer to extract the JWKS.
 		 * \param str buffer containing JSON object representing a JWKS
 		 * \throw error::invalid_json_exception or underlying JSON implation error if the JSON is
