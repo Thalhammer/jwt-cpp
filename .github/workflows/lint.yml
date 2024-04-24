@@ -74,7 +74,7 @@ jobs:
           - { name: "open_source_parsers_jsoncpp", library: "jsoncpp", url: "https://github.com/open-source-parsers/jsoncpp", disable_pico: true }
     name: render-defaults (${{ matrix.traits.name }})
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/render/defaults
         id: render
         with:
