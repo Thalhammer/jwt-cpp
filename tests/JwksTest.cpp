@@ -117,6 +117,15 @@ TEST(JwksTest, Missingx5c) {
 	ASSERT_EQ(jwk3.get_x5c_key_value(), "1");
 }
 
+TEST(JwksTest, DefaultConstructor) {
+	using Jwks = decltype(jwt::parse_jwks(std::declval<std::string>()));
+
+	Jwks keys{};
+	ASSERT_EQ(keys.begin(), keys.end());
+	ASSERT_FALSE(keys.has_jwk(""));
+	ASSERT_FALSE(keys.has_jwk("random-jwt"));
+}
+
 TEST(JwksTest, CachingBasedOnKid) {
 	std::string public_key = R"({
 	"keys": [{
