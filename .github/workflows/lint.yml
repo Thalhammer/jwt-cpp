@@ -36,7 +36,7 @@ jobs:
       matrix:
         files: ["**/CMakeLists.txt", "cmake/code-coverage.cmake"]
     steps:
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
       - run: pip install cmakelang
