@@ -91,10 +91,3 @@ jobs:
           cmake --build --preset ci-ubsan --target rsa-verify-run
           cmake --build --preset ci-ubsan --target jwks-verify-run
           cmake --build --preset ci-ubsan --target jwt-cpp-test-run
-
-  devcontainers:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: docker build -t default -f .devcontainer/Dockerfile .
-      - run: docker build -t wolfssl -f .devcontainer/wolfssl/Dockerfile .
