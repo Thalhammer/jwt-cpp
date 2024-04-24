@@ -30,6 +30,14 @@
             }
         },
         {
+            "name": "unit-tests",
+            "inherits": ["debug"],
+            "displayName": "Unit Tests",
+            "cacheVariables": {
+                "JWT_BUILD_TESTS": "ON"
+            }
+        },
+        {
             "name": "ci-fuzzing",
             "inherits": ["debug", "linux"],
             "displayName": "Fuzz Testing",
@@ -88,6 +96,14 @@
             ]
         },
         {
+            "name": "unit-tests",
+            "configurePreset": "unit-tests",
+            "configuration": "Debug",
+            "targets": [
+                "jwt-cpp-test"
+            ]
+        },
+        {
             "name": "ci-fuzzing",
             "configurePreset": "ci-fuzzing",
             "targets": [
@@ -115,6 +131,16 @@
                 "jwks-verify",
                 "jwt-cpp-test"
             ]
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "unit-tests",
+            "description": "Run the unit tests",
+            "configurePreset": "unit-tests",
+            "execution": {
+                "noTestsAction": "error"
+            }
         }
     ]
 }

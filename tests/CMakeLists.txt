@@ -6,7 +6,6 @@ if(JWT_DISABLE_PICOJSON)
   message(FATAL_ERROR "Tests requires the picojson support to be enabled!")
 endif()
 
-enable_testing()
 include(GoogleTest)
 if(HUNTER_ENABLED)
   hunter_add_package(GTest)

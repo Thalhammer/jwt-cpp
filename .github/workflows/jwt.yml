@@ -19,7 +19,6 @@ jobs:
 
       - name: configure
         run: cmake --preset coverage
-
       - name: run
         run: cmake --build --preset coverage
 
