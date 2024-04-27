@@ -10,12 +10,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-14, windows-latest, ubuntu-latest]
+        os: [macos-12, windows-latest, ubuntu-latest]
 
     steps:
-      - if: matrix.os == 'macos-14'
-        run: sudo cp /usr/local/opt/openssl@1.1/lib/pkgconfig/*.pc /usr/local/lib/pkgconfig/
-
       - uses: actions/checkout@v4
       - run: cmake -E make_directory ${{ github.workspace }}/build
 
