@@ -13,9 +13,6 @@ jobs:
         os: [macos-latest, windows-latest, ubuntu-latest]
 
     steps:
-      - if: matrix.os == 'macos-latest'
-        run: sudo cp /usr/local/opt/openssl@1.1/lib/pkgconfig/*.pc /usr/local/lib/pkgconfig/
-
       - uses: actions/checkout@v4
 
       - name: configure
