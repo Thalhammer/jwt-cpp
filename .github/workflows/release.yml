@@ -41,5 +41,5 @@ jobs:
       - uses: shogo82148/actions-upload-release-asset@v1
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: /tmp/jwt-cpp-${{ github.event.release.tag_name }}.zipelease.upload_url }}
+          asset_path: /tmp/jwt-cpp-${{ github.event.release.tag_name }}.zip
           
