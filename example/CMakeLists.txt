@@ -17,6 +17,7 @@ add_custom_target(print-claims-run COMMAND print-claims)
 
 add_executable(private-claims private-claims.cpp)
 target_link_libraries(private-claims jwt-cpp::jwt-cpp)
+add_custom_target(private-claims-run COMMAND private-claims)
 
 add_executable(rsa-create rsa-create.cpp)
 target_link_libraries(rsa-create jwt-cpp::jwt-cpp)

@@ -68,6 +68,7 @@ jobs:
 
       - name: run
         run: |
+          cmake --build --preset ci-asan --target private-claims-run
           cmake --build --preset ci-asan --target rsa-create-run
           cmake --build --preset ci-asan --target rsa-verify-run
           cmake --build --preset ci-asan --target jwks-verify-run
@@ -87,6 +88,7 @@ jobs:
 
       - name: run
         run: |
+          cmake --build --preset ci-ubsan --target private-claims-run
           cmake --build --preset ci-ubsan --target rsa-create-run
           cmake --build --preset ci-ubsan --target rsa-verify-run
           cmake --build --preset ci-ubsan --target jwks-verify-run
