@@ -113,7 +113,7 @@ namespace {
 	std::string google_cert =
 // This is to handle the different subject alternate name ordering
 // see https://github.com/wolfSSL/wolfssl/issues/4397
-#ifdef LIBWOLFSSL_VERSION_HEX
+#if defined(LIBWOLFSSL_VERSION_HEX) && LIBWOLFSSL_VERSION_HEX < 0x05007000
 		R"(-----BEGIN CERTIFICATE-----
 MIIFfTCCBOagAwIBAgIKYFOB9QABAACIvTANBgkqhkiG9w0BAQUFADBGMQswCQYD
 VQQGEwJVUzETMBEGA1UEChMKR29vZ2xlIEluYzEiMCAGA1UEAxMZR29vZ2xlIElu

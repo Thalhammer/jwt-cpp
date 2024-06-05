@@ -20,6 +20,7 @@
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
 #include <openssl/ssl.h>
+#include <openssl/opensslv.h>
 
 #include <algorithm>
 #include <chrono>
