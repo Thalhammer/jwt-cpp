@@ -126,7 +126,7 @@ if(${JWT_SSL_LIBRARY} MATCHES "wolfSSL")
   # This is required to access OpenSSL compatibility API
   target_include_directories(jwt-cpp INTERFACE ${wolfssl_INCLUDE_DIRS})
   # EXTERNAL_OPTS_OPENVPN is necessary so that wolfssl/options.h is included automatically
-  target_compile_definitions(jwt-cpp INTERFACE OPENSSL_EXTRA OPENSSL_ALL EXTERNAL_OPTS_OPENVPN)
+  target_compile_definitions(jwt-cpp INTERFACE EXTERNAL_OPTS_OPENVPN)
 endif()
 
 if(NOT JWT_DISABLE_PICOJSON AND JWT_EXTERNAL_PICOJSON)
