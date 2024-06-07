@@ -30,6 +30,10 @@ The minimum is `jwt.h` but you will need to add the defines:
 
 - [`JWT_DISABLE_BASE64`](https://github.com/Thalhammer/jwt-cpp/blob/c9a511f436eaa13857336ebeb44dbc5b7860fe01/include/jwt-cpp/jwt.h#L11)
 - [`JWT_DISABLE_PICOJSON`](https://github.com/Thalhammer/jwt-cpp/blob/c9a511f436eaa13857336ebeb44dbc5b7860fe01/include/jwt-cpp/jwt.h#L4)
+- The SSL library being used needs to be defined:
+  - `JWT_OPENSSL` for OpenSSL (Default)
+  - `JWT_LIBRESSL` for LibreSSL
+  - `JWT_WOLFSSL` for wolfSSL
 
 In addition to providing your own JSON traits implementation, see [traits.md](traits.md) for more information.
 

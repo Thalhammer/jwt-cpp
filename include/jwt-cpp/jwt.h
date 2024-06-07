@@ -12,6 +12,9 @@
 #include "base.h"
 #endif
 
+#ifdef JWT_WOLFSSL
+#include <wolfssl/options.h>
+#endif
 #include <openssl/ec.h>
 #include <openssl/ecdsa.h>
 #include <openssl/err.h>

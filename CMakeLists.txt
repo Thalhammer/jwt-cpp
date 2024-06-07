@@ -115,18 +115,19 @@ target_include_directories(jwt-cpp INTERFACE $<BUILD_INTERFACE:${JWT_INCLUDE_PAT
 
 if(${JWT_SSL_LIBRARY} MATCHES "OpenSSL")
   target_link_libraries(jwt-cpp INTERFACE OpenSSL::SSL OpenSSL::Crypto)
+  target_compile_definitions(jwt-cpp INTERFACE JWT_OPENSSL)
 endif()
 
 if(${JWT_SSL_LIBRARY} MATCHES "LibreSSL")
   target_link_libraries(jwt-cpp INTERFACE LibreSSL::TLS)
+  target_compile_definitions(jwt-cpp INTERFACE JWT_LIBRESSL)
 endif()
 
 if(${JWT_SSL_LIBRARY} MATCHES "wolfSSL")
   target_link_libraries(jwt-cpp INTERFACE PkgConfig::wolfssl)
   # This is required to access OpenSSL compatibility API
   target_include_directories(jwt-cpp INTERFACE ${wolfssl_INCLUDE_DIRS})
-  # EXTERNAL_OPTS_OPENVPN is necessary so that wolfssl/options.h is included automatically
-  target_compile_definitions(jwt-cpp INTERFACE EXTERNAL_OPTS_OPENVPN)
+  target_compile_definitions(jwt-cpp INTERFACE JWT_WOLFSSL)
 endif()
 
 if(NOT JWT_DISABLE_PICOJSON AND JWT_EXTERNAL_PICOJSON)
