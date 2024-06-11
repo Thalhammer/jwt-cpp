@@ -14,6 +14,7 @@
 
 #ifdef JWT_WOLFSSL
 #include <wolfssl/options.h>
+#include <wolfssl/version.h>
 #endif
 #include <openssl/ec.h>
 #include <openssl/ecdsa.h>

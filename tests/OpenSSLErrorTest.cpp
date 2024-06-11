@@ -561,6 +561,8 @@ TEST(OpenSSLErrorTest, ExtractPubkeyFromCertReference) {
 	ASSERT_EQ(ec.value(), 0);
 }
 
+#if !defined(LIBWOLFSSL_VERSION_HEX) || LIBWOLFSSL_VERSION_HEX >= 0x05007000
+/* Older versions of wolfSSL output different PEM encoding */
 TEST(OpenSSLErrorTest, ConvertCertBase64DerToPemReference) {
 	std::error_code ec;
 	auto res = jwt::helper::convert_base64_der_to_pem(sample_cert_base64_der, ec);
@@ -568,6 +570,7 @@ TEST(OpenSSLErrorTest, ConvertCertBase64DerToPemReference) {
 	ASSERT_FALSE(!(!ec));
 	ASSERT_EQ(ec.value(), 0);
 }
+#endif
 
 #ifndef LIBWOLFSSL_VERSION_HEX /* wolfSSL: limited ed support in compatibility layer */
 TEST(OpenSSLErrorTest, ConvertEcdsaCertBase64DerToPemReference) {
@@ -1035,7 +1038,7 @@ TEST(OpenSSLErrorTest, ES256SignErrorCode) {
 		{&fail_EVP_DigestUpdate, 1, jwt::error::signature_generation_error::digestupdate_failed},
 		{&fail_EVP_DigestSignFinal, 1, jwt::error::signature_generation_error::signfinal_failed},
 		{&fail_EVP_DigestSignFinal, 2, jwt::error::signature_generation_error::signfinal_failed},
-#ifndef LIBWOLFSSL_VERSION_HEX
+#if !defined(LIBWOLFSSL_VERSION_HEX) || LIBWOLFSSL_VERSION_HEX < 0x05007000
 		{&fail_d2i_ECDSA_SIG, 1, jwt::error::signature_generation_error::signature_decoding_failed},
 #else
 		{&fail_d2i_ECDSA_SIG, 1, jwt::error::signature_generation_error::signfinal_failed},
