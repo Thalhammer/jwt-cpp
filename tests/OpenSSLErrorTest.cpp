@@ -42,7 +42,6 @@ static uint64_t fail_EC_KEY_check_key = 0;
 static uint64_t fail_EVP_PKEY_get1_EC_KEY = 0;
 #endif
 static uint64_t fail_ECDSA_SIG_new = 0;
-static uint64_t fail_EVP_PKEY_get1_RSA = 0;
 static uint64_t fail_EVP_DigestSignInit = 0;
 static uint64_t fail_EVP_DigestSign = 0;
 static uint64_t fail_EVP_DigestVerifyInit = 0;
@@ -335,17 +334,6 @@ ECDSA_SIG* ECDSA_SIG_new(void) {
 		return nullptr;
 	else
 		return origMethod();
-}
-
-RSA* EVP_PKEY_get1_RSA(EVP_PKEY* pkey) {
-	static RSA* (*origMethod)(EVP_PKEY * pkey) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_PKEY_get1_RSA"));
-	bool fail = fail_EVP_PKEY_get1_RSA & 1;
-	fail_EVP_PKEY_get1_RSA = fail_EVP_PKEY_get1_RSA >> 1;
-	if (fail)
-		return nullptr;
-	else
-		return origMethod(pkey);
 }
 
 int EVP_DigestSignInit(EVP_MD_CTX* ctx, EVP_PKEY_CTX** pctx, const EVP_MD* type, ENGINE* e, EVP_PKEY* pkey) {
