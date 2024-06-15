@@ -14,22 +14,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - run: cmake -E make_directory ${{ github.workspace }}/build
 
       - name: configure
-        shell: bash # access regardless of the host operating system
-        working-directory: ${{ github.workspace }}/build
-        run: cmake $GITHUB_WORKSPACE -DJWT_BUILD_EXAMPLES=ON
+        run: cmake --preset examples
 
       - name: build
-        working-directory: ${{ github.workspace }}/build
-        shell: bash
-        run: cmake --build .
+        run: cmake --build --preset examples
 
       - name: test
         run: |
-          cmake --build build/ --target rsa-create-run
-          cmake --build build/ --target rsa-verify-run
+          cmake --build --preset examples --target rsa-create-run
+          cmake --build --preset examples --target rsa-verify-run
 
       - if: github.event_name == 'push' && always()
         uses: ./.github/actions/badge

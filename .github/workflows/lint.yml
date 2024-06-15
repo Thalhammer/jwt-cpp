@@ -36,7 +36,7 @@ jobs:
       matrix:
         files: ["**/CMakeLists.txt", "cmake/code-coverage.cmake"]
     steps:
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
       - run: pip install cmakelang
@@ -54,13 +54,9 @@ jobs:
       - uses: lukka/get-cmake@latest
       - uses: actions/checkout@v4
       - name: configure
-        run: |
-          mkdir build
-          cd build
-          cmake .. -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-fix"
+        run: cmake --preset examples -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-fix"
       - name: run
-        working-directory: build
-        run: make
+        run: cmake --build --preset examples
       - uses: ./.github/actions/process-linting-results
         with:
           linter_name: clang-tidy

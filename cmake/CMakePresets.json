@@ -1,0 +1,48 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 25,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "default",
+            "displayName": "Default Config",
+            "hidden": true,
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "JWT_BUILD_EXAMPLES": "OFF",
+                "JWT_BUILD_TESTS": "OFF"
+            }
+        },
+        {
+            "name": "debug",
+            "displayName": "Debug",
+            "inherits": "default",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "release",
+            "displayName": "Release",
+            "inherits": "default",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "debug",
+            "configurePreset": "debug",
+            "configuration": "Debug"
+        },
+        {
+            "name": "release",
+            "configurePreset": "release",
+            "configuration": "Release"
+        }
+    ]
+}

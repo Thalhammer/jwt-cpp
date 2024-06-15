@@ -27,10 +27,10 @@ jobs:
           version: ${{ matrix.openssl.tag }}
 
       - name: configure
-        run: cmake . -DJWT_BUILD_TESTS=ON -DOPENSSL_ROOT_DIR=/tmp
-      - run: make
+        run: cmake --preset unit-tests -DOPENSSL_ROOT_DIR=/tmp
+      - run: cmake --build --preset unit-tests
       - name: test
-        run: ./tests/jwt-cpp-test
+        run: ctest --preset unit-tests
 
       - if: github.event_name == 'push' && always()
         uses: ./.github/actions/badge
@@ -50,8 +50,10 @@ jobs:
           version: "openssl-3.0.5"
 
       - name: configure
-        run: cmake . -DJWT_BUILD_TESTS=ON -DOPENSSL_ROOT_DIR=/tmp -DCMAKE_CXX_FLAGS="-DOPENSSL_NO_DEPRECATED=1" -DCMAKE_C_FLAGS="-DOPENSSL_NO_DEPRECATED=1"
-      - run: make
+        run: cmake --preset unit-tests -DOPENSSL_ROOT_DIR=/tmp -DCMAKE_CXX_FLAGS="-DOPENSSL_NO_DEPRECATED=1" -DCMAKE_C_FLAGS="-DOPENSSL_NO_DEPRECATED=1"
+      - run: cmake --build --preset unit-tests
+      - name: test
+        run: ctest --preset unit-tests
 
   libressl:
     runs-on: ubuntu-latest
@@ -69,10 +71,10 @@ jobs:
           version: ${{ matrix.libressl }}
 
       - name: configure
-        run: cmake . -DJWT_BUILD_TESTS=ON -DJWT_SSL_LIBRARY:STRING=LibreSSL
-      - run: make
+        run: cmake --preset unit-tests -DJWT_SSL_LIBRARY:STRING=LibreSSL
+      - run: cmake --build --preset unit-tests
       - name: test
-        run: ./tests/jwt-cpp-test
+        run: ctest --preset unit-tests
 
       - if: github.event_name == 'push' && always()
         uses: ./.github/actions/badge
@@ -100,10 +102,10 @@ jobs:
           version: ${{ matrix.wolfssl.ref }}
 
       - name: configure
-        run: cmake . -DJWT_BUILD_TESTS=ON -DJWT_SSL_LIBRARY:STRING=wolfSSL
-      - run: make
+        run: cmake --preset unit-tests -DJWT_SSL_LIBRARY:STRING=wolfSSL
+      - run: cmake --build --preset unit-tests
       - name: test
-        run: ./tests/jwt-cpp-test
+        run: ctest --preset unit-tests
 
       - if: github.event_name == 'push' && always()
         uses: ./.github/actions/badge

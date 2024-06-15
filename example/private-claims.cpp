@@ -21,7 +21,7 @@ int main() {
 						   .set_issuer("auth.mydomain.io")
 						   .set_audience("mydomain.io")
 						   .set_issued_at(time)
-						   .set_not_before(time + sec{15})
+						   .set_not_before(time - sec{15})
 						   .set_expires_at(time + sec{15} + min{2})
 						   .set_payload_claim("boolean", picojson::value(true))
 						   .set_payload_claim("integer", picojson::value(int64_t{12345}))
