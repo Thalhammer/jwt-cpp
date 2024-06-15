@@ -1,0 +1,33 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 25,
+        "patch": 0
+    },
+    "include": [
+      "example/CMakePresets.json",
+      "tests/CMakePresets.json"
+    ],
+    "configurePresets": [
+        {
+            "name": "dev",
+            "displayName": "Development",
+            "inherits": "debug",
+            "environment": {
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            },
+            "cacheVariables": {
+                "JWT_BUILD_EXAMPLES": "ON",
+                "JWT_BUILD_TESTS": "ON"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "dev",
+            "configurePreset": "dev",
+            "configuration": "Debug"
+        }
+    ]
+}
