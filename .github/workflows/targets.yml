@@ -15,6 +15,7 @@ on:
 
 jobs:
   gcc-4-8:
+    if: false # There's no existing image with node20 and gcc4.8 https://github.com/actions/checkout/issues/1809
     name: GCC 4.8
     runs-on: ubuntu-latest
     container:
