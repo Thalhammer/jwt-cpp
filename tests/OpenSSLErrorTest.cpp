@@ -164,7 +164,8 @@ EVP_PKEY* PEM_read_bio_PUBKEY(BIO* bp, EVP_PKEY** x, pem_password_cb* cb, void* 
 
 EVP_PKEY* PEM_read_bio_PrivateKey(BIO* bp, EVP_PKEY** x, pem_password_cb* cb, void* u) {
 	static EVP_PKEY* (*origMethod)(BIO * bp, EVP_PKEY * *x, pem_password_cb * cb, void* u) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("PEM_read_bio_PrivateKey"));
+	if (origMethod == nullptr)
+		origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("PEM_read_bio_PrivateKey"));
 	bool fail = fail_PEM_read_bio_PrivateKey & 1;
 	fail_PEM_read_bio_PrivateKey = fail_PEM_read_bio_PrivateKey >> 1;
 	if (fail)
@@ -270,7 +271,8 @@ int EVP_VerifyFinal(EVP_MD_CTX* ctx, const unsigned char* sigbuf, unsigned int s
 #ifdef JWT_OPENSSL_3_0
 int EVP_PKEY_public_check(EVP_PKEY_CTX* ctx) {
 	static int (*origMethod)(EVP_PKEY_CTX * ctx) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_PKEY_public_check"));
+	if (origMethod == nullptr)
+		origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_PKEY_public_check"));
 	bool fail = fail_EVP_PKEY_public_check & 1;
 	fail_EVP_PKEY_public_check = fail_EVP_PKEY_public_check >> 1;
 	if (fail)
@@ -281,7 +283,8 @@ int EVP_PKEY_public_check(EVP_PKEY_CTX* ctx) {
 
 int EVP_PKEY_private_check(EVP_PKEY_CTX* ctx) {
 	static int (*origMethod)(EVP_PKEY_CTX * ctx) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_PKEY_private_check"));
+	if (origMethod == nullptr)
+		origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_PKEY_private_check"));
 	bool fail = fail_EVP_PKEY_private_check & 1;
 	fail_EVP_PKEY_private_check = fail_EVP_PKEY_private_check >> 1;
 	if (fail)
@@ -292,7 +295,8 @@ int EVP_PKEY_private_check(EVP_PKEY_CTX* ctx) {
 
 EVP_PKEY_CTX* EVP_PKEY_CTX_new_from_pkey(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const char* propquery) {
 	static EVP_PKEY_CTX* (*origMethod)(OSSL_LIB_CTX * libctx, EVP_PKEY * pkey, const char* propquery) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_PKEY_CTX_new_from_pkey"));
+	if (origMethod == nullptr)
+		origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_PKEY_CTX_new_from_pkey"));
 	bool fail = fail_EVP_PKEY_CTX_new_from_pkey & 1;
 	fail_EVP_PKEY_CTX_new_from_pkey = fail_EVP_PKEY_CTX_new_from_pkey >> 1;
 	if (fail)
@@ -386,7 +390,8 @@ int EVP_DigestVerify(EVP_MD_CTX* ctx, unsigned char* sigret, size_t* siglen, con
 
 int EVP_DigestVerifyFinal(EVP_MD_CTX* ctx, const unsigned char* sigret, size_t siglen) {
 	static int (*origMethod)(EVP_MD_CTX * ctx, const unsigned char* sigret, size_t siglen) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_DigestVerifyFinal"));
+	if (origMethod == nullptr)
+		origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_DigestVerifyFinal"));
 	bool fail = fail_EVP_DigestVerifyFinal & 1;
 	fail_EVP_DigestVerifyFinal = fail_EVP_DigestVerifyFinal >> 1;
 	if (fail)
@@ -431,7 +436,8 @@ OSSL_PARAM_BLD* OSSL_PARAM_BLD_new() {
 
 int OSSL_PARAM_BLD_push_BN(OSSL_PARAM_BLD* bld, const char* key, const BIGNUM* bn) {
 	static int (*origMethod)(OSSL_PARAM_BLD * bld, const char* key, const BIGNUM* bn) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("OSSL_PARAM_BLD_push_BN"));
+	if (origMethod == nullptr)
+		origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("OSSL_PARAM_BLD_push_BN"));
 	bool fail = fail_OSSL_PARAM_BLD_push_BN & 1;
 	fail_OSSL_PARAM_BLD_push_BN = fail_OSSL_PARAM_BLD_push_BN >> 1;
 	if (fail)
@@ -442,7 +448,8 @@ int OSSL_PARAM_BLD_push_BN(OSSL_PARAM_BLD* bld, const char* key, const BIGNUM* b
 
 OSSL_PARAM* OSSL_PARAM_BLD_to_param(OSSL_PARAM_BLD* bld) {
 	static OSSL_PARAM* (*origMethod)(OSSL_PARAM_BLD * bld) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("OSSL_PARAM_BLD_to_param"));
+	if (origMethod == nullptr)
+		origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("OSSL_PARAM_BLD_to_param"));
 	bool fail = fail_OSSL_PARAM_BLD_to_param & 1;
 	fail_OSSL_PARAM_BLD_to_param = fail_OSSL_PARAM_BLD_to_param >> 1;
 	if (fail)
@@ -453,7 +460,8 @@ OSSL_PARAM* OSSL_PARAM_BLD_to_param(OSSL_PARAM_BLD* bld) {
 
 EVP_PKEY_CTX* EVP_PKEY_CTX_new_from_name(OSSL_LIB_CTX* libctx, const char* name, const char* propquery) {
 	static EVP_PKEY_CTX* (*origMethod)(OSSL_LIB_CTX * libctx, const char* name, const char* propquery) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_PKEY_CTX_new_from_name"));
+	if (origMethod == nullptr)
+		origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_PKEY_CTX_new_from_name"));
 	bool fail = fail_EVP_PKEY_CTX_new_from_name & 1;
 	fail_EVP_PKEY_CTX_new_from_name = fail_EVP_PKEY_CTX_new_from_name >> 1;
 	if (fail)
@@ -464,7 +472,8 @@ EVP_PKEY_CTX* EVP_PKEY_CTX_new_from_name(OSSL_LIB_CTX* libctx, const char* name,
 
 int EVP_PKEY_fromdata_init(EVP_PKEY_CTX* ctx) {
 	static int (*origMethod)(EVP_PKEY_CTX * ctx) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_PKEY_fromdata_init"));
+	if (origMethod == nullptr)
+		origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_PKEY_fromdata_init"));
 	bool fail = fail_EVP_PKEY_fromdata_init & 1;
 	fail_EVP_PKEY_fromdata_init = fail_EVP_PKEY_fromdata_init >> 1;
 	if (fail)
@@ -486,7 +495,8 @@ int EVP_PKEY_fromdata(EVP_PKEY_CTX* ctx, EVP_PKEY** ppkey, int selection, OSSL_P
 #else
 int PEM_write_bio_RSA_PUBKEY(BIO* bp, RSA* x) {
 	static int (*origMethod)(BIO * bp, RSA * x) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("PEM_write_bio_RSA_PUBKEY"));
+	if (origMethod == nullptr)
+		origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("PEM_write_bio_RSA_PUBKEY"));
 	bool fail = fail_PEM_write_bio_RSA_PUBKEY & 1;
 	fail_PEM_write_bio_RSA_PUBKEY = fail_PEM_write_bio_RSA_PUBKEY >> 1;
 	if (fail)
@@ -996,7 +1006,9 @@ TEST(OpenSSLErrorTest, ECDSACertificate) {
 			{&fail_X509_get_pubkey, 1, jwt::error::ecdsa_error::get_key_failed},
 			{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::ecdsa_error::write_key_failed},
 #ifndef LIBWOLFSSL_VERSION_HEX /* wolfSSL does not use BIO_ctrl in BIO_get_mem_data */
-			{&fail_BIO_ctrl, 1, jwt::error::ecdsa_error::convert_to_pem_failed}
+		{
+			&fail_BIO_ctrl, 1, jwt::error::ecdsa_error::convert_to_pem_failed
+		}
 #endif
 	};
 
@@ -1020,16 +1032,16 @@ TEST(OpenSSLErrorTest, ES256Reference) {
 
 TEST(OpenSSLErrorTest, ES256SignErrorCode) {
 	jwt::algorithm::es256 alg{ecdsa256_pub_key, ecdsa256_priv_key};
-	std::vector<multitest_entry> mapping{
+	std::vector<multitest_entry> mapping {
 		{&fail_EVP_MD_CTX_new, 1, jwt::error::signature_generation_error::create_context_failed},
-		{&fail_EVP_DigestSignInit, 1, jwt::error::signature_generation_error::signinit_failed},
-		{&fail_EVP_DigestUpdate, 1, jwt::error::signature_generation_error::digestupdate_failed},
-		{&fail_EVP_DigestSignFinal, 1, jwt::error::signature_generation_error::signfinal_failed},
-		{&fail_EVP_DigestSignFinal, 2, jwt::error::signature_generation_error::signfinal_failed},
+			{&fail_EVP_DigestSignInit, 1, jwt::error::signature_generation_error::signinit_failed},
+			{&fail_EVP_DigestUpdate, 1, jwt::error::signature_generation_error::digestupdate_failed},
+			{&fail_EVP_DigestSignFinal, 1, jwt::error::signature_generation_error::signfinal_failed},
+			{&fail_EVP_DigestSignFinal, 2, jwt::error::signature_generation_error::signfinal_failed},
 #if !defined(LIBWOLFSSL_VERSION_HEX) || LIBWOLFSSL_VERSION_HEX < 0x05007000
-		{&fail_d2i_ECDSA_SIG, 1, jwt::error::signature_generation_error::signature_decoding_failed},
+			{&fail_d2i_ECDSA_SIG, 1, jwt::error::signature_generation_error::signature_decoding_failed},
 #else
-		{&fail_d2i_ECDSA_SIG, 1, jwt::error::signature_generation_error::signfinal_failed},
+			{&fail_d2i_ECDSA_SIG, 1, jwt::error::signature_generation_error::signfinal_failed},
 #endif
 	};
 
