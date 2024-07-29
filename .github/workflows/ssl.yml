@@ -85,7 +85,6 @@ jobs:
   wolfssl:
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
         wolfssl:
           - { ref: "v5.1.1-stable", name: "5.1.1"}
