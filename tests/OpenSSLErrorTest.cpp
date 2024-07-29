@@ -55,6 +55,8 @@ static uint64_t fail_i2d_ECDSA_SIG = 0;
 #ifdef JWT_OPENSSL_3_0
 static uint64_t fail_OSSL_PARAM_BLD_new = 0;
 static uint64_t fail_OSSL_PARAM_BLD_push_BN = 0;
+static uint64_t fail_OSSL_PARAM_BLD_push_utf8_string = 0;
+static uint64_t fail_OSSL_PARAM_BLD_push_octet_string = 0;
 static uint64_t fail_OSSL_PARAM_BLD_to_param = 0;
 static uint64_t fail_EVP_PKEY_CTX_new_from_name = 0;
 static uint64_t fail_EVP_PKEY_fromdata_init = 0;
@@ -62,6 +64,15 @@ static uint64_t fail_EVP_PKEY_fromdata = 0;
 #else
 static uint64_t fail_PEM_write_bio_RSA_PUBKEY = 0;
 static uint64_t fail_RSA_set0_key = 0;
+static uint64_t fail_PEM_write_bio_EC_PUBKEY = 0;
+static uint64_t fail_EC_GROUP_new_by_curve_name = 0;
+static uint64_t fail_EC_POINT_new = 0;
+static uint64_t fail_EC_POINT_set_affine_coordinates_GFp = 0;
+static uint64_t fail_EC_KEY_new = 0;
+#ifndef LIBWOLFSSL_VERSION_HEX
+static uint64_t fail_EC_KEY_set_group = 0;
+#endif
+static uint64_t fail_EC_KEY_set_public_key = 0;
 #endif
 
 #ifdef LIBWOLFSSL_VERSION_HEX
@@ -448,6 +459,30 @@ int OSSL_PARAM_BLD_push_BN(OSSL_PARAM_BLD* bld, const char* key, const BIGNUM* b
 		return origMethod(bld, key, bn);
 }
 
+int OSSL_PARAM_BLD_push_utf8_string(OSSL_PARAM_BLD* bld, const char* key, const char* buf, size_t bsize) {
+	static int (*origMethod)(OSSL_PARAM_BLD * bld, const char* key, const char* buf, size_t bsize) = nullptr;
+	if (origMethod == nullptr)
+		origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("OSSL_PARAM_BLD_push_utf8_string"));
+	bool fail = fail_OSSL_PARAM_BLD_push_utf8_string & 1;
+	fail_OSSL_PARAM_BLD_push_utf8_string = fail_OSSL_PARAM_BLD_push_utf8_string >> 1;
+	if (fail)
+		return 0;
+	else
+		return origMethod(bld, key, buf, bsize);
+}
+
+int OSSL_PARAM_BLD_push_octet_string(OSSL_PARAM_BLD* bld, const char* key, const void* buf, size_t bsize) {
+	static int (*origMethod)(OSSL_PARAM_BLD * bld, const char* key, const void* buf, size_t bsize) = nullptr;
+	if (origMethod == nullptr)
+		origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("OSSL_PARAM_BLD_push_octet_string"));
+	bool fail = fail_OSSL_PARAM_BLD_push_octet_string & 1;
+	fail_OSSL_PARAM_BLD_push_octet_string = fail_OSSL_PARAM_BLD_push_octet_string >> 1;
+	if (fail)
+		return 0;
+	else
+		return origMethod(bld, key, buf, bsize);
+}
+
 OSSL_PARAM* OSSL_PARAM_BLD_to_param(OSSL_PARAM_BLD* bld) {
 	static OSSL_PARAM* (*origMethod)(OSSL_PARAM_BLD * bld) = nullptr;
 	if (origMethod == nullptr)
@@ -516,6 +551,91 @@ int RSA_set0_key(RSA* r, BIGNUM* n, BIGNUM* e, BIGNUM* d) {
 		return 0;
 	else
 		return origMethod(r, n, e, d);
+}
+
+int PEM_write_bio_EC_PUBKEY(BIO* bp, EC_KEY* x) {
+	static int (*origMethod)(BIO * bp, EC_KEY * x) = nullptr;
+	if (origMethod == nullptr)
+		origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("PEM_write_bio_EC_PUBKEY"));
+	bool fail = fail_PEM_write_bio_EC_PUBKEY & 1;
+	fail_PEM_write_bio_EC_PUBKEY = fail_PEM_write_bio_EC_PUBKEY >> 1;
+	if (fail)
+		return 0;
+	else
+		return origMethod(bp, x);
+}
+
+EC_GROUP* EC_GROUP_new_by_curve_name(int nid) {
+	static EC_GROUP* (*origMethod)(int nid) = nullptr;
+	if (origMethod == nullptr)
+		origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EC_GROUP_new_by_curve_name"));
+	bool fail = fail_EC_GROUP_new_by_curve_name & 1;
+	fail_EC_GROUP_new_by_curve_name = fail_EC_GROUP_new_by_curve_name >> 1;
+	if (fail)
+		return nullptr;
+	else
+		return origMethod(nid);
+}
+
+EC_POINT* EC_POINT_new(const EC_GROUP* group) {
+	static EC_POINT* (*origMethod)(const EC_GROUP* group) = nullptr;
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EC_POINT_new"));
+	bool fail = fail_EC_POINT_new & 1;
+	fail_EC_POINT_new = fail_EC_POINT_new >> 1;
+	if (fail)
+		return nullptr;
+	else
+		return origMethod(group);
+}
+
+int EC_POINT_set_affine_coordinates_GFp(const EC_GROUP* group, EC_POINT* point, const BIGNUM* x, const BIGNUM* y,
+										BN_CTX* ctx) {
+	static int (*origMethod)(const EC_GROUP* group, EC_POINT* point, const BIGNUM* x, const BIGNUM* y, BN_CTX* ctx) =
+		nullptr;
+	if (origMethod == nullptr)
+		origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EC_POINT_set_affine_coordinates_GFp"));
+	bool fail = fail_EC_POINT_set_affine_coordinates_GFp & 1;
+	fail_EC_POINT_set_affine_coordinates_GFp = fail_EC_POINT_set_affine_coordinates_GFp >> 1;
+	if (fail)
+		return 0;
+	else
+		return origMethod(group, point, x, y, ctx);
+}
+
+EC_KEY* EC_KEY_new() {
+	static EC_KEY* (*origMethod)() = nullptr;
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EC_KEY_new"));
+	bool fail = fail_EC_KEY_new & 1;
+	fail_EC_KEY_new = fail_EC_KEY_new >> 1;
+	if (fail)
+		return nullptr;
+	else
+		return origMethod();
+}
+
+#ifndef LIBWOLFSSL_VERSION_HEX
+int EC_KEY_set_group(EC_KEY* eckey, const EC_GROUP* group) {
+	static int (*origMethod)(EC_KEY * eckey, const EC_GROUP* group) = nullptr;
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EC_KEY_set_group"));
+	bool fail = fail_EC_KEY_set_group & 1;
+	fail_EC_KEY_set_group = fail_EC_KEY_set_group >> 1;
+	if (fail)
+		return 0;
+	else
+		return origMethod(eckey, group);
+}
+#endif
+
+int EC_KEY_set_public_key(EC_KEY* eckey, const EC_POINT* pub) {
+	static int (*origMethod)(EC_KEY * eckey, const EC_POINT* pub) = nullptr;
+	if (origMethod == nullptr)
+		origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EC_KEY_set_public_key"));
+	bool fail = fail_EC_KEY_set_public_key & 1;
+	fail_EC_KEY_set_public_key = fail_EC_KEY_set_public_key >> 1;
+	if (fail)
+		return 0;
+	else
+		return origMethod(eckey, pub);
 }
 #endif
 
@@ -699,6 +819,80 @@ TEST(OpenSSLErrorTest, CreateRsaPublicKeyFromComponentsErrorCode) {
 			"lsFCPGuzr4Vp0YS7zS2hDYScC2oOMu4rGU1LcMZf39p3153Cq7bS2Xh6Y-vw5pwzFYZdjQxDn8x8BG3fJ6j8TGLXQsbKH1218_"
 			"HcUJRvMwdpbUQG5nvA2GXVqLqdwp054Lzk9_B_f1lVrmOKuHjTNHq48w",
 			"AQAB", ec);
+		ASSERT_EQ(res, "");
+	});
+}
+
+TEST(OpenSSLErrorTest, CreateEcPublicKeyFromComponents) {
+	std::vector<multitest_entry> mapping{
+		{&fail_BIO_new, 1, jwt::error::ecdsa_error::create_mem_bio_failed},
+#ifndef LIBWOLFSSL_VERSION_HEX
+		{&fail_BIO_get_mem_data, 1, jwt::error::ecdsa_error::convert_to_pem_failed},
+#endif
+#ifdef JWT_OPENSSL_3_0
+		{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::ecdsa_error::load_key_bio_write},
+		{&fail_OSSL_PARAM_BLD_new, 1, jwt::error::ecdsa_error::create_context_failed},
+		{&fail_OSSL_PARAM_BLD_push_utf8_string, 1, jwt::error::ecdsa_error::set_ecdsa_failed},
+		{&fail_OSSL_PARAM_BLD_push_octet_string, 1, jwt::error::ecdsa_error::set_ecdsa_failed},
+		{&fail_OSSL_PARAM_BLD_to_param, 1, jwt::error::ecdsa_error::set_ecdsa_failed},
+		{&fail_EVP_PKEY_CTX_new_from_name, 1, jwt::error::ecdsa_error::create_context_failed},
+		{&fail_EVP_PKEY_fromdata_init, 1, jwt::error::ecdsa_error::cert_load_failed},
+		{&fail_EVP_PKEY_fromdata, 1, jwt::error::ecdsa_error::cert_load_failed}
+#else
+		{&fail_PEM_write_bio_EC_PUBKEY, 1, jwt::error::ecdsa_error::load_key_bio_write},
+		{&fail_EC_GROUP_new_by_curve_name, 1, jwt::error::ecdsa_error::set_ecdsa_failed},
+		{&fail_EC_POINT_new, 1, jwt::error::ecdsa_error::set_ecdsa_failed},
+		{&fail_EC_POINT_set_affine_coordinates_GFp, 1, jwt::error::ecdsa_error::set_ecdsa_failed},
+		{&fail_EC_KEY_new, 1, jwt::error::ecdsa_error::set_ecdsa_failed},
+#ifndef LIBWOLFSSL_VERSION_HEX
+		{&fail_EC_KEY_set_group, 1, jwt::error::ecdsa_error::set_ecdsa_failed},
+#endif
+		{&fail_EC_KEY_set_public_key, 1, jwt::error::ecdsa_error::set_ecdsa_failed}
+#endif
+	};
+
+	run_multitest(mapping, [](std::error_code& ec) {
+		try {
+			jwt::helper::create_public_key_from_ec_components(
+				"P-384", "0uQ1-1P_wmhOuYvVtTogHOSBLC05IvK7L6sTPIX8Dl4Bg9nhC3v_FsgifjnXnijU",
+				"xVJSyWa9SuxwBonUhg6SiCEv-ixb74hjDesC4D7OwllVcnkDJmOy_NMx4N7yDPJp");
+			FAIL(); // Should never reach this
+		} catch (const jwt::error::ecdsa_exception& e) { ec = e.code(); }
+	});
+}
+
+TEST(OpenSSLErrorTest, CreateEcPublicKeyFromComponentsErrorCode) {
+	std::vector<multitest_entry> mapping{
+		{&fail_BIO_new, 1, jwt::error::ecdsa_error::create_mem_bio_failed},
+#ifndef LIBWOLFSSL_VERSION_HEX
+		{&fail_BIO_get_mem_data, 1, jwt::error::ecdsa_error::convert_to_pem_failed},
+#endif
+#ifdef JWT_OPENSSL_3_0
+		{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::ecdsa_error::load_key_bio_write},
+		{&fail_OSSL_PARAM_BLD_new, 1, jwt::error::ecdsa_error::create_context_failed},
+		{&fail_OSSL_PARAM_BLD_push_utf8_string, 1, jwt::error::ecdsa_error::set_ecdsa_failed},
+		{&fail_OSSL_PARAM_BLD_push_octet_string, 1, jwt::error::ecdsa_error::set_ecdsa_failed},
+		{&fail_OSSL_PARAM_BLD_to_param, 1, jwt::error::ecdsa_error::set_ecdsa_failed},
+		{&fail_EVP_PKEY_CTX_new_from_name, 1, jwt::error::ecdsa_error::create_context_failed},
+		{&fail_EVP_PKEY_fromdata_init, 1, jwt::error::ecdsa_error::cert_load_failed},
+		{&fail_EVP_PKEY_fromdata, 1, jwt::error::ecdsa_error::cert_load_failed}
+#else
+		{&fail_PEM_write_bio_EC_PUBKEY, 1, jwt::error::ecdsa_error::load_key_bio_write},
+		{&fail_EC_GROUP_new_by_curve_name, 1, jwt::error::ecdsa_error::set_ecdsa_failed},
+		{&fail_EC_POINT_new, 1, jwt::error::ecdsa_error::set_ecdsa_failed},
+		{&fail_EC_POINT_set_affine_coordinates_GFp, 1, jwt::error::ecdsa_error::set_ecdsa_failed},
+		{&fail_EC_KEY_new, 1, jwt::error::ecdsa_error::set_ecdsa_failed},
+#ifndef LIBWOLFSSL_VERSION_HEX
+		{&fail_EC_KEY_set_group, 1, jwt::error::ecdsa_error::set_ecdsa_failed},
+#endif
+		{&fail_EC_KEY_set_public_key, 1, jwt::error::ecdsa_error::set_ecdsa_failed}
+#endif
+	};
+
+	run_multitest(mapping, [](std::error_code& ec) {
+		auto res = jwt::helper::create_public_key_from_ec_components(
+			"P-384", "0uQ1-1P_wmhOuYvVtTogHOSBLC05IvK7L6sTPIX8Dl4Bg9nhC3v_FsgifjnXnijU",
+			"xVJSyWa9SuxwBonUhg6SiCEv-ixb74hjDesC4D7OwllVcnkDJmOy_NMx4N7yDPJp", ec);
 		ASSERT_EQ(res, "");
 	});
 }
