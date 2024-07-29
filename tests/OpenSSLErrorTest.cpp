@@ -26,7 +26,9 @@ static uint64_t fail_BIO_ctrl = 0;
 static uint64_t fail_BIO_write = 0;
 static uint64_t fail_PEM_read_bio_PUBKEY = 0;
 static uint64_t fail_PEM_read_bio_PrivateKey = 0;
+#if !defined(LIBWOLFSSL_VERSION_HEX) || LIBWOLFSSL_VERSION_HEX > 0x05007000
 static uint64_t fail_HMAC = 0;
+#endif
 static uint64_t fail_EVP_MD_CTX_new = 0;
 static uint64_t fail_EVP_DigestInit = 0;
 static uint64_t fail_EVP_DigestUpdate = 0;
