@@ -26,7 +26,9 @@ static uint64_t fail_BIO_ctrl = 0;
 static uint64_t fail_BIO_write = 0;
 static uint64_t fail_PEM_read_bio_PUBKEY = 0;
 static uint64_t fail_PEM_read_bio_PrivateKey = 0;
+#if !defined(LIBWOLFSSL_VERSION_HEX) || LIBWOLFSSL_VERSION_HEX > 0x05007000
 static uint64_t fail_HMAC = 0;
+#endif
 static uint64_t fail_EVP_MD_CTX_new = 0;
 static uint64_t fail_EVP_DigestInit = 0;
 static uint64_t fail_EVP_DigestUpdate = 0;
@@ -42,7 +44,6 @@ static uint64_t fail_EC_KEY_check_key = 0;
 static uint64_t fail_EVP_PKEY_get1_EC_KEY = 0;
 #endif
 static uint64_t fail_ECDSA_SIG_new = 0;
-static uint64_t fail_EVP_PKEY_get1_RSA = 0;
 static uint64_t fail_EVP_DigestSignInit = 0;
 static uint64_t fail_EVP_DigestSign = 0;
 static uint64_t fail_EVP_DigestVerifyInit = 0;
@@ -63,9 +64,15 @@ static uint64_t fail_PEM_write_bio_RSA_PUBKEY = 0;
 static uint64_t fail_RSA_set0_key = 0;
 #endif
 
+#ifdef LIBWOLFSSL_VERSION_HEX
+#define SYMBOL_NAME(s) ("wolfSSL_" s)
+#else
+#define SYMBOL_NAME(s) (s)
+#endif
+
 BIO* BIO_new(const BIO_METHOD* type) {
 	static BIO* (*origMethod)(const BIO_METHOD*) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "BIO_new");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("BIO_new"));
 	bool fail = fail_BIO_new & 1;
 	fail_BIO_new = fail_BIO_new >> 1;
 	if (fail)
@@ -76,7 +83,7 @@ BIO* BIO_new(const BIO_METHOD* type) {
 
 X509* PEM_read_bio_X509(BIO* bp, X509** x, pem_password_cb* cb, void* u) {
 	static X509* (*origMethod)(BIO * bp, X509 * *x, pem_password_cb * cb, void* u) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "PEM_read_bio_X509");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("PEM_read_bio_X509"));
 	bool fail = fail_PEM_read_bio_X509 & 1;
 	fail_PEM_read_bio_X509 = fail_PEM_read_bio_X509 >> 1;
 	if (fail)
@@ -87,7 +94,7 @@ X509* PEM_read_bio_X509(BIO* bp, X509** x, pem_password_cb* cb, void* u) {
 
 EVP_PKEY* X509_get_pubkey(X509* x) {
 	static EVP_PKEY* (*origMethod)(X509*) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "X509_get_pubkey");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("X509_get_pubkey"));
 	bool fail = fail_X509_get_pubkey & 1;
 	fail_X509_get_pubkey = fail_X509_get_pubkey >> 1;
 	if (fail)
@@ -104,7 +111,7 @@ EVP_PKEY* X509_get_pubkey(X509* x) {
 
 int PEM_write_bio_PUBKEY(BIO* bp, OPENSSL_CONST EVP_PKEY* x) {
 	static int (*origMethod)(BIO * bp, OPENSSL_CONST EVP_PKEY * x) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "PEM_write_bio_PUBKEY");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("PEM_write_bio_PUBKEY"));
 	bool fail = fail_PEM_write_bio_PUBKEY & 1;
 	fail_PEM_write_bio_PUBKEY = fail_PEM_write_bio_PUBKEY >> 1;
 	if (fail)
@@ -115,7 +122,7 @@ int PEM_write_bio_PUBKEY(BIO* bp, OPENSSL_CONST EVP_PKEY* x) {
 
 int PEM_write_bio_X509(BIO* bp, OPENSSL_CONST X509* x) {
 	static int (*origMethod)(BIO * bp, OPENSSL_CONST X509 * x) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "PEM_write_bio_X509");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("PEM_write_bio_X509"));
 	bool fail = fail_PEM_write_bio_cert & 1;
 	fail_PEM_write_bio_cert = fail_PEM_write_bio_cert >> 1;
 	if (fail)
@@ -126,7 +133,7 @@ int PEM_write_bio_X509(BIO* bp, OPENSSL_CONST X509* x) {
 
 long BIO_ctrl(BIO* bp, int cmd, long larg, void* parg) {
 	static long (*origMethod)(BIO * bp, int cmd, long larg, void* parg) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "BIO_ctrl");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("BIO_ctrl"));
 	bool fail = fail_BIO_ctrl & 1;
 	fail_BIO_ctrl = fail_BIO_ctrl >> 1;
 	if (fail)
@@ -137,7 +144,7 @@ long BIO_ctrl(BIO* bp, int cmd, long larg, void* parg) {
 
 int BIO_write(BIO* b, const void* data, int dlen) {
 	static int (*origMethod)(BIO * b, const void* data, int dlen) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "BIO_write");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("BIO_write"));
 	bool fail = fail_BIO_write & 1;
 	fail_BIO_write = fail_BIO_write >> 1;
 	if (fail)
@@ -148,7 +155,7 @@ int BIO_write(BIO* b, const void* data, int dlen) {
 
 EVP_PKEY* PEM_read_bio_PUBKEY(BIO* bp, EVP_PKEY** x, pem_password_cb* cb, void* u) {
 	static EVP_PKEY* (*origMethod)(BIO * bp, EVP_PKEY * *x, pem_password_cb * cb, void* u) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "PEM_read_bio_PUBKEY");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("PEM_read_bio_PUBKEY"));
 	bool fail = fail_PEM_read_bio_PUBKEY & 1;
 	fail_PEM_read_bio_PUBKEY = fail_PEM_read_bio_PUBKEY >> 1;
 	if (fail)
@@ -159,7 +166,8 @@ EVP_PKEY* PEM_read_bio_PUBKEY(BIO* bp, EVP_PKEY** x, pem_password_cb* cb, void* 
 
 EVP_PKEY* PEM_read_bio_PrivateKey(BIO* bp, EVP_PKEY** x, pem_password_cb* cb, void* u) {
 	static EVP_PKEY* (*origMethod)(BIO * bp, EVP_PKEY * *x, pem_password_cb * cb, void* u) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "PEM_read_bio_PrivateKey");
+	if (origMethod == nullptr)
+		origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("PEM_read_bio_PrivateKey"));
 	bool fail = fail_PEM_read_bio_PrivateKey & 1;
 	fail_PEM_read_bio_PrivateKey = fail_PEM_read_bio_PrivateKey >> 1;
 	if (fail)
@@ -168,11 +176,13 @@ EVP_PKEY* PEM_read_bio_PrivateKey(BIO* bp, EVP_PKEY** x, pem_password_cb* cb, vo
 		return origMethod(bp, x, cb, u);
 }
 
+#if !defined(LIBWOLFSSL_VERSION_HEX) || LIBWOLFSSL_VERSION_HEX > 0x05007000
+/* wolfSSL definition collides. Fixed after 5.7.0 */
 unsigned char* HMAC(const EVP_MD* evp_md, const void* key, int key_len, const unsigned char* d, size_t n,
 					unsigned char* md, unsigned int* md_len) {
 	static unsigned char* (*origMethod)(const EVP_MD* evp_md, const void* key, int key_len, const unsigned char* d,
 										size_t n, unsigned char* md, unsigned int* md_len) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "HMAC");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("HMAC"));
 	bool fail = fail_HMAC & 1;
 	fail_HMAC = fail_HMAC >> 1;
 	if (fail)
@@ -180,10 +190,11 @@ unsigned char* HMAC(const EVP_MD* evp_md, const void* key, int key_len, const un
 	else
 		return origMethod(evp_md, key, key_len, d, n, md, md_len);
 }
+#endif
 
 EVP_MD_CTX* EVP_MD_CTX_new(void) {
 	static EVP_MD_CTX* (*origMethod)(void) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_MD_CTX_new");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_MD_CTX_new"));
 	bool fail = fail_EVP_MD_CTX_new & 1;
 	fail_EVP_MD_CTX_new = fail_EVP_MD_CTX_new >> 1;
 	if (fail)
@@ -194,7 +205,7 @@ EVP_MD_CTX* EVP_MD_CTX_new(void) {
 
 int EVP_DigestSignFinal(EVP_MD_CTX* ctx, unsigned char* sigret, size_t* siglen) {
 	static int (*origMethod)(EVP_MD_CTX * ctx, unsigned char* sigret, size_t* siglen) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_DigestSignFinal");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_DigestSignFinal"));
 	bool fail = fail_EVP_DigestSignFinal & 1;
 	fail_EVP_DigestSignFinal = fail_EVP_DigestSignFinal >> 1;
 	if (fail)
@@ -205,7 +216,7 @@ int EVP_DigestSignFinal(EVP_MD_CTX* ctx, unsigned char* sigret, size_t* siglen) 
 
 int EVP_DigestInit(EVP_MD_CTX* ctx, const EVP_MD* type) {
 	static int (*origMethod)(EVP_MD_CTX * ctx, const EVP_MD* type) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_DigestInit");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_DigestInit"));
 	bool fail = fail_EVP_DigestInit & 1;
 	fail_EVP_DigestInit = fail_EVP_DigestInit >> 1;
 	if (fail)
@@ -216,7 +227,7 @@ int EVP_DigestInit(EVP_MD_CTX* ctx, const EVP_MD* type) {
 
 int EVP_DigestUpdate(EVP_MD_CTX* ctx, const void* d, size_t cnt) {
 	static int (*origMethod)(EVP_MD_CTX * ctx, const void* d, size_t cnt) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_DigestUpdate");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_DigestUpdate"));
 	bool fail = fail_EVP_DigestUpdate & 1;
 	fail_EVP_DigestUpdate = fail_EVP_DigestUpdate >> 1;
 	if (fail)
@@ -227,7 +238,7 @@ int EVP_DigestUpdate(EVP_MD_CTX* ctx, const void* d, size_t cnt) {
 
 int EVP_DigestFinal(EVP_MD_CTX* ctx, unsigned char* md, unsigned int* s) {
 	static int (*origMethod)(EVP_MD_CTX * ctx, unsigned char* md, unsigned int* s) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_DigestFinal");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_DigestFinal"));
 	bool fail = fail_EVP_DigestFinal & 1;
 	fail_EVP_DigestFinal = fail_EVP_DigestFinal >> 1;
 	if (fail)
@@ -238,7 +249,7 @@ int EVP_DigestFinal(EVP_MD_CTX* ctx, unsigned char* md, unsigned int* s) {
 
 int EVP_SignFinal(EVP_MD_CTX* ctx, unsigned char* md, unsigned int* s, EVP_PKEY* pkey) {
 	static int (*origMethod)(EVP_MD_CTX * ctx, unsigned char* md, unsigned int* s, EVP_PKEY* pkey) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_SignFinal");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_SignFinal"));
 	bool fail = fail_EVP_SignFinal & 1;
 	fail_EVP_SignFinal = fail_EVP_SignFinal >> 1;
 	if (fail)
@@ -250,7 +261,7 @@ int EVP_SignFinal(EVP_MD_CTX* ctx, unsigned char* md, unsigned int* s, EVP_PKEY*
 int EVP_VerifyFinal(EVP_MD_CTX* ctx, const unsigned char* sigbuf, unsigned int siglen, EVP_PKEY* pkey) {
 	static int (*origMethod)(EVP_MD_CTX * ctx, const unsigned char* sigbuf, unsigned int siglen, EVP_PKEY* pkey) =
 		nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_VerifyFinal");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_VerifyFinal"));
 	bool fail = fail_EVP_VerifyFinal & 1;
 	fail_EVP_VerifyFinal = fail_EVP_VerifyFinal >> 1;
 	if (fail)
@@ -262,7 +273,8 @@ int EVP_VerifyFinal(EVP_MD_CTX* ctx, const unsigned char* sigbuf, unsigned int s
 #ifdef JWT_OPENSSL_3_0
 int EVP_PKEY_public_check(EVP_PKEY_CTX* ctx) {
 	static int (*origMethod)(EVP_PKEY_CTX * ctx) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_PKEY_public_check");
+	if (origMethod == nullptr)
+		origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_PKEY_public_check"));
 	bool fail = fail_EVP_PKEY_public_check & 1;
 	fail_EVP_PKEY_public_check = fail_EVP_PKEY_public_check >> 1;
 	if (fail)
@@ -273,7 +285,8 @@ int EVP_PKEY_public_check(EVP_PKEY_CTX* ctx) {
 
 int EVP_PKEY_private_check(EVP_PKEY_CTX* ctx) {
 	static int (*origMethod)(EVP_PKEY_CTX * ctx) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_PKEY_private_check");
+	if (origMethod == nullptr)
+		origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_PKEY_private_check"));
 	bool fail = fail_EVP_PKEY_private_check & 1;
 	fail_EVP_PKEY_private_check = fail_EVP_PKEY_private_check >> 1;
 	if (fail)
@@ -284,7 +297,8 @@ int EVP_PKEY_private_check(EVP_PKEY_CTX* ctx) {
 
 EVP_PKEY_CTX* EVP_PKEY_CTX_new_from_pkey(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const char* propquery) {
 	static EVP_PKEY_CTX* (*origMethod)(OSSL_LIB_CTX * libctx, EVP_PKEY * pkey, const char* propquery) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_PKEY_CTX_new_from_pkey");
+	if (origMethod == nullptr)
+		origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_PKEY_CTX_new_from_pkey"));
 	bool fail = fail_EVP_PKEY_CTX_new_from_pkey & 1;
 	fail_EVP_PKEY_CTX_new_from_pkey = fail_EVP_PKEY_CTX_new_from_pkey >> 1;
 	if (fail)
@@ -296,7 +310,7 @@ EVP_PKEY_CTX* EVP_PKEY_CTX_new_from_pkey(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, c
 #else
 int EC_KEY_check_key(const EC_KEY* key) {
 	static int (*origMethod)(const EC_KEY* key) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EC_KEY_check_key");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EC_KEY_check_key"));
 	bool fail = fail_EC_KEY_check_key & 1;
 	fail_EC_KEY_check_key = fail_EC_KEY_check_key >> 1;
 	if (fail)
@@ -307,7 +321,7 @@ int EC_KEY_check_key(const EC_KEY* key) {
 
 EC_KEY* EVP_PKEY_get1_EC_KEY(EVP_PKEY* pkey) {
 	static EC_KEY* (*origMethod)(EVP_PKEY * pkey) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_PKEY_get1_EC_KEY");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_PKEY_get1_EC_KEY"));
 	bool fail = fail_EVP_PKEY_get1_EC_KEY & 1;
 	fail_EVP_PKEY_get1_EC_KEY = fail_EVP_PKEY_get1_EC_KEY >> 1;
 	if (fail)
@@ -319,7 +333,7 @@ EC_KEY* EVP_PKEY_get1_EC_KEY(EVP_PKEY* pkey) {
 
 ECDSA_SIG* ECDSA_SIG_new(void) {
 	static ECDSA_SIG* (*origMethod)() = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "ECDSA_SIG_new");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("ECDSA_SIG_new"));
 	bool fail = fail_ECDSA_SIG_new & 1;
 	fail_ECDSA_SIG_new = fail_ECDSA_SIG_new >> 1;
 	if (fail)
@@ -328,21 +342,10 @@ ECDSA_SIG* ECDSA_SIG_new(void) {
 		return origMethod();
 }
 
-struct rsa_st* EVP_PKEY_get1_RSA(EVP_PKEY* pkey) {
-	static struct rsa_st* (*origMethod)(EVP_PKEY * pkey) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_PKEY_get1_RSA");
-	bool fail = fail_EVP_PKEY_get1_RSA & 1;
-	fail_EVP_PKEY_get1_RSA = fail_EVP_PKEY_get1_RSA >> 1;
-	if (fail)
-		return nullptr;
-	else
-		return origMethod(pkey);
-}
-
 int EVP_DigestSignInit(EVP_MD_CTX* ctx, EVP_PKEY_CTX** pctx, const EVP_MD* type, ENGINE* e, EVP_PKEY* pkey) {
 	static int (*origMethod)(EVP_MD_CTX * ctx, EVP_PKEY_CTX * *pctx, const EVP_MD* type, ENGINE* e, EVP_PKEY* pkey) =
 		nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_DigestSignInit");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_DigestSignInit"));
 	bool fail = fail_EVP_DigestSignInit & 1;
 	fail_EVP_DigestSignInit = fail_EVP_DigestSignInit >> 1;
 	if (fail)
@@ -354,7 +357,7 @@ int EVP_DigestSignInit(EVP_MD_CTX* ctx, EVP_PKEY_CTX** pctx, const EVP_MD* type,
 int EVP_DigestSign(EVP_MD_CTX* ctx, unsigned char* sigret, size_t* siglen, const unsigned char* tbs, size_t tbslen) {
 	static int (*origMethod)(EVP_MD_CTX * ctx, unsigned char* sigret, size_t* siglen, const unsigned char* tbs,
 							 size_t tbslen) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_DigestSign");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_DigestSign"));
 	bool fail = fail_EVP_DigestSign & 1;
 	fail_EVP_DigestSign = fail_EVP_DigestSign >> 1;
 	if (fail)
@@ -366,7 +369,7 @@ int EVP_DigestSign(EVP_MD_CTX* ctx, unsigned char* sigret, size_t* siglen, const
 int EVP_DigestVerifyInit(EVP_MD_CTX* ctx, EVP_PKEY_CTX** pctx, const EVP_MD* type, ENGINE* e, EVP_PKEY* pkey) {
 	static int (*origMethod)(EVP_MD_CTX * ctx, EVP_PKEY_CTX * *pctx, const EVP_MD* type, ENGINE* e, EVP_PKEY* pkey) =
 		nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_DigestVerifyInit");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_DigestVerifyInit"));
 	bool fail = fail_EVP_DigestVerifyInit & 1;
 	fail_EVP_DigestVerifyInit = fail_EVP_DigestVerifyInit >> 1;
 	if (fail)
@@ -378,7 +381,7 @@ int EVP_DigestVerifyInit(EVP_MD_CTX* ctx, EVP_PKEY_CTX** pctx, const EVP_MD* typ
 int EVP_DigestVerify(EVP_MD_CTX* ctx, unsigned char* sigret, size_t* siglen, const unsigned char* tbs, size_t tbslen) {
 	static int (*origMethod)(EVP_MD_CTX * ctx, unsigned char* sigret, size_t* siglen, const unsigned char* tbs,
 							 size_t tbslen) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_DigestVerify");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_DigestVerify"));
 	bool fail = fail_EVP_DigestVerify & 1;
 	fail_EVP_DigestVerify = fail_EVP_DigestVerify >> 1;
 	if (fail)
@@ -389,7 +392,8 @@ int EVP_DigestVerify(EVP_MD_CTX* ctx, unsigned char* sigret, size_t* siglen, con
 
 int EVP_DigestVerifyFinal(EVP_MD_CTX* ctx, const unsigned char* sigret, size_t siglen) {
 	static int (*origMethod)(EVP_MD_CTX * ctx, const unsigned char* sigret, size_t siglen) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_DigestVerifyFinal");
+	if (origMethod == nullptr)
+		origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_DigestVerifyFinal"));
 	bool fail = fail_EVP_DigestVerifyFinal & 1;
 	fail_EVP_DigestVerifyFinal = fail_EVP_DigestVerifyFinal >> 1;
 	if (fail)
@@ -400,7 +404,7 @@ int EVP_DigestVerifyFinal(EVP_MD_CTX* ctx, const unsigned char* sigret, size_t s
 
 int i2d_ECDSA_SIG(const ECDSA_SIG* sig, unsigned char** ppout) {
 	static int (*origMethod)(const ECDSA_SIG* sig, unsigned char** ppout) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "i2d_ECDSA_SIG");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("i2d_ECDSA_SIG"));
 	bool fail = fail_i2d_ECDSA_SIG & 1;
 	fail_i2d_ECDSA_SIG = fail_i2d_ECDSA_SIG >> 1;
 	if (fail)
@@ -411,7 +415,7 @@ int i2d_ECDSA_SIG(const ECDSA_SIG* sig, unsigned char** ppout) {
 
 ECDSA_SIG* d2i_ECDSA_SIG(ECDSA_SIG** psig, const unsigned char** ppin, long len) {
 	static ECDSA_SIG* (*origMethod)(ECDSA_SIG * *psig, const unsigned char** ppin, long len) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "d2i_ECDSA_SIG");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("d2i_ECDSA_SIG"));
 	bool fail = fail_d2i_ECDSA_SIG & 1;
 	fail_d2i_ECDSA_SIG = fail_d2i_ECDSA_SIG >> 1;
 	if (fail)
@@ -423,7 +427,7 @@ ECDSA_SIG* d2i_ECDSA_SIG(ECDSA_SIG** psig, const unsigned char** ppin, long len)
 #ifdef JWT_OPENSSL_3_0
 OSSL_PARAM_BLD* OSSL_PARAM_BLD_new() {
 	static OSSL_PARAM_BLD* (*origMethod)() = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "OSSL_PARAM_BLD_new");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("OSSL_PARAM_BLD_new"));
 	bool fail = fail_OSSL_PARAM_BLD_new & 1;
 	fail_OSSL_PARAM_BLD_new = fail_OSSL_PARAM_BLD_new >> 1;
 	if (fail)
@@ -434,7 +438,8 @@ OSSL_PARAM_BLD* OSSL_PARAM_BLD_new() {
 
 int OSSL_PARAM_BLD_push_BN(OSSL_PARAM_BLD* bld, const char* key, const BIGNUM* bn) {
 	static int (*origMethod)(OSSL_PARAM_BLD * bld, const char* key, const BIGNUM* bn) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "OSSL_PARAM_BLD_push_BN");
+	if (origMethod == nullptr)
+		origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("OSSL_PARAM_BLD_push_BN"));
 	bool fail = fail_OSSL_PARAM_BLD_push_BN & 1;
 	fail_OSSL_PARAM_BLD_push_BN = fail_OSSL_PARAM_BLD_push_BN >> 1;
 	if (fail)
@@ -445,7 +450,8 @@ int OSSL_PARAM_BLD_push_BN(OSSL_PARAM_BLD* bld, const char* key, const BIGNUM* b
 
 OSSL_PARAM* OSSL_PARAM_BLD_to_param(OSSL_PARAM_BLD* bld) {
 	static OSSL_PARAM* (*origMethod)(OSSL_PARAM_BLD * bld) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "OSSL_PARAM_BLD_to_param");
+	if (origMethod == nullptr)
+		origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("OSSL_PARAM_BLD_to_param"));
 	bool fail = fail_OSSL_PARAM_BLD_to_param & 1;
 	fail_OSSL_PARAM_BLD_to_param = fail_OSSL_PARAM_BLD_to_param >> 1;
 	if (fail)
@@ -456,7 +462,8 @@ OSSL_PARAM* OSSL_PARAM_BLD_to_param(OSSL_PARAM_BLD* bld) {
 
 EVP_PKEY_CTX* EVP_PKEY_CTX_new_from_name(OSSL_LIB_CTX* libctx, const char* name, const char* propquery) {
 	static EVP_PKEY_CTX* (*origMethod)(OSSL_LIB_CTX * libctx, const char* name, const char* propquery) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_PKEY_CTX_new_from_name");
+	if (origMethod == nullptr)
+		origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_PKEY_CTX_new_from_name"));
 	bool fail = fail_EVP_PKEY_CTX_new_from_name & 1;
 	fail_EVP_PKEY_CTX_new_from_name = fail_EVP_PKEY_CTX_new_from_name >> 1;
 	if (fail)
@@ -467,7 +474,8 @@ EVP_PKEY_CTX* EVP_PKEY_CTX_new_from_name(OSSL_LIB_CTX* libctx, const char* name,
 
 int EVP_PKEY_fromdata_init(EVP_PKEY_CTX* ctx) {
 	static int (*origMethod)(EVP_PKEY_CTX * ctx) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_PKEY_fromdata_init");
+	if (origMethod == nullptr)
+		origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_PKEY_fromdata_init"));
 	bool fail = fail_EVP_PKEY_fromdata_init & 1;
 	fail_EVP_PKEY_fromdata_init = fail_EVP_PKEY_fromdata_init >> 1;
 	if (fail)
@@ -478,7 +486,7 @@ int EVP_PKEY_fromdata_init(EVP_PKEY_CTX* ctx) {
 
 int EVP_PKEY_fromdata(EVP_PKEY_CTX* ctx, EVP_PKEY** ppkey, int selection, OSSL_PARAM params[]) {
 	static int (*origMethod)(EVP_PKEY_CTX * ctx, EVP_PKEY * *ppkey, int selection, OSSL_PARAM params[]) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "EVP_PKEY_fromdata");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_PKEY_fromdata"));
 	bool fail = fail_EVP_PKEY_fromdata & 1;
 	fail_EVP_PKEY_fromdata = fail_EVP_PKEY_fromdata >> 1;
 	if (fail)
@@ -489,7 +497,8 @@ int EVP_PKEY_fromdata(EVP_PKEY_CTX* ctx, EVP_PKEY** ppkey, int selection, OSSL_P
 #else
 int PEM_write_bio_RSA_PUBKEY(BIO* bp, RSA* x) {
 	static int (*origMethod)(BIO * bp, RSA * x) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "PEM_write_bio_RSA_PUBKEY");
+	if (origMethod == nullptr)
+		origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("PEM_write_bio_RSA_PUBKEY"));
 	bool fail = fail_PEM_write_bio_RSA_PUBKEY & 1;
 	fail_PEM_write_bio_RSA_PUBKEY = fail_PEM_write_bio_RSA_PUBKEY >> 1;
 	if (fail)
@@ -500,7 +509,7 @@ int PEM_write_bio_RSA_PUBKEY(BIO* bp, RSA* x) {
 
 int RSA_set0_key(RSA* r, BIGNUM* n, BIGNUM* e, BIGNUM* d) {
 	static int (*origMethod)(RSA * r, BIGNUM * n, BIGNUM * e, BIGNUM * d) = nullptr;
-	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, "RSA_set0_key");
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("RSA_set0_key"));
 	bool fail = fail_RSA_set0_key & 1;
 	fail_RSA_set0_key = fail_RSA_set0_key >> 1;
 	if (fail)
@@ -552,6 +561,8 @@ TEST(OpenSSLErrorTest, ExtractPubkeyFromCertReference) {
 	ASSERT_EQ(ec.value(), 0);
 }
 
+#if !defined(LIBWOLFSSL_VERSION_HEX) || LIBWOLFSSL_VERSION_HEX >= 0x05007000
+/* Older versions of wolfSSL output different PEM encoding */
 TEST(OpenSSLErrorTest, ConvertCertBase64DerToPemReference) {
 	std::error_code ec;
 	auto res = jwt::helper::convert_base64_der_to_pem(sample_cert_base64_der, ec);
@@ -559,7 +570,9 @@ TEST(OpenSSLErrorTest, ConvertCertBase64DerToPemReference) {
 	ASSERT_FALSE(!(!ec));
 	ASSERT_EQ(ec.value(), 0);
 }
+#endif
 
+#ifndef LIBWOLFSSL_VERSION_HEX /* wolfSSL: limited ed support in compatibility layer */
 TEST(OpenSSLErrorTest, ConvertEcdsaCertBase64DerToPemReference) {
 	std::error_code ec;
 	auto res = jwt::helper::convert_base64_der_to_pem(ed25519_certificate_base64_der, ec);
@@ -567,6 +580,7 @@ TEST(OpenSSLErrorTest, ConvertEcdsaCertBase64DerToPemReference) {
 	ASSERT_FALSE(!(!ec));
 	ASSERT_EQ(ec.value(), 0);
 }
+#endif
 
 struct multitest_entry {
 	uint64_t* fail_mask_ptr;
@@ -595,7 +609,10 @@ TEST(OpenSSLErrorTest, ExtractPubkeyFromCert) {
 										 {&fail_PEM_read_bio_X509, 1, jwt::error::rsa_error::cert_load_failed},
 										 {&fail_X509_get_pubkey, 1, jwt::error::rsa_error::get_key_failed},
 										 {&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::write_key_failed},
-										 {&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed}};
+#ifndef LIBWOLFSSL_VERSION_HEX /* wolfSSL does not use BIO_ctrl in BIO_get_mem_data */
+										 {&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed}
+#endif
+	};
 
 	run_multitest(mapping, [](std::error_code& ec) {
 		try {
@@ -610,7 +627,10 @@ TEST(OpenSSLErrorTest, ExtractPubkeyFromCertErrorCode) {
 										 {&fail_PEM_read_bio_X509, 1, jwt::error::rsa_error::cert_load_failed},
 										 {&fail_X509_get_pubkey, 1, jwt::error::rsa_error::get_key_failed},
 										 {&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::write_key_failed},
-										 {&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed}};
+#ifndef LIBWOLFSSL_VERSION_HEX /* wolfSSL does not use BIO_ctrl in BIO_get_mem_data */
+										 {&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed}
+#endif
+	};
 
 	run_multitest(mapping, [](std::error_code& ec) {
 		auto res = jwt::helper::extract_pubkey_from_cert(sample_cert, "", ec);
@@ -621,7 +641,9 @@ TEST(OpenSSLErrorTest, ExtractPubkeyFromCertErrorCode) {
 TEST(OpenSSLErrorTest, CreateRsaPublicKeyFromComponents) {
 	std::vector<multitest_entry> mapping{
 		{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
+#ifndef LIBWOLFSSL_VERSION_HEX
 		{&fail_BIO_get_mem_data, 1, jwt::error::rsa_error::convert_to_pem_failed},
+#endif
 #ifdef JWT_OPENSSL_3_0
 		{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_write},
 		{&fail_OSSL_PARAM_BLD_new, 1, jwt::error::rsa_error::create_context_failed},
@@ -653,7 +675,9 @@ TEST(OpenSSLErrorTest, CreateRsaPublicKeyFromComponents) {
 TEST(OpenSSLErrorTest, CreateRsaPublicKeyFromComponentsErrorCode) {
 	std::vector<multitest_entry> mapping{
 		{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
+#ifndef LIBWOLFSSL_VERSION_HEX
 		{&fail_BIO_get_mem_data, 1, jwt::error::rsa_error::convert_to_pem_failed},
+#endif
 #ifdef JWT_OPENSSL_3_0
 		{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_write},
 		{&fail_OSSL_PARAM_BLD_new, 1, jwt::error::rsa_error::create_context_failed},
@@ -682,7 +706,10 @@ TEST(OpenSSLErrorTest, CreateRsaPublicKeyFromComponentsErrorCode) {
 TEST(OpenSSLErrorTest, ConvertCertBase64DerToPem) {
 	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
 										 {&fail_PEM_write_bio_cert, 1, jwt::error::rsa_error::write_cert_failed},
-										 {&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed}};
+#ifndef LIBWOLFSSL_VERSION_HEX /* wolfSSL does not use BIO_ctrl in BIO_get_mem_data */
+										 {&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed}
+#endif
+	};
 
 	run_multitest(mapping, [](std::error_code& ec) {
 		try {
@@ -694,8 +721,14 @@ TEST(OpenSSLErrorTest, ConvertCertBase64DerToPem) {
 
 TEST(OpenSSLErrorTest, ConvertEcdsaCertBase64DerToPem) {
 	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
+#ifndef LIBWOLFSSL_VERSION_HEX
 										 {&fail_PEM_write_bio_cert, 1, jwt::error::rsa_error::write_cert_failed},
-										 {&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed}};
+										 {&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed}
+#else
+										 {&fail_PEM_write_bio_cert, 1, jwt::error::rsa_error::create_mem_bio_failed},
+										 {&fail_BIO_ctrl, 1, jwt::error::rsa_error::create_mem_bio_failed}
+#endif
+	};
 
 	run_multitest(mapping, [](std::error_code& ec) {
 		try {
@@ -708,7 +741,10 @@ TEST(OpenSSLErrorTest, ConvertEcdsaCertBase64DerToPem) {
 TEST(OpenSSLErrorTest, ConvertCertBase64DerToPemErrorCode) {
 	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
 										 {&fail_PEM_write_bio_cert, 1, jwt::error::rsa_error::write_cert_failed},
-										 {&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed}};
+#ifndef LIBWOLFSSL_VERSION_HEX /* wolfSSL does not use BIO_ctrl in BIO_get_mem_data */
+										 {&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed}
+#endif
+	};
 
 	run_multitest(mapping, [](std::error_code& ec) {
 		auto res = jwt::helper::convert_base64_der_to_pem(sample_cert_base64_der, ec);
@@ -776,8 +812,12 @@ TEST(OpenSSLErrorTest, LoadPublicKeyCertFromStringReference) {
 TEST(OpenSSLErrorTest, LoadPublicKeyCertFromString) {
 	std::vector<multitest_entry> mapping {
 		{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
+#ifndef LIBWOLFSSL_VERSION_HEX
 			{&fail_BIO_get_mem_data, 1, jwt::error::rsa_error::convert_to_pem_failed},
-#if !defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER < 0x3050300fL
+#endif
+#if defined(LIBWOLFSSL_VERSION_HEX)
+			{&fail_BIO_write, 1, jwt::error::rsa_error::write_key_failed},
+#elif !defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER < 0x3050300fL
 			{&fail_BIO_write, 1, jwt::error::rsa_error::load_key_bio_write},
 #else
 			{&fail_BIO_write, 1, jwt::error::rsa_error::write_key_failed},
@@ -798,8 +838,12 @@ TEST(OpenSSLErrorTest, LoadPublicKeyCertFromString) {
 TEST(OpenSSLErrorTest, LoadPublicKeyCertFromStringErrorCode) {
 	std::vector<multitest_entry> mapping {
 		{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
+#ifndef LIBWOLFSSL_VERSION_HEX
 			{&fail_BIO_get_mem_data, 1, jwt::error::rsa_error::convert_to_pem_failed}, // extract_pubkey_from_cert
-#if !defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER < 0x3050300fL
+#endif
+#if defined(LIBWOLFSSL_VERSION_HEX)
+			{&fail_BIO_write, 1, jwt::error::rsa_error::write_key_failed},
+#elif !defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER < 0x3050300fL
 			{&fail_BIO_write, 1, jwt::error::rsa_error::load_key_bio_write},
 #else
 			{&fail_BIO_write, 1, jwt::error::rsa_error::write_key_failed},
@@ -844,6 +888,7 @@ TEST(OpenSSLErrorTest, LoadPrivateKeyFromStringErrorCode) {
 	});
 }
 
+#if !defined(LIBWOLFSSL_VERSION_HEX) || LIBWOLFSSL_VERSION_HEX > 0x05007000
 TEST(OpenSSLErrorTest, HMACSign) {
 	std::string token =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
@@ -855,6 +900,7 @@ TEST(OpenSSLErrorTest, HMACSign) {
 
 	run_multitest(mapping, [&](std::error_code& ec) { verify.verify(decoded_token, ec); });
 }
+#endif
 
 TEST(OpenSSLErrorTest, RS256Reference) {
 	jwt::algorithm::rs256 alg{rsa_pub_key, rsa_priv_key};
@@ -948,7 +994,9 @@ TEST(OpenSSLErrorTest, LoadECDSAPublicKeyFromString) {
 TEST(OpenSSLErrorTest, ECDSACertificate) {
 	std::vector<multitest_entry> mapping {
 		{&fail_BIO_new, 1, jwt::error::ecdsa_error::create_mem_bio_failed},
-#if !defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER < 0x3050300fL
+#if defined(LIBWOLFSSL_VERSION_HEX)
+			{&fail_BIO_write, 1, jwt::error::ecdsa_error::write_key_failed},
+#elif !defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER < 0x3050300fL
 			{&fail_BIO_write, 1, jwt::error::ecdsa_error::load_key_bio_write},
 #else
 			{&fail_BIO_write, 1, jwt::error::ecdsa_error::write_key_failed},
@@ -958,9 +1006,12 @@ TEST(OpenSSLErrorTest, ECDSACertificate) {
 			{&fail_BIO_new, 2, jwt::error::ecdsa_error::create_mem_bio_failed},
 			{&fail_PEM_read_bio_X509, 1, jwt::error::ecdsa_error::cert_load_failed},
 			{&fail_X509_get_pubkey, 1, jwt::error::ecdsa_error::get_key_failed},
-			{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::ecdsa_error::write_key_failed}, {
+			{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::ecdsa_error::write_key_failed},
+#ifndef LIBWOLFSSL_VERSION_HEX /* wolfSSL does not use BIO_ctrl in BIO_get_mem_data */
+		{
 			&fail_BIO_ctrl, 1, jwt::error::ecdsa_error::convert_to_pem_failed
 		}
+#endif
 	};
 
 	run_multitest(mapping, [](std::error_code& ec) {
@@ -983,13 +1034,17 @@ TEST(OpenSSLErrorTest, ES256Reference) {
 
 TEST(OpenSSLErrorTest, ES256SignErrorCode) {
 	jwt::algorithm::es256 alg{ecdsa256_pub_key, ecdsa256_priv_key};
-	std::vector<multitest_entry> mapping{
+	std::vector<multitest_entry> mapping {
 		{&fail_EVP_MD_CTX_new, 1, jwt::error::signature_generation_error::create_context_failed},
-		{&fail_EVP_DigestSignInit, 1, jwt::error::signature_generation_error::signinit_failed},
-		{&fail_EVP_DigestUpdate, 1, jwt::error::signature_generation_error::digestupdate_failed},
-		{&fail_EVP_DigestSignFinal, 1, jwt::error::signature_generation_error::signfinal_failed},
-		{&fail_EVP_DigestSignFinal, 2, jwt::error::signature_generation_error::signfinal_failed},
-		{&fail_d2i_ECDSA_SIG, 1, jwt::error::signature_generation_error::signature_decoding_failed},
+			{&fail_EVP_DigestSignInit, 1, jwt::error::signature_generation_error::signinit_failed},
+			{&fail_EVP_DigestUpdate, 1, jwt::error::signature_generation_error::digestupdate_failed},
+			{&fail_EVP_DigestSignFinal, 1, jwt::error::signature_generation_error::signfinal_failed},
+			{&fail_EVP_DigestSignFinal, 2, jwt::error::signature_generation_error::signfinal_failed},
+#if !defined(LIBWOLFSSL_VERSION_HEX) || LIBWOLFSSL_VERSION_HEX < 0x05007000
+			{&fail_d2i_ECDSA_SIG, 1, jwt::error::signature_generation_error::signature_decoding_failed},
+#else
+			{&fail_d2i_ECDSA_SIG, 1, jwt::error::signature_generation_error::signfinal_failed},
+#endif
 	};
 
 	run_multitest(mapping, [&alg](std::error_code& ec) {
