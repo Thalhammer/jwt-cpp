@@ -62,7 +62,7 @@ static uint64_t fail_PEM_write_bio_RSA_PUBKEY = 0;
 static uint64_t fail_RSA_set0_key = 0;
 #endif
 
-#ifdef LIBWOLFSSL_VERSION_STRING
+#ifdef LIBWOLFSSL_VERSION_HEX
 #define SYMBOL_NAME(s) ("wolfSSL_" s)
 #else
 #define SYMBOL_NAME(s) (s)

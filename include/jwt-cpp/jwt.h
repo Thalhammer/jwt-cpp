@@ -12,10 +12,6 @@
 #include "base.h"
 #endif
 
-#ifdef JWT_WOLFSSL
-#include <wolfssl/options.h>
-#include <wolfssl/version.h>
-#endif
 #include <openssl/ec.h>
 #include <openssl/ecdsa.h>
 #include <openssl/err.h>
@@ -24,7 +20,6 @@
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
 #include <openssl/ssl.h>
-#include <openssl/opensslv.h>
 
 #include <algorithm>
 #include <chrono>
@@ -71,6 +66,8 @@
 
 #if defined(LIBWOLFSSL_VERSION_HEX)
 #define JWT_OPENSSL_1_1_1
+#include <wolfssl/options.h>
+#include <wolfssl/version.h>
 #endif
 
 #ifndef JWT_CLAIM_EXPLICIT
