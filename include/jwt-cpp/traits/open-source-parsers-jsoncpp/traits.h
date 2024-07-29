@@ -120,10 +120,8 @@ namespace jwt {
 				Json::CharReaderBuilder builder;
 				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 
-				return reader->parse(
-					reinterpret_cast<const char*>(str.c_str()),
-					reinterpret_cast<const char*>(str.c_str() + str.size()), &val,
-					nullptr);
+				return reader->parse(reinterpret_cast<const char*>(str.c_str()),
+									 reinterpret_cast<const char*>(str.c_str() + str.size()), &val, nullptr);
 			}
 
 			static string_type serialize(const value_type& val) {
