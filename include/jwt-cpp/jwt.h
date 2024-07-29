@@ -66,8 +66,6 @@
 
 #if defined(LIBWOLFSSL_VERSION_HEX)
 #define JWT_OPENSSL_1_1_1
-#include <wolfssl/options.h>
-#include <wolfssl/version.h>
 #endif
 
 #ifndef JWT_CLAIM_EXPLICIT
