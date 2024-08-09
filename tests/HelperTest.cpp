@@ -45,6 +45,23 @@ JQIDAQAB
 	ASSERT_EQ(public_key, public_key_expected);
 }
 
+TEST(HelperTest, EcFromComponents) {
+	const std::string public_key_expected =
+		R"(-----BEGIN PUBLIC KEY-----
+MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE0uQ1+1P/wmhOuYvVtTogHOSBLC05IvK7
+L6sTPIX8Dl4Bg9nhC3v/FsgifjnXnijUxVJSyWa9SuxwBonUhg6SiCEv+ixb74hj
+DesC4D7OwllVcnkDJmOy/NMx4N7yDPJp
+-----END PUBLIC KEY-----
+)";
+	const std::string curve = R"(P-384)";
+	const std::string x = R"(0uQ1-1P_wmhOuYvVtTogHOSBLC05IvK7L6sTPIX8Dl4Bg9nhC3v_FsgifjnXnijU)";
+	const std::string y = R"(xVJSyWa9SuxwBonUhg6SiCEv-ixb74hjDesC4D7OwllVcnkDJmOy_NMx4N7yDPJp)";
+
+	const auto public_key = jwt::helper::create_public_key_from_ec_components(curve, x, y);
+
+	ASSERT_EQ(public_key, public_key_expected);
+}
+
 TEST(HelperTest, ErrorCodeMessages) {
 	ASSERT_EQ(std::error_code(jwt::error::rsa_error::ok).message(), "no error");
 	ASSERT_EQ(std::error_code(static_cast<jwt::error::rsa_error>(-1)).message(), "unknown RSA error");
@@ -80,7 +97,7 @@ TEST(HelperTest, ErrorCodeMessages) {
 	ASSERT_EQ(std::error_code(static_cast<jwt::error::rsa_error>(i)).message(),
 			  std::error_code(static_cast<jwt::error::rsa_error>(-1)).message());
 
-	for (i = 10; i < 22; i++) {
+	for (i = 10; i < 24; i++) {
 		ASSERT_NE(std::error_code(static_cast<jwt::error::ecdsa_error>(i)).message(),
 				  std::error_code(static_cast<jwt::error::ecdsa_error>(-1)).message());
 	}
