@@ -71,17 +71,8 @@ TEST(TokenTest, CreateTokenRS256) {
 		token);
 }
 
-TEST(TokenTest, CreateTokenRS512) {
-	auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(
-		jwt::algorithm::rs512(rsa512_pub_key, rsa512_priv_key, "", ""));
-
-	ASSERT_EQ("eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.GZhnjtsvBl2_KDSxg4JW6xnmNjr2mWhYSZSSQyLKvI0"
-			  "TK86sJKchkt_HDy2IC5l5BGRhq_Xv9pHdA1umidQZG3a7gWvHsujqybCBgBraMTd1wJrCl4QxFg2RYHhHbRqb9BnPJgFD_vryd4GB"
-			  "hfGgejPBCBlGrQtqFGFdHHOjNHY",
-			  token);
-}
-
-TEST(TokenTest, CreateTokenRS512Encrypted) {
+#if !defined(JWT_OPENSSL_1_0_0)
+TEST(TokenTest, CreateTokenRS256Encrypted) {
 	// openssl genrsa -aes256 -out private.pem 2048
 	// openssl rsa -in private.pem -pubout -out public.pem
 	const std::string rsa_passphrase = "helloworld";
@@ -133,6 +124,17 @@ ixip+DkPtcbSsFjn2bVnknYYluk+Qupw/kWGxyFbvC1sYhn1iNwFv0g=
 			  "hVFXdx5oK8V427aKPUxlBq8MyOGLYFCXFKYWLinLTCihPHnEV5LFI2HGGtWm-"
 			  "S2OlNKawt24qnOhRtwE8QuckfOiiIjCtPH8798cOZzBrsqMdKTYhlFM28dTkejP_AgJUwD6QujSm2is0kAg1_"
 			  "SXxKTDSHVlg8irtG9ZQZXcuhaZCieAE1uIlJmKpEg4MUHVfvMsgy0N0p64NOiHa6bQsEb3NFn7UAe55jKQ",
+			  token);
+}
+#endif
+
+TEST(TokenTest, CreateTokenRS512) {
+	auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(
+		jwt::algorithm::rs512(rsa512_pub_key, rsa512_priv_key, "", ""));
+
+	ASSERT_EQ("eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.GZhnjtsvBl2_KDSxg4JW6xnmNjr2mWhYSZSSQyLKvI0"
+			  "TK86sJKchkt_HDy2IC5l5BGRhq_Xv9pHdA1umidQZG3a7gWvHsujqybCBgBraMTd1wJrCl4QxFg2RYHhHbRqb9BnPJgFD_vryd4GB"
+			  "hfGgejPBCBlGrQtqFGFdHHOjNHY",
 			  token);
 }
 
