@@ -71,7 +71,7 @@ TEST(TokenTest, CreateTokenRS256) {
 		token);
 }
 
-#if !defined(JWT_OPENSSL_1_0_0)
+//#if !defined(JWT_OPENSSL_1_0_0)
 TEST(TokenTest, CreateTokenRS256Encrypted) {
 	// openssl genrsa -aes256 -out private.pem 2048
 	// openssl rsa -in private.pem -pubout -out public.pem
@@ -126,7 +126,7 @@ ixip+DkPtcbSsFjn2bVnknYYluk+Qupw/kWGxyFbvC1sYhn1iNwFv0g=
 			  "SXxKTDSHVlg8irtG9ZQZXcuhaZCieAE1uIlJmKpEg4MUHVfvMsgy0N0p64NOiHa6bQsEb3NFn7UAe55jKQ",
 			  token);
 }
-#endif
+//#endif
 
 TEST(TokenTest, CreateTokenRS512) {
 	auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(
