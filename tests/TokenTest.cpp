@@ -71,11 +71,11 @@ TEST(TokenTest, CreateTokenRS256) {
 		token);
 }
 
+#if !defined(JWT_OPENSSL_1_0_0)
 TEST(TokenTest, CreateTokenRS256Encrypted) {
 	// openssl genrsa -aes256 -out private.pem 2048
 	// openssl rsa -in private.pem -pubout -out public.pem
 	const std::string rsa_passphrase = "helloworld";
-#if !defined(JWT_OPENSSL_1_0_0)
 	const std::string rsa_public = R"(-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtJWZsTVZxeeYWkSeVPvo
 yQtHH6KjJ4HcV6bI7gQQlPjDKzleIuK2bjC9mEv9+ewxL5qoYHm6Q5iYA0tYkHx0
@@ -115,47 +115,6 @@ n9BK3LDfqRvF0x/anEBQtleLo9srDPRrxWIfQms9vhjJoCY489XfdA2zeYguD8YI
 zbWUDoX0QfmWg+yaMEqvTges4crmbf8aVQohAkCdzAqAwzrT4miRoUQTmkdUPCgP
 ixip+DkPtcbSsFjn2bVnknYYluk+Qupw/kWGxyFbvC1sYhn1iNwFv0g=
 -----END ENCRYPTED PRIVATE KEY-----)";
-#else
-	const std::string rsa_public = R"(-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwZL9bD6xz+8o1ivfFm6V
-fDDocc2DvL7VPiiMdJS5A/LphSBbitmmvLzWoku3TCsvIa9uk2ErSMz6Zb/rQqK3
-8+dglktK5jzPAj9DfqXZU8/eSHw4uOHqxorwSS4taa/NRt5n02pUcSbEIXIn6Yl3
-rr9qHL5BjUj6gdSWjfpH2lXqVivkHNy0VjnOFR9gBTucKJAebtblj2at8gSzqvNP
-LYFeBDAvFi9KNKRK1HJbix+sGlukbHOfyATvFfffTEHQ3pKg41KcgkKEqQFWjjEC
-iFnXbsd8z/vDFUWlEO/yQOUCr8/8rmYDcsufJhuZ+9mBF0PysOM2nNuG0JNgaVzq
-OQIDAQAB
------END PUBLIC KEY-----)";
-	const std::string rsa_private = R"(-----BEGIN RSA PRIVATE KEY-----
-Proc-Type: 4,ENCRYPTED
-DEK-Info: AES-256-CBC,1CBFDA9945643B8B45931B757EEA31B5
-
-lQ2amQ7nzqyRODZtiS3vCu9JHD0uyviCMIIImxSw6VyTobqkjrqGUocCOTzTmKrm
-EYhSJn7NZQ6DlMMnrEiCQcIDU+zi0w+uuabPSwGR3MdlH3HeNw20NzjtYHD185b9
-jbyzIX+tZLukXhm21bry7IEHhOvwSoDr9NQH075f9hZ2DC4TvOVwiueVND18P5bz
-BccoYVm4a5I4QnUVwg7A1WJHiBN5Wa8gYYqNQNRsaX0v6YFanbjUtsna6hUVIl1A
-0ArdMSMDksgkRXcZWfje6eDlBFB0o9n0c4Ke5t8TwHxTQX2dR1NhDqaFPTeQJA0M
-qhxuIVeN3ZzE/MQlWcSenVDfxIfxu7dZ0XjEGhiIE3iQVW4L6OYIc2vFvNi8Rb5l
-gAoGG0ctj+3v42wy0GXJvOqgtruF16pgVf54g/s291OWYjCev2JuBGNdwmibIkVK
-iTPRuVVbsffgk+uhKjLsxNPK97rOu10btNsQjri4A09OBJ6gtxnsAgAxqa1r70sO
-pP3oR8ngrWBXRxNO2j2nVQuBKCyRiUGj6Dzaw1Ay1We2L9VIFH9v5krEgSilP+M/
-ecorCJJN9IPZaypzdmxZkJyEa0hh36kTzLfpB732jUy+uu5NXeeNkvP3UZnmmzek
-A7oha5oZh7V+u4U4uPQGAAMD0APOd9BUIsYpy3JQreY1UZsqoKpAES72kLwqmXg3
-gwYccXMV9jEoAVFIazHXui+dIigAO6srK2QlWJlsHAe6ylMUrI7FF8/2OXm74Pa9
-ih8EROH22L0C6pEbtYtd619w0fS46M7IiXYHZNKF6PLGaZxPUQ+re6mTtdkKMHor
-kBmlqzJKsj1Ob1hBpLfjwi619cQSFyikX5fXKRZO0wj+aAMFctaaffA+3zxNn5j8
-uj4pjwZNahVJEyY+HJwh7sVlgpwcJ6xU1rv1ZH/CX6f1mfdGUFKJtkoFWPpQcnik
-7QnS1ThaRTIFVzpSAB1qNxwQgBiSjRoVAxEA4t047QEM7lK+W0yzPeUUEwnDR3hw
-KfWJEzoO31iGZ+6viET168+E3A501eX8WOR6ktPqLzE9jknlj4jMmjsr9wt0jX5e
-F6IU410kYlMc+Hp4h20TVfAziU5ZGd6E05ZhXBupQZthRpEQ+vFKmPHanR4SXDOg
-SURP/+RuwtNlv5lnSt+Wb00wYBedjeg5hVoY0U3GIcExZYE1nOBXQ1d1vexzt9y/
-AjU3QzMzwwKlYpslvdBGNYgXqGtMsP+IGXo/p0TWAF2PAp43FbA9R3bLJdrQtYAn
-Ro8Xb8UJr/gXpWveWm+UsQAj3Yb6JvUW3zyWRn5YkQsmwQelK+m5bOGgNmvDGQJd
-Vft2t0jqr/Hviho9WqQXujBFVv7oDvWoVHRTOpm0qMJdgmlpmIlWdpyn4nEwWUEU
-qMIo3EwLhjj6Wt5jHmPBPQmdues1udfbzgGv7CYsLMoORfKvi0u9ofAUeAXC148+
-GmEnTtHJvGXpul+K8vcAVqncGFv18wUi7brebesDZEKvxCGzv5SQkJIlUM32DSA9
-kAwAQnSWWALIAU/HJDa5vet4QAYONoYUf++XbuVvR6Vw6aunpHc8k6duogWY4ZKm
------END RSA PRIVATE KEY-----)";
-#endif
 
 	auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(
 		jwt::algorithm::rs256(rsa_public, rsa_private, rsa_passphrase, rsa_passphrase));
@@ -167,6 +126,7 @@ kAwAQnSWWALIAU/HJDa5vet4QAYONoYUf++XbuVvR6Vw6aunpHc8k6duogWY4ZKm
 			  "SXxKTDSHVlg8irtG9ZQZXcuhaZCieAE1uIlJmKpEg4MUHVfvMsgy0N0p64NOiHa6bQsEb3NFn7UAe55jKQ",
 			  token);
 }
+#endif
 
 TEST(TokenTest, CreateTokenRS512) {
 	auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(
