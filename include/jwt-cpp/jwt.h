@@ -3925,7 +3925,7 @@ namespace jwt {
 			auto x5c_array = get_jwk_claim("x5c").as_array();
 			if (x5c_array.size() == 0) throw error::claim_not_present_exception();
 
-			return json_traits::as_string(x5c_array.front());
+			return json_traits::as_string(x5c_array[0]);
 		};
 
 		/**
