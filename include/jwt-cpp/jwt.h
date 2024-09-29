@@ -2464,7 +2464,7 @@ namespace jwt {
 										  is_iterable<array_type>::value &&
 										  is_detected<value_type_t, array_type>::value &&
 										  std::is_same<typename array_type::value_type, value_type>::value &&
-										  !std::is_same<decltype(std::declval<array_type>().front()), void>::value;
+										  std::is_member_function_pointer<decltype(&array_type::front)>::value;
 		};
 
 		template<typename string_type, typename integer_type>

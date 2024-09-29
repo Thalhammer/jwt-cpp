@@ -34,8 +34,6 @@ namespace jwt {
 				array_type& operator=(const array_type& o) = default;
 				array_type& operator=(array_type&& o) noexcept = default;
 
-				value_type& front() { return this->operator[](0U); }
-
 				value_type const& front() const { return this->operator[](0U); }
 			};
 			using number_type = double;

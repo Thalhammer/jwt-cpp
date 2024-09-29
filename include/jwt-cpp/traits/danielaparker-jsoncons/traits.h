@@ -63,8 +63,6 @@ namespace jwt {
 			};
 			class array_type : public json::array {
 			public:
-				value_type& front() { return this->operator[](0U); }
-
 				value_type const& front() const { return this->operator[](0U); }
 			};
 			using string_type = std::string; // current limitation of traits implementation
