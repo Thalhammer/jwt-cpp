@@ -2459,12 +2459,15 @@ namespace jwt {
 		struct is_valid_json_array {
 			template<typename T>
 			using value_type_t = typename T::value_type;
+			using front_return_type = decltype(std::declval<array_type>().front());
+			using front_base_type =
+				typename std::remove_cv<typename std::remove_reference<front_return_type>::type>::type;
 
 			static constexpr auto value = std::is_constructible<value_type, array_type>::value &&
 										  is_iterable<array_type>::value &&
 										  is_detected<value_type_t, array_type>::value &&
 										  std::is_same<typename array_type::value_type, value_type>::value &&
-										  std::is_member_function_pointer<decltype(&array_type::front)>::value;
+										  std::is_same<front_base_type, value_type>::value;
 		};
 
 		template<typename string_type, typename integer_type>
