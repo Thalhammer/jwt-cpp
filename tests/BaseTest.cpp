@@ -14,9 +14,7 @@ TEST(BaseTest, Base64Index) {
 
 	std::size_t noBaseCharCount = 0;
 	for (std::size_t i = 0; i < jwt::alphabet::base64::rdata().size(); i++) {
-		if(jwt::alphabet::base64::rdata().at(i) == -1) {
-			noBaseCharCount++;
-		}
+		if (jwt::alphabet::base64::rdata().at(i) == -1) { noBaseCharCount++; }
 	}
 	ASSERT_EQ(jwt::alphabet::base64::rdata().size() - jwt::alphabet::base64::data().size(), noBaseCharCount);
 }
@@ -31,12 +29,10 @@ TEST(BaseTest, Base64URLIndex) {
 		ASSERT_EQ(index, jwt::alphabet::index(jwt::alphabet::base64url::rdata(), c));
 		index++;
 	}
-	
+
 	std::size_t noBaseCharCount = 0;
 	for (std::size_t i = 0; i < jwt::alphabet::base64url::rdata().size(); i++) {
-		if(jwt::alphabet::base64url::rdata().at(i) == -1) {
-			noBaseCharCount++;
-		}
+		if (jwt::alphabet::base64url::rdata().at(i) == -1) { noBaseCharCount++; }
 	}
 	ASSERT_EQ(jwt::alphabet::base64url::rdata().size() - jwt::alphabet::base64url::data().size(), noBaseCharCount);
 }
