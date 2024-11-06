@@ -13,7 +13,7 @@ if(HUNTER_ENABLED)
   message(STATUS "jwt-cpp: using hunter for dependency resolution")
 endif()
 
-project(jwt-cpp)
+project(jwt-cpp LANGUAGES CXX)
 
 option(JWT_BUILD_EXAMPLES "Configure CMake to build examples (or not)" ON)
 option(JWT_BUILD_TESTS "Configure CMake to build tests (or not)" OFF)
