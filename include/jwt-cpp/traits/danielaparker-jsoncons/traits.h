@@ -61,7 +61,13 @@ namespace jwt {
 					return 0;
 				}
 			};
-			using array_type = json::array;
+			class array_type : public json::array {
+			public:
+				using json::array::array;
+				explicit array_type(const json::array& a) : json::array(a) {}
+				explicit array_type(json::array&& a) : json::array(a) {}
+				value_type const& front() const { return this->operator[](0U); }
+			};
 			using string_type = std::string; // current limitation of traits implementation
 			using number_type = double;
 			using integer_type = int64_t;
@@ -89,7 +95,7 @@ namespace jwt {
 
 			static array_type as_array(const json& val) {
 				if (val.type() != jsoncons::json_type::array_value) throw std::bad_cast();
-				return val.array_value();
+				return array_type(val.array_value());
 			}
 
 			static string_type as_string(const json& val) {

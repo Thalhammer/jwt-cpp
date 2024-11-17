@@ -808,7 +808,7 @@ namespace jwt {
 		 * \brief Load a public key from a string.
 		 *
 		 * The string should contain a pem encoded certificate or public key
-		 * 
+		 *
 		 * \deprecated Use the templated version helper::load_private_key_from_string with error::ecdsa_error
 		 *
 		 * \param key		String containing the certificate encoded as pem
@@ -872,7 +872,7 @@ namespace jwt {
 		 * The string should contain a pem encoded certificate or public key
 		 *
 		 * \deprecated Use the templated version helper::load_private_key_from_string with error::ecdsa_error
-		 * 
+		 *
 		 * \param key		String containing the certificate or key encoded as pem
 		 * \param password	Password used to decrypt certificate or key (leave empty if not encrypted)
 		 * \throw			ecdsa_exception if an error occurred
@@ -887,7 +887,7 @@ namespace jwt {
 
 		/**
 		 * \brief Load a private key from a string.
-		 * 
+		 *
 		 * \deprecated Use the templated version helper::load_private_key_from_string with error::ecdsa_error
 		 *
 		 * \param key		String containing a private key as pem
@@ -1077,7 +1077,7 @@ namespace jwt {
 		 * \brief Load a private key from a string.
 		 *
 		 * \deprecated Use the templated version helper::load_private_key_from_string with error::ecdsa_error
-		 * 
+		 *
 		 * \param key		String containing a private key as pem
 		 * \param password	Password used to decrypt key (leave empty if not encrypted)
 		 * \throw			ecdsa_exception if an error occurred
@@ -1372,7 +1372,7 @@ namespace jwt {
 		struct hmacsha {
 			/**
 			 * Construct new hmac algorithm
-			 * 
+			 *
 			 * \param key Key to use for HMAC
 			 * \param md Pointer to hash function
 			 * \param name Name of the algorithm
@@ -1381,7 +1381,7 @@ namespace jwt {
 				: secret(std::move(key)), md(md), alg_name(std::move(name)) {}
 			/**
 			 * Sign jwt data
-			 * 
+			 *
 			 * \param data The data to sign
 			 * \param ec error_code filled with details on error
 			 * \return HMAC signature for the given data
@@ -1402,7 +1402,7 @@ namespace jwt {
 			}
 			/**
 			 * Check if signature is valid
-			 * 
+			 *
 			 * \param data The data to check signature against
 			 * \param signature Signature provided by the jwt
 			 * \param ec Filled with details about failure.
@@ -1423,7 +1423,7 @@ namespace jwt {
 			}
 			/**
 			 * Returns the algorithm name provided to the constructor
-			 * 
+			 *
 			 * \return algorithm's name
 			 */
 			std::string name() const { return alg_name; }
@@ -1442,7 +1442,7 @@ namespace jwt {
 		struct rsa {
 			/**
 			 * Construct new rsa algorithm
-			 * 
+			 *
 			 * \param public_key RSA public key in PEM format
 			 * \param private_key RSA private key or empty string if not available. If empty, signing will always fail.
 			 * \param public_key_password Password to decrypt public key pem.
@@ -1495,7 +1495,7 @@ namespace jwt {
 			}
 			/**
 			 * Check if signature is valid
-			 * 
+			 *
 			 * \param data The data to check signature against
 			 * \param signature Signature provided by the jwt
 			 * \param ec Filled with details on failure
@@ -2053,13 +2053,13 @@ namespace jwt {
 		};
 		/**
 		 * RS256 algorithm.
-		 * 
+		 *
 		 * This data structure is used to describe the RSA256 and can be used to verify JWTs
 		 */
 		struct rs256 : public rsa {
 			/**
 			 * \brief Construct new instance of algorithm
-			 * 
+			 *
 			 * \param public_key RSA public key in PEM format
 			 * \param private_key RSA private key or empty string if not available. If empty, signing will always fail.
 			 * \param public_key_password Password to decrypt public key pem.
@@ -2459,11 +2459,13 @@ namespace jwt {
 		struct is_valid_json_array {
 			template<typename T>
 			using value_type_t = typename T::value_type;
+			using front_base_type = typename std::decay<decltype(std::declval<array_type>().front())>::type;
 
 			static constexpr auto value = std::is_constructible<value_type, array_type>::value &&
 										  is_iterable<array_type>::value &&
 										  is_detected<value_type_t, array_type>::value &&
-										  std::is_same<typename array_type::value_type, value_type>::value;
+										  std::is_same<typename array_type::value_type, value_type>::value &&
+										  std::is_same<front_base_type, value_type>::value;
 		};
 
 		template<typename string_type, typename integer_type>
@@ -3728,9 +3730,9 @@ namespace jwt {
 		 * Specify a claim to check for using the specified operation.
 		 * This is helpful for implementating application specific authentication checks
 		 * such as the one seen in partial-claim-verifier.cpp
-		 * 
+		 *
 		 * \snippet{trimleft} partial-claim-verifier.cpp verifier check custom claim
-		 * 
+		 *
 		 * \param name Name of the claim to check for
 		 * \param fn Function to use for verifying the claim
 		 * \return *this to allow chaining
@@ -3743,9 +3745,9 @@ namespace jwt {
 		/**
 		 * Specify a claim to check for equality (both type & value).
 		 * See the private-claims.cpp example.
-		 * 
+		 *
 		 * \snippet{trimleft} private-claims.cpp verify exact claim
-		 * 
+		 *
 		 * \param name Name of the claim to check for
 		 * \param c Claim to check for
 		 * \return *this to allow chaining
@@ -3756,13 +3758,13 @@ namespace jwt {
 
 		/**
 		 * \brief Add an algorithm available for checking.
-		 * 
+		 *
 		 * This is used to handle incomming tokens for predefined algorithms
 		 * which the authorization server is provided. For example a small system
 		 * where only a single RSA key-pair is used to sign tokens
-		 * 
+		 *
 		 * \snippet{trimleft} example/rsa-verify.cpp allow rsa algorithm
-		 * 
+		 *
 		 * \tparam Algorithm any algorithm such as those provided by jwt::algorithm
 		 * \param alg Algorithm to allow
 		 * \return *this to allow chaining
@@ -4122,18 +4124,18 @@ namespace jwt {
 	 * Default clock class using std::chrono::system_clock as a backend.
 	 */
 	struct default_clock {
-		/** 
+		/**
 		 * Gets the current system time
-		 * \return time_point of the host system 
+		 * \return time_point of the host system
 		 */
 		date now() const { return date::clock::now(); }
 	};
 
 	/**
 	 * Create a verifier using the default_clock.
-	 * 
-	 * 
-	 * 
+	 *
+	 *
+	 *
 	 * \param c Clock instance to use
 	 * \return verifier instance
 	 */
@@ -4153,7 +4155,7 @@ namespace jwt {
 	/**
 	 * \brief Decode a token. This can be used to to help access important feild like 'x5c'
 	 * for verifying tokens. See associated example rsa-verify.cpp for more details.
-	 * 
+	 *
 	 * \tparam json_traits JSON implementation traits
 	 * \tparam Decode is callable, taking a string_type and returns a string_type.
 	 *         It should ensure the padding of the input and then base64url decode and
@@ -4172,7 +4174,7 @@ namespace jwt {
 	/**
 	 * Decode a token. This can be used to to help access important feild like 'x5c'
 	 * for verifying tokens. See associated example rsa-verify.cpp for more details.
-	 * 
+	 *
 	 * \tparam json_traits JSON implementation traits
 	 * \param token Token to decode
 	 * \return Decoded token
@@ -4194,10 +4196,10 @@ namespace jwt {
 		return jwk<json_traits>(jwk_);
 	}
 	/**
-	 * Parse a JSON Web Key Set. This can be used to to help access 
+	 * Parse a JSON Web Key Set. This can be used to to help access
 	 * important feild like 'x5c' for verifying tokens. See example
 	 * jwks-verify.cpp for more information.
-	 * 
+	 *
 	 * \tparam json_traits JSON implementation traits
 	 * \param jwks_ string buffer containing the JSON object
 	 * \return Parsed JSON object containing the data of the JWK SET string
