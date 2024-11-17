@@ -38,6 +38,22 @@ namespace jwt {
 					 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'}};
 				return data;
 			}
+			static const std::array<int8_t, 256>& rdata() {
+				static constexpr std::array<int8_t, 256> rdata{{
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63,
+					52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1, -1, 0,	1,	2,	3,	4,	5,	6,
+					7,	8,	9,	10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1,
+					-1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
+					49, 50, 51, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+				}};
+				return rdata;
+			}
 			static const std::string& fill() {
 				static const std::string fill{"="};
 				return fill;
@@ -61,6 +77,22 @@ namespace jwt {
 					 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'}};
 				return data;
 			}
+			static const std::array<int8_t, 256>& rdata() {
+				static constexpr std::array<int8_t, 256> rdata{{
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1,
+					52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1, -1, 0,	1,	2,	3,	4,	5,	6,
+					7,	8,	9,	10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, 63,
+					-1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
+					49, 50, 51, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+				}};
+				return rdata;
+			}
 			static const std::string& fill() {
 				static const std::string fill{"%3d"};
 				return fill;
@@ -82,6 +114,22 @@ namespace jwt {
 						 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'}};
 					return data;
 				}
+				static const std::array<int8_t, 256>& rdata() {
+					static constexpr std::array<int8_t, 256> rdata{{
+						-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+						-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1,
+						52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1, -1, 0,	1,	2,	3,	4,	5,	6,
+						7,	8,	9,	10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, 63,
+						-1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
+						49, 50, 51, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+						-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+						-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+						-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+						-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+						-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+					}};
+					return rdata;
+				}
 				static const std::vector<std::string>& fill() {
 					static const std::vector<std::string> fill{"%3D", "%3d"};
 					return fill;
@@ -89,11 +137,10 @@ namespace jwt {
 			};
 		} // namespace helper
 
-		inline uint32_t index(const std::array<char, 64>& alphabet, char symbol) {
-			auto itr = std::find_if(alphabet.cbegin(), alphabet.cend(), [symbol](char c) { return c == symbol; });
-			if (itr == alphabet.cend()) { throw std::runtime_error("Invalid input: not within alphabet"); }
-
-			return static_cast<uint32_t>(std::distance(alphabet.cbegin(), itr));
+		inline uint32_t index(const std::array<int8_t, 256>& rdata, char symbol) {
+			auto index = rdata[static_cast<unsigned char>(symbol)];
+			if (index <= -1) { throw std::runtime_error("Invalid input: not within alphabet"); }
+			return static_cast<uint32_t>(index);
 		}
 	} // namespace alphabet
 
@@ -178,7 +225,7 @@ namespace jwt {
 				return res;
 			}
 
-			inline std::string decode(const std::string& base, const std::array<char, 64>& alphabet,
+			inline std::string decode(const std::string& base, const std::array<int8_t, 256>& rdata,
 									  const std::vector<std::string>& fill) {
 				const auto pad = count_padding(base, fill);
 				if (pad.count > 2) throw std::runtime_error("Invalid input: too much fill");
@@ -190,7 +237,7 @@ namespace jwt {
 				std::string res;
 				res.reserve(out_size);
 
-				auto get_sextet = [&](size_t offset) { return alphabet::index(alphabet, base[offset]); };
+				auto get_sextet = [&](size_t offset) { return alphabet::index(rdata, base[offset]); };
 
 				size_t fast_size = size - size % 4;
 				for (size_t i = 0; i < fast_size;) {
@@ -224,9 +271,9 @@ namespace jwt {
 				return res;
 			}
 
-			inline std::string decode(const std::string& base, const std::array<char, 64>& alphabet,
+			inline std::string decode(const std::string& base, const std::array<int8_t, 256>& rdata,
 									  const std::string& fill) {
-				return decode(base, alphabet, std::vector<std::string>{fill});
+				return decode(base, rdata, std::vector<std::string>{fill});
 			}
 
 			inline std::string pad(const std::string& base, const std::string& fill) {
@@ -273,7 +320,7 @@ namespace jwt {
 		 */
 		template<typename T>
 		std::string decode(const std::string& base) {
-			return details::decode(base, T::data(), T::fill());
+			return details::decode(base, T::rdata(), T::fill());
 		}
 		/**
 		 * \brief Generic base64 padding

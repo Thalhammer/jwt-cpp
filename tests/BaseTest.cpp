@@ -2,15 +2,39 @@
 #include <gtest/gtest.h>
 
 TEST(BaseTest, Base64Index) {
-	ASSERT_EQ(0, jwt::alphabet::index(jwt::alphabet::base64::data(), 'A'));
-	ASSERT_EQ(32, jwt::alphabet::index(jwt::alphabet::base64::data(), 'g'));
-	ASSERT_EQ(62, jwt::alphabet::index(jwt::alphabet::base64::data(), '+'));
+	ASSERT_EQ(0, jwt::alphabet::index(jwt::alphabet::base64::rdata(), 'A'));
+	ASSERT_EQ(32, jwt::alphabet::index(jwt::alphabet::base64::rdata(), 'g'));
+	ASSERT_EQ(62, jwt::alphabet::index(jwt::alphabet::base64::rdata(), '+'));
+
+	std::size_t index = 0;
+	for (auto c : jwt::alphabet::base64::data()) {
+		ASSERT_EQ(index, jwt::alphabet::index(jwt::alphabet::base64::rdata(), c));
+		index++;
+	}
+
+	std::size_t noBaseCharCount = 0;
+	for (std::size_t i = 0; i < jwt::alphabet::base64::rdata().size(); i++) {
+		if (jwt::alphabet::base64::rdata().at(i) == -1) { noBaseCharCount++; }
+	}
+	ASSERT_EQ(jwt::alphabet::base64::rdata().size() - jwt::alphabet::base64::data().size(), noBaseCharCount);
 }
 
 TEST(BaseTest, Base64URLIndex) {
-	ASSERT_EQ(0, jwt::alphabet::index(jwt::alphabet::base64url::data(), 'A'));
-	ASSERT_EQ(32, jwt::alphabet::index(jwt::alphabet::base64url::data(), 'g'));
-	ASSERT_EQ(62, jwt::alphabet::index(jwt::alphabet::base64url::data(), '-'));
+	ASSERT_EQ(0, jwt::alphabet::index(jwt::alphabet::base64url::rdata(), 'A'));
+	ASSERT_EQ(32, jwt::alphabet::index(jwt::alphabet::base64url::rdata(), 'g'));
+	ASSERT_EQ(62, jwt::alphabet::index(jwt::alphabet::base64url::rdata(), '-'));
+
+	std::size_t index = 0;
+	for (auto c : jwt::alphabet::base64url::data()) {
+		ASSERT_EQ(index, jwt::alphabet::index(jwt::alphabet::base64url::rdata(), c));
+		index++;
+	}
+
+	std::size_t noBaseCharCount = 0;
+	for (std::size_t i = 0; i < jwt::alphabet::base64url::rdata().size(); i++) {
+		if (jwt::alphabet::base64url::rdata().at(i) == -1) { noBaseCharCount++; }
+	}
+	ASSERT_EQ(jwt::alphabet::base64url::rdata().size() - jwt::alphabet::base64url::data().size(), noBaseCharCount);
 }
 
 TEST(BaseTest, BaseDetailsCountPadding) {
