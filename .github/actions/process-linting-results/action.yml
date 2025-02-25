@@ -11,7 +11,7 @@ runs:
       shell: bash
     - id: stage
       #continue-on-error: true
-      uses: Thalhammer/patch-generator-action@v2
+      uses: Thalhammer/patch-generator-action@v3
       
     # Unfortunately the previous action reports a failure so nothing else can run
     # partially a limitation on composite actions since `continue-on-error` is not
