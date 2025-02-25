@@ -1570,6 +1570,18 @@ namespace jwt {
 					throw error::ecdsa_exception(error::ecdsa_error::invalid_key_size);
 			}
 
+			ecdsa(helper::evp_pkey_handle private_key, const EVP_MD* (*md)(), std::string name, size_t siglen)
+				: pkey(std::move(private_key)), md(md), alg_name(std::move(name)), signature_length(siglen) {
+				if (pkey) {
+					check_private_key(pkey.get());
+				} else {
+					throw error::ecdsa_exception(error::ecdsa_error::no_key_provided);
+				}
+				size_t keysize = EVP_PKEY_bits(pkey.get());
+				if (keysize != signature_length * 4 && (signature_length != 132 || keysize != 521))
+					throw error::ecdsa_exception(error::ecdsa_error::invalid_key_size);
+			}
+
 			/**
 			 * Sign jwt data
 			 * \param data The data to sign
