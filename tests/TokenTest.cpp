@@ -175,6 +175,28 @@ TEST(TokenTest, CreateTokenES256) {
 	ASSERT_NO_THROW(jwt::verify().allow_algorithm(jwt::algorithm::es256(ecdsa256_pub_key, "", "", "")).verify(decoded));
 }
 
+TEST(TokenTest, CreateTokenEvpPkeyES256) {
+
+	auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(jwt::algorithm::ecdsa(
+		jwt::helper::load_private_ec_key_from_string(ecdsa256_priv_key), EVP_sha256, "ES256", 64));
+
+	auto decoded = jwt::decode(token);
+
+	ASSERT_THROW(
+		jwt::verify().allow_algorithm(jwt::algorithm::es256(ecdsa256_pub_key_invalid, "", "", "")).verify(decoded),
+		jwt::error::signature_verification_exception);
+	ASSERT_NO_THROW(jwt::verify().allow_algorithm(jwt::algorithm::es256(ecdsa256_pub_key, "", "", "")).verify(decoded));
+}
+
+TEST(TokenTest, CreateTokenEvpPkeyES256NoPrivate) {
+	ASSERT_THROW(
+		[]() {
+			auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(jwt::algorithm::ecdsa(
+				jwt::helper::load_public_ec_key_from_string(ecdsa256_pub_key), EVP_sha256, "ES256", 64));
+		}(),
+		jwt::error::signature_generation_exception);
+}
+
 TEST(TokenTest, CreateTokenES256NoPrivate) {
 	ASSERT_THROW(
 		[]() {
@@ -548,11 +570,33 @@ TEST(TokenTest, VerifyTokenES256FailNoKey) {
 		jwt::error::ecdsa_exception);
 }
 
+TEST(TokenTest, VerifyTokenEvpPkeyES256FailNoKey) {
+	ASSERT_THROW(
+		[]() {
+			auto verify = jwt::verify()
+							  .allow_algorithm(
+								  jwt::algorithm::ecdsa(jwt::helper::evp_pkey_handle{nullptr}, EVP_sha256, "ES256", 64))
+							  .with_issuer("auth0");
+		}(),
+		jwt::error::ecdsa_exception);
+}
+
 TEST(TokenTest, VerifyTokenES256) {
 	const std::string token = "eyJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJhdXRoMCJ9.4iVk3-Y0v4RT4_9IaQlp-8dZ_"
 							  "4fsTzIylgrPTDLrEvTHBTyVS3tgPbr2_IZfLETtiKRqCg0aQ5sh9eIsTTwB1g";
 
 	auto verify = jwt::verify().allow_algorithm(jwt::algorithm::es256(ecdsa256_pub_key, "", "", ""));
+	auto decoded_token = jwt::decode(token);
+
+	verify.verify(decoded_token);
+}
+
+TEST(TokenTest, VerifyTokenEvpPkeyES256) {
+	const std::string token = "eyJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJhdXRoMCJ9.4iVk3-Y0v4RT4_9IaQlp-8dZ_"
+							  "4fsTzIylgrPTDLrEvTHBTyVS3tgPbr2_IZfLETtiKRqCg0aQ5sh9eIsTTwB1g";
+
+	auto verify = jwt::verify().allow_algorithm(
+		jwt::algorithm::ecdsa(jwt::helper::load_public_ec_key_from_string(ecdsa256_pub_key), EVP_sha256, "ES256", 64));
 	auto decoded_token = jwt::decode(token);
 
 	verify.verify(decoded_token);

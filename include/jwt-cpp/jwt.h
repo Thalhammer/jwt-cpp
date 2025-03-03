@@ -1570,11 +1570,9 @@ namespace jwt {
 					throw error::ecdsa_exception(error::ecdsa_error::invalid_key_size);
 			}
 
-			ecdsa(helper::evp_pkey_handle private_key, const EVP_MD* (*md)(), std::string name, size_t siglen)
-				: pkey(std::move(private_key)), md(md), alg_name(std::move(name)), signature_length(siglen) {
-				if (pkey) {
-					check_private_key(pkey.get());
-				} else {
+			ecdsa(helper::evp_pkey_handle key_pair, const EVP_MD* (*md)(), std::string name, size_t siglen)
+				: pkey(std::move(key_pair)), md(md), alg_name(std::move(name)), signature_length(siglen) {
+				if (!pkey) {
 					throw error::ecdsa_exception(error::ecdsa_error::no_key_provided);
 				}
 				size_t keysize = EVP_PKEY_bits(pkey.get());
