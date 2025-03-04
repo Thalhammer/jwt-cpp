@@ -1461,6 +1461,17 @@ namespace jwt {
 					throw error::rsa_exception(error::rsa_error::no_key_provided);
 			}
 			/**
+			 * Construct new rsa algorithm
+			 *
+			 * \param key_pair openssl EVP_PKEY structure containing RSA key pair. The private part is optional.
+			 * \param md Pointer to hash function
+			 * \param name Name of the algorithm
+			 */
+			rsa(helper::evp_pkey_handle key_pair, const EVP_MD* (*md)(), std::string name)
+				: pkey(std::move(key_pair)), md(md), alg_name(std::move(name)) {
+				if (!pkey) { throw error::rsa_exception(error::rsa_error::no_key_provided); }
+			}
+			/**
 			 * Sign jwt data
 			 * \param data The data to sign
 			 * \param ec error_code filled with details on error

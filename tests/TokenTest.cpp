@@ -71,6 +71,18 @@ TEST(TokenTest, CreateTokenRS256) {
 		token);
 }
 
+TEST(TokenTest, CreateTokenEvpPkeyRS256) {
+	auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(
+		jwt::algorithm::rsa(jwt::helper::load_private_key_from_string(rsa_priv_key), EVP_sha256, "RS256"));
+
+	ASSERT_EQ(
+		"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
+		"HAZCTQxa1Q8NppnpYV-hlqxh-X3Bb0JOePTGzjynpNZoJh2aHZD-GKpZt7OO1Zp8AFWPZ3p8Cahq8536fD8RiBES9jRsvChZvOqA7gMcFc4"
+		"YD0iZhNIcI7a654u5yPYyTlf5kjR97prCf_OXWRn-bYY74zna4p_bP9oWCL4BkaoRcMxi-IR7kmVcCnvbYqyIrKloXP2qPO442RBGqU7Ov9"
+		"sGQxiVqtRHKXZR9RbfvjrErY1KGiCp9M5i2bsUHadZEY44FE2jiOmx-uc2z5c05CCXqVSpfCjWbh9gQ",
+		token);
+}
+
 #if !defined(JWT_OPENSSL_1_0_0)
 TEST(TokenTest, CreateTokenRS256Encrypted) {
 	// openssl genrsa -aes256 -out private.pem 2048
@@ -329,6 +341,23 @@ TEST(TokenTest, VerifyTokenRS256) {
 	verify.verify(decoded_token);
 }
 
+TEST(TokenTest, VerifyTokenEvpPkeyRS256) {
+	std::string token =
+		"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
+		"HAZCTQxa1Q8NppnpYV-hlqxh-X3Bb0JOePTGzjynpNZoJh2aHZD-GKpZt7OO1Zp8AFWPZ3p8Cahq8536fD8RiBES9jRsvChZvOqA7gMcFc4"
+		"YD0iZhNIcI7a654u5yPYyTlf5kjR97prCf_OXWRn-bYY74zna4p_bP9oWCL4BkaoRcMxi-IR7kmVcCnvbYqyIrKloXP2qPO442RBGqU7Ov9"
+		"sGQxiVqtRHKXZR9RbfvjrErY1KGiCp9M5i2bsUHadZEY44FE2jiOmx-uc2z5c05CCXqVSpfCjWbh9gQ";
+
+	auto verify = jwt::verify()
+					  .allow_algorithm(jwt::algorithm::rsa(jwt::helper::load_private_key_from_string(rsa_priv_key),
+														   EVP_sha256, "RS256"))
+					  .with_issuer("auth0");
+
+	auto decoded_token = jwt::decode(token);
+
+	verify.verify(decoded_token);
+}
+
 TEST(TokenTest, VerifyTokenRS256PublicOnly) {
 	std::string token =
 		"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
@@ -337,6 +366,23 @@ TEST(TokenTest, VerifyTokenRS256PublicOnly) {
 		"sGQxiVqtRHKXZR9RbfvjrErY1KGiCp9M5i2bsUHadZEY44FE2jiOmx-uc2z5c05CCXqVSpfCjWbh9gQ";
 
 	auto verify = jwt::verify().allow_algorithm(jwt::algorithm::rs256(rsa_pub_key, "", "", "")).with_issuer("auth0");
+
+	auto decoded_token = jwt::decode(token);
+
+	verify.verify(decoded_token);
+}
+
+TEST(TokenTest, VerifyTokenEvpPkeyRS256PublicOnly) {
+	std::string token =
+		"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
+		"HAZCTQxa1Q8NppnpYV-hlqxh-X3Bb0JOePTGzjynpNZoJh2aHZD-GKpZt7OO1Zp8AFWPZ3p8Cahq8536fD8RiBES9jRsvChZvOqA7gMcFc4"
+		"YD0iZhNIcI7a654u5yPYyTlf5kjR97prCf_OXWRn-bYY74zna4p_bP9oWCL4BkaoRcMxi-IR7kmVcCnvbYqyIrKloXP2qPO442RBGqU7Ov9"
+		"sGQxiVqtRHKXZR9RbfvjrErY1KGiCp9M5i2bsUHadZEY44FE2jiOmx-uc2z5c05CCXqVSpfCjWbh9gQ";
+
+	auto verify = jwt::verify()
+					  .allow_algorithm(jwt::algorithm::rsa(jwt::helper::load_public_key_from_string(rsa_pub_key),
+														   EVP_sha256, "RS256"))
+					  .with_issuer("auth0");
 
 	auto decoded_token = jwt::decode(token);
 
