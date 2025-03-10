@@ -1461,6 +1461,17 @@ namespace jwt {
 					throw error::rsa_exception(error::rsa_error::no_key_provided);
 			}
 			/**
+			 * Construct new rsa algorithm
+			 *
+			 * \param key_pair openssl EVP_PKEY structure containing RSA key pair. The private part is optional.
+			 * \param md Pointer to hash function
+			 * \param name Name of the algorithm
+			 */
+			rsa(helper::evp_pkey_handle key_pair, const EVP_MD* (*md)(), std::string name)
+				: pkey(std::move(key_pair)), md(md), alg_name(std::move(name)) {
+				if (!pkey) { throw error::rsa_exception(error::rsa_error::no_key_provided); }
+			}
+			/**
 			 * Sign jwt data
 			 * \param data The data to sign
 			 * \param ec error_code filled with details on error
@@ -1565,6 +1576,22 @@ namespace jwt {
 				}
 				if (!pkey) throw error::ecdsa_exception(error::ecdsa_error::invalid_key);
 
+				size_t keysize = EVP_PKEY_bits(pkey.get());
+				if (keysize != signature_length * 4 && (signature_length != 132 || keysize != 521))
+					throw error::ecdsa_exception(error::ecdsa_error::invalid_key_size);
+			}
+
+			/**
+			 * Construct new ecdsa algorithm
+			 *
+			 * \param key_pair openssl EVP_PKEY structure containing ECDSA key pair. The private part is optional.
+			 * \param md Pointer to hash function
+			 * \param name Name of the algorithm
+			 * \param siglen The bit length of the signature
+			 */
+			ecdsa(helper::evp_pkey_handle key_pair, const EVP_MD* (*md)(), std::string name, size_t siglen)
+				: pkey(std::move(key_pair)), md(md), alg_name(std::move(name)), signature_length(siglen) {
+				if (!pkey) { throw error::ecdsa_exception(error::ecdsa_error::no_key_provided); }
 				size_t keysize = EVP_PKEY_bits(pkey.get());
 				if (keysize != signature_length * 4 && (signature_length != 132 || keysize != 521))
 					throw error::ecdsa_exception(error::ecdsa_error::invalid_key_size);
