@@ -177,6 +177,7 @@ namespace jwt {
 			}
 
 			inline std::string encode(const std::string& bin, const std::array<char, 64>& alphabet,
+			inline std::string encode(const std::string_view& bin, const std::array<char, 64>& alphabet,
 									  const std::string& fill) {
 				size_t size = bin.size();
 				std::string res;
@@ -306,6 +307,7 @@ namespace jwt {
 		 */
 		template<typename T>
 		std::string encode(const std::string& bin) {
+		std::string encode(const std::string_view& bin) {
 			return details::encode(bin, T::data(), T::fill());
 		}
 		/**
@@ -354,3 +356,4 @@ namespace jwt {
 } // namespace jwt
 
 #endif
+
