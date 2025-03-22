@@ -1,8 +1,10 @@
+#ifndef JWT_CPP_DANIELAPARKER_JSONCONS_TRAITS_H
+#define JWT_CPP_DANIELAPARKER_JSONCONS_TRAITS_H
+
 #define JWT_DISABLE_PICOJSON
 #define JSONCONS_NO_DEPRECATED
 
 #include "jwt-cpp/jwt.h"
-
 #include "jsoncons/json.hpp"
 
 #include <sstream>
@@ -15,59 +17,103 @@ namespace jwt {
 		/// basic_claim's JSON trait implementation for jsoncons.
 		struct danielaparker_jsoncons {
 			// Needs at least https://github.com/danielaparker/jsoncons/commit/28c56b90ec7337f98a5b8942574590111a5e5831
-			static_assert(jsoncons::version().minor >= 167, "A higher version of jsoncons is required!");
+			static_assert(jsoncons::version().minor >= 167 || (jsoncons::version().major > 0), "A higher version of jsoncons is required!");
 
 			using json = jsoncons::json;
 			using value_type = json;
-			struct object_type : json::object {
-				// Add missing C++11 member types
-				// https://github.com/danielaparker/jsoncons/commit/1b1ceeb572f9a2db6d37cff47ac78a4f14e072e2#commitcomment-45391411
-				using value_type = key_value_type; // Enable optional jwt-cpp methods
-				using mapped_type = key_value_type::value_type;
-				using size_type = size_t; // for implementing count
+
+			struct object_type {
+				using key_type = json::key_type;
+				using mapped_type = json;
+				using value_type = std::pair<const key_type, mapped_type>;
+				using size_type = size_t;
+				using iterator = json::object_iterator;
+				using const_iterator = json::const_object_iterator;
 
 				object_type() = default;
-				object_type(const object_type&) = default;
-				explicit object_type(const json::object& o) : json::object(o) {}
-				object_type(object_type&&) = default;
-				explicit object_type(json::object&& o) : json::object(o) {}
+				object_type(const object_type& o) : json_(o) {}
+				explicit object_type(const json& j) : json_(j) {}
+				explicit object_type(object_type&& o) noexcept : json_(std::move(o)) {}
 				~object_type() = default;
-				object_type& operator=(const object_type& o) = default;
-				object_type& operator=(object_type&& o) noexcept = default;
+
+				object_type& operator=(const object_type& o) {
+					json_ = o.json_;
+					return *this;
+				}
+
+				object_type& operator=(object_type&& o) noexcept {
+					json_ = std::move(o.json_);
+					return *this;
+				}
 
 				// Add missing C++11 subscription operator
-				mapped_type& operator[](const key_type& key) {
-					// https://github.com/microsoft/STL/blob/2914b4301c59dc7ffc09d16ac6f7979fde2b7f2c/stl/inc/map#L325
-					return try_emplace(key).first->value();
-				}
+				mapped_type& operator[](const key_type& key) { return const_cast<mapped_type&>(json_[key]); }
 
 				// Add missing C++11 element access
-				const mapped_type& at(const key_type& key) const {
-					auto target = find(key);
-					if (target != end()) return target->value();
-
-					throw std::out_of_range("invalid key");
-				}
+				const mapped_type& at(const key_type& key) const { return json_.at(key); }
 
 				// Add missing C++11 lookup method
-				size_type count(const key_type& key) const {
-					struct compare {
-						bool operator()(const value_type& val, const key_type& key) const { return val.key() < key; }
-						bool operator()(const key_type& key, const value_type& val) const { return key < val.key(); }
-					};
+				size_type count(const key_type& key) const { return json_.count(key); }
 
-					// https://en.cppreference.com/w/cpp/algorithm/binary_search#Complexity
-					if (std::binary_search(this->begin(), this->end(), key, compare{})) return 1;
-					return 0;
+				iterator begin() { return json_.object_range().begin(); }
+				iterator end() { return json_.object_range().end(); }
+				const_iterator begin() const { return json_.object_range().cbegin(); }
+				const_iterator end() const { return json_.object_range().cend(); }
+				const_iterator cbegin() const { return json_.object_range().cbegin(); }
+				const_iterator cend() const { return json_.object_range().cend(); }
+
+			private:
+				json json_;
+			};
+
+			struct array_type {
+				using value_type = json;
+				using size_type = size_t;
+				using iterator = json::array_iterator;
+				using const_iterator = json::const_array_iterator;
+
+				array_type() = default;
+				array_type(const array_type& a) : json_(a) {}
+				explicit array_type(const json& j) : json_(j) {}
+				explicit array_type(array_type&& a) noexcept : json_(std::move(a)) {}
+				template<typename Iterator>
+				array_type(Iterator first, Iterator last) {
+					json_ = json::array();
+					for (auto it = first; it != last; ++it) {
+						json_.push_back(*it);
+					}
 				}
+				~array_type() = default;
+
+				array_type& operator=(const array_type& o) {
+					json_ = o.json_;
+					return *this;
+				}
+
+				array_type& operator=(array_type&& o) noexcept {
+					json_ = std::move(o.json_);
+					return *this;
+				}
+
+				value_type& operator[](size_type index) { return const_cast<value_type&>(json_[index]); }
+
+				const value_type& at(size_type index) const { return json_.at(index); }
+
+				value_type const& front() const { return json_.at(0); }
+
+				void push_back(const value_type& val) { json_.push_back(val); }
+
+				iterator begin() { return json_.array_range().begin(); }
+				iterator end() { return json_.array_range().end(); }
+				const_iterator begin() const { return json_.array_range().cbegin(); }
+				const_iterator end() const { return json_.array_range().cend(); }
+				const_iterator cbegin() const { return json_.array_range().cbegin(); }
+				const_iterator cend() const { return json_.array_range().cend(); }
+
+			private:
+				json json_;
 			};
-			class array_type : public json::array {
-			public:
-				using json::array::array;
-				explicit array_type(const json::array& a) : json::array(a) {}
-				explicit array_type(json::array&& a) : json::array(a) {}
-				value_type const& front() const { return this->operator[](0U); }
-			};
+
 			using string_type = std::string; // current limitation of traits implementation
 			using number_type = double;
 			using integer_type = int64_t;
@@ -90,12 +136,12 @@ namespace jwt {
 
 			static object_type as_object(const json& val) {
 				if (val.type() != jsoncons::json_type::object_value) throw std::bad_cast();
-				return object_type(val.object_value());
+				return object_type(val);
 			}
 
 			static array_type as_array(const json& val) {
 				if (val.type() != jsoncons::json_type::array_value) throw std::bad_cast();
-				return array_type(val.array_value());
+				return array_type(val);
 			}
 
 			static string_type as_string(const json& val) {
@@ -131,3 +177,65 @@ namespace jwt {
 		};
 	} // namespace traits
 } // namespace jwt
+
+namespace jsoncons {
+	template <typename Json>
+	struct json_type_traits<Json, jwt::traits::danielaparker_jsoncons::object_type> {
+
+		using allocator_type = typename Json::allocator_type;
+
+		static bool is(const Json&) noexcept {
+			return true;
+		}
+
+		static jwt::traits::danielaparker_jsoncons::object_type as(const Json& j) {
+			jwt::traits::danielaparker_jsoncons::object_type o;
+			for (const auto& item : j.object_range()) {
+				o[item.key()] = item.value();
+			}
+		}
+
+		static Json to_json(const jwt::traits::danielaparker_jsoncons::object_type& val) {
+			jsoncons::json j = jsoncons::json::object();
+			for (const auto& item : val) {
+				j[item.key()] = item.value();
+			}
+			return j;
+		}
+
+		static Json to_json(const jwt::traits::danielaparker_jsoncons::object_type& val, const allocator_type&) {
+			return to_json(val);
+		}
+	};
+
+	template <typename Json>
+	struct json_type_traits<Json, jwt::traits::danielaparker_jsoncons::array_type> {
+
+		using allocator_type = typename Json::allocator_type;
+
+		static bool is(const Json&) noexcept {
+			return true;
+		}
+
+		static jwt::traits::danielaparker_jsoncons::array_type as(const Json& j) {
+			jwt::traits::danielaparker_jsoncons::array_type a;
+			for (const auto& item : j.array_range()) {
+				a.push_back(item);
+			}
+		}
+
+		static Json to_json(const jwt::traits::danielaparker_jsoncons::array_type& val) {
+			jsoncons::json a = jsoncons::json::array();
+			for (const auto& item : val) {
+				a.push_back(item);
+			}
+			return a;
+		}
+
+		static Json to_json(const jwt::traits::danielaparker_jsoncons::array_type& val, const allocator_type&) {
+			return to_json(val);
+		}
+	};
+} // namespace jsoncons
+
+#endif // JWT_CPP_DANIELAPARKER_JSONCONS_TRAITS_H
