@@ -4,8 +4,8 @@
 #define JWT_DISABLE_PICOJSON
 #define JSONCONS_NO_DEPRECATED
 
-#include "jwt-cpp/jwt.h"
 #include "jsoncons/json.hpp"
+#include "jwt-cpp/jwt.h"
 
 #include <sstream>
 
@@ -17,7 +17,8 @@ namespace jwt {
 		/// basic_claim's JSON trait implementation for jsoncons.
 		struct danielaparker_jsoncons {
 			// Needs at least https://github.com/danielaparker/jsoncons/commit/28c56b90ec7337f98a5b8942574590111a5e5831
-			static_assert(jsoncons::version().minor >= 167 || (jsoncons::version().major > 0), "A higher version of jsoncons is required!");
+			static_assert(jsoncons::version().minor >= 167 || (jsoncons::version().major > 0),
+				"A higher version of jsoncons is required!");
 
 			using json = jsoncons::json;
 			using value_type = json;
@@ -47,7 +48,7 @@ namespace jwt {
 				}
 
 				// Add missing C++11 subscription operator
-				mapped_type& operator[](const key_type& key) { return const_cast<mapped_type&>(json_[key]); }
+				mapped_type& operator[](const key_type& key) { return json_[key]; }
 
 				// Add missing C++11 element access
 				const mapped_type& at(const key_type& key) const { return json_.at(key); }
@@ -95,7 +96,7 @@ namespace jwt {
 					return *this;
 				}
 
-				value_type& operator[](size_type index) { return const_cast<value_type&>(json_[index]); }
+				value_type& operator[](size_type index) { return json_[index]; }
 
 				const value_type& at(size_type index) const { return json_.at(index); }
 
@@ -179,20 +180,19 @@ namespace jwt {
 } // namespace jwt
 
 namespace jsoncons {
-	template <typename Json>
+	template<typename Json>
 	struct json_type_traits<Json, jwt::traits::danielaparker_jsoncons::object_type> {
 
 		using allocator_type = typename Json::allocator_type;
 
-		static bool is(const Json&) noexcept {
-			return true;
-		}
+		static bool is(const Json&) noexcept { return true; }
 
 		static jwt::traits::danielaparker_jsoncons::object_type as(const Json& j) {
 			jwt::traits::danielaparker_jsoncons::object_type o;
 			for (const auto& item : j.object_range()) {
 				o[item.key()] = item.value();
 			}
+			return o;
 		}
 
 		static Json to_json(const jwt::traits::danielaparker_jsoncons::object_type& val) {
@@ -208,20 +208,19 @@ namespace jsoncons {
 		}
 	};
 
-	template <typename Json>
+	template<typename Json>
 	struct json_type_traits<Json, jwt::traits::danielaparker_jsoncons::array_type> {
 
 		using allocator_type = typename Json::allocator_type;
 
-		static bool is(const Json&) noexcept {
-			return true;
-		}
+		static bool is(const Json&) noexcept { return true; }
 
 		static jwt::traits::danielaparker_jsoncons::array_type as(const Json& j) {
 			jwt::traits::danielaparker_jsoncons::array_type a;
 			for (const auto& item : j.array_range()) {
 				a.push_back(item);
 			}
+			return a;
 		}
 
 		static Json to_json(const jwt::traits::danielaparker_jsoncons::array_type& val) {
