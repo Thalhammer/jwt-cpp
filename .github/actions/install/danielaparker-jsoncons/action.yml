@@ -4,7 +4,7 @@ inputs:
   version:
     description: The desired jsoncons version to install
     required: false
-    default: "1.3.0"
+    default: "1.3.2"
 runs:
   using: composite
   steps:
