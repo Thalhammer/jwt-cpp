@@ -15,7 +15,7 @@ jobs:
         target:
           - { name: "danielaparker-jsoncons", tag: "1.3.2", version: "v1.3.2" }
           - { name: "boost-json", tag: "1.78.0", version: "v1.80.0" }
-          - { name: "nlohmann-json", tag: "3.12.0", version: "v3.12.0" }
+          - { name: "nlohmann-json", tag: "3.11.2", version: "v3.11.2" }
           - { name: "kazuho-picojson", tag: "111c9be5188f7350c2eac9ddaedd8cca3d7bf394", version: "111c9be" }
           - { name: "open-source-parsers-jsoncpp", tag: "1.9.5", version: "v1.9.5" }
     steps:
