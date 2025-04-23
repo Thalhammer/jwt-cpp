@@ -82,7 +82,7 @@ if(JWT_BUILD_EXAMPLES OR JWT_BUILD_TESTS)
     include(FetchContent)
     fetchcontent_declare(nlohmann_json
       URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz
-      URL_MD5 127794b2c82c0c5693805feaa2a703e2)
+      URL_MD5 e155202b2a589137f6804724bd182f12)
     fetchcontent_makeavailable(nlohmann_json)
   endif()
 endif()
