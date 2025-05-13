@@ -2625,15 +2625,15 @@ namespace jwt {
 		/**
 		 * \brief Get the contained JSON value as a date
 		 *
-		 * If the value is a decimal, it is rounded up to the closest integer
+		 * If the value is a decimal, it is rounded to the closest integer
 		 *
 		 * \return content as date
 		 * \throw std::bad_cast Content was not a date
 		 */
 		date as_date() const {
 			using std::chrono::system_clock;
-			if (get_type() == json::type::number) return system_clock::from_time_t(std::round(as_number()));
-			return system_clock::from_time_t(as_integer());
+			if (get_type() == json::type::number) return system_clock::from_time_t(static_cast<std::time_t>(std::round(as_number())));
+			return system_clock::from_time_t(static_cast<std::time_t>(as_integer()));
 		}
 
 		/**
