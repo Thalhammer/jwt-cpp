@@ -4,7 +4,7 @@ inputs:
   version:
     description: The desired nlohmann-json version to install
     required: false
-    default: "3.11.2"
+    default: "3.12.0"
 runs:
   using: composite
   steps:
