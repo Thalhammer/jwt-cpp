@@ -44,7 +44,7 @@ rK0/Ikt5ybqUzKCMJZg2VKGTxg==
 					 .set_payload_claim("resource-access", role_claim)
 					 .sign(jwt::algorithm::rs256("", rsa_priv_key, "", ""));
 
-	std::cout << "token: " << token << std::endl;
+	std::cout << "token: " << token << '\n';
 
 	std::string rsa_pub_key = R"(-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuGbXWiK3dQTyCbX5xdE4
@@ -59,9 +59,9 @@ YwIDAQAB
 	auto decoded = jwt::decode(token);
 
 	for (const auto& e : decoded.get_payload_json())
-		std::cout << e.first << " = " << e.second << std::endl;
+		std::cout << e.first << " = " << e.second << '\n';
 
-	std::cout << std::endl;
+	std::cout << '\n';
 
 	auto role_verifier = [](const jwt::verify_context& ctx, std::error_code& ec) {
 		using error = jwt::error::token_verification_error;
@@ -88,8 +88,8 @@ YwIDAQAB
 
 	try {
 		verifier.verify(decoded);
-		std::cout << "Success!" << std::endl;
-	} catch (const std::exception& ex) { std::cout << "Error: " << ex.what() << std::endl; }
+		std::cout << "Success!" << '\n';
+	} catch (const std::exception& ex) { std::cout << "Error: " << ex.what() << '\n'; }
 
 	return 0;
 }

@@ -41,5 +41,5 @@ rK0/Ikt5ybqUzKCMJZg2VKGTxg==
 					 .set_payload_claim("sample", jwt::claim(std::string{"test"}))
 					 .sign(jwt::algorithm::rs256("", rsa_priv_key, "", ""));
 
-	std::cout << "token:\n" << token << std::endl;
+	std::cout << "token:\n" << token << '\n';
 }
