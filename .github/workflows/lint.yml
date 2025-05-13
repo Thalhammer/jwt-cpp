@@ -20,11 +20,9 @@ jobs:
         - "example/*.cpp"
         - "example/**/*.cpp"
     steps:
-      - run: |
-          sudo apt-get install clang-format-14
-          shopt -s globstar
+      - run: shopt -s globstar
       - uses: actions/checkout@v4
-      - run: clang-format-14 -i ${{ matrix.files }}
+      - run: clang-format -i ${{ matrix.files }}
       - uses: ./.github/actions/process-linting-results
         with:
           linter_name: clang-format
@@ -50,7 +48,6 @@ jobs:
   clang-tidy:
     runs-on: ubuntu-latest
     steps:
-      - run: sudo apt-get install clang-tidy
       - uses: lukka/get-cmake@latest
       - uses: actions/checkout@v4
       - name: configure
