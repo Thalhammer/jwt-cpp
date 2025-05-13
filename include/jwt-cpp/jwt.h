@@ -1846,7 +1846,7 @@ namespace jwt {
 				ERR_clear_error();
 				if (EVP_DigestSignUpdate(ctx.get(), reinterpret_cast<const unsigned char*>(data.data()), data.size()) !=
 					1) {
-					std::cout << ERR_error_string(ERR_get_error(), NULL) << std::endl;
+					std::cout << ERR_error_string(ERR_get_error(), NULL) << '\n';
 					ec = error::signature_generation_error::signupdate_failed;
 					return {};
 				}
@@ -2652,15 +2652,16 @@ namespace jwt {
 		/**
 		 * \brief Get the contained JSON value as a date
 		 *
-		 * If the value is a decimal, it is rounded up to the closest integer
+		 * If the value is a decimal, it is rounded to the closest integer
 		 *
 		 * \return content as date
 		 * \throw std::bad_cast Content was not a date
 		 */
 		date as_date() const {
 			using std::chrono::system_clock;
-			if (get_type() == json::type::number) return system_clock::from_time_t(std::round(as_number()));
-			return system_clock::from_time_t(as_integer());
+			if (get_type() == json::type::number)
+				return system_clock::from_time_t(static_cast<std::time_t>(std::round(as_number())));
+			return system_clock::from_time_t(static_cast<std::time_t>(as_integer()));
 		}
 
 		/**

@@ -28,13 +28,13 @@ int main() {
 						   .set_payload_claim("integer", 12345)
 						   .set_payload_claim("precision", 12.3456789)
 						   .set_payload_claim("strings", list)
-						   .set_payload_claim("array", {big_numbers.begin(), big_numbers.end()})
+						   .set_payload_claim("array", claim{big_numbers.begin(), big_numbers.end()})
 						   .set_payload_claim("object", from_raw_json)
 						   .sign(jwt::algorithm::none{});
 	const auto decoded = jwt::decode<traits>(token);
 
 	const auto array = traits::as_array(decoded.get_payload_claim("object").to_json()["api"]["array"]);
-	std::cout << "payload /object/api/array = " << jsoncons::pretty_print(traits::json(array)) << std::endl;
+	std::cout << "payload /object/api/array = " << jsoncons::pretty_print(traits::json(array)) << '\n';
 
 	jwt::verify<traits>()
 		.allow_algorithm(jwt::algorithm::none{})
