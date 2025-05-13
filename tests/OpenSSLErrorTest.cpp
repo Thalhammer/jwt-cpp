@@ -1084,7 +1084,7 @@ TEST(OpenSSLErrorTest, LoadPrivateKeyFromStringErrorCode) {
 
 #if !defined(LIBWOLFSSL_VERSION_HEX) || LIBWOLFSSL_VERSION_HEX > 0x05007000
 TEST(OpenSSLErrorTest, HMACSign) {
-	std::string token =
+	std::string const token =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
 
 	auto verify = jwt::verify().allow_algorithm(jwt::algorithm::hs256{"secret"}).with_issuer("auth0");
