@@ -20,9 +20,11 @@ jobs:
         - "example/*.cpp"
         - "example/**/*.cpp"
     steps:
-      - run: shopt -s globstar
+      - run: |
+          sudo apt-get install clang-format-14
+          shopt -s globstar
       - uses: actions/checkout@v4
-      - run: clang-format -i ${{ matrix.files }}
+      - run: clang-format-14 -i ${{ matrix.files }}
       - uses: ./.github/actions/process-linting-results
         with:
           linter_name: clang-format
