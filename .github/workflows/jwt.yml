@@ -10,6 +10,7 @@ jobs:
   coverage:
     runs-on: ubuntu-latest
     steps:
+      - run: sudo apt install lcov
       - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
       - uses: ./.github/actions/install/gtest
