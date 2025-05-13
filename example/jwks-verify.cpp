@@ -111,7 +111,7 @@ ARS9Ln8Wh5RsFuw/Y7Grg8FsoAVzV/Pns4cwjZG75ezXfk4UVpr4oO4B5jzazzCR
 	auto x5c = jwk.get_x5c_key_value();
 
 	if (!x5c.empty() && !issuer.empty()) {
-		std::cout << "Verifying with 'x5c' key" << std::endl;
+		std::cout << "Verifying with 'x5c' key" << '\n';
 		auto verifier =
 			jwt::verify()
 				.allow_algorithm(jwt::algorithm::rs256(jwt::helper::convert_base64_der_to_pem(x5c), "", "", ""))
@@ -123,7 +123,7 @@ ARS9Ln8Wh5RsFuw/Y7Grg8FsoAVzV/Pns4cwjZG75ezXfk4UVpr4oO4B5jzazzCR
 	}
 	// else if the optional 'x5c' was not present
 	{
-		std::cout << "Verifying with RSA components" << std::endl;
+		std::cout << "Verifying with RSA components" << '\n';
 		const auto modulus = jwk.get_jwk_claim("n").as_string();
 		const auto exponent = jwk.get_jwk_claim("e").as_string();
 		auto verifier = jwt::verify()
