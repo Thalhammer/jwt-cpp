@@ -4,7 +4,7 @@
 #include <iostream>
 
 int main() {
-	std::string rsa_priv_key = R"(-----BEGIN PRIVATE KEY-----
+	std::string const rsa_priv_key = R"(-----BEGIN PRIVATE KEY-----
 MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQC4ZtdaIrd1BPIJ
 tfnF0TjIK5inQAXZ3XlCrUlJdP+XHwIRxdv1FsN12XyMYO/6ymLmo9ryoQeIrsXB
 XYqlET3zfAY+diwCb0HEsVvhisthwMU4gZQu6TYW2s9LnXZB5rVtcBK69hcSlA2k
@@ -46,7 +46,7 @@ rK0/Ikt5ybqUzKCMJZg2VKGTxg==
 
 	std::cout << "token: " << token << '\n';
 
-	std::string rsa_pub_key = R"(-----BEGIN PUBLIC KEY-----
+	std::string const rsa_pub_key = R"(-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuGbXWiK3dQTyCbX5xdE4
 yCuYp0AF2d15Qq1JSXT/lx8CEcXb9RbDddl8jGDv+spi5qPa8qEHiK7FwV2KpRE9
 83wGPnYsAm9BxLFb4YrLYcDFOIGULuk2FtrPS512Qea1bXASuvYXEpQNpGbnTGVs

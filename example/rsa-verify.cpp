@@ -3,7 +3,7 @@
 #include <jwt-cpp/jwt.h>
 
 int main() {
-	std::string rsa_pub_key = R"(-----BEGIN PUBLIC KEY-----
+	std::string const rsa_pub_key = R"(-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuGbXWiK3dQTyCbX5xdE4
 yCuYp0AF2d15Qq1JSXT/lx8CEcXb9RbDddl8jGDv+spi5qPa8qEHiK7FwV2KpRE9
 83wGPnYsAm9BxLFb4YrLYcDFOIGULuk2FtrPS512Qea1bXASuvYXEpQNpGbnTGVs
