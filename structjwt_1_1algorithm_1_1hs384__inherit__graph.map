@@ -1,0 +1,5 @@
+<map id="jwt::algorithm::hs384" name="jwt::algorithm::hs384">
+<area shape="rect" id="Node000001" title=" " alt="" coords="15,79,175,104"/>
+<area shape="rect" id="Node000002" href="$structjwt_1_1algorithm_1_1hmacsha.html" title="Base class for HMAC family of algorithms." alt="" coords="5,5,185,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="98,44,98,79,93,79,93,44"/>
+</map>
