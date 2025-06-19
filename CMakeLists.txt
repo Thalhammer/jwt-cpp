@@ -132,7 +132,7 @@ if(${JWT_SSL_LIBRARY} MATCHES "wolfSSL")
 endif()
 
 if(NOT JWT_DISABLE_PICOJSON AND JWT_EXTERNAL_PICOJSON)
-  target_link_libraries(jwt-cpp INTERFACE picojson::picojson>)
+  target_link_libraries(jwt-cpp INTERFACE picojson::picojson)
 endif()
 
 # Hunter needs relative paths so the files are placed correctly
