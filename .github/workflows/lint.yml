@@ -30,7 +30,7 @@ jobs:
           linter_name: clang-format
 
   cmake-format:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -48,9 +48,8 @@ jobs:
           linter_name: cmake-format
 
   clang-tidy:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
-      - run: sudo apt-get install clang-tidy
       - uses: lukka/get-cmake@latest
       - uses: actions/checkout@v4
       - name: configure
@@ -118,7 +117,7 @@ jobs:
           linter_name: render-tests
 
   line-ending:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: git add --renormalize .

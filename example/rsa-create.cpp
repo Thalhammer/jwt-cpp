@@ -3,7 +3,7 @@
 #include <jwt-cpp/jwt.h>
 
 int main() {
-	std::string rsa_priv_key = R"(-----BEGIN PRIVATE KEY-----
+	std::string const rsa_priv_key = R"(-----BEGIN PRIVATE KEY-----
 MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQC4ZtdaIrd1BPIJ
 tfnF0TjIK5inQAXZ3XlCrUlJdP+XHwIRxdv1FsN12XyMYO/6ymLmo9ryoQeIrsXB
 XYqlET3zfAY+diwCb0HEsVvhisthwMU4gZQu6TYW2s9LnXZB5rVtcBK69hcSlA2k
@@ -41,5 +41,5 @@ rK0/Ikt5ybqUzKCMJZg2VKGTxg==
 					 .set_payload_claim("sample", jwt::claim(std::string{"test"}))
 					 .sign(jwt::algorithm::rs256("", rsa_priv_key, "", ""));
 
-	std::cout << "token:\n" << token << std::endl;
+	std::cout << "token:\n" << token << '\n';
 }

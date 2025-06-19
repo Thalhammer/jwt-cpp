@@ -4,7 +4,7 @@
 #include <iostream>
 
 int main() {
-	std::string rsa_priv_key = R"(-----BEGIN PRIVATE KEY-----
+	std::string const rsa_priv_key = R"(-----BEGIN PRIVATE KEY-----
 MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQC4ZtdaIrd1BPIJ
 tfnF0TjIK5inQAXZ3XlCrUlJdP+XHwIRxdv1FsN12XyMYO/6ymLmo9ryoQeIrsXB
 XYqlET3zfAY+diwCb0HEsVvhisthwMU4gZQu6TYW2s9LnXZB5rVtcBK69hcSlA2k
@@ -44,9 +44,9 @@ rK0/Ikt5ybqUzKCMJZg2VKGTxg==
 					 .set_payload_claim("resource-access", role_claim)
 					 .sign(jwt::algorithm::rs256("", rsa_priv_key, "", ""));
 
-	std::cout << "token: " << token << std::endl;
+	std::cout << "token: " << token << '\n';
 
-	std::string rsa_pub_key = R"(-----BEGIN PUBLIC KEY-----
+	std::string const rsa_pub_key = R"(-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuGbXWiK3dQTyCbX5xdE4
 yCuYp0AF2d15Qq1JSXT/lx8CEcXb9RbDddl8jGDv+spi5qPa8qEHiK7FwV2KpRE9
 83wGPnYsAm9BxLFb4YrLYcDFOIGULuk2FtrPS512Qea1bXASuvYXEpQNpGbnTGVs
@@ -59,9 +59,9 @@ YwIDAQAB
 	auto decoded = jwt::decode(token);
 
 	for (const auto& e : decoded.get_payload_json())
-		std::cout << e.first << " = " << e.second << std::endl;
+		std::cout << e.first << " = " << e.second << '\n';
 
-	std::cout << std::endl;
+	std::cout << '\n';
 
 	auto role_verifier = [](const jwt::verify_context& ctx, std::error_code& ec) {
 		using error = jwt::error::token_verification_error;
@@ -88,8 +88,8 @@ YwIDAQAB
 
 	try {
 		verifier.verify(decoded);
-		std::cout << "Success!" << std::endl;
-	} catch (const std::exception& ex) { std::cout << "Error: " << ex.what() << std::endl; }
+		std::cout << "Success!" << '\n';
+	} catch (const std::exception& ex) { std::cout << "Error: " << ex.what() << '\n'; }
 
 	return 0;
 }

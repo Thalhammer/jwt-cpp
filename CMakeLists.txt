@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 cmake_policy(VERSION 3.14)
 if(POLICY CMP0135) # DOWNLOAD_EXTRACT_TIMESTAMP
-  cmake_policy(SET CMP0135 OLD)
+  cmake_policy(SET CMP0135 NEW)
 endif()
 
 # HUNTER_ENABLED is always set if this package is included in a project using hunter (HunterGate sets it) In this case
@@ -81,8 +81,8 @@ if(JWT_BUILD_EXAMPLES OR JWT_BUILD_TESTS)
     message(STATUS "jwt-cpp: using FetchContent for nlohmann-json required for tests")
     include(FetchContent)
     fetchcontent_declare(nlohmann_json
-      URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz
-      URL_MD5 127794b2c82c0c5693805feaa2a703e2)
+      URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz
+      URL_MD5 e155202b2a589137f6804724bd182f12)
     fetchcontent_makeavailable(nlohmann_json)
   endif()
 endif()

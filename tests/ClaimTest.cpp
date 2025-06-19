@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 TEST(ClaimTest, AudienceAsString) {
-	std::string token =
+	std::string const token =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0.WZnM3SIiSRHsbO3O7Z2bmIzTJ4EC32HRBKfLznHhrh4";
 	auto decoded = jwt::decode(token);
 
@@ -32,7 +32,7 @@ TEST(ClaimTest, SetAudienceAsString) {
 }
 
 TEST(ClaimTest, AudienceAsSet) {
-	std::string token = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJhdWQiOlsidGVzdCIsInRlc3QyIl19.";
+	std::string const token = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJhdWQiOlsidGVzdCIsInRlc3QyIl19.";
 	auto decoded = jwt::decode(token);
 
 	ASSERT_TRUE(decoded.has_algorithm());
