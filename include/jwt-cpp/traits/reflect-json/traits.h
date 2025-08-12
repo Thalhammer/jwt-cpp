@@ -8,11 +8,10 @@
 
 #include "jwt-cpp/jwt.h"
 
-#include <rfl/json.hpp>    // rfl::json::read / write
 #include <rfl/Generic.hpp> // rfl::Generic, rfl::Object
-#include <variant>
+#include <rfl/json.hpp>    // rfl::json::read / write
 #include <stdexcept>
-#include <type_traits>
+#include <variant>
 
 namespace jwt {
 namespace traits {
@@ -24,7 +23,7 @@ struct reflect_json {
   using array_type   = rfl::Generic::Array;  // std::vector<rfl::Generic>
   using string_type  = std::string;
   using number_type  = double;
-  using integer_type = long;      // matches Generic’s integer alternative
+  using integer_type = int64_t;      // matches Generic’s integer alternative
   using boolean_type = bool;
 
   template <class... Ts>
@@ -49,43 +48,43 @@ struct reflect_json {
 
   // --- Conversions (throwing on type mismatch, as jwt-cpp expects)
   static object_type as_object(const value_type& val) {
-    const auto& v = val.get();
-    if (!std::holds_alternative<object_type>(v)) throw std::bad_cast();
-    return std::get<object_type>(v);
+    const auto& variant = val.get();
+    if (!std::holds_alternative<object_type>(variant)) throw std::bad_cast();
+    return std::get<object_type>(variant);
   }
 
   static array_type as_array(const value_type& val) {
-    const auto& v = val.get();
-    if (!std::holds_alternative<array_type>(v)) throw std::bad_cast();
-    return std::get<array_type>(v);
+    const auto& variant = val.get();
+    if (!std::holds_alternative<array_type>(variant)) throw std::bad_cast();
+    return std::get<array_type>(variant);
   }
 
   static string_type as_string(const value_type& val) {
-    const auto& v = val.get();
-    if (!std::holds_alternative<string_type>(v)) throw std::bad_cast();
-    return std::get<string_type>(v);
+    const auto& variant = val.get();
+    if (!std::holds_alternative<string_type>(variant)) throw std::bad_cast();
+    return std::get<string_type>(variant);
   }
 
   static integer_type as_integer(const value_type& val) {
-    const auto& v = val.get();
-    if (!std::holds_alternative<integer_type>(v)) throw std::bad_cast();
-    return std::get<integer_type>(v);
+    const auto& variant = val.get();
+    if (!std::holds_alternative<integer_type>(variant)) throw std::bad_cast();
+    return std::get<integer_type>(variant);
   }
 
   static boolean_type as_boolean(const value_type& val) {
-    const auto& v = val.get();
-    if (!std::holds_alternative<boolean_type>(v)) throw std::bad_cast();
-    return std::get<boolean_type>(v);
+    const auto& variant = val.get();
+    if (!std::holds_alternative<boolean_type>(variant)) throw std::bad_cast();
+    return std::get<boolean_type>(variant);
   }
 
   static number_type as_number(const value_type& val) {
-    const auto& v = val.get();
-    if (!std::holds_alternative<number_type>(v)) throw std::bad_cast();
-    return std::get<number_type>(v);
+    const auto& variant = val.get();
+    if (!std::holds_alternative<number_type>(variant)) throw std::bad_cast();
+    return std::get<number_type>(variant);
   }
 
   // --- Parse / Serialize
-  static bool parse(value_type& out, string_type json) {
+  static bool parse(value_type& out, string_type const& json) {
     auto res = rfl::json::read<rfl::Generic>(json);
     if (res) { out = *res; return true; }
     return false;
