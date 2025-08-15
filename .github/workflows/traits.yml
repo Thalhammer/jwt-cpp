@@ -57,7 +57,7 @@ jobs:
         with:
           version: ${{matrix.target.tag}}
 
-      - if: matrix.target.name == 'open-source-parsers-jsoncpp'
+      - if: matrix.target.name == 'stephenberry-glaze'
         uses: ./.github/actions/install/stephenberry-glaze
         with:
           version: ${{matrix.target.tag}}
