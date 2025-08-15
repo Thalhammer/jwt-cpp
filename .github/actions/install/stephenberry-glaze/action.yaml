@@ -11,7 +11,7 @@ runs:
     - run: |
         cd /tmp
         wget https://github.com/stephenberry/glaze/archive/refs/tags/v${{ inputs.version }}.tar.gz
-        tar -zxf /tmp/${{ inputs.version }}.tar.gz
+        tar -zxf /tmp/v${{ inputs.version }}.tar.gz
         cd glaze-${{ inputs.version }}
         cmake . -B build
         cd build
