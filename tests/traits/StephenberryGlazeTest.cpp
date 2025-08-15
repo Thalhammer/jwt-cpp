@@ -5,7 +5,6 @@
 #include <sstream>
 #include <vector>
 
-
 // This is the expanded version of the Mustache template you pasted
 TEST(StephenberryGlazeTest, BasicClaims) {
 	const auto string_claim =
@@ -17,7 +16,7 @@ TEST(StephenberryGlazeTest, BasicClaims) {
 	ASSERT_EQ(array_claim.get_type(), jwt::json::type::array);
 
 	const auto integer_claim = jwt::basic_claim<jwt::traits::stephenberry_glaze>(159816816);
-	ASSERT_EQ(integer_claim.get_type(), jwt::json::type::integer);
+	ASSERT_EQ(integer_claim.get_type(), jwt::json::type::number); // glaze has no integers in it, only doubles
 }
 
 TEST(StephenberryGlazeTest, AudienceAsString) {
@@ -56,7 +55,9 @@ TEST(StephenberryGlazeTest, SetArray) {
 TEST(StephenberryGlazeTest, SetObject) {
 	std::istringstream iss{"{\"api-x\": [1]}"};
 	jwt::basic_claim<jwt::traits::stephenberry_glaze> object;
-	iss >> object;
+	// iss >> object; // THere is no operator >> for string streams in glz::json_t
+	object = jwt::basic_claim<jwt::traits::stephenberry_glaze>(
+		*glz::read_json<jwt::traits::stephenberry_glaze::value_type>(iss.str()));
 	ASSERT_EQ(object.get_type(), jwt::json::type::object);
 
 	auto token = jwt::create<jwt::traits::stephenberry_glaze>()
