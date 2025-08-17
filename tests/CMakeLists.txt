@@ -44,6 +44,34 @@ if(TARGET jsoncpp_static)
   list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/OspJsoncppTest.cpp)
 endif()
 
+# ---- reflect-cpp: prefer find_package, fall back to FetchContent (C++20+) ----
+find_package(reflectcpp CONFIG QUIET)
+set(JWT_HAVE_REFLECTCPP OFF)
+if(NOT TARGET reflectcpp::reflectcpp AND NOT TARGET reflectcpp)
+  # Only fetch if toolchain isn't explicitly set < C++20
+  if(CMAKE_CXX_STANDARD AND CMAKE_CXX_STANDARD LESS 20)
+    message(STATUS "jwt-cpp: reflect-cpp requires C++20; skipping fetch and tests")
+  else()
+    message(STATUS "jwt-cpp: using FetchContent for reflect-cpp for tests")
+    FetchContent_Declare(
+      reflectcpp
+      GIT_REPOSITORY https://github.com/getml/reflect-cpp.git
+      GIT_TAG ca53b225bfc6887dd27e278820c34992cce37c6d
+    )
+    # keep test deps lean
+    set(REFLECTCPP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(REFLECTCPP_BUILD_BENCHMARKS OFF CACHE BOOL "" FORCE)
+    set(REFLECTCPP_ALL_FORMATS OFF CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(reflectcpp)
+  endif()
+endif()
+
+# Add the reflect-cpp trait test source ONLY if we actually have it
+if(TARGET reflectcpp::reflectcpp OR TARGET reflectcpp)
+  set(JWT_HAVE_REFLECTCPP ON)
+  list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/ReflectCppTest.cpp)
+endif()
+
 add_executable(jwt-cpp-test ${TEST_SOURCES})
 
 # NOTE: Don't use space inside a generator expression here, because the function prematurely breaks the expression into
@@ -72,6 +100,21 @@ else()
 endif()
 target_link_libraries(jwt-cpp-test PRIVATE jwt-cpp nlohmann_json::nlohmann_json
                                            $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:${CMAKE_DL_LIBS}>)
+
+# ---- reflect-cpp wiring (only if present) ----
+if(JWT_HAVE_REFLECTCPP)
+  # Only enforce C++20 if not already C++20 or higher
+  if(NOT CMAKE_CXX_STANDARD OR CMAKE_CXX_STANDARD LESS 20)
+    target_compile_features(jwt-cpp-test PRIVATE cxx_std_20)
+  endif()
+
+  # Link the reflect-cpp target (name depends on how it was provided)
+  if(TARGET reflectcpp::reflectcpp)
+    target_link_libraries(jwt-cpp-test PRIVATE reflectcpp::reflectcpp)
+  else()
+    target_link_libraries(jwt-cpp-test PRIVATE reflectcpp)
+  endif()
+endif()
 
 gtest_discover_tests(jwt-cpp-test)
 add_custom_target(jwt-cpp-test-run COMMAND jwt-cpp-test)
