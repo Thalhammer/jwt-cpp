@@ -1,6 +1,8 @@
-#include "jwt-cpp/traits/reflect-cpp/defaults.h"
+#include "jwt-cpp/traits/reflect-cpp/traits.h"
 
 #include <gtest/gtest.h>
+
+using jwt::algorithm::hs256;
 
 TEST(ReflectCppTest, BasicClaims) {
 	const auto string = jwt::basic_claim<jwt::traits::reflect_cpp>(jwt::traits::reflect_cpp::string_type("string"));
@@ -41,8 +43,8 @@ TEST(ReflectCppTest, SetArray) {
 	// Build the array via the trait first
 	jwt::traits::reflect_cpp::array_type arr{100, 20, 10};
 
-	jwt::traits::reflect_cpp::value_type v(arr);
-	jwt::basic_claim<jwt::traits::reflect_cpp> array_claim(v);
+	jwt::traits::reflect_cpp::value_type value(arr);
+	jwt::basic_claim<jwt::traits::reflect_cpp> array_claim(value);
 
 	// Use the reflect-cpp trait for create()
 	auto token =
@@ -121,11 +123,11 @@ TEST(ReflectCppTest, VerifyTokenExpired) {
 
 	ASSERT_THROW(verify.verify(decoded), jwt::error::token_verification_exception);
 
-	std::error_code ec;
-	ASSERT_NO_THROW(verify.verify(decoded, ec));
-	ASSERT_TRUE(ec); // non-zero
-	ASSERT_EQ(ec.category(), jwt::error::token_verification_error_category());
-	ASSERT_EQ(ec.value(), static_cast<int>(jwt::error::token_verification_error::token_expired));
+	std::error_code errcode;
+	ASSERT_NO_THROW(verify.verify(decoded, errcode));
+	ASSERT_TRUE(errcode); // non-zero
+	ASSERT_EQ(errcode.category(), jwt::error::token_verification_error_category());
+	ASSERT_EQ(errcode.value(), static_cast<int>(jwt::error::token_verification_error::token_expired));
 }
 
 TEST(ReflectCppTest, VerifyArray) {
@@ -154,9 +156,8 @@ TEST(ReflectCppTest, VerifyObject) {
 	jwt::basic_claim<jwt::traits::reflect_cpp> object_claim(value);
 
 	// Use the reflect-cpp trait for verify(), too
-	const auto verify = jwt::verify<jwt::traits::reflect_cpp>()
-							.allow_algorithm(jwt::algorithm::hs256("test"))
-							.with_claim("namespace", object_claim);
+	const auto verify =
+		jwt::verify<jwt::traits::reflect_cpp>().allow_algorithm(hs256("test")).with_claim("namespace", object_claim);
 
 	ASSERT_NO_THROW(verify.verify(decoded_token));
 }
