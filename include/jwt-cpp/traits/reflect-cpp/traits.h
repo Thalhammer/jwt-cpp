@@ -81,7 +81,7 @@ namespace jwt::traits {
 		static bool parse(value_type& out, string_type const& json) {
 			auto res = rfl::json::read<rfl::Generic>(json);
 			if (res) {
-				out = *res;
+				out = *std::move(res);
 				return true;
 			}
 			return false;
