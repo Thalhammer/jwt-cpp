@@ -13,13 +13,17 @@ jobs:
       - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
       - uses: ./.github/actions/install/gtest
+      #  - uses: ./.github/actions/install/lcov
+      - uses: ./.github/actions/install/gcovr
       - uses: ./.github/actions/install/danielaparker-jsoncons
       - uses: ./.github/actions/install/boost-json
       - uses: ./.github/actions/install/open-source-parsers-jsoncpp
 
       - name: configure
         run: cmake --preset coverage
-      - name: run
+        #      - name: run-lcov
+        #        run: cmake --build --preset coverage
+      - name: run-gcovr
         run: cmake --build --preset coverage
 
       - uses: coverallsapp/github-action@v2
@@ -31,19 +35,19 @@ jobs:
   fuzzing:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: lukka/get-cmake@latest
-      
-    - name: configure
-      run: cmake --preset ci-fuzzing
-    - name: build
-      run: cmake --build --preset ci-fuzzing
-        
-    - name: run
-      run: |
-        cmake --build --preset ci-fuzzing --target jwt-cpp-fuzz-BaseEncodeFuzz-run
-        cmake --build --preset ci-fuzzing --target jwt-cpp-fuzz-BaseDecodeFuzz-run
-        cmake --build --preset ci-fuzzing --target jwt-cpp-fuzz-TokenDecodeFuzz-run
+      - uses: actions/checkout@v4
+      - uses: lukka/get-cmake@latest
+
+      - name: configure
+        run: cmake --preset ci-fuzzing
+      - name: build
+        run: cmake --build --preset ci-fuzzing
+
+      - name: run
+        run: |
+          cmake --build --preset ci-fuzzing --target jwt-cpp-fuzz-BaseEncodeFuzz-run
+          cmake --build --preset ci-fuzzing --target jwt-cpp-fuzz-BaseDecodeFuzz-run
+          cmake --build --preset ci-fuzzing --target jwt-cpp-fuzz-TokenDecodeFuzz-run
 
   asan:
     runs-on: ubuntu-latest
