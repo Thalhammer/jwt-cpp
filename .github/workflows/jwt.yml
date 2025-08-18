@@ -23,7 +23,7 @@ jobs:
         run: cmake --preset coverage
         #      - name: run-lcov
         #        run: cmake --build --preset coverage
-      - name: run-gcovr
+      - name: run
         run: cmake --build --preset coverage
 
       - uses: coverallsapp/github-action@v2
