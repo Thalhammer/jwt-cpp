@@ -44,31 +44,25 @@ if(TARGET jsoncpp_static)
   list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/OspJsoncppTest.cpp)
 endif()
 
-# ---- reflect-cpp: prefer find_package, fall back to FetchContent (C++20+) ----
-find_package(reflectcpp CONFIG QUIET)
-set(JWT_HAVE_REFLECTCPP OFF)
-if(NOT TARGET reflectcpp::reflectcpp AND NOT TARGET reflectcpp)
-  # Only fetch if toolchain isn't explicitly set < C++20
-  if(CMAKE_CXX_STANDARD AND CMAKE_CXX_STANDARD LESS 20)
-    message(STATUS "jwt-cpp: reflect-cpp requires C++20; skipping fetch and tests")
-  else()
-    message(STATUS "jwt-cpp: using FetchContent for reflect-cpp for tests")
-    FetchContent_Declare(
-      reflectcpp
-      GIT_REPOSITORY https://github.com/getml/reflect-cpp.git
-      GIT_TAG ca53b225bfc6887dd27e278820c34992cce37c6d
-    )
+# ---- reflect-cpp trait tests toggle (OFF by default) ----
+option(JWT_ENABLE_REFLECTCPP_TESTS "Build reflect-cpp trait tests (requires C++20)" OFF)
+if(JWT_ENABLE_REFLECTCPP_TESTS)
+  # Prefer an installed package
+  find_package(reflectcpp CONFIG QUIET)
+
+  # If not found, always fetch at a pinned commit
+  if(NOT TARGET reflectcpp::reflectcpp)
+    message(STATUS "jwt-cpp: reflect-cpp not found; fetching for tests")
+    include(FetchContent)
+    FetchContent_Declare(reflectcpp GIT_REPOSITORY https://github.com/getml/reflect-cpp.git GIT_TAG ca53b225bfc6887dd27e278820c34992cce37c6d)
     # keep test deps lean
     set(REFLECTCPP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
     set(REFLECTCPP_BUILD_BENCHMARKS OFF CACHE BOOL "" FORCE)
     set(REFLECTCPP_ALL_FORMATS OFF CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(reflectcpp)
   endif()
-endif()
 
-# Add the reflect-cpp trait test source ONLY if we actually have it
-if(TARGET reflectcpp::reflectcpp OR TARGET reflectcpp)
-  set(JWT_HAVE_REFLECTCPP ON)
+  # Add the reflect-cpp trait test source
   list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/ReflectCppTest.cpp)
 endif()
 
@@ -97,24 +91,23 @@ else()
   if(TARGET jsoncpp_static)
     target_link_libraries(jwt-cpp-test PRIVATE jsoncpp_static)
   endif()
+  if(JWT_ENABLE_REFLECTCPP_TESTS)
+    # Enforce language level on this target:
+    # - If CMAKE_CXX_STANDARD is undefined, require C++20 for this target.
+    # - If defined and <20, hard error.
+    # - If defined and >=20, request that exact level on this target.
+    if(NOT DEFINED CMAKE_CXX_STANDARD)
+      target_compile_features(jwt-cpp-test PRIVATE cxx_std_20)
+    else()
+      if(CMAKE_CXX_STANDARD LESS 20)
+        message(FATAL_ERROR "jwt-cpp: reflect-cpp tests require C++20, but CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}.")
+      endif()
+    endif()
+    target_link_libraries(jwt-cpp-test PRIVATE reflectcpp::reflectcpp)
+  endif()
 endif()
 target_link_libraries(jwt-cpp-test PRIVATE jwt-cpp nlohmann_json::nlohmann_json
                                            $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:${CMAKE_DL_LIBS}>)
-
-# ---- reflect-cpp wiring (only if present) ----
-if(JWT_HAVE_REFLECTCPP)
-  # Only enforce C++20 if not already C++20 or higher
-  if(NOT CMAKE_CXX_STANDARD OR CMAKE_CXX_STANDARD LESS 20)
-    target_compile_features(jwt-cpp-test PRIVATE cxx_std_20)
-  endif()
-
-  # Link the reflect-cpp target (name depends on how it was provided)
-  if(TARGET reflectcpp::reflectcpp)
-    target_link_libraries(jwt-cpp-test PRIVATE reflectcpp::reflectcpp)
-  else()
-    target_link_libraries(jwt-cpp-test PRIVATE reflectcpp)
-  endif()
-endif()
 
 gtest_discover_tests(jwt-cpp-test)
 add_custom_target(jwt-cpp-test-run COMMAND jwt-cpp-test)
