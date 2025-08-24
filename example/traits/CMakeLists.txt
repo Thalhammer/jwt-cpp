@@ -38,14 +38,14 @@ endif()
 # Build the reflect-cpp trait example only when the dep exists AND we're on C++20 or higher.
 find_package(reflectcpp CONFIG)
 if(TARGET reflectcpp::reflectcpp AND (NOT DEFINED CMAKE_CXX_STANDARD OR CMAKE_CXX_STANDARD GREATER_EQUAL 20))
-  add_executable(example-traits-reflectcpp example/traits/reflect-cpp.cpp)
-  target_link_libraries(example-traits-reflectcpp PRIVATE jwt-cpp reflectcpp::reflectcpp)
+  add_executable(reflect-cpp reflect-cpp.cpp)
+  target_link_libraries(reflect-cpp PRIVATE jwt-cpp reflectcpp::reflectcpp)
 
   # If the project hasn't set a global standard, request C++20 just for this example.
   if(NOT DEFINED CMAKE_CXX_STANDARD)
-    target_compile_features(example-traits-reflectcpp PRIVATE cxx_std_20)
+    target_compile_features(reflect-cpp PRIVATE cxx_std_20)
   endif()
 elseif(TARGET reflectcpp::reflectcpp)
   # reflect-cpp is present but the user explicitly chose a pre-C++20 standard → skip the example.
-  message(STATUS "jwt-cpp: skipping example-traits-reflectcpp (CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} < 20)")
+  message(STATUS "jwt-cpp: skipping reflect-cpp example (CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} < 20)")
 endif()
