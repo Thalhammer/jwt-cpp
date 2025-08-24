@@ -16,4 +16,4 @@ runs:
         cd _thirdparty/reflect-cpp
         git checkout "${{ inputs.version }}"
         cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=20
-        cmake --build build --target install -j
+        sudo cmake --build build --target install -j
