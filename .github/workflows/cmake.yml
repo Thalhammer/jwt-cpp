@@ -273,3 +273,37 @@ jobs:
         run: |
           cd build
           ./tests/jwt-cpp-test
+
+  reflect-cpp-tests:
+    name: Unit tests (reflect-cpp)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain & deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build g++ libssl-dev
+
+      - name: Install reflect-cpp
+        run: |
+          git clone https://github.com/getml/reflect-cpp.git _thirdparty/reflect-cpp
+          cd _thirdparty/reflect-cpp
+          git checkout ca53b225bfc6887dd27e278820c34992cce37c6d
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=20
+          sudo cmake --build build --target install -j
+
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DJWT_BUILD_TESTS=ON \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_CXX_STANDARD=20 \
+            -DJWT_SSL_LIBRARY=OpenSSL
+
+      - name: Build tests
+        run: cmake --build build --target jwt-cpp-test -j
+
+      - name: Run tests
+        working-directory: build
+        run: ctest --output-on-failure
