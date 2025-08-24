@@ -18,6 +18,7 @@ jobs:
           - { name: "nlohmann-json", tag: "3.12.0", version: "v3.12.0" }
           - { name: "kazuho-picojson", tag: "111c9be5188f7350c2eac9ddaedd8cca3d7bf394", version: "111c9be" }
           - { name: "open-source-parsers-jsoncpp", tag: "1.9.6", version: "v1.9.6" }
+          - { name: "reflect-cpp", tag: "ca53b225bfc6887dd27e278820c34992cce37c6d", version: "ca53b22" }
     steps:
       - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
@@ -55,6 +56,11 @@ jobs:
         uses: ./.github/actions/install/open-source-parsers-jsoncpp
         with:
           version: ${{matrix.target.tag}}
+
+      - if: matrix.target.name == 'reflect-cpp'
+        uses: ./.github/actions/install/reflect-cpp
+        with:
+          version: ${{ matrix.target.tag }}
 
       - name: test
         working-directory: example/traits

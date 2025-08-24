@@ -1,0 +1,19 @@
+name: Install reflect-cpp
+description: Build & install reflect-cpp at a specific commit
+inputs:
+  version:
+    description: Commit/tag to checkout
+    required: true
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        set -eux
+        sudo apt-get update
+        sudo apt-get install -y ninja-build
+        git clone https://github.com/getml/reflect-cpp.git _thirdparty/reflect-cpp
+        cd _thirdparty/reflect-cpp
+        git checkout "${{ inputs.version }}"
+        cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=20
+        cmake --build build --target install -j
