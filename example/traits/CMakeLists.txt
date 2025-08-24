@@ -39,7 +39,7 @@ endif()
 find_package(reflectcpp CONFIG)
 if(TARGET reflectcpp::reflectcpp AND (NOT DEFINED CMAKE_CXX_STANDARD OR CMAKE_CXX_STANDARD GREATER_EQUAL 20))
   add_executable(reflect-cpp reflect-cpp.cpp)
-  target_link_libraries(reflect-cpp PRIVATE jwt-cpp reflectcpp::reflectcpp)
+  target_link_libraries(reflect-cpp PRIVATE jwt-cpp::jwt-cpp reflectcpp::reflectcpp)
 
   # If the project hasn't set a global standard, request C++20 just for this example.
   if(NOT DEFINED CMAKE_CXX_STANDARD)
