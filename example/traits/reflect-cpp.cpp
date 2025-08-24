@@ -1,89 +1,83 @@
 #include "jwt-cpp/jwt.h"
-#include "jwt-cpp/traits/reflect-cpp/traits.h" // the trait adapter
+#include "jwt-cpp/traits/reflect-cpp/traits.h"
 
 #include <chrono>
 #include <iostream>
-#include <string>
 
 int main() {
-	using R = jwt::traits::reflect_cpp;
+	using sec = std::chrono::seconds;
+	using min = std::chrono::minutes;
+	using traits = jwt::traits::reflect_cpp;
+	using claim = jwt::basic_claim<traits>;
 
-	try {
-		// Build a small JSON object claim using the trait's value_type
-		R::object_type ns_obj;
-		ns_obj["api-x"] = R::value_type(1); // {"api-x": 1}
-
-		// Build an array claim: [100, 20, 10]
-		R::array_type arr;
-		arr.emplace_back(100);
-		arr.emplace_back(20);
-		arr.emplace_back(10);
-
-		// Wrap the native JSON values into jwt::basic_claim<R>
-		jwt::basic_claim<R> ns_claim(R::value_type(ns_obj));
-		jwt::basic_claim<R> arr_claim(R::value_type(arr));
-
-		// Create a token using the reflect-cpp trait (HS256)
-		const std::string secret = "secret";
-		const auto now = std::chrono::system_clock::now();
-
-		const auto token = jwt::create<R>()
-							   .set_type("JWT")
-							   .set_algorithm("HS256")
-							   .set_issuer("auth0")
-							   .set_subject("demo")
-							   .set_audience("example")
-							   .set_issued_at(now)
-							   .set_not_before(now - std::chrono::seconds{5})
-							   .set_expires_at(now + std::chrono::minutes{10})
-							   .set_payload_claim("namespace", ns_claim)
-							   .set_payload_claim("numbers", arr_claim)
-							   .sign(jwt::algorithm::hs256{secret});
-
-		std::cout << "token: " << token << "\n";
-
-		// Decode with the same trait
-		const auto decoded = jwt::decode<R>(token);
-
-		// Access header/payload fields
-		std::cout << "alg: " << decoded.get_algorithm() << "\n";
-		std::cout << "typ: " << decoded.get_type() << "\n";
-		if (decoded.has_issuer()) std::cout << "iss: " << decoded.get_issuer() << "\n";
-
-		// Verify with the same trait
-		const auto verifier = jwt::verify<R>().allow_algorithm(jwt::algorithm::hs256{secret}).with_issuer("auth0");
-
-		verifier.verify(decoded);
-		std::cout << "verification: OK\n";
-
-		// Read back our custom claims using the trait accessors
-		if (decoded.has_payload_claim("namespace")) {
-			const auto c = decoded.get_payload_claim("namespace");
-			if (c.get_type() == jwt::json::type::object) {
-				const auto& obj = c.as_object(); // R::object_type (map-like)
-				const auto it = obj.find("api-x");
-				if (it != obj.end()) {
-					// it->second is R::value_type
-					// print integer if present
-					// (rfl::Generic can be visited, but jwt-cpp trait exposes typed helpers)
-					// Keep it simple and rely on serialization through the trait:
-					std::cout << "namespace.api-x present\n";
-				}
-			}
+	// Load a raw JSON object into a claim (reflect-cpp: parse -> wrap)
+	claim from_raw_json;
+	{
+		traits::value_type value;
+		// Mirrors the nlohmann example’s JSON
+		const auto* const json_text = R"##({"api":{"array":[1,2,3],"null":null}})##";
+		if (!traits::parse(value, json_text)) {
+			std::cerr << "failed to parse raw json\n";
+			return 1;
 		}
-
-		if (decoded.has_payload_claim("numbers")) {
-			const auto c = decoded.get_payload_claim("numbers");
-			if (c.get_type() == jwt::json::type::array) {
-				const auto& a = c.as_array(); // R::array_type (vector-like)
-				std::cout << "numbers.size: " << a.size() << "\n";
-			}
-		}
-
-	} catch (const std::exception& e) {
-		std::cerr << "error: " << e.what() << "\n";
-		return 1;
+		from_raw_json = claim{std::move(value)};
 	}
+
+	claim::set_t list{"once", "twice"};
+	std::vector<int64_t> big_numbers{727663072LL, 770979831LL, 427239169LL, 525936436LL};
+
+	// Build an array claim from the big_numbers vector
+	traits::array_type arr;
+	arr.reserve(big_numbers.size());
+	for (auto val : big_numbers) {
+		arr.emplace_back(val);
+	}
+	claim array_claim{traits::value_type{arr}};
+	claim strings_claim{list.begin(), list.end()};
+
+	const auto time = jwt::date::clock::now();
+	const auto token = jwt::create<traits>()
+						   .set_type("JWT")
+						   .set_issuer("auth.mydomain.io")
+						   .set_audience("mydomain.io")
+						   .set_issued_at(time)
+						   .set_not_before(time)
+						   .set_expires_at(time + min{2} + sec{15})
+						   .set_payload_claim("boolean", true)
+						   .set_payload_claim("integer", 12345)
+						   .set_payload_claim("precision", 12.3456789)
+						   .set_payload_claim("strings", strings_claim) // <— fixed
+						   .set_payload_claim("array", array_claim)
+						   .set_payload_claim("object", from_raw_json)
+						   .sign(jwt::algorithm::none{});
+
+	const auto decoded = jwt::decode<traits>(token);
+
+	// Access payload /object/api/array using reflect-cpp's Result-returning get()
+	{
+		const auto obj_v = decoded.get_payload_claim("object").to_json(); // R::value_type
+		const auto obj = traits::as_object(obj_v);						  // rfl::Object<rfl::Generic>
+
+		if (auto api_res = obj.get("api"); api_res) {				 // rfl::Result<rfl::Generic>
+			const auto api_obj = traits::as_object(api_res.value()); // nested object
+
+			if (auto arr_res = api_obj.get("array"); arr_res) {
+				const auto& nested = traits::as_array(arr_res.value()); // vector-like
+				std::cout << "payload /object/api/array = " << rfl::json::write(nested) << '\n';
+			} else {
+				std::cout << "payload /object/api/array missing\n";
+			}
+		} else {
+			std::cout << "payload /object/api missing\n";
+		}
+	}
+
+	jwt::verify<traits>()
+		.allow_algorithm(jwt::algorithm::none{})
+		.with_issuer("auth.mydomain.io")
+		.with_audience("mydomain.io")
+		.with_claim("object", from_raw_json)
+		.verify(decoded);
 
 	return 0;
 }
