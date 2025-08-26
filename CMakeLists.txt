@@ -31,8 +31,6 @@ cmake_dependent_option(JWT_EXTERNAL_NLOHMANN_JSON
   "Use find_package() to locate nlohman-json required for tests and examples" OFF
   "JWT_BUILD_EXAMPLES OR JWT_BUILD_TESTS" OFF)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "Export compile commands" FORCE)
-
 set(JWT_SSL_LIBRARY_OPTIONS OpenSSL LibreSSL wolfSSL)
 set(JWT_SSL_LIBRARY OpenSSL CACHE STRING "Determines which SSL library to build with")
 set_property(CACHE JWT_SSL_LIBRARY PROPERTY STRINGS ${JWT_SSL_LIBRARY_OPTIONS})
