@@ -34,3 +34,18 @@ if(TARGET jsoncpp_static)
   add_executable(open-source-parsers-jsoncpp open-source-parsers-jsoncpp.cpp)
   target_link_libraries(open-source-parsers-jsoncpp jsoncpp_static jwt-cpp::jwt-cpp)
 endif()
+
+# Build the reflect-cpp trait example only when the dep exists AND we're on C++20 or higher.
+find_package(reflectcpp CONFIG)
+if(TARGET reflectcpp::reflectcpp AND (NOT DEFINED CMAKE_CXX_STANDARD OR CMAKE_CXX_STANDARD GREATER_EQUAL 20))
+  add_executable(reflect-cpp reflect-cpp.cpp)
+  target_link_libraries(reflect-cpp PRIVATE jwt-cpp::jwt-cpp reflectcpp::reflectcpp)
+
+  # If the project hasn't set a global standard, request C++20 just for this example.
+  if(NOT DEFINED CMAKE_CXX_STANDARD)
+    target_compile_features(reflect-cpp PRIVATE cxx_std_20)
+  endif()
+elseif(TARGET reflectcpp::reflectcpp)
+  # reflect-cpp is present but the user explicitly chose a pre-C++20 standard → skip the example.
+  message(STATUS "jwt-cpp: skipping reflect-cpp example (CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} < 20)")
+endif()
