@@ -1,12 +1,16 @@
 #ifndef JWT_CPP_BASE_H
 #define JWT_CPP_BASE_H
 
+#ifdef JWT_USE_IMPORT_STD
+import std;
+#else
 #include <algorithm>
 #include <array>
 #include <cstdint>
 #include <stdexcept>
 #include <string>
 #include <vector>
+#endif
 
 #ifdef __has_cpp_attribute
 #if __has_cpp_attribute(fallthrough)

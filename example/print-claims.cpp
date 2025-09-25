@@ -1,6 +1,11 @@
 /// @file print-claims.cpp
 #include <iostream>
+
+#ifndef JWT_ENABLE_MODULES
 #include <jwt-cpp/jwt.h>
+#else
+import jwt_cpp;
+#endif
 
 int main() {
 	const std::string token =

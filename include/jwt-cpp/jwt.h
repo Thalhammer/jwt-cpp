@@ -21,6 +21,9 @@
 #include <openssl/rsa.h>
 #include <openssl/ssl.h>
 
+#ifdef JWT_USE_IMPORT_STD
+import std;
+#else
 #include <algorithm>
 #include <chrono>
 #include <climits>
@@ -43,6 +46,8 @@
 #include <experimental/type_traits>
 #endif
 #endif
+#endif
+
 #endif
 
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L // 3.0.0

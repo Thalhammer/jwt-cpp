@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.15)
 project(jwt-cpp-examples)
 
 if(NOT TARGET jwt-cpp)
@@ -14,6 +14,9 @@ endif()
 add_executable(print-claims print-claims.cpp)
 target_link_libraries(print-claims jwt-cpp::jwt-cpp)
 add_custom_target(print-claims-run COMMAND print-claims)
+if (JWT_ENABLE_MODULES) 
+  target_compile_definitions(print-claims PRIVATE JWT_ENABLE_MODULES)
+endif()
 
 add_executable(private-claims private-claims.cpp)
 target_link_libraries(private-claims jwt-cpp::jwt-cpp)
