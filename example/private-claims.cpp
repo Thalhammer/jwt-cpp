@@ -1,8 +1,13 @@
 /// @file private-claims.cpp
-#include <jwt-cpp/jwt.h>
-
 #include <iostream>
 #include <sstream>
+#include <chrono>
+
+#ifndef JWT_ENABLE_MODULES
+#include <jwt-cpp/jwt.h>
+#else
+import jwt_cpp;
+#endif
 
 using sec = std::chrono::seconds;
 using min = std::chrono::minutes;

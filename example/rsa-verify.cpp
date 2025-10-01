@@ -1,6 +1,12 @@
 /// \file rsa-verify.cpp
 #include <iostream>
+#include <chrono>
+
+#ifndef JWT_ENABLE_MODULES
 #include <jwt-cpp/jwt.h>
+#else
+import jwt_cpp;
+#endif
 
 int main() {
 	const std::string rsa_pub_key = R"(-----BEGIN PUBLIC KEY-----

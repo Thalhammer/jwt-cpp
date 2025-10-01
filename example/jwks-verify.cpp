@@ -5,7 +5,13 @@
  * and using the corresponding x5c from the JWK to verify the token
  */
 #include <iostream>
+#include <chrono>
+
+#ifndef JWT_ENABLE_MODULES
 #include <jwt-cpp/jwt.h>
+#else
+import jwt_cpp;
+#endif
 #include <openssl/rand.h>
 
 int main() {

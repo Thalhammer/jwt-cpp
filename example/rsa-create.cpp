@@ -1,6 +1,12 @@
 /// @file rsa-create.cpp
 #include <iostream>
+#include <chrono>
+
+#ifndef JWT_ENABLE_MODULES
 #include <jwt-cpp/jwt.h>
+#else
+import jwt_cpp;
+#endif
 
 int main() {
 	std::string const rsa_priv_key = R"(-----BEGIN PRIVATE KEY-----
