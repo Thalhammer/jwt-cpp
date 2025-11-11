@@ -1,0 +1,22 @@
+name: Install gcovr
+description: Install gcovr for generating coverage reports
+
+inputs:
+  version:
+    description: gcovr version to install
+    required: false
+    default: "8.3" # pick the latest stable version
+
+runs:
+  using: composite
+  steps:
+    - name: Install Python and pip
+      run: |
+        sudo apt-get install -y python3 python3-pip
+      shell: bash
+
+    - name: Install gcovr
+      run: |
+        python3 -m pip install --upgrade pip
+        python3 -m pip install gcovr==${{ inputs.version }}
+      shell: bash
