@@ -2610,7 +2610,8 @@ namespace jwt {
 
 		JWT_CLAIM_EXPLICIT basic_claim(typename json_traits::string_type s) : val(std::move(s)) {}
 		JWT_CLAIM_EXPLICIT basic_claim(const date& d)
-			: val(typename json_traits::integer_type(std::chrono::system_clock::to_time_t(d))) {}
+			: val(typename json_traits::integer_type(
+				  std::chrono::duration_cast<std::chrono::seconds>(d.time_since_epoch()).count())) {}
 		JWT_CLAIM_EXPLICIT basic_claim(typename json_traits::array_type a) : val(std::move(a)) {}
 		JWT_CLAIM_EXPLICIT basic_claim(typename json_traits::value_type v) : val(std::move(v)) {}
 		JWT_CLAIM_EXPLICIT basic_claim(const set_t& s) : val(typename json_traits::array_type(s.begin(), s.end())) {}
@@ -2659,9 +2660,8 @@ namespace jwt {
 		 */
 		date as_date() const {
 			using std::chrono::system_clock;
-			if (get_type() == json::type::number)
-				return system_clock::from_time_t(static_cast<std::time_t>(std::round(as_number())));
-			return system_clock::from_time_t(static_cast<std::time_t>(as_integer()));
+			if (get_type() == json::type::number) return date(std::chrono::seconds(std::llround(as_number())));
+			return date(std::chrono::seconds(as_integer()));
 		}
 
 		/**
