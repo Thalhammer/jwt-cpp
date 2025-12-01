@@ -44,6 +44,11 @@ if(TARGET jsoncpp_static)
   list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/OspJsoncppTest.cpp)
 endif()
 
+find_package(glaze CONFIG)
+if(TARGET glaze::glaze)
+  list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/StephenberryGlazeTest.cpp)
+endif()
+
 add_executable(jwt-cpp-test ${TEST_SOURCES})
 
 # NOTE: Don't use space inside a generator expression here, because the function prematurely breaks the expression into
@@ -68,6 +73,9 @@ else()
   endif()
   if(TARGET jsoncpp_static)
     target_link_libraries(jwt-cpp-test PRIVATE jsoncpp_static)
+  endif()
+  if(TARGET glaze::glaze)
+    target_link_libraries(jwt-cpp-test PRIVATE glaze::glaze)
   endif()
 endif()
 target_link_libraries(jwt-cpp-test PRIVATE jwt-cpp nlohmann_json::nlohmann_json
