@@ -3246,8 +3246,8 @@ namespace jwt {
 		 * \param d token expiration timeout
 		 * \return *this to allow for method chaining
 		 */
-		template<class Rep>
-		builder& set_expires_in(const std::chrono::duration<Rep>& d) {
+		template<class Rep, class Period>
+		builder& set_expires_in(const std::chrono::duration<Rep, Period>& d) {
 			return set_payload_claim("exp", basic_claim<json_traits>(clock.now() + d));
 		}
 		/**
