@@ -722,13 +722,23 @@ namespace jwt {
 			if (key.substr(0, 27) == "-----BEGIN CERTIFICATE-----") {
 				auto epkey = helper::extract_pubkey_from_cert<error_category>(key, password, ec);
 				if (ec) return {};
-				const int len = static_cast<int>(epkey.size());
+				// Ensure the size fits into an int before casting
+				if (epkey.size() > static_cast<std::size_t>(std::numeric_limits<int>::max())) {
+					ec = error_category::load_key_bio_write; // Add an appropriate error here
+					return {};
+				}
+				int len = static_cast<int>(epkey.size());
 				if (BIO_write(pubkey_bio.get(), epkey.data(), len) != len) {
 					ec = error_category::load_key_bio_write;
 					return {};
 				}
 			} else {
-				const int len = static_cast<int>(key.size());
+				// Ensure the size fits into an int before casting
+				if (key.size() > static_cast<std::size_t>(std::numeric_limits<int>::max())) {
+					ec = error_category::load_key_bio_write; // Add an appropriate error here
+					return {};
+				}
+				int len = static_cast<int>(key.size());
 				if (BIO_write(pubkey_bio.get(), key.data(), len) != len) {
 					ec = error_category::load_key_bio_write;
 					return {};
