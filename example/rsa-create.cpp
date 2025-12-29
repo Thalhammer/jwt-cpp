@@ -37,7 +37,7 @@ rK0/Ikt5ybqUzKCMJZg2VKGTxg==
 					 .set_type("JWT")
 					 .set_id("rsa-create-example")
 					 .set_issued_now()
-					 .set_expires_in(std::chrono::seconds{36000})
+					 .set_expires_in(std::chrono::hours{1})
 					 .set_payload_claim("sample", jwt::claim(std::string{"test"}))
 					 .sign(jwt::algorithm::rs256("", rsa_priv_key, "", ""));
 
