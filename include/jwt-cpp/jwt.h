@@ -723,7 +723,7 @@ namespace jwt {
 				auto epkey = helper::extract_pubkey_from_cert<error_category>(key, password, ec);
 				if (ec) return {};
 				// Ensure the size fits into an int before casting
-				if (epkey.size() > static_cast<std::size_t>(std::numeric_limits<int>::max())) {
+				if (epkey.size() > static_cast<std::size_t>((std::numeric_limits<int>::max)())) {
 					ec = error_category::load_key_bio_write; // Add an appropriate error here
 					return {};
 				}
@@ -734,7 +734,7 @@ namespace jwt {
 				}
 			} else {
 				// Ensure the size fits into an int before casting
-				if (key.size() > static_cast<std::size_t>(std::numeric_limits<int>::max())) {
+				if (key.size() > static_cast<std::size_t>((std::numeric_limits<int>::max)())) {
 					ec = error_category::load_key_bio_write; // Add an appropriate error here
 					return {};
 				}
