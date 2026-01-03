@@ -722,13 +722,23 @@ namespace jwt {
 			if (key.substr(0, 27) == "-----BEGIN CERTIFICATE-----") {
 				auto epkey = helper::extract_pubkey_from_cert<error_category>(key, password, ec);
 				if (ec) return {};
-				const int len = static_cast<int>(epkey.size());
+				// Ensure the size fits into an int before casting
+				if (epkey.size() > static_cast<std::size_t>((std::numeric_limits<int>::max)())) {
+					ec = error_category::load_key_bio_write; // Add an appropriate error here
+					return {};
+				}
+				int len = static_cast<int>(epkey.size());
 				if (BIO_write(pubkey_bio.get(), epkey.data(), len) != len) {
 					ec = error_category::load_key_bio_write;
 					return {};
 				}
 			} else {
-				const int len = static_cast<int>(key.size());
+				// Ensure the size fits into an int before casting
+				if (key.size() > static_cast<std::size_t>((std::numeric_limits<int>::max)())) {
+					ec = error_category::load_key_bio_write; // Add an appropriate error here
+					return {};
+				}
+				int len = static_cast<int>(key.size());
 				if (BIO_write(pubkey_bio.get(), key.data(), len) != len) {
 					ec = error_category::load_key_bio_write;
 					return {};
@@ -2610,7 +2620,8 @@ namespace jwt {
 
 		JWT_CLAIM_EXPLICIT basic_claim(typename json_traits::string_type s) : val(std::move(s)) {}
 		JWT_CLAIM_EXPLICIT basic_claim(const date& d)
-			: val(typename json_traits::integer_type(std::chrono::system_clock::to_time_t(d))) {}
+			: val(typename json_traits::integer_type(
+				  std::chrono::duration_cast<std::chrono::seconds>(d.time_since_epoch()).count())) {}
 		JWT_CLAIM_EXPLICIT basic_claim(typename json_traits::array_type a) : val(std::move(a)) {}
 		JWT_CLAIM_EXPLICIT basic_claim(typename json_traits::value_type v) : val(std::move(v)) {}
 		JWT_CLAIM_EXPLICIT basic_claim(const set_t& s) : val(typename json_traits::array_type(s.begin(), s.end())) {}
@@ -2659,9 +2670,8 @@ namespace jwt {
 		 */
 		date as_date() const {
 			using std::chrono::system_clock;
-			if (get_type() == json::type::number)
-				return system_clock::from_time_t(static_cast<std::time_t>(std::round(as_number())));
-			return system_clock::from_time_t(static_cast<std::time_t>(as_integer()));
+			if (get_type() == json::type::number) return date(std::chrono::seconds(std::llround(as_number())));
+			return date(std::chrono::seconds(as_integer()));
 		}
 
 		/**
@@ -3246,8 +3256,8 @@ namespace jwt {
 		 * \param d token expiration timeout
 		 * \return *this to allow for method chaining
 		 */
-		template<class Rep>
-		builder& set_expires_in(const std::chrono::duration<Rep>& d) {
+		template<class Rep, class Period>
+		builder& set_expires_in(const std::chrono::duration<Rep, Period>& d) {
 			return set_payload_claim("exp", basic_claim<json_traits>(clock.now() + d));
 		}
 		/**
