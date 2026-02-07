@@ -1624,7 +1624,7 @@ namespace jwt {
 					ec = error::signature_generation_error::signinit_failed;
 					return {};
 				}
-				if (!EVP_DigestUpdate(ctx.get(), data.data(), data.size())) {
+				if (!EVP_DigestUpdate(ctx.get(), data.data(), static_cast<unsigned int>(data.size()))) {
 					ec = error::signature_generation_error::digestupdate_failed;
 					return {};
 				}
@@ -1664,7 +1664,7 @@ namespace jwt {
 					ec = error::signature_verification_error::verifyinit_failed;
 					return;
 				}
-				if (!EVP_DigestUpdate(ctx.get(), data.data(), data.size())) {
+				if (!EVP_DigestUpdate(ctx.get(), data.data(), static_cast<unsigned int>(data.size()))) {
 					ec = error::signature_verification_error::verifyupdate_failed;
 					return;
 				}
@@ -1984,7 +1984,7 @@ namespace jwt {
 					return {};
 				}
 #endif
-				if (EVP_DigestUpdate(md_ctx.get(), data.data(), data.size()) != 1) {
+				if (EVP_DigestUpdate(md_ctx.get(), data.data(), static_cast<unsigned int>(data.size())) != 1) {
 					ec = error::signature_generation_error::digestupdate_failed;
 					return {};
 				}
@@ -2033,7 +2033,7 @@ namespace jwt {
 					return;
 				}
 #endif
-				if (EVP_DigestUpdate(md_ctx.get(), data.data(), data.size()) != 1) {
+				if (EVP_DigestUpdate(md_ctx.get(), data.data(), static_cast<unsigned int>(data.size())) != 1) {
 					ec = error::signature_verification_error::verifyupdate_failed;
 					return;
 				}
@@ -2670,7 +2670,7 @@ namespace jwt {
 		 */
 		date as_date() const {
 			using std::chrono::system_clock;
-			if (get_type() == json::type::number) return date(std::chrono::seconds(std::llround(as_number())));
+			if (get_type() == json::type::number) return date(std::chrono::seconds(static_cast<int64_t>(std::llround(as_number()))));
 			return date(std::chrono::seconds(as_integer()));
 		}
 
