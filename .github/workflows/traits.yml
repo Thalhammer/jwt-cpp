@@ -11,7 +11,7 @@ jobs:
     name: Traits (${{ matrix.target.name }})
     runs-on: ubuntu-latest
     concurrency:
-      group: badges-${{ github.ref }}
+      group: badges-${{ github.ref }}-${{ matrix.target.name }}
       cancel-in-progress: false
     strategy:
       matrix:
