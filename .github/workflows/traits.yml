@@ -10,6 +10,9 @@ jobs:
   traits:
     name: Traits (${{ matrix.target.name }})
     runs-on: ubuntu-latest
+    concurrency:
+      group: badges-${{ github.ref }}
+      cancel-in-progress: false
     strategy:
       matrix:
         target:
