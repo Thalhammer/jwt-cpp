@@ -2670,7 +2670,8 @@ namespace jwt {
 		 */
 		date as_date() const {
 			using std::chrono::system_clock;
-			if (get_type() == json::type::number) return date(std::chrono::seconds(static_cast<int64_t>(std::llround(as_number()))));
+			if (get_type() == json::type::number)
+				return date(std::chrono::seconds(static_cast<int64_t>(std::llround(as_number()))));
 			return date(std::chrono::seconds(as_integer()));
 		}
 
