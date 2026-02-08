@@ -82,5 +82,5 @@ if(JWT_ENABLE_COVERAGE)
   set(COVERAGE_EXCLUDES "/usr/**" "/home/*/.conan/**" "*test*" "*build*" "**/nlohmann/json.hpp"
                         "**/picojson/picojson.h" "*boost*" "*jsoncons*")
   setup_target_for_coverage_lcov(NAME coverage EXECUTABLE ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-test LCOV_ARGS 
-                                  "--ignore-errors;mismatch;--ignore-errors;unused")
+                                 "--ignore-errors;mismatch;--ignore-errors;unused")
 endif()
