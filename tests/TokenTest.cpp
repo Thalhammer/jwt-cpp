@@ -279,6 +279,7 @@ TEST(TokenTest, CreateTokenEd25519) {
 		jwt::verify().allow_algorithm(jwt::algorithm::ed25519(ed25519_pub_key, "", "", "")).verify(decoded));
 }
 
+#if !defined(LIBRESSL_VERSION_NUMBER)
 TEST(TokenTest, CreateTokenEd448) {
 
 	auto token =
@@ -291,7 +292,8 @@ TEST(TokenTest, CreateTokenEd448) {
 		jwt::error::signature_verification_exception);
 	ASSERT_NO_THROW(jwt::verify().allow_algorithm(jwt::algorithm::ed448(ed448_pub_key, "", "", "")).verify(decoded));
 }
-#endif
+#endif // !LIBRESSL_VERSION_NUMBER
+#endif // !JWT_OPENSSL_1_0_0 && !JWT_OPENSSL_1_1_0
 
 TEST(TokenTest, VerifyTokenWrongAlgorithm) {
 	std::string token =
@@ -779,6 +781,7 @@ TEST(TokenTest, VerifyTokenEd25519Fail) {
 	ASSERT_THROW(verify.verify(decoded_token), jwt::error::signature_verification_exception);
 }
 
+#if !defined(LIBRESSL_VERSION_NUMBER)
 TEST(TokenTest, VerifyTokenEd448) {
 	const std::string token =
 		"eyJhbGciOiJFZERTQSIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.Aldes9jrXZXxfNjuovqmIZ3r2WF4yVXVr2Q8B8SkAmv"
@@ -802,7 +805,8 @@ TEST(TokenTest, VerifyTokenEd448Fail) {
 
 	ASSERT_THROW(verify.verify(decoded_token), jwt::error::signature_verification_exception);
 }
-#endif
+#endif // !LIBRESSL_VERSION_NUMBER
+#endif // !JWT_OPENSSL_1_0_0 && !JWT_OPENSSL_1_1_0
 
 struct test_clock {
 	jwt::date n;
