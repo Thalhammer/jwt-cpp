@@ -12,7 +12,9 @@ jobs:
     strategy:
       matrix:
         openssl:
-          - { tag: "openssl-3.0.5", name: "3.0.5" }
+          - { tag: "openssl-3.0.19", name: "3.0.19" }
+          - { tag: "openssl-3.5.5", name: "3.5.5" }
+          - { tag: "openssl-3.6.1", name: "3.6.1" }
           - { tag: "OpenSSL_1_1_1q", name: "1.1.1q" }
           - { tag: "OpenSSL_1_1_0i", name: "1.1.0i" } # Do not bump, there's a broken in the autoconfig script and it's not maintained
           - { tag: "OpenSSL_1_0_2u", name: "1.0.2u" }
@@ -40,14 +42,14 @@ jobs:
 
   openssl-no-deprecated:
     runs-on: ubuntu-latest
-    name: OpenSSL 3.0 No Deprecated
+    name: OpenSSL 3.6 No Deprecated
     steps:
       - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
       - uses: ./.github/actions/install/gtest
       - uses: ./.github/actions/install/openssl
         with:
-          version: "openssl-3.0.5"
+          version: "openssl-3.6.1"
 
       - name: configure
         run: cmake --preset unit-tests -DOPENSSL_ROOT_DIR=/tmp -DCMAKE_CXX_FLAGS="-DOPENSSL_NO_DEPRECATED=1" -DCMAKE_C_FLAGS="-DOPENSSL_NO_DEPRECATED=1"
