@@ -2508,15 +2508,15 @@ namespace jwt {
 		template<typename string_type, typename integer_type>
 		using is_substr_start_end_index_signature =
 			typename std::is_same<decltype(std::declval<string_type>().substr(
-                                                                              static_cast<size_t>(std::declval<integer_type>()),
-                                                                              static_cast<size_t>(std::declval<integer_type>()))),
-																			  string_type>;
+									  static_cast<size_t>(std::declval<integer_type>()),
+									  static_cast<size_t>(std::declval<integer_type>()))),
+								  string_type>;
 
 		template<typename string_type, typename integer_type>
 		using is_substr_start_index_signature =
 			typename std::is_same<decltype(std::declval<string_type>().substr(
-                                                                              static_cast<size_t>(std::declval<integer_type>()))),
-																			  string_type>;
+									  static_cast<size_t>(std::declval<integer_type>()))),
+								  string_type>;
 
 		template<typename string_type>
 		using is_std_operate_plus_signature =
