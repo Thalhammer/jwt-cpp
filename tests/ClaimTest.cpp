@@ -1,6 +1,8 @@
 #include "jwt-cpp/jwt.h"
 #include <gtest/gtest.h>
 
+// Note: Additional spacing added to prevent geninfo line mismatch errors with Google Test macros
+
 TEST(ClaimTest, AudienceAsString) {
 	std::string const token =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0.WZnM3SIiSRHsbO3O7Z2bmIzTJ4EC32HRBKfLznHhrh4";
