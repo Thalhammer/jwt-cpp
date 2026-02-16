@@ -54,7 +54,7 @@ namespace jwt {
 
 			static integer_type as_integer(const value_type& val) {
 				if (get_type(val) != jwt::json::type::integer) throw std::bad_cast();
-				 return val.get_number();
+				return val.get_number();
 			}
 
 			static boolean_type as_boolean(const value_type& val) {
