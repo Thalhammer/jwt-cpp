@@ -1,1 +1,1 @@
-{ "schemaVersion": 1, "label": "macos-latest", "message": "Failing", "color": "red" }
+{ "schemaVersion": 1, "label": "macos-latest", "message": "Passing", "color": "brightgreen" }
