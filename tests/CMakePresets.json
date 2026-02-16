@@ -39,7 +39,7 @@
         },
         {
             "name": "mac-libressl",
-            "inherits": ["debug", "unit-tests"],
+            "inherits": ["unit-tests"],
             "displayName": "macOS Unit Tests (LibreSSL)",
             "description": "This is only available on macOS and requires LibreSSL to be installed via Homebrew. You can install it with `brew install libressl`. You need to manually download the FindLibreSSL.cmake file from the LibreSSL repository and place it in the cmake/ directory of this project.",
             "condition": {
@@ -50,6 +50,15 @@
             "cacheVariables": {
                 "JWT_SSL_LIBRARY": "LibreSSL",
                 "LIBRESSL_ROOT_DIR": "$env{HOMEBREW_PREFIX}/opt/libressl"
+            }
+        },
+        {
+            "name": "linux-libressl",
+            "inherits": ["linux", "unit-tests"],
+            "displayName": "Linux Unit Tests (LibreSSL)",
+            "description": "This is only available on Linux and requires LibreSSL to be installed. You need to manually download the FindLibreSSL.cmake file from the LibreSSL repository and place it in the cmake/ directory of this project.",
+            "cacheVariables": {
+                "JWT_SSL_LIBRARY": "LibreSSL"
             }
         },
         {
@@ -121,6 +130,14 @@
         {
             "name": "mac-libressl",
             "configurePreset": "mac-libressl",
+            "configuration": "Debug",
+            "targets": [
+                "jwt-cpp-test"
+            ]
+        },
+        {
+            "name": "linux-libressl",
+            "configurePreset": "linux-libressl",
             "configuration": "Debug",
             "targets": [
                 "jwt-cpp-test"
