@@ -62,7 +62,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        libressl: ["3.5.3", "3.4.3", "3.3.6"]
+        libressl: ["4.2.1", "4.1.2", "3.9.2"]
     name: LibreSSL ${{ matrix.libressl }}
     steps:
       - uses: actions/checkout@v4

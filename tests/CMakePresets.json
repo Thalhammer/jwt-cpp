@@ -38,6 +38,21 @@
             }
         },
         {
+            "name": "mac-libressl",
+            "inherits": ["debug", "unit-tests"],
+            "displayName": "macOS Unit Tests (LibreSSL)",
+            "description": "This is only available on macOS and requires LibreSSL to be installed via Homebrew. You can install it with `brew install libressl`. You need to manually download the FindLibreSSL.cmake file from the LibreSSL repository and place it in the cmake/ directory of this project.",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Darwin"
+            },
+            "cacheVariables": {
+                "JWT_SSL_LIBRARY": "LibreSSL",
+                "LIBRESSL_ROOT_DIR": "$env{HOMEBREW_PREFIX}/opt/libressl"
+            }
+        },
+        {
             "name": "ci-fuzzing",
             "inherits": ["debug", "linux"],
             "displayName": "Fuzz Testing",
@@ -98,6 +113,14 @@
         {
             "name": "unit-tests",
             "configurePreset": "unit-tests",
+            "configuration": "Debug",
+            "targets": [
+                "jwt-cpp-test"
+            ]
+        },
+        {
+            "name": "mac-libressl",
+            "configurePreset": "mac-libressl",
             "configuration": "Debug",
             "targets": [
                 "jwt-cpp-test"
