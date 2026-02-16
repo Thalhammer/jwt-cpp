@@ -55,7 +55,7 @@ jobs:
         run: cmake --preset unit-tests -DOPENSSL_ROOT_DIR=/tmp -DCMAKE_CXX_FLAGS="-DOPENSSL_NO_DEPRECATED=1" -DCMAKE_C_FLAGS="-DOPENSSL_NO_DEPRECATED=1"
       - run: cmake --build --preset unit-tests
       - name: test
-        run: ctest --preset unit-tests
+        run: ctest --preset unit-tests --output-on-failure
 
   libressl:
     runs-on: ubuntu-latest
@@ -76,7 +76,7 @@ jobs:
         run: cmake --preset unit-tests -DJWT_SSL_LIBRARY:STRING=LibreSSL
       - run: cmake --build --preset unit-tests
       - name: test
-        run: ctest --preset unit-tests
+        run: ctest --preset unit-tests --output-on-failure
 
       - if: github.event_name == 'push' && always()
         uses: ./.github/actions/badge
@@ -106,7 +106,7 @@ jobs:
         run: cmake --preset unit-tests -DJWT_SSL_LIBRARY:STRING=wolfSSL
       - run: cmake --build --preset unit-tests
       - name: test
-        run: ctest --preset unit-tests
+        run: ctest --preset unit-tests --output-on-failure
 
       - if: github.event_name == 'push' && always()
         uses: ./.github/actions/badge
