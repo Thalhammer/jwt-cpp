@@ -1399,7 +1399,7 @@ namespace jwt {
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
 				std::string res(static_cast<size_t>(EVP_MAX_MD_SIZE), '\0');
-				auto len = static_cast<unsigned int>(res.size());
+				unsigned int len = static_cast<unsigned int>(res.size());
 				if (HMAC(md(), secret.data(), static_cast<int>(secret.size()),
 						 reinterpret_cast<const unsigned char*>(data.data()), static_cast<int>(data.size()),
 						 (unsigned char*)res.data(), // NOLINT(google-readability-casting) requires `const_cast`
@@ -1536,8 +1536,9 @@ namespace jwt {
 					ec = error::signature_verification_error::verifyupdate_failed;
 					return;
 				}
+				const unsigned int sig_size = static_cast<unsigned int>(signature.size());
 				auto res = EVP_VerifyFinal(ctx.get(), reinterpret_cast<const unsigned char*>(signature.data()),
-										   static_cast<unsigned int>(signature.size()), pkey.get());
+										   sig_size, pkey.get());
 				if (res != 1) {
 					ec = error::signature_verification_error::verifyfinal_failed;
 					return;
@@ -1674,8 +1675,9 @@ namespace jwt {
 #else
 				const unsigned char* der_sig_data = reinterpret_cast<const unsigned char*>(der_signature.data());
 #endif
+				const unsigned int der_sig_size = static_cast<unsigned int>(der_signature.length());
 				auto res =
-					EVP_DigestVerifyFinal(ctx.get(), der_sig_data, static_cast<unsigned int>(der_signature.length()));
+					EVP_DigestVerifyFinal(ctx.get(), der_sig_data, der_sig_size);
 				if (res == 0) {
 					ec = error::signature_verification_error::invalid_signature;
 					return;
