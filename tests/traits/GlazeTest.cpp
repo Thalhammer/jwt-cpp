@@ -53,9 +53,8 @@ TEST(GlazeTest, SetObject) {
 	jwt::basic_claim<jwt::traits::glaze> object(value);
 	ASSERT_EQ(object.get_type(), jwt::json::type::object);
 
-	auto token = jwt::create<jwt::traits::glaze>()
-					 .set_payload_claim("namespace", object)
-					 .sign(jwt::algorithm::hs256("test"));
+	auto token =
+		jwt::create<jwt::traits::glaze>().set_payload_claim("namespace", object).sign(jwt::algorithm::hs256("test"));
 	ASSERT_EQ(token,
 			  "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lc3BhY2UiOnsiYXBpLXgiOlsxXX19.F8I6I2RcSF98bKa0IpIz09fRZtHr1CWnWKx2za-tFQA");
 }
