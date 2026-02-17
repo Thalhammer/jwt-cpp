@@ -14,13 +14,16 @@ inputs:
 runs:
   using: composite
   steps:
+    # https://github.com/actions/runner-images/blob/b35930c1765585449578960a3e4b17de818ca923/images/ubuntu/scripts/build/configure-environment.sh#L13
+  - run: echo "image_os=$ImageOS" >> "$GITHUB_OUTPUT"
+    id: image_os
+    shell: bash
   - name: Cache CMake
     id: cache-cmake
     uses: actions/cache@v4
     with:
       path: cmake-${{ inputs.version }}
-      #https://github.com/actions/runner-images/blob/b35930c1765585449578960a3e4b17de818ca923/images/ubuntu/scripts/build/configure-environment.sh#L13
-      key: ${{ inputs.cache-key }}-${{ env.ImageOS }}-cmake-${{ inputs.version }}
+      key: ${{ inputs.cache-key }}-${{ steps.image_os.outputs.image_os }}-cmake-${{ inputs.version }}
   - name: Build cmake
     if: steps.cache-cmake.outputs.cache-hit != 'true'
     run: |
