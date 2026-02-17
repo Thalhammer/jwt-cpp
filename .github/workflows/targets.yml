@@ -50,8 +50,11 @@ jobs:
   gcc-12:
     name: GCC 12
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image: [ubuntu:jammy-20231004] # 22.04
     container:
-      image: ubuntu:jammy-20231004 # 22.04 
+      image: ${{ matrix.image }}
     env:
       CC: /usr/bin/gcc-12
       CXX: /usr/bin/g++-12
@@ -64,7 +67,7 @@ jobs:
         with:
           version: "3.26.3"
           url: "https://cmake.org/files/v3.26/cmake-3.26.3.tar.gz"
-          cache-key: ${{ runner.os }}-${{ job.container.image }}
+          cache-key: ${{ runner.os }}-${{ matrix.image }}
 
       - name: setup
         run: |
