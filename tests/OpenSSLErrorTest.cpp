@@ -333,7 +333,7 @@ int EC_KEY_check_key(const EC_KEY* key) {
 #if defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER >= 0x4020000fL
 // LibreSSL 4.2.0+ changed EVP_PKEY_get1_EC_KEY to take const EVP_PKEY*
 EC_KEY* EVP_PKEY_get1_EC_KEY(const EVP_PKEY* pkey) {
-	static EC_KEY* (*origMethod)(const EVP_PKEY * pkey) = nullptr;
+	static EC_KEY* (*origMethod)(const EVP_PKEY* pkey) = nullptr;
 	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_PKEY_get1_EC_KEY"));
 	bool fail = fail_EVP_PKEY_get1_EC_KEY & 1;
 	fail_EVP_PKEY_get1_EC_KEY = fail_EVP_PKEY_get1_EC_KEY >> 1;
