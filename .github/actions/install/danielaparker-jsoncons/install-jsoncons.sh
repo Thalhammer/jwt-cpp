@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Install jsoncons library with specified version
 
 set -e  # Exit on error

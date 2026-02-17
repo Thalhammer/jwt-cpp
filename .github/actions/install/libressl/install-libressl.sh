@@ -1,5 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Install LibreSSL library with specified version
+
+set -e  # Exit on error
 
 # Check if version is provided
 if [[ -z "$1" ]] || [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
@@ -17,9 +19,7 @@ if [[ -z "$1" ]] || [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
     exit 1
 fi
 
-# Configuration
 LIBRESSL_VERSION="$1"
-
 
 wget https://raw.githubusercontent.com/libressl-portable/portable/v${LIBRESSL_VERSION}/FindLibreSSL.cmake -P cmake/
 cd /tmp
