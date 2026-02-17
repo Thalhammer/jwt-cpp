@@ -67,7 +67,7 @@ jobs:
         with:
           version: "3.26.3"
           url: "https://cmake.org/files/v3.26/cmake-3.26.3.tar.gz"
-          cache-key: ${{ runner.os }}-${{ matrix.image }}
+          cache-key-extra: ${{ matrix.image }}
 
       - name: setup
         run: |
