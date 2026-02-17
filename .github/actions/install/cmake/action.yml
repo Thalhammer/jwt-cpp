@@ -19,8 +19,8 @@ runs:
     uses: actions/cache@v4
     with:
       path: cmake-${{ inputs.version }}
-      # https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#job-context
-      key: ${{ inputs.cache-key }}-cmake-${{ inputs.version }}
+      #https://github.com/actions/runner-images/blob/b35930c1765585449578960a3e4b17de818ca923/images/ubuntu/scripts/build/configure-environment.sh#L13
+      key: ${{ inputs.cache-key }}-${{ env.ImageOS }}-cmake-${{ inputs.version }}
   - name: Build cmake
     if: steps.cache-cmake.outputs.cache-hit != 'true'
     run: |
