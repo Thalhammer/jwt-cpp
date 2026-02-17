@@ -15,7 +15,8 @@ runs:
     uses: actions/cache@v4
     with:
       path: cmake-${{ inputs.version }}
-      key: ${{ runner.os }}-${{ runner.arch }}-${{ job.container.image || 'host' }}-cmake-${{ inputs.version }}
+      # https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#job-context
+      key: ${{ runner.os }}-${{ runner.arch }}-${{ job.container.id || 'host' }}-cmake-${{ inputs.version }}
   - name: Build cmake
     if: steps.cache-cmake.outputs.cache-hit != 'true'
     run: |
