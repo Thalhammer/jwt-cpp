@@ -32,6 +32,7 @@ jobs:
         with:
           version: "3.26.3"
           url: "https://cmake.org/files/v3.26/cmake-3.26.3.tar.gz"
+          cache-key: ${{ runner.os }}-${{ job.container.image }}
 
       - name: setup
         run: |
@@ -63,6 +64,7 @@ jobs:
         with:
           version: "3.26.3"
           url: "https://cmake.org/files/v3.26/cmake-3.26.3.tar.gz"
+          cache-key: ${{ runner.os }}-${{ job.container.image }}
 
       - name: setup
         run: |

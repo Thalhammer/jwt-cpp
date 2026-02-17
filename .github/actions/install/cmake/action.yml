@@ -7,6 +7,10 @@ inputs:
   url:
     description: "The corresponding URL to download the source code from"
     required: true
+  cache-key:
+    description: "The key to use for caching the built CMake. Defaults to a key based on the version and runner architecture."
+    required: false
+    default: ${{ runner.os }}-${{ runner.arch }}
 runs:
   using: composite
   steps:
@@ -16,7 +20,7 @@ runs:
     with:
       path: cmake-${{ inputs.version }}
       # https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#job-context
-      key: ${{ runner.os }}-${{ runner.arch }}-${{ job.container.id || 'host' }}-cmake-${{ inputs.version }}
+      key: ${{ inputs.cache-key }}-cmake-${{ inputs.version }}
   - name: Build cmake
     if: steps.cache-cmake.outputs.cache-hit != 'true'
     run: |
