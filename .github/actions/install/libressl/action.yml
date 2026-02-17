@@ -8,12 +8,5 @@ inputs:
 runs:
   using: composite
   steps:
-    - run: |
-        wget https://raw.githubusercontent.com/libressl-portable/portable/v${{ inputs.version }}/FindLibreSSL.cmake -P cmake/
-        cd /tmp
-        wget https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-${{ inputs.version }}.tar.gz
-        tar -zvxf /tmp/libressl-${{ inputs.version }}.tar.gz
-        cd libressl-${{ inputs.version }}
-        ./configure
-        sudo make -j $(nproc) install
+    - run: ${{ github.action_path }}/install-libressl.sh ${{ inputs.version }}
       shell: bash
