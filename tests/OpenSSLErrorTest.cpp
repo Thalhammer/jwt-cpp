@@ -330,6 +330,20 @@ int EC_KEY_check_key(const EC_KEY* key) {
 		return origMethod(key);
 }
 
+#if defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER >= 0x4020000fL
+// LibreSSL 4.2.0+ changed EVP_PKEY_get1_EC_KEY to take const EVP_PKEY*
+EC_KEY* EVP_PKEY_get1_EC_KEY(const EVP_PKEY* pkey) {
+	static EC_KEY* (*origMethod)(const EVP_PKEY* pkey) = nullptr;
+	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_PKEY_get1_EC_KEY"));
+	bool fail = fail_EVP_PKEY_get1_EC_KEY & 1;
+	fail_EVP_PKEY_get1_EC_KEY = fail_EVP_PKEY_get1_EC_KEY >> 1;
+	if (fail)
+		return nullptr;
+	else
+		return origMethod(pkey);
+}
+#else
+// LibreSSL < 4.2.0 uses non-const EVP_PKEY*
 EC_KEY* EVP_PKEY_get1_EC_KEY(EVP_PKEY* pkey) {
 	static EC_KEY* (*origMethod)(EVP_PKEY * pkey) = nullptr;
 	if (origMethod == nullptr) origMethod = (decltype(origMethod))dlsym(RTLD_NEXT, SYMBOL_NAME("EVP_PKEY_get1_EC_KEY"));
@@ -340,6 +354,7 @@ EC_KEY* EVP_PKEY_get1_EC_KEY(EVP_PKEY* pkey) {
 	else
 		return origMethod(pkey);
 }
+#endif
 #endif
 
 ECDSA_SIG* ECDSA_SIG_new(void) {
@@ -1331,16 +1346,23 @@ TEST(OpenSSLErrorTest, EdDSAKey) {
 }
 
 TEST(OpenSSLErrorTest, EdDSACertificate) {
-	std::vector<multitest_entry> mapping{// load_public_key_from_string
-										 {&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
-										 {&fail_BIO_write, 1, jwt::error::rsa_error::load_key_bio_write},
-										 {&fail_PEM_read_bio_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_read},
-										 // extract_pubkey_from_cert
-										 {&fail_BIO_new, 2, jwt::error::rsa_error::create_mem_bio_failed},
-										 {&fail_PEM_read_bio_X509, 1, jwt::error::rsa_error::cert_load_failed},
-										 {&fail_X509_get_pubkey, 1, jwt::error::rsa_error::get_key_failed},
-										 {&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::write_key_failed},
-										 {&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed}};
+	std::vector<multitest_entry> mapping {
+		// load_public_key_from_string
+		{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
+#if !defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER < 0x3070100fL // 3.7.1 - EdDSA support
+			{&fail_BIO_write, 1, jwt::error::rsa_error::load_key_bio_write},
+#else
+			{&fail_BIO_write, 1, jwt::error::rsa_error::write_key_failed},
+#endif
+			{&fail_PEM_read_bio_PUBKEY, 1, jwt::error::rsa_error::load_key_bio_read},
+			// extract_pubkey_from_cert
+			{&fail_BIO_new, 2, jwt::error::rsa_error::create_mem_bio_failed},
+			{&fail_PEM_read_bio_X509, 1, jwt::error::rsa_error::cert_load_failed},
+			{&fail_X509_get_pubkey, 1, jwt::error::rsa_error::get_key_failed},
+			{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::write_key_failed}, {
+			&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed
+		}
+	};
 
 	run_multitest(mapping, [](std::error_code& ec) {
 		try {
