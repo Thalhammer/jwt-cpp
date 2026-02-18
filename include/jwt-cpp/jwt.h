@@ -1909,7 +1909,8 @@ namespace jwt {
 				}
 #else
 				auto res = EVP_DigestVerify(ctx.get(), reinterpret_cast<const unsigned char*>(signature.data()),
-											signature.size(), reinterpret_cast<const unsigned char*>(data.data()), data.size());
+											signature.size(), reinterpret_cast<const unsigned char*>(data.data()),
+											data.size());
 				if (res != 1) {
 					ec = error::signature_verification_error::verifyfinal_failed;
 					return;
