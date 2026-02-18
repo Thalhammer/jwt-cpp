@@ -1625,7 +1625,7 @@ namespace jwt {
 					ec = error::signature_generation_error::signinit_failed;
 					return {};
 				}
-				if (!EVP_DigestUpdate(ctx.get(), data.data(), static_cast<unsigned int>(data.size()))) {
+				if (!EVP_DigestUpdate(ctx.get(), data.data(), data.size())) {
 					ec = error::signature_generation_error::digestupdate_failed;
 					return {};
 				}
@@ -1665,7 +1665,7 @@ namespace jwt {
 					ec = error::signature_verification_error::verifyinit_failed;
 					return;
 				}
-				if (!EVP_DigestUpdate(ctx.get(), data.data(), static_cast<unsigned int>(data.size()))) {
+				if (!EVP_DigestUpdate(ctx.get(), data.data(), data.size())) {
 					ec = error::signature_verification_error::verifyupdate_failed;
 					return;
 				}
@@ -1675,8 +1675,7 @@ namespace jwt {
 #else
 				const unsigned char* der_sig_data = reinterpret_cast<const unsigned char*>(der_signature.data());
 #endif
-				const unsigned int der_sig_size = static_cast<unsigned int>(der_signature.length());
-				auto res = EVP_DigestVerifyFinal(ctx.get(), der_sig_data, der_sig_size);
+				auto res = EVP_DigestVerifyFinal(ctx.get(), der_sig_data, der_signature.length());
 				if (res == 0) {
 					ec = error::signature_verification_error::invalid_signature;
 					return;
@@ -1903,16 +1902,14 @@ namespace jwt {
 					ec = error::signature_verification_error::verifyupdate_failed;
 					return;
 				}
-				const unsigned int sig_size = static_cast<unsigned int>(signature.size());
 				if (EVP_DigestVerifyFinal(ctx.get(), reinterpret_cast<const unsigned char*>(signature.data()),
-										  sig_size) != 1) {
+										  signature.size()) != 1) {
 					ec = error::signature_verification_error::verifyfinal_failed;
 					return;
 				}
 #else
-				const unsigned int sig_size = static_cast<unsigned int>(signature.size());
 				auto res = EVP_DigestVerify(ctx.get(), reinterpret_cast<const unsigned char*>(signature.data()),
-											sig_size, reinterpret_cast<const unsigned char*>(data.data()), data.size());
+											signature.size(), reinterpret_cast<const unsigned char*>(data.data()), data.size());
 				if (res != 1) {
 					ec = error::signature_verification_error::verifyfinal_failed;
 					return;
@@ -1986,7 +1983,7 @@ namespace jwt {
 					return {};
 				}
 #endif
-				if (EVP_DigestUpdate(md_ctx.get(), data.data(), static_cast<unsigned int>(data.size())) != 1) {
+				if (EVP_DigestUpdate(md_ctx.get(), data.data(), data.size()) != 1) {
 					ec = error::signature_generation_error::digestupdate_failed;
 					return {};
 				}
@@ -2035,13 +2032,12 @@ namespace jwt {
 					return;
 				}
 #endif
-				if (EVP_DigestUpdate(md_ctx.get(), data.data(), static_cast<unsigned int>(data.size())) != 1) {
+				if (EVP_DigestUpdate(md_ctx.get(), data.data(), data.size()) != 1) {
 					ec = error::signature_verification_error::verifyupdate_failed;
 					return;
 				}
 
-				const unsigned int sig_size = static_cast<unsigned int>(signature.size());
-				if (EVP_DigestVerifyFinal(md_ctx.get(), (unsigned char*)signature.data(), sig_size) <= 0) {
+				if (EVP_DigestVerifyFinal(md_ctx.get(), (unsigned char*)signature.data(), signature.size()) <= 0) {
 					ec = error::signature_verification_error::verifyfinal_failed;
 					return;
 				}
