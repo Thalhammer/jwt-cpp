@@ -1912,8 +1912,7 @@ namespace jwt {
 #else
 				const unsigned int sig_size = static_cast<unsigned int>(signature.size());
 				auto res = EVP_DigestVerify(ctx.get(), reinterpret_cast<const unsigned char*>(signature.data()),
-											sig_size, reinterpret_cast<const unsigned char*>(data.data()),
-											data.size());
+											sig_size, reinterpret_cast<const unsigned char*>(data.data()), data.size());
 				if (res != 1) {
 					ec = error::signature_verification_error::verifyfinal_failed;
 					return;
