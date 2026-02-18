@@ -44,6 +44,15 @@ if(TARGET jsoncpp_static)
   list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/OspJsoncppTest.cpp)
 endif()
 
+find_package(reflectcpp CONFIG QUIET)
+if(TARGET reflectcpp::reflectcpp)
+  if(NOT DEFINED CMAKE_CXX_STANDARD OR CMAKE_CXX_STANDARD GREATER_EQUAL 20)
+    list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/ReflectCppTest.cpp)
+  else()
+    message(STATUS "jwt-cpp: skipping reflect-cpp tests (CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} < 20)")
+  endif()
+endif()
+
 add_executable(jwt-cpp-test ${TEST_SOURCES})
 
 # NOTE: Don't use space inside a generator expression here, because the function prematurely breaks the expression into
@@ -53,6 +62,7 @@ set(JWT_TESTER_CLANG_FLAGS -Weverything -Wno-c++98-compat -Wno-global-constructo
 target_compile_options(
   jwt-cpp-test PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/W4> $<$<CXX_COMPILER_ID:GNU>:${JWT_TESTER_GCC_FLAGS}>
                        $<$<CXX_COMPILER_ID:Clang>:${JWT_TESTER_CLANG_FLAGS}>)
+
 if(HUNTER_ENABLED)
   target_link_libraries(jwt-cpp-test PRIVATE GTest::gtest GTest::gtest_main)
   # Define a compile define to bypass openssl error tests
@@ -69,7 +79,17 @@ else()
   if(TARGET jsoncpp_static)
     target_link_libraries(jwt-cpp-test PRIVATE jsoncpp_static)
   endif()
+
+  # reflect-cpp: link only when available and only for C++20 builds
+  if(TARGET reflectcpp::reflectcpp AND (NOT DEFINED CMAKE_CXX_STANDARD OR CMAKE_CXX_STANDARD GREATER_EQUAL 20))
+    # If the user didn't set a project-wide standard, request C++20 for this test target.
+    if(NOT DEFINED CMAKE_CXX_STANDARD)
+      target_compile_features(jwt-cpp-test PRIVATE cxx_std_20)
+    endif()
+    target_link_libraries(jwt-cpp-test PRIVATE reflectcpp::reflectcpp)
+  endif()
 endif()
+
 target_link_libraries(jwt-cpp-test PRIVATE jwt-cpp nlohmann_json::nlohmann_json
                                            $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:${CMAKE_DL_LIBS}>)
 
