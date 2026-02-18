@@ -32,7 +32,6 @@ jobs:
         with:
           version: "3.26.3"
           url: "https://cmake.org/files/v3.26/cmake-3.26.3.tar.gz"
-          cache-key: ${{ runner.os }}-${{ job.container.image }}
 
       - name: setup
         run: |
@@ -52,6 +51,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        # This is to have a veriable with the image being used for testing to
+        # be forwarded as part of the cache key since the action internally can not
+        # determine it is being ran inside a docker container
         image: [ubuntu:jammy-20231004] # 22.04
     container:
       image: ${{ matrix.image }}
