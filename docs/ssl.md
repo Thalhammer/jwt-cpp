@@ -16,23 +16,25 @@ cmake . -DJWT_SSL_LIBRARY:STRING=wolfSSL
 
 These are the versions which are currently being tested:
 
-| OpenSSL           | LibreSSL       | wolfSSL        |
-| ----------------- | -------------- | -------------- |
-| ![3.0.19][o3.0]   | ![4.2.1][l4.2] | ![5.1.1][w5.1] |
-| ![3.5.5][o3.5] :star: | ![4.1.2][l4.1] | ![5.2.0][w5.2] |
-| ![3.6.1][o3.6]    | ![3.9.2][l3.9] | ![5.3.0][w5.3] |
+| OpenSSL               | LibreSSL           | wolfSSL        |
+| --------------------- | ------------------ | -------------- |
+| ![3.0.19][o3.0]       | ![4.2.1][l4.2]     | ![5.1.1][w5.1] |
+| ![3.5.5][o3.5] :star: | ![4.1.2][l4.1]     | ![5.2.0][w5.2] |
+| ![3.6.1][o3.6]        | ![3.9.2][l3.9]     | ![5.3.0][w5.3] |
+| ![1.1.1w][o1.1.1]     |                    |                |
+| ![1.0.2u][o1.0.2]     |                    |                |
 
 > [!NOTE]
 > :star: Indicates LTS (Long-Term Support) versions. [OpenSSL versions](https://openssl-library.org/policies/releasestrat/index.html) are supported as follows:
+>
 > - **3.0.19**: Supported until 2026-09-07 (LTS)
 > - **3.5.5**: Supported until 2030-04-08 (LTS)
 > - **3.6.1**: Supported until 2026-11-01
 >
-> A complete list of versions tested in the past can be found [here](https://github.com/Thalhammer/jwt-cpp/tree/badges).
+> A complete list of versions tested in the past can be found [on this branch](https://github.com/Thalhammer/jwt-cpp/tree/badges).
 
 [o1.0.2]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/openssl/1.0.2u/shields.json
-[o1.1.0]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/openssl/1.1.0i/shields.json
-[o1.1.1]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/openssl/1.1.1q/shields.json
+[o1.1.1]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/openssl/1.1.1w/shields.json
 [o3.0]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/openssl/3.0.19/shields.json
 [o3.5]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/openssl/3.5.5/shields.json
 [o3.6]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Thalhammer/jwt-cpp/badges/openssl/3.6.1/shields.json

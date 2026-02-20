@@ -15,8 +15,8 @@ jobs:
           - { tag: "openssl-3.0.19", name: "3.0.19" }
           - { tag: "openssl-3.5.5", name: "3.5.5" }
           - { tag: "openssl-3.6.1", name: "3.6.1" }
-          - { tag: "OpenSSL_1_1_1q", name: "1.1.1q" }
-          - { tag: "OpenSSL_1_1_0i", name: "1.1.0i" } # Do not bump, there's a broken in the autoconfig script and it's not maintained
+          - { tag: "OpenSSL_1_1_1w", name: "1.1.1w" }
+          - { tag: "OpenSSL_1_1_0i", name: "1.1.0i" } # Do not bump, there's a bug in the autoconf script and it's not maintained
           - { tag: "OpenSSL_1_0_2u", name: "1.0.2u" }
           - { tag: "OpenSSL_1_0_1u", name: "1.0.1u" }
     name: OpenSSL ${{ matrix.openssl.name }}
@@ -29,7 +29,7 @@ jobs:
           version: ${{ matrix.openssl.tag }}
 
       - name: configure
-        run: cmake --preset unit-tests -DOPENSSL_ROOT_DIR=/tmp
+        run: cmake --preset unit-tests
       - run: cmake --build --preset unit-tests
       - name: test
         run: ctest --preset unit-tests --output-on-failure
@@ -52,7 +52,7 @@ jobs:
           version: "openssl-3.6.1"
 
       - name: configure
-        run: cmake --preset unit-tests -DOPENSSL_ROOT_DIR=/tmp -DCMAKE_CXX_FLAGS="-DOPENSSL_NO_DEPRECATED=1" -DCMAKE_C_FLAGS="-DOPENSSL_NO_DEPRECATED=1"
+        run: cmake --preset unit-tests -DCMAKE_CXX_FLAGS="-DOPENSSL_NO_DEPRECATED=1" -DCMAKE_C_FLAGS="-DOPENSSL_NO_DEPRECATED=1"
       - run: cmake --build --preset unit-tests
       - name: test
         run: ctest --preset unit-tests --output-on-failure
