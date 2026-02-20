@@ -846,7 +846,7 @@ namespace jwt {
 			bn2raw(const BIGNUM* bn)
 #endif
 		{
-			std::string res(BN_num_bytes(bn), '\0');
+			std::string res(static_cast<size_t>(BN_num_bytes(bn)), '\0');
 			BN_bn2bin(bn, (unsigned char*)res.data()); // NOLINT(google-readability-casting) requires `const_cast`
 			return res;
 		}
@@ -1501,7 +1501,7 @@ namespace jwt {
 					return {};
 				}
 
-				std::string res(EVP_PKEY_size(pkey.get()), '\0');
+				std::string res(static_cast<size_t>(EVP_PKEY_size(pkey.get())), '\0');
 				unsigned int len = 0;
 
 				if (!EVP_SignUpdate(ctx.get(), data.data(), data.size())) {
@@ -1589,7 +1589,7 @@ namespace jwt {
 				}
 				if (!pkey) throw error::ecdsa_exception(error::ecdsa_error::invalid_key);
 
-				size_t keysize = EVP_PKEY_bits(pkey.get());
+				size_t keysize = static_cast<size_t>(EVP_PKEY_bits(pkey.get()));
 				if (keysize != signature_length * 4 && (signature_length != 132 || keysize != 521))
 					throw error::ecdsa_exception(error::ecdsa_error::invalid_key_size);
 			}
@@ -1605,7 +1605,7 @@ namespace jwt {
 			ecdsa(helper::evp_pkey_handle key_pair, const EVP_MD* (*md)(), std::string name, size_t siglen)
 				: pkey(std::move(key_pair)), md(md), alg_name(std::move(name)), signature_length(siglen) {
 				if (!pkey) { throw error::ecdsa_exception(error::ecdsa_error::no_key_provided); }
-				size_t keysize = EVP_PKEY_bits(pkey.get());
+				size_t keysize = static_cast<size_t>(EVP_PKEY_bits(pkey.get()));
 				if (keysize != signature_length * 4 && (signature_length != 132 || keysize != 521))
 					throw error::ecdsa_exception(error::ecdsa_error::invalid_key_size);
 			}
@@ -1780,14 +1780,14 @@ namespace jwt {
 					ec = error::signature_verification_error::signature_encoding_failed;
 					return {};
 				}
-				std::string der_signature(length, '\0');
+				std::string der_signature(static_cast<size_t>(length), '\0');
 				unsigned char* psbuffer = (unsigned char*)der_signature.data();
 				length = i2d_ECDSA_SIG(psig, &psbuffer);
 				if (length < 0) {
 					ec = error::signature_verification_error::signature_encoding_failed;
 					return {};
 				}
-				der_signature.resize(length);
+				der_signature.resize(static_cast<size_t>(length));
 				return der_signature;
 			}
 
@@ -1850,7 +1850,7 @@ namespace jwt {
 					return {};
 				}
 
-				size_t len = EVP_PKEY_size(pkey.get());
+				size_t len = static_cast<size_t>(EVP_PKEY_size(pkey.get()));
 				std::string res(len, '\0');
 
 // LibreSSL and OpenSSL, require the oneshot EVP_DigestSign API.
@@ -1991,7 +1991,7 @@ namespace jwt {
 					return {};
 				}
 
-				size_t size = EVP_PKEY_size(pkey.get());
+				size_t size = static_cast<size_t>(EVP_PKEY_size(pkey.get()));
 				std::string res(size, 0x00);
 				if (EVP_DigestSignFinal(
 						md_ctx.get(),
@@ -3571,7 +3571,7 @@ namespace jwt {
 
 				while (in_next != in_end) {
 					wchar_t wc;
-					std::size_t result = std::mbrtowc(&wc, in_next, in_end - in_next, &state);
+					std::size_t result = std::mbrtowc(&wc, in_next, static_cast<size_t>(in_end - in_next), &state);
 					if (result == static_cast<std::size_t>(-1)) {
 						throw std::runtime_error("encoding error: " + std::string(std::strerror(errno)));
 					} else if (result == static_cast<std::size_t>(-2)) {
