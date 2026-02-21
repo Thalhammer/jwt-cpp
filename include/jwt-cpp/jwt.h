@@ -1401,7 +1401,7 @@ namespace jwt {
 			std::string sign(const std::string& data, std::error_code& ec) const {
 				ec.clear();
 				std::string res(static_cast<size_t>(EVP_MAX_MD_SIZE), '\0');
-				auto len = static_cast<unsigned int>(res.size());
+				unsigned int len = static_cast<unsigned int>(res.size());
 				if (HMAC(md(), secret.data(), static_cast<int>(secret.size()),
 						 reinterpret_cast<const unsigned char*>(data.data()), static_cast<int>(data.size()),
 						 (unsigned char*)res.data(), // NOLINT(google-readability-casting) requires `const_cast`
