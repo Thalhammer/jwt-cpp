@@ -21,6 +21,7 @@ jobs:
           - { name: "nlohmann-json", tag: "3.12.0", version: "v3.12.0" }
           - { name: "kazuho-picojson", tag: "111c9be5188f7350c2eac9ddaedd8cca3d7bf394", version: "111c9be" }
           - { name: "open-source-parsers-jsoncpp", tag: "1.9.6", version: "v1.9.6" }
+          - { name: "stephenberry-glaze", tag: "5.5.5", version: "v5.5.5" }
     steps:
       - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
@@ -56,6 +57,11 @@ jobs:
 
       - if: matrix.target.name == 'open-source-parsers-jsoncpp'
         uses: ./.github/actions/install/open-source-parsers-jsoncpp
+        with:
+          version: ${{matrix.target.tag}}
+
+      - if: matrix.target.name == 'stephenberry-glaze'
+        uses: ./.github/actions/install/stephenberry-glaze
         with:
           version: ${{matrix.target.tag}}
 
