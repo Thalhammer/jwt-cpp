@@ -1403,7 +1403,7 @@ namespace jwt {
 				std::string res(static_cast<size_t>(EVP_MAX_MD_SIZE), '\0');
 				unsigned int len = static_cast<unsigned int>(res.size());
 				if (HMAC(md(), secret.data(), static_cast<int>(secret.size()),
-						 reinterpret_cast<const unsigned char*>(data.data()), static_cast<int>(data.size()),
+						 reinterpret_cast<const unsigned char*>(data.data()), data.size(),
 						 (unsigned char*)res.data(), // NOLINT(google-readability-casting) requires `const_cast`
 						 &len) == nullptr) {
 					ec = error::signature_generation_error::hmac_failed;
