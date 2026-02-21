@@ -1,9 +1,9 @@
-file(DOWNLOAD https://raw.githubusercontent.com/jothepro/doxygen-awesome-css/v2.2.1/doxygen-awesome.css
+file(DOWNLOAD https://raw.githubusercontent.com/jothepro/doxygen-awesome-css/v2.4.1/doxygen-awesome.css
      ${CMAKE_CURRENT_LIST_DIR}/doxygen-awesome.css
-     EXPECTED_HASH SHA256=9b5549928906e9974cc12dcdde9265e016dc2388ec72d5aa3209f4870914a0c8)
-file(DOWNLOAD https://raw.githubusercontent.com/jothepro/doxygen-awesome-css/v2.2.1/doxygen-awesome-sidebar-only.css
+     EXPECTED_HASH SHA256=59d490373159e2cae97784c83463d8bc21fe5d65a4b0edd73048a3dab60f2ee5)
+file(DOWNLOAD https://raw.githubusercontent.com/jothepro/doxygen-awesome-css/v2.4.1/doxygen-awesome-sidebar-only.css
      ${CMAKE_CURRENT_LIST_DIR}/doxygen-awesome-sidebar-only.css
-     EXPECTED_HASH SHA256=998328b27193b7be007a431bc9be1a6f6855ff4d8fa722ecfdfed79a8931409f)
+     EXPECTED_HASH SHA256=dc7ddd235375b71ecb0af920faa6b925ee9445ac617f3bc962b0b0db97da7b4f)
 
 execute_process(COMMAND doxygen --version RESULT_VARIABLE DOXYGEN_VERSION_RESULT
                 OUTPUT_VARIABLE DOXYGEN_VERSION_RAW_OUTPUT)
