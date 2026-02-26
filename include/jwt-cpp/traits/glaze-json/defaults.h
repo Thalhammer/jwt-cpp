@@ -40,7 +40,9 @@ namespace jwt {
 	 * \throw std::invalid_argument Token is not in correct format
 	 * \throw std::runtime_error Base64 decoding failed or invalid json
 	 */
-	inline decoded_jwt<traits::glaze_json> decode(const std::string& token) { return decoded_jwt<traits::glaze_json>(token); }
+	inline decoded_jwt<traits::glaze_json> decode(const std::string& token) {
+		return decoded_jwt<traits::glaze_json>(token);
+	}
 #endif
 
 	/**
@@ -65,7 +67,9 @@ namespace jwt {
 	 * \return Parsed JWK
 	 * \throw std::runtime_error Token is not in correct format
 	 */
-	inline jwk<traits::glaze_json> parse_jwk(const traits::glaze_json::string_type& token) { return jwk<traits::glaze_json>(token); }
+	inline jwk<traits::glaze_json> parse_jwk(const traits::glaze_json::string_type& token) {
+		return jwk<traits::glaze_json>(token);
+	}
 
 	/**
 	 * Parse a jwks
