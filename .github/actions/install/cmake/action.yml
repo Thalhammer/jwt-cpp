@@ -7,15 +7,34 @@ inputs:
   url:
     description: "The corresponding URL to download the source code from"
     required: true
+  cache-key-extra:
+    description: "The key to use for caching the built CMake. Defaults to a key based on the version and runner architecture."
+    required: false
+    default: "host"
 runs:
   using: composite
   steps:
+  # Taken from https://github.com/actions/setup-go/blob/a5f9b05d2d216f63e13859e0d847461041025775/README.md?plain=1#L343-L365
+  - name: Normalize runner architecture (Linux/macOS)
+    if: runner.os != 'Windows'
+    shell: bash
+    run: echo "ARCH=$(echo '${{ runner.arch }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+  - name: Normalize runner architecture (Windows)
+    if: runner.os == 'Windows'
+    shell: pwsh
+    run: |
+      $arch = "${{ runner.arch }}".ToLower()
+      echo "ARCH=$arch" | Out-File $env:GITHUB_ENV -Append
+  - name: Set cache OS suffix # Might not be set when inside a container
+    shell: bash
+    run: echo "CACHE_OS_SUFFIX=$ImageOS-" >> $GITHUB_ENV
   - name: Cache CMake
     id: cache-cmake
     uses: actions/cache@v4
     with:
       path: cmake-${{ inputs.version }}
-      key: ${{ runner.name }}-${{ runner.os }}-${{ runner.arch }}-${{ job.container.id }}-cmake-${{ inputs.version }}
+      key: ${{ runner.os }}-${{ env.ARCH }}-${{ env.CACHE_OS_SUFFIX }}${{ inputs.cache-key-extra }}-cmake-${{ inputs.version }}
+
   - name: Build cmake
     if: steps.cache-cmake.outputs.cache-hit != 'true'
     run: |

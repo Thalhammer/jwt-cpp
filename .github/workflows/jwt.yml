@@ -51,8 +51,8 @@ jobs:
       fail-fast: false
       matrix:
         openssl:
-          - { tag: "openssl-3.0.5", name: "3.0.5" }
-          - { tag: "OpenSSL_1_1_1q", name: "1.1.1q" }
+          - { tag: "openssl-3.6.1", name: "3.6.1" }
+          - { tag: "OpenSSL_1_1_1w", name: "1.1.1w" }
     steps:
       - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
