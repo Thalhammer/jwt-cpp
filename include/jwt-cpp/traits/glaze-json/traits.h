@@ -1,11 +1,10 @@
-#ifndef JWT_CPP_GLAZE_TRAITS_H
-#define JWT_CPP_GLAZE_TRAITS_H
+#ifndef JWT_CPP_GLAZE_JSON_TRAITS_H
+#define JWT_CPP_GLAZE_JSON_TRAITS_H
 
 #define JWT_DISABLE_PICOJSON
 #include "jwt-cpp/jwt.h"
 
-#include <cmath>
-#include <glaze/glaze.hpp>
+#include <glaze/json.hpp>
 
 namespace jwt {
 	/**
@@ -13,7 +12,7 @@ namespace jwt {
 	*/
 	namespace traits {
 		/// basic_claim's JSON trait implementation for Glaze
-		struct glaze {
+		struct glaze_json {
 			using value_type = glz::generic;
 			using object_type = value_type::object_t;
 			using array_type = value_type::array_t;
@@ -81,4 +80,4 @@ namespace jwt {
 	} // namespace traits
 } // namespace jwt
 
-#endif // JWT_CPP_BOOSTJSON_TRAITS_H
+#endif // JWT_CPP_GLAZE_JSON_TRAITS_H

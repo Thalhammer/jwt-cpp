@@ -1,5 +1,5 @@
-#ifndef JWT_CPP_GLAZE_DEFAULTS_H
-#define JWT_CPP_GLAZE_DEFAULTS_H
+#ifndef JWT_CPP_GLAZE_JSON_DEFAULTS_H
+#define JWT_CPP_GLAZE_JSON_DEFAULTS_H
 
 #ifndef JWT_DISABLE_PICOJSON
 #define JWT_DISABLE_PICOJSON
@@ -14,22 +14,22 @@ namespace jwt {
 	 * This type is the specialization of the \ref basic_claim class which
 	 * uses the standard template types.
 	 */
-	using claim = basic_claim<traits::glaze>;
+	using claim = basic_claim<traits::glaze_json>;
 
 	/**
 	 * Create a verifier using the default clock
 	 * \return verifier instance
 	 */
-	inline verifier<default_clock, traits::glaze> verify() {
-		return verify<default_clock, traits::glaze>(default_clock{});
+	inline verifier<default_clock, traits::glaze_json> verify() {
+		return verify<default_clock, traits::glaze_json>(default_clock{});
 	}
 
 	/**
 	 * Create a builder using the default clock
 	 * \return builder instance to create a new token
 	 */
-	inline builder<default_clock, traits::glaze> create() {
-		return builder<default_clock, traits::glaze>(default_clock{});
+	inline builder<default_clock, traits::glaze_json> create() {
+		return builder<default_clock, traits::glaze_json>(default_clock{});
 	}
 
 #ifndef JWT_DISABLE_BASE64
@@ -40,7 +40,7 @@ namespace jwt {
 	 * \throw std::invalid_argument Token is not in correct format
 	 * \throw std::runtime_error Base64 decoding failed or invalid json
 	 */
-	inline decoded_jwt<traits::glaze> decode(const std::string& token) { return decoded_jwt<traits::glaze>(token); }
+	inline decoded_jwt<traits::glaze_json> decode(const std::string& token) { return decoded_jwt<traits::glaze_json>(token); }
 #endif
 
 	/**
@@ -55,8 +55,8 @@ namespace jwt {
 	 * \throw std::runtime_error Base64 decoding failed or invalid json
 	 */
 	template<typename Decode>
-	decoded_jwt<traits::glaze> decode(const std::string& token, Decode decode) {
-		return decoded_jwt<traits::glaze>(token, decode);
+	decoded_jwt<traits::glaze_json> decode(const std::string& token, Decode decode) {
+		return decoded_jwt<traits::glaze_json>(token, decode);
 	}
 
 	/**
@@ -65,7 +65,7 @@ namespace jwt {
 	 * \return Parsed JWK
 	 * \throw std::runtime_error Token is not in correct format
 	 */
-	inline jwk<traits::glaze> parse_jwk(const traits::glaze::string_type& token) { return jwk<traits::glaze>(token); }
+	inline jwk<traits::glaze_json> parse_jwk(const traits::glaze_json::string_type& token) { return jwk<traits::glaze_json>(token); }
 
 	/**
 	 * Parse a jwks
@@ -73,15 +73,15 @@ namespace jwt {
 	 * \return Parsed JWKs
 	 * \throw std::runtime_error Token is not in correct format
 	 */
-	inline jwks<traits::glaze> parse_jwks(const traits::glaze::string_type& token) {
-		return jwks<traits::glaze>(token);
+	inline jwks<traits::glaze_json> parse_jwks(const traits::glaze_json::string_type& token) {
+		return jwks<traits::glaze_json>(token);
 	}
 
 	/**
 	 * This type is the specialization of the \ref verify_ops::verify_context class which
 	 * uses the standard template types.
 	 */
-	using verify_context = verify_ops::verify_context<traits::glaze>;
+	using verify_context = verify_ops::verify_context<traits::glaze_json>;
 } // namespace jwt
 
-#endif // JWT_CPP_BOOST_JSON_DEFAULTS_H
+#endif // JWT_CPP_GLAZE_JSON_DEFAULTS_H
