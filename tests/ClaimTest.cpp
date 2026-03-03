@@ -3,7 +3,14 @@
 
 // Note: Additional spacing added to prevent geninfo line mismatch errors with Google Test macros
 
-TEST(ClaimTest, AudienceAsString) {
+template<typename Trait>
+class ClaimTest : public ::testing::Test {};
+
+// Include the generated trait type list for parameterized testing
+#include "traits_typelist.h"
+TYPED_TEST_SUITE(ClaimTest, AllTraitTypes);
+
+TYPED_TEST(ClaimTest, AudienceAsString) {
 	std::string const token =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0.WZnM3SIiSRHsbO3O7Z2bmIzTJ4EC32HRBKfLznHhrh4";
 	auto decoded = jwt::decode(token);
@@ -27,13 +34,13 @@ TEST(ClaimTest, AudienceAsString) {
 	ASSERT_EQ("test", *aud.begin());
 }
 
-TEST(ClaimTest, SetAudienceAsString) {
+TYPED_TEST(ClaimTest, SetAudienceAsString) {
 	auto token = jwt::create().set_type("JWT").set_audience("test").sign(jwt::algorithm::hs256("test"));
 	ASSERT_EQ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0.ny5Fa0vzAg7tNL95KWg_ecBNd3XP3tdAzq0SFA6diY4",
 			  token);
 }
 
-TEST(ClaimTest, AudienceAsSet) {
+TYPED_TEST(ClaimTest, AudienceAsSet) {
 	std::string const token = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJhdWQiOlsidGVzdCIsInRlc3QyIl19.";
 	auto decoded = jwt::decode(token);
 
@@ -57,7 +64,7 @@ TEST(ClaimTest, AudienceAsSet) {
 	ASSERT_TRUE(aud.count("test2") > 0);
 }
 
-TEST(ClaimTest, SetAudienceAsSet) {
+TYPED_TEST(ClaimTest, SetAudienceAsSet) {
 	auto token = jwt::create()
 					 .set_type("JWT")
 					 .set_audience({{picojson::value("test"), picojson::value("test2")}})
@@ -65,14 +72,14 @@ TEST(ClaimTest, SetAudienceAsSet) {
 	ASSERT_EQ("eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJhdWQiOlsidGVzdCIsInRlc3QyIl19.", token);
 }
 
-TEST(ClaimTest, SetArray) {
+TYPED_TEST(ClaimTest, SetArray) {
 	std::vector<int64_t> vect = {100, 20, 10};
 	auto token =
 		jwt::create().set_payload_claim("test", jwt::claim(vect.begin(), vect.end())).sign(jwt::algorithm::none{});
 	ASSERT_EQ(token, "eyJhbGciOiJub25lIn0.eyJ0ZXN0IjpbMTAwLDIwLDEwXX0.");
 }
 
-TEST(ClaimTest, SetObject) {
+TYPED_TEST(ClaimTest, SetObject) {
 	std::istringstream iss{"{\"api-x\": [1]}"};
 	jwt::claim object;
 	iss >> object;
@@ -83,19 +90,19 @@ TEST(ClaimTest, SetObject) {
 			  "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lc3BhY2UiOnsiYXBpLXgiOlsxXX19.F8I6I2RcSF98bKa0IpIz09fRZtHr1CWnWKx2za-tFQA");
 }
 
-TEST(ClaimTest, SetAlgorithm) {
+TYPED_TEST(ClaimTest, SetAlgorithm) {
 	auto token = jwt::create().set_algorithm("test").sign(jwt::algorithm::none{});
 
 	auto decoded_token = jwt::decode(token);
 	ASSERT_EQ(decoded_token.get_algorithm(), "test");
 }
 
-TEST(ClaimTest, AsInt) {
+TYPED_TEST(ClaimTest, AsInt) {
 	jwt::claim c(picojson::value(static_cast<int64_t>(10)));
 	ASSERT_EQ(c.as_integer(), 10);
 }
 
-TEST(ClaimTest, AsDate) {
+TYPED_TEST(ClaimTest, AsDate) {
 	jwt::claim c(picojson::value(static_cast<int64_t>(10)));
 	ASSERT_EQ(c.as_date(), std::chrono::system_clock::from_time_t(10));
 }
