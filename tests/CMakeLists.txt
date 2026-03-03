@@ -30,6 +30,14 @@ set(AVAILABLE_TRAITS)
 set(AVAILABLE_TRAIT_TYPES)
 set(AVAILABLE_TRAIT_NAMES)
 
+# PicoJSON is always available (required by testing)
+list(APPEND AVAILABLE_TRAIT_NAMES "picojson")
+list(APPEND AVAILABLE_TRAIT_TYPES "::jwt::traits::kazuho_picojson")
+
+# nlohmann_json is always available (required by testing)
+list(APPEND AVAILABLE_TRAIT_NAMES "nlohmann_json")
+list(APPEND AVAILABLE_TRAIT_TYPES "::jwt::traits::nlohmann_json")
+
 # Check for each trait library and add to available list
 find_package(jsoncons CONFIG)
 if(TARGET jsoncons)
@@ -54,14 +62,6 @@ if(TARGET jsoncpp_static)
   list(APPEND AVAILABLE_TRAIT_NAMES "jsoncpp")
   list(APPEND AVAILABLE_TRAIT_TYPES "::jwt::traits::open_source_parsers_jsoncpp")
 endif()
-
-# nlohmann_json is always available (required by testing)
-list(PREPEND AVAILABLE_TRAIT_NAMES "nlohmann_json")
-list(PREPEND AVAILABLE_TRAIT_TYPES "::jwt::traits::nlohmann_json")
-
-# PicoJSON is always available (required by testing)
-list(PREPEND AVAILABLE_TRAIT_NAMES "picojson")
-list(PREPEND AVAILABLE_TRAIT_TYPES "::jwt::traits::kazuho_picojson")
 
 message(STATUS "jwt-cpp: Generating traits_typelist.h with ${AVAILABLE_TRAIT_NAMES}")
 
