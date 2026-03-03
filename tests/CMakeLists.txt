@@ -22,9 +22,9 @@ if(NOT TARGET GTest::gtest_main)
   fetchcontent_makeavailable(googletest)
 endif()
 
-# Tests are built with multiple traits using Google Test's TYPED_TEST mechanism.
-# Each test is parameterized to run against all available JSON trait implementations.
-# This enables the trait discovery and wrapper file generation logic below.
+# Tests are built with multiple traits using Google Test's TYPED_TEST mechanism. Each test is parameterized to run
+# against all available JSON trait implementations. This enables the trait discovery and wrapper file generation logic
+# below.
 
 set(AVAILABLE_TRAITS)
 set(AVAILABLE_TRAIT_TYPES)
@@ -112,16 +112,11 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/traits_typelist.h" "${TRAITS_TYPELIST_CO
 
 # Collect all test sources - primary test files provide the test implementations
 set(TEST_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/BaseTest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/ClaimTest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Keys.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/HelperTest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/TestMain.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/TokenFormatTest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/TokenTest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/JwksTest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/OpenSSLErrorTest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/traits/NlohmannTest.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/BaseTest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/ClaimTest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Keys.cpp ${CMAKE_CURRENT_SOURCE_DIR}/HelperTest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestMain.cpp ${CMAKE_CURRENT_SOURCE_DIR}/TokenFormatTest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/TokenTest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/JwksTest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/OpenSSLErrorTest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/traits/NlohmannTest.cpp)
 
 # Add trait-specific test files (legacy, for additional trait-specific tests)
 if(TARGET jsoncons)
