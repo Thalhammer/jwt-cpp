@@ -178,8 +178,8 @@ add_custom_target(jwt-cpp-test-run COMMAND jwt-cpp-test)
 if(JWT_ENABLE_COVERAGE)
   include("code-coverage")
   setup_coverage(jwt-cpp-test)
-  set(COVERAGE_EXCLUDES "/usr/**" "/home/*/.conan/**" "*test*" "*build*" "**/nlohmann/json.hpp"
-                        "**/picojson/picojson.h" "*boost*" "*jsoncons*")
+  set(LCOV_ARGS "--ignore-errors" "mismatch,mismatch")
+  set(COVERAGE_EXCLUDES "/usr/**" "*test*" "*build*" "**/picojson.h")
   setup_target_for_coverage_lcov(NAME coverage EXECUTABLE ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-test LCOV_ARGS
                                  "--ignore-errors;mismatch;--ignore-errors;unused")
 endif()
