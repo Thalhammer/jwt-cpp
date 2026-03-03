@@ -25,7 +25,7 @@ jobs:
         env:
           # https://github.com/linux-test-project/lcov/issues/316#issuecomment-2304694266
           # The affected feature sare not used, the lcov and gcov dont match (sufficiently) in github actions runners
-          LCOV_OPTS: "--ignore-errors mismatch"
+          LCOV_OPTS: "--ignore-errors mismatch,mismatch"
 
       - uses: coverallsapp/github-action@v2
         with:
