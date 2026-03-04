@@ -64,8 +64,8 @@ if(${JWT_SSL_LIBRARY} MATCHES "OpenSSL")
 elseif(${JWT_SSL_LIBRARY} MATCHES "LibreSSL")
   find_package(LibreSSL 3.0.0 REQUIRED)
 elseif(${JWT_SSL_LIBRARY} MATCHES "wolfSSL")
-  find_package(PkgConfig REQUIRED)
-  pkg_check_modules(wolfssl REQUIRED IMPORTED_TARGET wolfssl)
+  find_package(wolfssl 5.8.4 REQUIRED)
+  get_target_property(wolfssl_INCLUDE_DIRS wolfssl INCLUDE_DIRECTORIES)
   list(TRANSFORM wolfssl_INCLUDE_DIRS APPEND "/wolfssl") # This is required to access OpenSSL compatibility API
 endif()
 
@@ -122,7 +122,7 @@ if(${JWT_SSL_LIBRARY} MATCHES "LibreSSL")
 endif()
 
 if(${JWT_SSL_LIBRARY} MATCHES "wolfSSL")
-  target_link_libraries(jwt-cpp INTERFACE PkgConfig::wolfssl)
+  target_link_libraries(jwt-cpp INTERFACE wolfssl)
   # This is required to access OpenSSL compatibility API
   target_include_directories(jwt-cpp INTERFACE ${wolfssl_INCLUDE_DIRS})
   # This flag is required to have the mandatory header included automatically 
