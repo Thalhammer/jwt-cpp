@@ -1,6 +1,13 @@
 #include "jwt-cpp/jwt.h"
 #include <gtest/gtest.h>
 
+template<typename Trait>
+class TokenTest : public ::testing::Test {};
+
+// Include the generated trait type list for parameterized testing
+#include "traits_typelist.h"
+TYPED_TEST_SUITE(TokenTest, AllTraitTypes);
+
 inline namespace test_keys {
 	extern std::string rsa_priv_key;
 	extern std::string rsa_pub_key;
@@ -26,7 +33,7 @@ inline namespace test_keys {
 	extern std::string ed448_pub_key_invalid;
 } // namespace test_keys
 
-TEST(TokenTest, DecodeToken) {
+TYPED_TEST(TokenTest, DecodeToken) {
 	std::string token =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
 	auto decoded = jwt::decode(token);
@@ -48,18 +55,18 @@ TEST(TokenTest, DecodeToken) {
 	ASSERT_EQ("auth0", decoded.get_issuer());
 }
 
-TEST(TokenTest, CreateToken) {
+TYPED_TEST(TokenTest, CreateToken) {
 	auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(jwt::algorithm::none{});
 	ASSERT_EQ("eyJhbGciOiJub25lIiwidHlwIjoiSldTIn0.eyJpc3MiOiJhdXRoMCJ9.", token);
 }
 
-TEST(TokenTest, CreateTokenHS256) {
+TYPED_TEST(TokenTest, CreateTokenHS256) {
 	auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(jwt::algorithm::hs256{"secret"});
 	ASSERT_EQ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE",
 			  token);
 }
 
-TEST(TokenTest, CreateTokenRS256) {
+TYPED_TEST(TokenTest, CreateTokenRS256) {
 	auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(
 		jwt::algorithm::rs256(rsa_pub_key, rsa_priv_key, "", ""));
 
@@ -71,7 +78,7 @@ TEST(TokenTest, CreateTokenRS256) {
 		token);
 }
 
-TEST(TokenTest, CreateTokenEvpPkeyRS256) {
+TYPED_TEST(TokenTest, CreateTokenEvpPkeyRS256) {
 	auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(
 		jwt::algorithm::rsa(jwt::helper::load_private_key_from_string(rsa_priv_key), EVP_sha256, "RS256"));
 
@@ -84,7 +91,7 @@ TEST(TokenTest, CreateTokenEvpPkeyRS256) {
 }
 
 #if !defined(JWT_OPENSSL_1_0_0)
-TEST(TokenTest, CreateTokenRS256Encrypted) {
+TYPED_TEST(TokenTest, CreateTokenRS256Encrypted) {
 	// openssl genrsa -aes256 -out private.pem 2048
 	// openssl rsa -in private.pem -pubout -out public.pem
 	const std::string rsa_passphrase = "helloworld";
@@ -140,7 +147,7 @@ ixip+DkPtcbSsFjn2bVnknYYluk+Qupw/kWGxyFbvC1sYhn1iNwFv0g=
 }
 #endif
 
-TEST(TokenTest, CreateTokenRS512) {
+TYPED_TEST(TokenTest, CreateTokenRS512) {
 	auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(
 		jwt::algorithm::rs512(rsa512_pub_key, rsa512_priv_key, "", ""));
 
@@ -150,7 +157,7 @@ TEST(TokenTest, CreateTokenRS512) {
 			  token);
 }
 
-TEST(TokenTest, CreateTokenPS256) {
+TYPED_TEST(TokenTest, CreateTokenPS256) {
 	auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(
 		jwt::algorithm::ps256(rsa_pub_key, rsa_priv_key, "", ""));
 
@@ -158,7 +165,7 @@ TEST(TokenTest, CreateTokenPS256) {
 	// Can't do simple check for equal since pss adds random salt.
 }
 
-TEST(TokenTest, CreateTokenPS384) {
+TYPED_TEST(TokenTest, CreateTokenPS384) {
 	auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(
 		jwt::algorithm::ps384(rsa_pub_key, rsa_priv_key, "", ""));
 
@@ -166,7 +173,7 @@ TEST(TokenTest, CreateTokenPS384) {
 	// Can't do simple check for equal since pss adds random salt.
 }
 
-TEST(TokenTest, CreateTokenPS512) {
+TYPED_TEST(TokenTest, CreateTokenPS512) {
 	auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(
 		jwt::algorithm::ps512(rsa_pub_key, rsa_priv_key, "", ""));
 
@@ -174,7 +181,7 @@ TEST(TokenTest, CreateTokenPS512) {
 	// Can't do simple check for equal since pss adds random salt.
 }
 
-TEST(TokenTest, CreateTokenES256) {
+TYPED_TEST(TokenTest, CreateTokenES256) {
 
 	auto token =
 		jwt::create().set_issuer("auth0").set_type("JWS").sign(jwt::algorithm::es256("", ecdsa256_priv_key, "", ""));
@@ -187,7 +194,7 @@ TEST(TokenTest, CreateTokenES256) {
 	ASSERT_NO_THROW(jwt::verify().allow_algorithm(jwt::algorithm::es256(ecdsa256_pub_key, "", "", "")).verify(decoded));
 }
 
-TEST(TokenTest, CreateTokenEvpPkeyES256) {
+TYPED_TEST(TokenTest, CreateTokenEvpPkeyES256) {
 
 	auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(jwt::algorithm::ecdsa(
 		jwt::helper::load_private_ec_key_from_string(ecdsa256_priv_key), EVP_sha256, "ES256", 64));
@@ -200,7 +207,7 @@ TEST(TokenTest, CreateTokenEvpPkeyES256) {
 	ASSERT_NO_THROW(jwt::verify().allow_algorithm(jwt::algorithm::es256(ecdsa256_pub_key, "", "", "")).verify(decoded));
 }
 
-TEST(TokenTest, CreateTokenEvpPkeyES256NoPrivate) {
+TYPED_TEST(TokenTest, CreateTokenEvpPkeyES256NoPrivate) {
 	ASSERT_THROW(
 		[]() {
 			auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(jwt::algorithm::ecdsa(
@@ -209,7 +216,7 @@ TEST(TokenTest, CreateTokenEvpPkeyES256NoPrivate) {
 		jwt::error::signature_generation_exception);
 }
 
-TEST(TokenTest, CreateTokenES256NoPrivate) {
+TYPED_TEST(TokenTest, CreateTokenES256NoPrivate) {
 	ASSERT_THROW(
 		[]() {
 			auto token = jwt::create().set_issuer("auth0").set_type("JWS").sign(
@@ -218,7 +225,7 @@ TEST(TokenTest, CreateTokenES256NoPrivate) {
 		jwt::error::signature_generation_exception);
 }
 
-TEST(TokenTest, CreateTokenES384) {
+TYPED_TEST(TokenTest, CreateTokenES384) {
 
 	auto token =
 		jwt::create().set_issuer("auth0").set_type("JWS").sign(jwt::algorithm::es384("", ecdsa384_priv_key, "", ""));
@@ -231,7 +238,7 @@ TEST(TokenTest, CreateTokenES384) {
 	ASSERT_NO_THROW(jwt::verify().allow_algorithm(jwt::algorithm::es384(ecdsa384_pub_key, "", "", "")).verify(decoded));
 }
 
-TEST(TokenTest, CreateTokenES384NoPrivate) {
+TYPED_TEST(TokenTest, CreateTokenES384NoPrivate) {
 
 	ASSERT_THROW(
 		[]() {
@@ -241,7 +248,7 @@ TEST(TokenTest, CreateTokenES384NoPrivate) {
 		jwt::error::signature_generation_exception);
 }
 
-TEST(TokenTest, CreateTokenES512) {
+TYPED_TEST(TokenTest, CreateTokenES512) {
 
 	auto token =
 		jwt::create().set_issuer("auth0").set_type("JWS").sign(jwt::algorithm::es512("", ecdsa521_priv_key, "", ""));
@@ -254,7 +261,7 @@ TEST(TokenTest, CreateTokenES512) {
 	ASSERT_NO_THROW(jwt::verify().allow_algorithm(jwt::algorithm::es512(ecdsa521_pub_key, "", "", "")).verify(decoded));
 }
 
-TEST(TokenTest, CreateTokenES512NoPrivate) {
+TYPED_TEST(TokenTest, CreateTokenES512NoPrivate) {
 
 	ASSERT_THROW(
 		[]() {
@@ -265,7 +272,7 @@ TEST(TokenTest, CreateTokenES512NoPrivate) {
 }
 
 #if !defined(JWT_OPENSSL_1_0_0) && !defined(JWT_OPENSSL_1_1_0)
-TEST(TokenTest, CreateTokenEd25519) {
+TYPED_TEST(TokenTest, CreateTokenEd25519) {
 
 	auto token =
 		jwt::create().set_issuer("auth0").set_type("JWS").sign(jwt::algorithm::ed25519("", ed25519_priv_key, "", ""));
@@ -280,7 +287,7 @@ TEST(TokenTest, CreateTokenEd25519) {
 }
 
 #if !defined(LIBRESSL_VERSION_NUMBER)
-TEST(TokenTest, CreateTokenEd448) {
+TYPED_TEST(TokenTest, CreateTokenEd448) {
 
 	auto token =
 		jwt::create().set_issuer("auth0").set_type("JWS").sign(jwt::algorithm::ed448("", ed448_priv_key, "", ""));
@@ -295,7 +302,7 @@ TEST(TokenTest, CreateTokenEd448) {
 #endif // !LIBRESSL_VERSION_NUMBER
 #endif // !JWT_OPENSSL_1_0_0 && !JWT_OPENSSL_1_1_0
 
-TEST(TokenTest, VerifyTokenWrongAlgorithm) {
+TYPED_TEST(TokenTest, VerifyTokenWrongAlgorithm) {
 	std::string token =
 		"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
 		"HAZCTQxa1Q8NppnpYV-hlqxh-X3Bb0JOePTGzjynpNZoJh2aHZD-GKpZt7OO1Zp8AFWPZ3p8Cahq8536fD8RiBES9jRsvChZvOqA7gMcFc4"
@@ -309,7 +316,7 @@ TEST(TokenTest, VerifyTokenWrongAlgorithm) {
 	ASSERT_THROW(verify.verify(decoded_token), jwt::error::token_verification_exception);
 }
 
-TEST(TokenTest, VerifyTokenNoneFail) {
+TYPED_TEST(TokenTest, VerifyTokenNoneFail) {
 	// None algorithm should not have a signature
 	std::string token = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpYXQiOjE1OTUyNjc1MTZ9.cmFuZG9tc2ln";
 
@@ -320,7 +327,7 @@ TEST(TokenTest, VerifyTokenNoneFail) {
 	ASSERT_THROW(verify.verify(decoded_token), jwt::error::signature_verification_exception);
 }
 
-TEST(TokenTest, VerifyTokenRS256FailNoKey) {
+TYPED_TEST(TokenTest, VerifyTokenRS256FailNoKey) {
 	ASSERT_THROW(
 		[]() {
 			auto verify = jwt::verify().allow_algorithm(jwt::algorithm::rs256("", "", "", "")).with_issuer("auth0");
@@ -328,7 +335,7 @@ TEST(TokenTest, VerifyTokenRS256FailNoKey) {
 		jwt::error::rsa_exception);
 }
 
-TEST(TokenTest, VerifyTokenRS256) {
+TYPED_TEST(TokenTest, VerifyTokenRS256) {
 	std::string token =
 		"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
 		"HAZCTQxa1Q8NppnpYV-hlqxh-X3Bb0JOePTGzjynpNZoJh2aHZD-GKpZt7OO1Zp8AFWPZ3p8Cahq8536fD8RiBES9jRsvChZvOqA7gMcFc4"
@@ -343,7 +350,7 @@ TEST(TokenTest, VerifyTokenRS256) {
 	verify.verify(decoded_token);
 }
 
-TEST(TokenTest, VerifyTokenEvpPkeyRS256) {
+TYPED_TEST(TokenTest, VerifyTokenEvpPkeyRS256) {
 	std::string token =
 		"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
 		"HAZCTQxa1Q8NppnpYV-hlqxh-X3Bb0JOePTGzjynpNZoJh2aHZD-GKpZt7OO1Zp8AFWPZ3p8Cahq8536fD8RiBES9jRsvChZvOqA7gMcFc4"
@@ -360,7 +367,7 @@ TEST(TokenTest, VerifyTokenEvpPkeyRS256) {
 	verify.verify(decoded_token);
 }
 
-TEST(TokenTest, VerifyTokenRS256PublicOnly) {
+TYPED_TEST(TokenTest, VerifyTokenRS256PublicOnly) {
 	std::string token =
 		"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
 		"HAZCTQxa1Q8NppnpYV-hlqxh-X3Bb0JOePTGzjynpNZoJh2aHZD-GKpZt7OO1Zp8AFWPZ3p8Cahq8536fD8RiBES9jRsvChZvOqA7gMcFc4"
@@ -374,7 +381,7 @@ TEST(TokenTest, VerifyTokenRS256PublicOnly) {
 	verify.verify(decoded_token);
 }
 
-TEST(TokenTest, VerifyTokenEvpPkeyRS256PublicOnly) {
+TYPED_TEST(TokenTest, VerifyTokenEvpPkeyRS256PublicOnly) {
 	std::string token =
 		"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
 		"HAZCTQxa1Q8NppnpYV-hlqxh-X3Bb0JOePTGzjynpNZoJh2aHZD-GKpZt7OO1Zp8AFWPZ3p8Cahq8536fD8RiBES9jRsvChZvOqA7gMcFc4"
@@ -391,7 +398,7 @@ TEST(TokenTest, VerifyTokenEvpPkeyRS256PublicOnly) {
 	verify.verify(decoded_token);
 }
 
-TEST(TokenTest, VerifyTokenRS256PublicOnlyEncrypted) {
+TYPED_TEST(TokenTest, VerifyTokenRS256PublicOnlyEncrypted) {
 	// openssl genrsa -aes256 -out private.pem 2048
 	// openssl rsa -in private.pem -pubout -out public.pem
 	const std::string rsa_passphrase = "helloworld";
@@ -419,7 +426,7 @@ JwIDAQAB
 	verify.verify(decoded_token);
 }
 
-TEST(TokenTest, VerifyTokenRS256PrivateOnly) {
+TYPED_TEST(TokenTest, VerifyTokenRS256PrivateOnly) {
 	std::string token =
 		"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
 		"HAZCTQxa1Q8NppnpYV-hlqxh-X3Bb0JOePTGzjynpNZoJh2aHZD-GKpZt7OO1Zp8AFWPZ3p8Cahq8536fD8RiBES9jRsvChZvOqA7gMcFc4"
@@ -433,7 +440,7 @@ TEST(TokenTest, VerifyTokenRS256PrivateOnly) {
 	verify.verify(decoded_token);
 }
 
-TEST(TokenTest, VerifyTokenRS256Fail) {
+TYPED_TEST(TokenTest, VerifyTokenRS256Fail) {
 	std::string token =
 		"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
 		"HAZCTQxa1Q8NppnpYV-hlqxh-X3Bb0JOePTGzjynpNZoJh2aHZD-GKpZt7OO1Zp8AFWPZ3p8Cahq8536fD8RiBES9jRsvChZvOqA7gMcFc4"
@@ -448,7 +455,7 @@ TEST(TokenTest, VerifyTokenRS256Fail) {
 	ASSERT_THROW(verify.verify(decoded_token), jwt::error::signature_verification_exception);
 }
 
-TEST(TokenTest, VerifyTokenRS512) {
+TYPED_TEST(TokenTest, VerifyTokenRS512) {
 	std::string token =
 		"eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.GZhnjtsvBl2_KDSxg4JW6xnmNjr2mWhYSZ"
 		"SSQyLKvI0TK86sJKchkt_HDy2IC5l5BGRhq_Xv9pHdA1umidQZG3a7gWvHsujqybCBgBraMTd1wJrCl4QxFg2RYHhHbRqb9BnPJgFD_vryd4"
@@ -463,7 +470,7 @@ TEST(TokenTest, VerifyTokenRS512) {
 	verify.verify(decoded_token);
 }
 
-TEST(TokenTest, VerifyTokenRS512PublicOnly) {
+TYPED_TEST(TokenTest, VerifyTokenRS512PublicOnly) {
 	std::string token =
 		"eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.GZhnjtsvBl2_KDSxg4JW6xnmNjr2mWhYSZ"
 		"SSQyLKvI0TK86sJKchkt_HDy2IC5l5BGRhq_Xv9pHdA1umidQZG3a7gWvHsujqybCBgBraMTd1wJrCl4QxFg2RYHhHbRqb9BnPJgFD_vryd4"
@@ -476,7 +483,7 @@ TEST(TokenTest, VerifyTokenRS512PublicOnly) {
 	verify.verify(decoded_token);
 }
 
-TEST(TokenTest, VerifyTokenRS512PrivateOnly) {
+TYPED_TEST(TokenTest, VerifyTokenRS512PrivateOnly) {
 	std::string token =
 		"eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.GZhnjtsvBl2_KDSxg4JW6xnmNjr2mWhYSZ"
 		"SSQyLKvI0TK86sJKchkt_HDy2IC5l5BGRhq_Xv9pHdA1umidQZG3a7gWvHsujqybCBgBraMTd1wJrCl4QxFg2RYHhHbRqb9BnPJgFD_vryd4"
@@ -490,7 +497,7 @@ TEST(TokenTest, VerifyTokenRS512PrivateOnly) {
 	verify.verify(decoded_token);
 }
 
-TEST(TokenTest, VerifyTokenRS512Fail) {
+TYPED_TEST(TokenTest, VerifyTokenRS512Fail) {
 	std::string token =
 		"eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.GZhnjtsvBl2_KDSxg4JW6xnmNjr2mWhYSZ"
 		"SSQyLKvI0TK86sJKchkt_HDy2IC5l5BGRhq_Xv9pHdA1umidQZG3a7gWvHsujqybCBgBraMTd1wJrCl4QxFg2RYHhHbRqb9BnPJgFD_vryd4"
@@ -504,7 +511,7 @@ TEST(TokenTest, VerifyTokenRS512Fail) {
 	ASSERT_THROW(verify.verify(decoded_token), jwt::error::signature_verification_exception);
 }
 
-TEST(TokenTest, VerifyTokenHS256) {
+TYPED_TEST(TokenTest, VerifyTokenHS256) {
 	std::string token =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
 
@@ -514,7 +521,7 @@ TEST(TokenTest, VerifyTokenHS256) {
 	verify.verify(decoded_token);
 }
 
-TEST(TokenTest, VerifyTokenHS256Fail) {
+TYPED_TEST(TokenTest, VerifyTokenHS256Fail) {
 	std::string token =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
 
@@ -524,7 +531,7 @@ TEST(TokenTest, VerifyTokenHS256Fail) {
 	ASSERT_THROW(verify.verify(decoded_token), jwt::error::signature_verification_exception);
 }
 
-TEST(TokenTest, VerifyTokenHS256FailSignatureLength) {
+TYPED_TEST(TokenTest, VerifyTokenHS256FailSignatureLength) {
 	std::string token =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkA";
 
@@ -534,7 +541,7 @@ TEST(TokenTest, VerifyTokenHS256FailSignatureLength) {
 	ASSERT_THROW(verify.verify(decoded_token), jwt::error::signature_verification_exception);
 }
 
-TEST(TokenTest, VerifyFail) {
+TYPED_TEST(TokenTest, VerifyFail) {
 	{
 		auto token = jwt::create()
 						 .set_issuer("auth0")
@@ -610,7 +617,7 @@ TEST(TokenTest, VerifyFail) {
 	}
 }
 
-TEST(TokenTest, VerifyTokenES256FailNoKey) {
+TYPED_TEST(TokenTest, VerifyTokenES256FailNoKey) {
 	ASSERT_THROW(
 		[]() {
 			auto verify = jwt::verify().allow_algorithm(jwt::algorithm::es256("", "", "", "")).with_issuer("auth0");
@@ -618,7 +625,7 @@ TEST(TokenTest, VerifyTokenES256FailNoKey) {
 		jwt::error::ecdsa_exception);
 }
 
-TEST(TokenTest, VerifyTokenEvpPkeyES256FailNoKey) {
+TYPED_TEST(TokenTest, VerifyTokenEvpPkeyES256FailNoKey) {
 	ASSERT_THROW(
 		[]() {
 			auto verify = jwt::verify()
@@ -629,7 +636,7 @@ TEST(TokenTest, VerifyTokenEvpPkeyES256FailNoKey) {
 		jwt::error::ecdsa_exception);
 }
 
-TEST(TokenTest, VerifyTokenES256) {
+TYPED_TEST(TokenTest, VerifyTokenES256) {
 	const std::string token = "eyJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJhdXRoMCJ9.4iVk3-Y0v4RT4_9IaQlp-8dZ_"
 							  "4fsTzIylgrPTDLrEvTHBTyVS3tgPbr2_IZfLETtiKRqCg0aQ5sh9eIsTTwB1g";
 
@@ -639,7 +646,7 @@ TEST(TokenTest, VerifyTokenES256) {
 	verify.verify(decoded_token);
 }
 
-TEST(TokenTest, VerifyTokenEvpPkeyES256) {
+TYPED_TEST(TokenTest, VerifyTokenEvpPkeyES256) {
 	const std::string token = "eyJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJhdXRoMCJ9.4iVk3-Y0v4RT4_9IaQlp-8dZ_"
 							  "4fsTzIylgrPTDLrEvTHBTyVS3tgPbr2_IZfLETtiKRqCg0aQ5sh9eIsTTwB1g";
 
@@ -650,7 +657,7 @@ TEST(TokenTest, VerifyTokenEvpPkeyES256) {
 	verify.verify(decoded_token);
 }
 
-TEST(TokenTest, VerifyTokenES256Fail) {
+TYPED_TEST(TokenTest, VerifyTokenES256Fail) {
 	const std::string token = "eyJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJhdXRoMCJ9.4iVk3-Y0v4RT4_9IaQlp-8dZ_"
 							  "4fsTzIylgrPTDLrEvTHBTyVS3tgPbr2_IZfLETtiKRqCg0aQ5sh9eIsTTwB1g";
 
@@ -660,7 +667,7 @@ TEST(TokenTest, VerifyTokenES256Fail) {
 	ASSERT_THROW(verify.verify(decoded_token), jwt::error::signature_verification_exception);
 }
 
-TEST(TokenTest, VerifyTokenES384) {
+TYPED_TEST(TokenTest, VerifyTokenES384) {
 	const std::string token =
 		"eyJhbGciOiJFUzM4NCIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.nTUwWanmj_K1VZM5it1ES-1FbnmRDL-lH3V_Fem-"
 		"AhMur9Q61yZfKIydrpdavkm_SMxEsUGPVoqkpoEsjFjrtzMDs5s9yaFYD_ydiy1dsn9VbcI55voA3XwEcWFiPHri";
@@ -671,7 +678,7 @@ TEST(TokenTest, VerifyTokenES384) {
 	verify.verify(decoded_token);
 }
 
-TEST(TokenTest, VerifyTokenES384Fail) {
+TYPED_TEST(TokenTest, VerifyTokenES384Fail) {
 	const std::string token =
 		"eyJhbGciOiJFUzM4NCIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.nTUwWanmj_K1VZM5it1ES-1FbnmRDL-lH3V_Fem-"
 		"AhMur9Q61yZfKIydrpdavkm_SMxEsUGPVoqkpoEsjFjrtzMDs5s9yaFYD_ydiy1dsn9VbcI55voA3XwEcWFiPHri";
@@ -682,7 +689,7 @@ TEST(TokenTest, VerifyTokenES384Fail) {
 	ASSERT_THROW(verify.verify(decoded_token), jwt::error::signature_verification_exception);
 }
 
-TEST(TokenTest, VerifyTokenES521) {
+TYPED_TEST(TokenTest, VerifyTokenES521) {
 	const std::string token =
 		"eyJhbGciOiJFUzUxMiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.ASF5hh9_Jyujzm3GRBttoth-3I6lCcwqun9Tt7Ekz9_23BN6-"
 		"BFgwKidECWCNc4VINEqFEFdApC2y3YRdkpKX2etAWI7yYudAlxJ7Z17m6GwAoLOGaeNonsaKOe1UnC5W86eoXrCoPRgzsFTpKIb8NiolcYWjIY"
@@ -694,7 +701,7 @@ TEST(TokenTest, VerifyTokenES521) {
 	verify.verify(decoded_token);
 }
 
-TEST(TokenTest, VerifyTokenES521Fail) {
+TYPED_TEST(TokenTest, VerifyTokenES521Fail) {
 	const std::string token =
 		"eyJhbGciOiJFUzUxMiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.ASF5hh9_Jyujzm3GRBttoth-3I6lCcwqun9Tt7Ekz9_23BN6-"
 		"BFgwKidECWCNc4VINEqFEFdApC2y3YRdkpKX2etAWI7yYudAlxJ7Z17m6GwAoLOGaeNonsaKOe1UnC5W86eoXrCoPRgzsFTpKIb8NiolcYWjIY"
@@ -706,7 +713,7 @@ TEST(TokenTest, VerifyTokenES521Fail) {
 	ASSERT_THROW(verify.verify(decoded_token), jwt::error::signature_verification_exception);
 }
 
-TEST(TokenTest, VerifyTokenPS256) {
+TYPED_TEST(TokenTest, VerifyTokenPS256) {
 	std::string token =
 		"eyJhbGciOiJQUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.CJ4XjVWdbV6vXGZkD4GdJbtYc80SN9cmPOqRhZBRzOyDRqTFE"
 		"4MsbdKyQuhAWcvuMOjn-24qOTjVMR_P_uTC1uG6WPLcucxZyLnbb56zbKnEklW2SX0mQnCGewr-93a_vDaFT6Cp45MsF_OwFPRCMaS5CJg-"
@@ -721,7 +728,7 @@ TEST(TokenTest, VerifyTokenPS256) {
 	verify.verify(decoded_token);
 }
 
-TEST(TokenTest, VerifyTokenPS256PublicOnly) {
+TYPED_TEST(TokenTest, VerifyTokenPS256PublicOnly) {
 	std::string token =
 		"eyJhbGciOiJQUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.CJ4XjVWdbV6vXGZkD4GdJbtYc80SN9cmPOqRhZBRzOyDRqTFE"
 		"4MsbdKyQuhAWcvuMOjn-24qOTjVMR_P_uTC1uG6WPLcucxZyLnbb56zbKnEklW2SX0mQnCGewr-93a_vDaFT6Cp45MsF_OwFPRCMaS5CJg-"
@@ -735,7 +742,7 @@ TEST(TokenTest, VerifyTokenPS256PublicOnly) {
 	verify.verify(decoded_token);
 }
 
-TEST(TokenTest, VerifyTokenPS256Fail) {
+TYPED_TEST(TokenTest, VerifyTokenPS256Fail) {
 	std::string token =
 		"eyJhbGciOiJQUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.CJ4XjVWdbV6vXGZkD4GdJbtYc80SN9cmPOqRhZBRzOyDRqTFE"
 		"4MsbdKyQuhAWcvuMOjn-24qOTjVMR_P_uTC1uG6WPLcucxZyLnbb56zbKnEklW2SX0mQnCGewr-93a_vDaFT6Cp45MsF_OwFPRCMaS5CJg-"
@@ -750,7 +757,7 @@ TEST(TokenTest, VerifyTokenPS256Fail) {
 	ASSERT_THROW(verify.verify(decoded_token), jwt::error::signature_verification_exception);
 }
 
-TEST(TokenTest, VerifyTokenPS256FailNoKey) {
+TYPED_TEST(TokenTest, VerifyTokenPS256FailNoKey) {
 	ASSERT_THROW(
 		[]() {
 			auto verify = jwt::verify().allow_algorithm(jwt::algorithm::ps256("", "", "", "")).with_issuer("auth0");
@@ -759,7 +766,7 @@ TEST(TokenTest, VerifyTokenPS256FailNoKey) {
 }
 
 #if !defined(JWT_OPENSSL_1_0_0) && !defined(JWT_OPENSSL_1_1_0)
-TEST(TokenTest, VerifyTokenEd25519) {
+TYPED_TEST(TokenTest, VerifyTokenEd25519) {
 	const std::string token =
 		"eyJhbGciOiJFZERTQSIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.OujgVcO8xQx5xLcAYWENCRU1SCGH5HcX4MX4o6wU3M4"
 		"DOnKiNmc0O2AnvQlzr-9cgI4QGQzeC6gz_fgLoesADg";
@@ -770,7 +777,7 @@ TEST(TokenTest, VerifyTokenEd25519) {
 	verify.verify(decoded_token);
 }
 
-TEST(TokenTest, VerifyTokenEd25519Fail) {
+TYPED_TEST(TokenTest, VerifyTokenEd25519Fail) {
 	const std::string token =
 		"eyJhbGciOiJFZERTQSIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.OujgVcO8xQx5xLcAYWENCRU1SCGH5HcX4MX4o6wU3M4"
 		"DOnKiNmc0O2AnvQlzr-9cgI4QGQzeC6gz_fgLoesADg";
@@ -782,7 +789,7 @@ TEST(TokenTest, VerifyTokenEd25519Fail) {
 }
 
 #if !defined(LIBRESSL_VERSION_NUMBER)
-TEST(TokenTest, VerifyTokenEd448) {
+TYPED_TEST(TokenTest, VerifyTokenEd448) {
 	const std::string token =
 		"eyJhbGciOiJFZERTQSIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.Aldes9jrXZXxfNjuovqmIZ3r2WF4yVXVr2Q8B8SkAmv"
 		"Bsw_3MHs8HtgKeXbqKFYWpHOCtmZJcH-AWMvoY6FCNdQqbESGTkv58O6tFbXDD_nLejWNAOuvcO2LPMySmkVNQUopmQf_HO62Mug1ngepUDE"
@@ -794,7 +801,7 @@ TEST(TokenTest, VerifyTokenEd448) {
 	verify.verify(decoded_token);
 }
 
-TEST(TokenTest, VerifyTokenEd448Fail) {
+TYPED_TEST(TokenTest, VerifyTokenEd448Fail) {
 	const std::string token =
 		"eyJhbGciOiJFZERTQSIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.Aldes9jrXZXxfNjuovqmIZ3r2WF4yVXVr2Q8B8SkAmv"
 		"Bsw_3MHs8HtgKeXbqKFYWpHOCtmZJcH-AWMvoY6FCNdQqbESGTkv58O6tFbXDD_nLejWNAOuvcO2LPMySmkVNQUopmQf_HO62Mug1ngepUDE"
@@ -813,7 +820,7 @@ struct test_clock {
 	jwt::date now() const { return n; }
 };
 
-TEST(TokenTest, VerifyTokenExpireFail) {
+TYPED_TEST(TokenTest, VerifyTokenExpireFail) {
 	auto token = jwt::create().set_expires_at(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
 	auto decoded_token = jwt::decode(token);
 
@@ -827,7 +834,7 @@ TEST(TokenTest, VerifyTokenExpireFail) {
 	ASSERT_EQ(ec.value(), static_cast<int>(jwt::error::token_verification_error::token_expired));
 }
 
-TEST(TokenTest, VerifyTokenExpire) {
+TYPED_TEST(TokenTest, VerifyTokenExpire) {
 	auto token = jwt::create().set_expires_at(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
 	auto decoded_token = jwt::decode(token);
 
@@ -840,7 +847,7 @@ TEST(TokenTest, VerifyTokenExpire) {
 	ASSERT_EQ(ec.value(), 0);
 }
 
-TEST(TokenTest, VerifyTokenNBFFail) {
+TYPED_TEST(TokenTest, VerifyTokenNBFFail) {
 	auto token = jwt::create().set_not_before(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
 	auto decoded_token = jwt::decode(token);
 
@@ -854,7 +861,7 @@ TEST(TokenTest, VerifyTokenNBFFail) {
 	ASSERT_EQ(ec.value(), static_cast<int>(jwt::error::token_verification_error::token_expired));
 }
 
-TEST(TokenTest, VerifyTokenNBF) {
+TYPED_TEST(TokenTest, VerifyTokenNBF) {
 	auto token = jwt::create().set_not_before(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
 	auto decoded_token = jwt::decode(token);
 
@@ -867,7 +874,7 @@ TEST(TokenTest, VerifyTokenNBF) {
 	ASSERT_EQ(ec.value(), 0);
 }
 
-TEST(TokenTest, VerifyTokenIATFail) {
+TYPED_TEST(TokenTest, VerifyTokenIATFail) {
 	auto token = jwt::create().set_issued_at(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
 	auto decoded_token = jwt::decode(token);
 
@@ -881,7 +888,7 @@ TEST(TokenTest, VerifyTokenIATFail) {
 	ASSERT_EQ(ec.value(), static_cast<int>(jwt::error::token_verification_error::token_expired));
 }
 
-TEST(TokenTest, VerifyTokenIAT) {
+TYPED_TEST(TokenTest, VerifyTokenIAT) {
 	auto token = jwt::create().set_issued_at(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
 	auto decoded_token = jwt::decode(token);
 
@@ -894,7 +901,7 @@ TEST(TokenTest, VerifyTokenIAT) {
 	ASSERT_EQ(ec.value(), 0);
 }
 
-TEST(TokenTest, VerifyTokenType) {
+TYPED_TEST(TokenTest, VerifyTokenType) {
 	auto token = jwt::create().set_type("JWS").sign(jwt::algorithm::none{});
 	auto decoded_token = jwt::decode(token);
 
@@ -906,7 +913,7 @@ TEST(TokenTest, VerifyTokenType) {
 	ASSERT_EQ(ec.value(), 0);
 }
 
-TEST(TokenTest, GetClaimThrows) {
+TYPED_TEST(TokenTest, GetClaimThrows) {
 	const std::string token = "eyJhbGciOiJub25lIiwidHlwIjoiSldTIn0.eyJpc3MiOiJhdXRoMCJ9.";
 	auto decoded_token = jwt::decode(token);
 
@@ -953,7 +960,7 @@ TEST(TokenTest, ThrowInvalidKeyLength) {
 	ASSERT_NO_THROW(jwt::algorithm::es512(ecdsa521_pub_key, ecdsa521_priv_key));
 }
 
-TEST(TokenTest, MoveDecodedToken) {
+TYPED_TEST(TokenTest, MoveDecodedToken) {
 	const std::string token0 = "eyJhbGciOiJub25lIiwidHlwIjoiSldTIn0.eyJpc3MiOiJhdXRoMCJ9.";
 	const std::string token1 =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";

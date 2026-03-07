@@ -1,7 +1,14 @@
 #include "jwt-cpp/jwt.h"
 #include <gtest/gtest.h>
 
-TEST(JwksTest, OneKeyParse) {
+template<typename Trait>
+class JwksTest : public ::testing::Test {};
+
+// Include the generated trait type list for parameterized testing
+#include "traits_typelist.h"
+TYPED_TEST_SUITE(JwksTest, AllTraitTypes);
+
+TYPED_TEST(JwksTest, OneKeyParse) {
 	std::string public_key = R"({
     "alg": "RS256",
     "kty": "RSA",
@@ -28,7 +35,7 @@ TEST(JwksTest, OneKeyParse) {
 	ASSERT_EQ("123456789", jwk.get_key_id());
 }
 
-TEST(JwksTest, MultiKeysParse) {
+TYPED_TEST(JwksTest, MultiKeysParse) {
 	std::string public_key = R"({
 	"keys": [{
 			"kid": "internal-gateway-jwt",
@@ -66,7 +73,7 @@ TEST(JwksTest, MultiKeysParse) {
 	ASSERT_THROW(jwks.get_jwk("123456"), jwt::error::claim_not_present_exception);
 }
 
-TEST(JwksTest, Missingx5c) {
+TYPED_TEST(JwksTest, Missingx5c) {
 	std::string public_key = R"({
 	"keys": [{
 			"kid": "internal-gateway-jwt",
@@ -117,7 +124,7 @@ TEST(JwksTest, Missingx5c) {
 	ASSERT_EQ(jwk3.get_x5c_key_value(), "1");
 }
 
-TEST(JwksTest, DefaultConstructor) {
+TYPED_TEST(JwksTest, DefaultConstructor) {
 	using Jwks = decltype(jwt::parse_jwks(std::declval<std::string>()));
 
 	Jwks keys{};
@@ -126,7 +133,7 @@ TEST(JwksTest, DefaultConstructor) {
 	ASSERT_FALSE(keys.has_jwk("random-jwt"));
 }
 
-TEST(JwksTest, CachingBasedOnKid) {
+TYPED_TEST(JwksTest, CachingBasedOnKid) {
 	std::string public_key = R"({
 	"keys": [{
 			"kid": "internal-gateway-jwt",
