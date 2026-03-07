@@ -34,7 +34,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        files: ["**/CMakeLists.txt", "cmake/code-coverage.cmake"]
+        files: ["**/CMakeLists.txt", "cmake/code-coverage.cmake", "generate-defaults-h.cmake"]
     steps:
       - uses: actions/setup-python@v5
         with:
@@ -90,35 +90,6 @@ jobs:
       - uses: ./.github/actions/process-linting-results
         with:
           linter_name: render-defaults
-
-  render-tests:
-    runs-on: ubuntu-22.04
-    strategy:
-      fail-fast: false
-      matrix:
-        traits:
-          # - { name: "boost_json", suite: "BoostJsonTest" } # Currently needs work around for API limitations
-          - { name: "danielaparker_jsoncons", suite: "JsonconsTest" }
-          # - { name: "kazuho_picojson", suite: "PicoJsonTest" } # Currently the default everything tests against this!
-          - { name: "nlohmann_json", suite: "NlohmannTest" }
-          - { name: "open_source_parsers_jsoncpp", suite: "OspJsoncppTest" }
-          # - { name: "glaze_json", suite: "GlazeTest" } # No supported due to istream buffer being specialized
-          # - { name: "reflectcpp_json", suite: "ReflectCppJsonTest" } # No supported due to istream buffer being specialized
-    name: render-tests (${{ matrix.traits.name }})
-    steps:
-      - uses: actions/checkout@v4
-      - run: |
-          sudo apt-get install clang-format-14
-          shopt -s globstar
-      - uses: ./.github/actions/render/tests
-        with:
-          traits_name: ${{ matrix.traits.name }}
-          test_suite_name: ${{ matrix.traits.suite }}
-      - run: clang-format-14 -i tests/**/*.cpp
-      - run: git add tests/traits/*
-      - uses: ./.github/actions/process-linting-results
-        with:
-          linter_name: render-tests
 
   line-ending:
     runs-on: ubuntu-latest
