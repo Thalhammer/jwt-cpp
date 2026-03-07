@@ -22,7 +22,7 @@ jobs:
           - { name: "kazuho-picojson", tag: "111c9be5188f7350c2eac9ddaedd8cca3d7bf394", version: "111c9be" }
           - { name: "open-source-parsers-jsoncpp", tag: "1.9.6", version: "v1.9.6" }
           - { name: "glaze-json", tag: "7.0.2", version: "v7.0.2" }
-          - { name: "reflectcpp_json", tag: "0.24.0", version: "v0.24.0" }
+          - { name: "reflectcpp-json", tag: "0.24.0", version: "v0.24.0" }
     steps:
       - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
@@ -66,8 +66,8 @@ jobs:
         with:
           version: ${{matrix.target.tag}}
 
-      - if: matrix.target.name == 'reflectcpp_json'
-        uses: ./.github/actions/install/reflectcpp_json
+      - if: matrix.target.name == 'reflectcpp-json'
+        uses: ./.github/actions/install/reflectcpp-json
         with:
           version: ${{ matrix.target.tag }}
 
