@@ -90,6 +90,6 @@ namespace jwt::traits {
 		static std::string serialize(const value_type& val) { return rfl::json::write(val); }
 	};
 
-}
+} // namespace jwt::traits
 
 #endif

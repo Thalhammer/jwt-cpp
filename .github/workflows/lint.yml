@@ -103,7 +103,7 @@ jobs:
           - { name: "nlohmann_json", suite: "NlohmannTest" }
           - { name: "open_source_parsers_jsoncpp", suite: "OspJsoncppTest" }
           # - { name: "glaze_json", suite: "GlazeTest" } # No supported due to istream buffer being specialized
-          - { name: "reflectcpp_json", suite: "ReflectCppTest" }
+          # - { name: "reflectcpp_json", suite: "ReflectCppJsonTest" } # No supported due to istream buffer being specialized
     name: render-tests (${{ matrix.traits.name }})
     steps:
       - uses: actions/checkout@v4
