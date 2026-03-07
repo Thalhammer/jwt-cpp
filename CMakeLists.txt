@@ -36,7 +36,7 @@ set(JWT_SSL_LIBRARY OpenSSL CACHE STRING "Determines which SSL library to build 
 set_property(CACHE JWT_SSL_LIBRARY PROPERTY STRINGS ${JWT_SSL_LIBRARY_OPTIONS})
 
 set(JWT_JSON_TRAITS_OPTIONS boost-json danielaparker-jsoncons kazuho-picojson nlohmann-json open-source-parsers-jsoncpp
-                            glaze-json reflect-cpp)
+                            glaze-json reflectcpp-json)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 

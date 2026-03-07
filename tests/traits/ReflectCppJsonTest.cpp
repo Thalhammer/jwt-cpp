@@ -47,7 +47,6 @@ TEST(ReflectCppTest, SetArray) {
 	jwt::traits::reflectcpp_json::value_type value(arr);
 	jwt::basic_claim<jwt::traits::reflectcpp_json> array_claim(value);
 
-	// Use the reflect-cpp trait for create()
 	auto token =
 		jwt::create<jwt::traits::reflectcpp_json>().set_payload_claim("test", array_claim).sign(jwt::algorithm::none{});
 

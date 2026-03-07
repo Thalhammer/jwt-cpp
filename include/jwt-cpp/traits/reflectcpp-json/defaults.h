@@ -10,11 +10,11 @@
 namespace jwt {
 
 	/**
-         * \brief a class to store a generic reflect-cpp (rfl::Generic) value as claim
-         *
-         * This type is the specialization of the \ref basic_claim class which
-         * uses the reflect-cpp JSON traits.
-         */
+	 * \brief a class to store a generic reflect-cpp (rfl::Generic) value as claim
+	 *
+	 * This type is the specialization of the \ref basic_claim class which
+	 * uses the reflect-cpp JSON traits.
+	 */
 	using claim = basic_claim<traits::reflectcpp_json>;
 
 	/** Create a verifier using the default clock */
@@ -52,6 +52,6 @@ namespace jwt {
 	/** Verify context type alias (for advanced verification ops) */
 	using verify_context = verify_ops::verify_context<traits::reflectcpp_json>;
 
-} // namespace jwt
+}
 
 #endif
