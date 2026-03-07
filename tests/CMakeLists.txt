@@ -1,10 +1,6 @@
-if(JWT_DISABLE_BASE64)
-  message(FATAL_ERROR "Tests requires the base64 support to be enabled!")
-endif()
-
-if(JWT_DISABLE_PICOJSON)
-  message(FATAL_ERROR "Tests requires the picojson support to be enabled!")
-endif()
+# Include and configure defaults.h generation if enabled
+include(traits-metadata)
+jwt_configure_traits_defaults()
 
 include(GoogleTest)
 if(HUNTER_ENABLED)

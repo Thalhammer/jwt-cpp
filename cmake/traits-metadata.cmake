@@ -11,10 +11,6 @@ set(JWT_TRAITS_METADATA
 )
 
 function(jwt_configure_traits_defaults)
-  if(NOT JWT_GENERATE_DEFAULTS)
-    return()
-  endif()
-
   foreach(trait_meta IN LISTS JWT_TRAITS_METADATA)
     string(REPLACE "|" ";" trait_info "${trait_meta}")
     list(GET trait_info 0 TRAITS_NAME)
@@ -29,8 +25,8 @@ function(jwt_configure_traits_defaults)
         -DLIBRARY_NAME=${LIBRARY_NAME}
         -DLIBRARY_URL=${LIBRARY_URL}
         -DDISABLE_DEFAULT_TRAITS=${DISABLE_DEFAULT_TRAITS}
-        -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
-        -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/configure_defaults.cmake
+        -DSOURCE_DIR=${PROJECT_SOURCE_DIR}
+        -P ${PROJECT_SOURCE_DIR}/cmake/generate-defaults-h.cmake
       RESULT_VARIABLE result
     )
 

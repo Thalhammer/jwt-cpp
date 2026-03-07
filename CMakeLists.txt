@@ -20,11 +20,13 @@ option(JWT_BUILD_TESTS "Configure CMake to build tests (or not)" OFF)
 option(JWT_BUILD_DOCS "Adds a target for building the doxygen documentation" OFF)
 option(JWT_ENABLE_COVERAGE "Enable code coverage testing" OFF)
 option(JWT_ENABLE_FUZZING "Enable fuzz testing" OFF)
-option(JWT_GENERATE_DEFAULTS "Generate defaults.h files from templates for each trait" OFF)
 
 option(JWT_DISABLE_PICOJSON "Do not provide the picojson template specialiaze" OFF)
 option(JWT_DISABLE_BASE64 "Do not include the base64 implementation from this library" OFF)
 include(CMakeDependentOption)
+cmake_dependent_option(
+  JWT_BUILD_TESTS "Configure CMake to build tests (or not)" OFF
+  "NOT JWT_DISABLE_BASE64 AND NOT JWT_DISABLE_PICOJSON" OFF)
 cmake_dependent_option(
   JWT_EXTERNAL_PICOJSON "Use find_package() to locate picojson, provided to integrate with package managers" OFF
   "NOT JWT_DISABLE_PICOJSON" OFF)
@@ -40,10 +42,6 @@ set(JWT_JSON_TRAITS_OPTIONS boost-json danielaparker-jsoncons kazuho-picojson nl
                             glaze-json reflectcpp-json)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
-
-# Include and configure defaults.h generation if enabled
-include(traits-metadata)
-jwt_configure_traits_defaults()
 
 if(NOT JWT_SSL_LIBRARY IN_LIST JWT_SSL_LIBRARY_OPTIONS)
   message(FATAL_ERROR "JWT_SSL_LIBRARY must be one of ${JWT_SSL_LIBRARY_OPTIONS}")
