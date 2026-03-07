@@ -6,8 +6,8 @@
         "patch": 0
     },
     "include": [
-      "example/CMakePresets.json",
-      "tests/CMakePresets.json"
+        "example/CMakePresets.json",
+        "tests/CMakePresets.json"
     ],
     "configurePresets": [
         {
@@ -28,6 +28,13 @@
             "name": "dev",
             "configurePreset": "dev",
             "configuration": "Debug"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "dev",
+            "displayName": "Run all tests",
+            "configurePreset": "dev"
         }
     ]
 }
