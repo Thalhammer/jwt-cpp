@@ -51,16 +51,22 @@ if(TARGET boost_json)
   list(APPEND AVAILABLE_TRAIT_TYPES "::jwt::traits::boost_json")
 endif()
 
+find_package(jsoncpp CONFIG)
+if(TARGET jsoncpp_static)
+  list(APPEND AVAILABLE_TRAIT_NAMES "jsoncpp")
+  list(APPEND AVAILABLE_TRAIT_TYPES "::jwt::traits::open_source_parsers_jsoncpp")
+endif()
+
 find_package(glaze CONFIG)
 if(TARGET glaze::glaze)
   list(APPEND AVAILABLE_TRAIT_NAMES "glaze_json")
   list(APPEND AVAILABLE_TRAIT_TYPES "::jwt::traits::glaze_json")
 endif()
 
-find_package(jsoncpp CONFIG)
-if(TARGET jsoncpp_static)
-  list(APPEND AVAILABLE_TRAIT_NAMES "jsoncpp")
-  list(APPEND AVAILABLE_TRAIT_TYPES "::jwt::traits::open_source_parsers_jsoncpp")
+find_package(reflectcpp CONFIG)
+if(TARGET reflectcpp::reflectcpp)
+  list(APPEND AVAILABLE_TRAIT_NAMES "reflectcpp")
+  list(APPEND AVAILABLE_TRAIT_TYPES "::jwt::traits::reflectcpp_json")
 endif()
 
 message(STATUS "jwt-cpp: Generating traits_typelist.h with ${AVAILABLE_TRAIT_NAMES}")
@@ -72,7 +78,7 @@ string(APPEND TRAITS_TYPELIST_CONTENT "// Auto-generated list of available JWT t
 string(APPEND TRAITS_TYPELIST_CONTENT "// Includes all necessary trait headers\n\n")
 
 # Include headers for all available traits
-string(APPEND TRAITS_TYPELIST_CONTENT "#include <jwt-cpp/traits/kazuho-picojson/traits.h>\n\n")
+string(APPEND TRAITS_TYPELIST_CONTENT "#include <jwt-cpp/traits/kazuho-picojson/traits.h>\n")
 string(APPEND TRAITS_TYPELIST_CONTENT "#include <jwt-cpp/traits/nlohmann-json/traits.h>\n")
 
 if(TARGET jsoncons)
@@ -83,16 +89,20 @@ if(TARGET boost_json)
   string(APPEND TRAITS_TYPELIST_CONTENT "#include <jwt-cpp/traits/boost-json/traits.h>\n")
 endif()
 
-if(TARGET glaze::glaze)
-  string(APPEND TRAITS_TYPELIST_CONTENT "#include <jwt-cpp/traits/glaze-json/traits.h>\n")
-endif()
-
 if(TARGET jsoncpp_static)
   string(APPEND TRAITS_TYPELIST_CONTENT "#include <jwt-cpp/traits/open-source-parsers-jsoncpp/traits.h>\n")
 endif()
 
+if(TARGET glaze::glaze)
+  string(APPEND TRAITS_TYPELIST_CONTENT "#include <jwt-cpp/traits/glaze-json/traits.h>\n")
+endif()
+
+if(TARGET reflectcpp::reflectcpp)
+  string(APPEND TRAITS_TYPELIST_CONTENT "#include <jwt-cpp/traits/reflectcpp-json/traits.h>\n")
+endif()
+
 # Add the type list using the available traits
-string(APPEND TRAITS_TYPELIST_CONTENT "using AllTraitTypes = ::testing::Types<\n")
+string(APPEND TRAITS_TYPELIST_CONTENT "\nusing AllTraitTypes = ::testing::Types<\n")
 
 list(LENGTH AVAILABLE_TRAIT_TYPES count)
 math(EXPR last_index "${count} - 1")
@@ -127,21 +137,16 @@ if(TARGET boost_json)
   list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/BoostJsonTest.cpp)
 endif()
 
-if(TARGET glaze::glaze)
-  list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/GlazeTest.cpp)
-endif()
-
 if(TARGET jsoncpp_static)
   list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/OspJsoncppTest.cpp)
 endif()
 
-find_package(reflectcpp CONFIG QUIET)
+if(TARGET glaze::glaze)
+  list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/GlazeTest.cpp)
+endif()
+
 if(TARGET reflectcpp::reflectcpp)
-  if(NOT DEFINED CMAKE_CXX_STANDARD OR CMAKE_CXX_STANDARD GREATER_EQUAL 20)
-    list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/ReflectCppTest.cpp)
-  else()
-    message(STATUS "jwt-cpp: skipping reflect-cpp tests (CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} < 20)")
-  endif()
+  list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/ReflectCppJsonTest.cpp)
 endif()
 
 add_executable(jwt-cpp-test ${TEST_SOURCES})

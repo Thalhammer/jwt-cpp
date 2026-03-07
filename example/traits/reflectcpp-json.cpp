@@ -1,5 +1,5 @@
 #include "jwt-cpp/jwt.h"
-#include "jwt-cpp/traits/reflect-cpp/traits.h"
+#include "jwt-cpp/traits/reflectcpp-json/traits.h"
 
 #include <chrono>
 #include <iostream>
@@ -7,7 +7,7 @@
 int main() {
 	using sec = std::chrono::seconds;
 	using min = std::chrono::minutes;
-	using traits = jwt::traits::reflect_cpp;
+	using traits = jwt::traits::reflectcpp_json;
 	using claim = jwt::basic_claim<traits>;
 
 	// Load a raw JSON object into a claim (reflect-cpp: parse -> wrap)

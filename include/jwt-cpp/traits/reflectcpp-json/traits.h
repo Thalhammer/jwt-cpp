@@ -1,4 +1,5 @@
-#pragma once
+#ifndef JWT_CPP_REFLECT_CPP_TRAITS_H
+#define JWT_CPP_REFLECT_CPP_TRAITS_H
 
 #ifndef JWT_DISABLE_PICOJSON
 #define JWT_DISABLE_PICOJSON
@@ -8,12 +9,11 @@
 
 #include <rfl/Generic.hpp>
 #include <rfl/json.hpp>
-#include <stdexcept>
 #include <variant>
 
 namespace jwt::traits {
 
-	struct reflect_cpp {
+	struct reflectcpp_json {
 
 		using value_type = rfl::Generic;
 		using object_type = rfl::Generic::Object;
@@ -91,3 +91,5 @@ namespace jwt::traits {
 	};
 
 } // namespace jwt::traits
+
+#endif
