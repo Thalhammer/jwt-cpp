@@ -384,7 +384,7 @@ GET(array, *u_.array_)
 GET(object, *u_.object_)
 #ifdef PICOJSON_USE_INT64
 GET(double,
-    (type_ == int64_type && (const_cast<value *>(this)->type_ = number_type, (const_cast<value *>(this)->u_.number_ = u_.int64_)),
+    ((void)(type_ == int64_type && (const_cast<value *>(this)->type_ = number_type, (const_cast<value *>(this)->u_.number_ = static_cast<double>(u_.int64_)), true)),
      u_.number_))
 GET(int64_t, u_.int64_)
 #else
