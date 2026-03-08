@@ -87,7 +87,7 @@ namespace jwt {
 
 			static integer_type as_integer(const value_type& val) {
 				switch (val.type()) {
-				case Json::intValue: return val.asInt64();
+				case Json::intValue: return static_cast<integer_type>(val.asInt64());
 				case Json::uintValue: return static_cast<integer_type>(val.asUInt64());
 				default: throw std::bad_cast();
 				}
