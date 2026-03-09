@@ -34,7 +34,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        files: ["**/CMakeLists.txt", "cmake/code-coverage.cmake", "generate-defaults-h.cmake"]
+        files: ["**/CMakeLists.txt", "cmake/code-coverage.cmake", "cmake/generate-defaults-h.cmake"]
     steps:
       - uses: actions/setup-python@v5
         with:
