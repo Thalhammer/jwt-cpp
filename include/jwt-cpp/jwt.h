@@ -2494,6 +2494,12 @@ namespace jwt {
 				is_at_const_signature<object_type, value_type, string_type>::value;
 		};
 
+		template<typename array_type>
+		using is_size_signature = typename std::is_integral<decltype(std::declval<const array_type>().size())>;
+
+		template<typename array_type>
+		using is_empty_signature = typename std::is_same<bool, decltype(std::declval<const array_type>().empty())>;
+
 		template<typename value_type, typename array_type>
 		struct is_valid_json_array {
 			template<typename T>
@@ -2504,7 +2510,8 @@ namespace jwt {
 										  is_iterable<array_type>::value &&
 										  is_detected<value_type_t, array_type>::value &&
 										  std::is_same<typename array_type::value_type, value_type>::value &&
-										  std::is_same<front_base_type, value_type>::value;
+										  std::is_same<front_base_type, value_type>::value &&
+										  is_size_signature<array_type>::value && is_empty_signature<array_type>::value;
 		};
 
 		template<typename string_type, typename integer_type>
