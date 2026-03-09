@@ -1,7 +1,3 @@
-# Include and configure defaults.h generation if enabled
-include(traits-metadata)
-jwt_configure_traits_defaults()
-
 include(GoogleTest)
 if(HUNTER_ENABLED)
   hunter_add_package(GTest)
