@@ -2426,7 +2426,6 @@ namespace jwt {
 				std::is_constructible<value_type, const value_type&>::value && // a more generic is_copy_constructible
 				std::is_move_constructible<value_type>::value && std::is_assignable<value_type, value_type>::value &&
 				std::is_copy_assignable<value_type>::value && std::is_move_assignable<value_type>::value;
-			// TODO(prince-chrismc): Stream operators
 		};
 
 		// https://stackoverflow.com/a/53967057/8480874
@@ -2643,13 +2642,18 @@ namespace jwt {
 		 * Parse input stream into underlying JSON value
 		 * \return input stream
 		 */
-		std::istream& operator>>(std::istream& is) { return is >> val; }
+		std::istream& operator>>(std::istream& is) {
+			typename json_traits::string_type buffer{std::istreambuf_iterator<char>(is),
+													 std::istreambuf_iterator<char>()};
+			json_traits::parse(val, buffer);
+			return is;
+		}
 
 		/**
 		 * Serialize claim to output stream from wrapped JSON value
 		 * \return output stream
 		 */
-		std::ostream& operator<<(std::ostream& os) { return os << val; }
+		std::ostream& operator<<(std::ostream& os) { return os << json_traits::serialize(val); }
 
 		/**
 		 * Get type of contained JSON value

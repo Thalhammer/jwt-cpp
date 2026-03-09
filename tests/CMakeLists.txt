@@ -77,6 +77,12 @@ string(APPEND TRAITS_TYPELIST_CONTENT "#define TRAITS_TYPELIST_H\n\n")
 string(APPEND TRAITS_TYPELIST_CONTENT "// Auto-generated list of available JWT traits\n")
 string(APPEND TRAITS_TYPELIST_CONTENT "// Includes all necessary trait headers\n\n")
 
+string(APPEND TRAITS_TYPELIST_CONTENT "#define JWT_DISABLE_PICOJSON // Block default traits\n\n")
+string(APPEND TRAITS_TYPELIST_CONTENT "#include <gtest/gtest.h>\n\n")
+
+
+
+
 # Include headers for all available traits
 string(APPEND TRAITS_TYPELIST_CONTENT "#include <jwt-cpp/traits/kazuho-picojson/traits.h>\n")
 string(APPEND TRAITS_TYPELIST_CONTENT "#include <jwt-cpp/traits/nlohmann-json/traits.h>\n")
