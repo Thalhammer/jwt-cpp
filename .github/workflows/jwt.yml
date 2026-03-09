@@ -19,11 +19,6 @@ jobs:
       - uses: ./.github/actions/install/glaze-json
       - uses: ./.github/actions/install/reflectcpp-json
 
-      - name: Configure LCOV to ignore mismatches
-        # https://github.com/linux-test-project/lcov/issues/316#issuecomment-2304694266
-        # The affected feature sare not used, the lcov and gcov dont match (sufficiently) in github actions runners
-        run: |
-          echo "ignore_errors = mismatch,mismatch" > .lcovrc
       - name: configure
         run: cmake --preset coverage
       - name: run
