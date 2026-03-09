@@ -902,9 +902,12 @@ TYPED_TEST(TokenTest, VerifyTokenIAT) {
 }
 
 TYPED_TEST(TokenTest, VerifyTokenType) {
+	ASSERT_NO_THROW(jwt::create<TypeParam>().set_type("JWS").sign(jwt::algorithm::none{}));
 	auto token = jwt::create<TypeParam>().set_type("JWS").sign(jwt::algorithm::none{});
+	ASSERT_NO_THROW(jwt::decode<TypeParam>(token));
 	auto decoded_token = jwt::decode<TypeParam>(token);
 
+	ASSERT_NO_THROW(jwt::verify<TypeParam>().with_type("jws").allow_algorithm(jwt::algorithm::none{}).verify(decoded_token));
 	auto verify = jwt::verify<TypeParam>().with_type("jws").allow_algorithm(jwt::algorithm::none{});
 	EXPECT_NO_THROW(verify.verify(decoded_token));
 	std::error_code ec;

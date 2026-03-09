@@ -86,9 +86,17 @@ TYPED_TEST(ClaimTest, SetObject) {
 			  "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lc3BhY2UiOnsiYXBpLXgiOlsxXX19.F8I6I2RcSF98bKa0IpIz09fRZtHr1CWnWKx2za-tFQA");
 }
 
+TYPED_TEST(ClaimTest, EmptyToken) {
+	ASSERT_NO_THROW(jwt::create<TypeParam>().sign(jwt::algorithm::none{}));
+	auto token = jwt::create<TypeParam>().sign(jwt::algorithm::none{});
+	EXPECT_EQ(token, "eyJhbGciOiJub25lIn0.e30.");
+}
+
 TYPED_TEST(ClaimTest, SetAlgorithm) {
+	ASSERT_NO_THROW(jwt::create<TypeParam>().set_algorithm("test").sign(jwt::algorithm::none{}));
 	auto token = jwt::create<TypeParam>().set_algorithm("test").sign(jwt::algorithm::none{});
 
+	ASSERT_NO_THROW(jwt::decode<TypeParam>(token));
 	auto decoded_token = jwt::decode<TypeParam>(token);
 	EXPECT_EQ(decoded_token.get_algorithm(), "test");
 }
