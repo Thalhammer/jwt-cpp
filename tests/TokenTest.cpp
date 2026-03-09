@@ -183,15 +183,17 @@ TYPED_TEST(TokenTest, CreateTokenPS512) {
 
 TYPED_TEST(TokenTest, CreateTokenES256) {
 
-	auto token =
-		jwt::create<TypeParam>().set_issuer("auth0").set_type("JWS").sign(jwt::algorithm::es256("", ecdsa256_priv_key, "", ""));
+	auto token = jwt::create<TypeParam>().set_issuer("auth0").set_type("JWS").sign(
+		jwt::algorithm::es256("", ecdsa256_priv_key, "", ""));
 
 	auto decoded = jwt::decode<TypeParam>(token);
 
-	EXPECT_THROW(
-		jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::es256(ecdsa256_pub_key_invalid, "", "", "")).verify(decoded),
-		jwt::error::signature_verification_exception);
-	EXPECT_NO_THROW(jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::es256(ecdsa256_pub_key, "", "", "")).verify(decoded));
+	EXPECT_THROW(jwt::verify<TypeParam>()
+					 .allow_algorithm(jwt::algorithm::es256(ecdsa256_pub_key_invalid, "", "", ""))
+					 .verify(decoded),
+				 jwt::error::signature_verification_exception);
+	EXPECT_NO_THROW(
+		jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::es256(ecdsa256_pub_key, "", "", "")).verify(decoded));
 }
 
 TYPED_TEST(TokenTest, CreateTokenEvpPkeyES256) {
@@ -201,10 +203,12 @@ TYPED_TEST(TokenTest, CreateTokenEvpPkeyES256) {
 
 	auto decoded = jwt::decode<TypeParam>(token);
 
-	EXPECT_THROW(
-		jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::es256(ecdsa256_pub_key_invalid, "", "", "")).verify(decoded),
-		jwt::error::signature_verification_exception);
-	EXPECT_NO_THROW(jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::es256(ecdsa256_pub_key, "", "", "")).verify(decoded));
+	EXPECT_THROW(jwt::verify<TypeParam>()
+					 .allow_algorithm(jwt::algorithm::es256(ecdsa256_pub_key_invalid, "", "", ""))
+					 .verify(decoded),
+				 jwt::error::signature_verification_exception);
+	EXPECT_NO_THROW(
+		jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::es256(ecdsa256_pub_key, "", "", "")).verify(decoded));
 }
 
 TYPED_TEST(TokenTest, CreateTokenEvpPkeyES256NoPrivate) {
@@ -227,15 +231,17 @@ TYPED_TEST(TokenTest, CreateTokenES256NoPrivate) {
 
 TYPED_TEST(TokenTest, CreateTokenES384) {
 
-	auto token =
-		jwt::create<TypeParam>().set_issuer("auth0").set_type("JWS").sign(jwt::algorithm::es384("", ecdsa384_priv_key, "", ""));
+	auto token = jwt::create<TypeParam>().set_issuer("auth0").set_type("JWS").sign(
+		jwt::algorithm::es384("", ecdsa384_priv_key, "", ""));
 
 	auto decoded = jwt::decode<TypeParam>(token);
 
-	EXPECT_THROW(
-		jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::es384(ecdsa384_pub_key_invalid, "", "", "")).verify(decoded),
-		jwt::error::signature_verification_exception);
-	EXPECT_NO_THROW(jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::es384(ecdsa384_pub_key, "", "", "")).verify(decoded));
+	EXPECT_THROW(jwt::verify<TypeParam>()
+					 .allow_algorithm(jwt::algorithm::es384(ecdsa384_pub_key_invalid, "", "", ""))
+					 .verify(decoded),
+				 jwt::error::signature_verification_exception);
+	EXPECT_NO_THROW(
+		jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::es384(ecdsa384_pub_key, "", "", "")).verify(decoded));
 }
 
 TYPED_TEST(TokenTest, CreateTokenES384NoPrivate) {
@@ -250,15 +256,17 @@ TYPED_TEST(TokenTest, CreateTokenES384NoPrivate) {
 
 TYPED_TEST(TokenTest, CreateTokenES512) {
 
-	auto token =
-		jwt::create<TypeParam>().set_issuer("auth0").set_type("JWS").sign(jwt::algorithm::es512("", ecdsa521_priv_key, "", ""));
+	auto token = jwt::create<TypeParam>().set_issuer("auth0").set_type("JWS").sign(
+		jwt::algorithm::es512("", ecdsa521_priv_key, "", ""));
 
 	auto decoded = jwt::decode<TypeParam>(token);
 
-	EXPECT_THROW(
-		jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::es512(ecdsa521_pub_key_invalid, "", "", "")).verify(decoded),
-		jwt::error::signature_verification_exception);
-	EXPECT_NO_THROW(jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::es512(ecdsa521_pub_key, "", "", "")).verify(decoded));
+	EXPECT_THROW(jwt::verify<TypeParam>()
+					 .allow_algorithm(jwt::algorithm::es512(ecdsa521_pub_key_invalid, "", "", ""))
+					 .verify(decoded),
+				 jwt::error::signature_verification_exception);
+	EXPECT_NO_THROW(
+		jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::es512(ecdsa521_pub_key, "", "", "")).verify(decoded));
 }
 
 TYPED_TEST(TokenTest, CreateTokenES512NoPrivate) {
@@ -274,14 +282,15 @@ TYPED_TEST(TokenTest, CreateTokenES512NoPrivate) {
 #if !defined(JWT_OPENSSL_1_0_0) && !defined(JWT_OPENSSL_1_1_0)
 TYPED_TEST(TokenTest, CreateTokenEd25519) {
 
-	auto token =
-		jwt::create<TypeParam>().set_issuer("auth0").set_type("JWS").sign(jwt::algorithm::ed25519("", ed25519_priv_key, "", ""));
+	auto token = jwt::create<TypeParam>().set_issuer("auth0").set_type("JWS").sign(
+		jwt::algorithm::ed25519("", ed25519_priv_key, "", ""));
 
 	auto decoded = jwt::decode<TypeParam>(token);
 
-	EXPECT_THROW(
-		jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::ed25519(ed25519_pub_key_invalid, "", "", "")).verify(decoded),
-		jwt::error::signature_verification_exception);
+	EXPECT_THROW(jwt::verify<TypeParam>()
+					 .allow_algorithm(jwt::algorithm::ed25519(ed25519_pub_key_invalid, "", "", ""))
+					 .verify(decoded),
+				 jwt::error::signature_verification_exception);
 	EXPECT_NO_THROW(
 		jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::ed25519(ed25519_pub_key, "", "", "")).verify(decoded));
 }
@@ -289,15 +298,17 @@ TYPED_TEST(TokenTest, CreateTokenEd25519) {
 #if !defined(LIBRESSL_VERSION_NUMBER)
 TYPED_TEST(TokenTest, CreateTokenEd448) {
 
-	auto token =
-		jwt::create<TypeParam>().set_issuer("auth0").set_type("JWS").sign(jwt::algorithm::ed448("", ed448_priv_key, "", ""));
+	auto token = jwt::create<TypeParam>().set_issuer("auth0").set_type("JWS").sign(
+		jwt::algorithm::ed448("", ed448_priv_key, "", ""));
 
 	auto decoded = jwt::decode<TypeParam>(token);
 
-	EXPECT_THROW(
-		jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::ed448(ed448_pub_key_invalid, "", "", "")).verify(decoded),
-		jwt::error::signature_verification_exception);
-	EXPECT_NO_THROW(jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::ed448(ed448_pub_key, "", "", "")).verify(decoded));
+	EXPECT_THROW(jwt::verify<TypeParam>()
+					 .allow_algorithm(jwt::algorithm::ed448(ed448_pub_key_invalid, "", "", ""))
+					 .verify(decoded),
+				 jwt::error::signature_verification_exception);
+	EXPECT_NO_THROW(
+		jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::ed448(ed448_pub_key, "", "", "")).verify(decoded));
 }
 #endif // !LIBRESSL_VERSION_NUMBER
 #endif // !JWT_OPENSSL_1_0_0 && !JWT_OPENSSL_1_1_0
@@ -330,7 +341,8 @@ TYPED_TEST(TokenTest, VerifyTokenNoneFail) {
 TYPED_TEST(TokenTest, VerifyTokenRS256FailNoKey) {
 	EXPECT_THROW(
 		[]() {
-			auto verify = jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::rs256("", "", "", "")).with_issuer("auth0");
+			auto verify =
+				jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::rs256("", "", "", "")).with_issuer("auth0");
 		}(),
 		jwt::error::rsa_exception);
 }
@@ -342,8 +354,9 @@ TYPED_TEST(TokenTest, VerifyTokenRS256) {
 		"YD0iZhNIcI7a654u5yPYyTlf5kjR97prCf_OXWRn-bYY74zna4p_bP9oWCL4BkaoRcMxi-IR7kmVcCnvbYqyIrKloXP2qPO442RBGqU7Ov9"
 		"sGQxiVqtRHKXZR9RbfvjrErY1KGiCp9M5i2bsUHadZEY44FE2jiOmx-uc2z5c05CCXqVSpfCjWbh9gQ";
 
-	auto verify =
-		jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::rs256(rsa_pub_key, rsa_priv_key, "", "")).with_issuer("auth0");
+	auto verify = jwt::verify<TypeParam>()
+					  .allow_algorithm(jwt::algorithm::rs256(rsa_pub_key, rsa_priv_key, "", ""))
+					  .with_issuer("auth0");
 
 	auto decoded_token = jwt::decode<TypeParam>(token);
 
@@ -374,7 +387,8 @@ TYPED_TEST(TokenTest, VerifyTokenRS256PublicOnly) {
 		"YD0iZhNIcI7a654u5yPYyTlf5kjR97prCf_OXWRn-bYY74zna4p_bP9oWCL4BkaoRcMxi-IR7kmVcCnvbYqyIrKloXP2qPO442RBGqU7Ov9"
 		"sGQxiVqtRHKXZR9RbfvjrErY1KGiCp9M5i2bsUHadZEY44FE2jiOmx-uc2z5c05CCXqVSpfCjWbh9gQ";
 
-	auto verify = jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::rs256(rsa_pub_key, "", "", "")).with_issuer("auth0");
+	auto verify =
+		jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::rs256(rsa_pub_key, "", "", "")).with_issuer("auth0");
 
 	auto decoded_token = jwt::decode<TypeParam>(token);
 
@@ -418,8 +432,9 @@ JwIDAQAB
 						"S2OlNKawt24qnOhRtwE8QuckfOiiIjCtPH8798cOZzBrsqMdKTYhlFM28dTkejP_AgJUwD6QujSm2is0kAg1_"
 						"SXxKTDSHVlg8irtG9ZQZXcuhaZCieAE1uIlJmKpEg4MUHVfvMsgy0N0p64NOiHa6bQsEb3NFn7UAe55jKQ";
 
-	auto verify =
-		jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::rs256(rsa_public, "", rsa_passphrase, "")).with_issuer("auth0");
+	auto verify = jwt::verify<TypeParam>()
+					  .allow_algorithm(jwt::algorithm::rs256(rsa_public, "", rsa_passphrase, ""))
+					  .with_issuer("auth0");
 
 	auto decoded_token = jwt::decode<TypeParam>(token);
 
@@ -433,7 +448,8 @@ TYPED_TEST(TokenTest, VerifyTokenRS256PrivateOnly) {
 		"YD0iZhNIcI7a654u5yPYyTlf5kjR97prCf_OXWRn-bYY74zna4p_bP9oWCL4BkaoRcMxi-IR7kmVcCnvbYqyIrKloXP2qPO442RBGqU7Ov9"
 		"sGQxiVqtRHKXZR9RbfvjrErY1KGiCp9M5i2bsUHadZEY44FE2jiOmx-uc2z5c05CCXqVSpfCjWbh9gQ";
 
-	auto verify = jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::rs256("", rsa_priv_key, "", "")).with_issuer("auth0");
+	auto verify =
+		jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::rs256("", rsa_priv_key, "", "")).with_issuer("auth0");
 
 	auto decoded_token = jwt::decode<TypeParam>(token);
 
@@ -447,8 +463,9 @@ TYPED_TEST(TokenTest, VerifyTokenRS256Fail) {
 		"YD0iZhNIcI7a654u5yPYyTlf5kjR97prCf_OXWRn-bYY74zna4p_bP9oWCL4BkaoRcMxi-IR7kmVcCnvbYqyIrKloXP2qPO442RBGqU7Ov9"
 		"sGQxiVqtRHKXZR9RbfvjrErY1KGiCp9M5i2bsUHadZEY44FE2jiOmx-uc2z5c05CCXqVSpfCjWbh9gQ";
 
-	auto verify =
-		jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::rs256(rsa_pub_key_invalid, "", "", "")).with_issuer("auth0");
+	auto verify = jwt::verify<TypeParam>()
+					  .allow_algorithm(jwt::algorithm::rs256(rsa_pub_key_invalid, "", "", ""))
+					  .with_issuer("auth0");
 
 	auto decoded_token = jwt::decode<TypeParam>(token);
 
@@ -476,7 +493,9 @@ TYPED_TEST(TokenTest, VerifyTokenRS512PublicOnly) {
 		"SSQyLKvI0TK86sJKchkt_HDy2IC5l5BGRhq_Xv9pHdA1umidQZG3a7gWvHsujqybCBgBraMTd1wJrCl4QxFg2RYHhHbRqb9BnPJgFD_vryd4"
 		"GBhfGgejPBCBlGrQtqFGFdHHOjNHY";
 
-	auto verify = jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::rs512(rsa512_pub_key, "", "", "")).with_issuer("auth0");
+	auto verify = jwt::verify<TypeParam>()
+					  .allow_algorithm(jwt::algorithm::rs512(rsa512_pub_key, "", "", ""))
+					  .with_issuer("auth0");
 
 	auto decoded_token = jwt::decode<TypeParam>(token);
 
@@ -489,8 +508,9 @@ TYPED_TEST(TokenTest, VerifyTokenRS512PrivateOnly) {
 		"SSQyLKvI0TK86sJKchkt_HDy2IC5l5BGRhq_Xv9pHdA1umidQZG3a7gWvHsujqybCBgBraMTd1wJrCl4QxFg2RYHhHbRqb9BnPJgFD_vryd4"
 		"GBhfGgejPBCBlGrQtqFGFdHHOjNHY";
 
-	auto verify =
-		jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::rs512("", rsa512_priv_key, "", "")).with_issuer("auth0");
+	auto verify = jwt::verify<TypeParam>()
+					  .allow_algorithm(jwt::algorithm::rs512("", rsa512_priv_key, "", ""))
+					  .with_issuer("auth0");
 
 	auto decoded_token = jwt::decode<TypeParam>(token);
 
@@ -503,8 +523,9 @@ TYPED_TEST(TokenTest, VerifyTokenRS512Fail) {
 		"SSQyLKvI0TK86sJKchkt_HDy2IC5l5BGRhq_Xv9pHdA1umidQZG3a7gWvHsujqybCBgBraMTd1wJrCl4QxFg2RYHhHbRqb9BnPJgFD_vryd4"
 		"GBhfGgejPBCBlGrQtqFGFdHHOjNHY";
 
-	auto verify =
-		jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::rs512(rsa_pub_key_invalid, "", "", "")).with_issuer("auth0");
+	auto verify = jwt::verify<TypeParam>()
+					  .allow_algorithm(jwt::algorithm::rs512(rsa_pub_key_invalid, "", "", ""))
+					  .with_issuer("auth0");
 
 	auto decoded_token = jwt::decode<TypeParam>(token);
 
@@ -568,13 +589,17 @@ TYPED_TEST(TokenTest, VerifyFail) {
 			EXPECT_THROW(verify.verify(decoded_token), jwt::error::token_verification_exception);
 		}
 		{
-			auto verify =
-				jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::none{}).with_issuer("auth0").with_audience("test");
+			auto verify = jwt::verify<TypeParam>()
+							  .allow_algorithm(jwt::algorithm::none{})
+							  .with_issuer("auth0")
+							  .with_audience("test");
 			EXPECT_THROW(verify.verify(decoded_token), jwt::error::token_verification_exception);
 		}
 		{
-			auto verify =
-				jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::none{}).with_issuer("auth0").with_subject("test");
+			auto verify = jwt::verify<TypeParam>()
+							  .allow_algorithm(jwt::algorithm::none{})
+							  .with_issuer("auth0")
+							  .with_subject("test");
 			EXPECT_THROW(verify.verify(decoded_token), jwt::error::token_verification_exception);
 		}
 		{
@@ -585,10 +610,11 @@ TYPED_TEST(TokenTest, VerifyFail) {
 			EXPECT_THROW(verify.verify(decoded_token), jwt::error::token_verification_exception);
 		}
 		{
-			auto verify = jwt::verify<TypeParam>()
-							  .allow_algorithm(jwt::algorithm::none{})
-							  .with_issuer("auth0")
-							  .with_claim("typetest", jwt::basic_claim<TypeParam>(typename TypeParam::value_type(true)));
+			auto verify =
+				jwt::verify<TypeParam>()
+					.allow_algorithm(jwt::algorithm::none{})
+					.with_issuer("auth0")
+					.with_claim("typetest", jwt::basic_claim<TypeParam>(typename TypeParam::value_type(true)));
 			EXPECT_THROW(verify.verify(decoded_token), jwt::error::token_verification_exception);
 		}
 		{
@@ -610,8 +636,10 @@ TYPED_TEST(TokenTest, VerifyFail) {
 		auto decoded_token = jwt::decode<TypeParam>(token);
 
 		{
-			auto verify =
-				jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::none{}).with_issuer("auth0").with_audience("test");
+			auto verify = jwt::verify<TypeParam>()
+							  .allow_algorithm(jwt::algorithm::none{})
+							  .with_issuer("auth0")
+							  .with_audience("test");
 			EXPECT_THROW(verify.verify(decoded_token), jwt::error::token_verification_exception);
 		}
 	}
@@ -620,7 +648,8 @@ TYPED_TEST(TokenTest, VerifyFail) {
 TYPED_TEST(TokenTest, VerifyTokenES256FailNoKey) {
 	EXPECT_THROW(
 		[]() {
-			auto verify = jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::es256("", "", "", "")).with_issuer("auth0");
+			auto verify =
+				jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::es256("", "", "", "")).with_issuer("auth0");
 		}(),
 		jwt::error::ecdsa_exception);
 }
@@ -720,8 +749,9 @@ TYPED_TEST(TokenTest, VerifyTokenPS256) {
 		"N5KY67UrVSr3s9nkuK9ZTQkyODHfyEUh9F_FhRCATGrb5G7_qHqBYvTvaPUXqzhhpCjN855Tocg7A24Hl0yMwM-XdasucW5xNdKjG_YCkis"
 		"HX7ax--JiF5GNYCO61eLFteO4THUg-3Z0r4OlGqlppyWo5X5tjcxOZCvBh7WDWfkxA48KFZPRv0nlKA";
 
-	auto verify =
-		jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::ps256(rsa_pub_key, rsa_priv_key, "", "")).with_issuer("auth0");
+	auto verify = jwt::verify<TypeParam>()
+					  .allow_algorithm(jwt::algorithm::ps256(rsa_pub_key, rsa_priv_key, "", ""))
+					  .with_issuer("auth0");
 
 	auto decoded_token = jwt::decode<TypeParam>(token);
 
@@ -735,7 +765,8 @@ TYPED_TEST(TokenTest, VerifyTokenPS256PublicOnly) {
 		"N5KY67UrVSr3s9nkuK9ZTQkyODHfyEUh9F_FhRCATGrb5G7_qHqBYvTvaPUXqzhhpCjN855Tocg7A24Hl0yMwM-XdasucW5xNdKjG_YCkis"
 		"HX7ax--JiF5GNYCO61eLFteO4THUg-3Z0r4OlGqlppyWo5X5tjcxOZCvBh7WDWfkxA48KFZPRv0nlKA";
 
-	auto verify = jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::ps256(rsa_pub_key, "", "", "")).with_issuer("auth0");
+	auto verify =
+		jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::ps256(rsa_pub_key, "", "", "")).with_issuer("auth0");
 
 	auto decoded_token = jwt::decode<TypeParam>(token);
 
@@ -749,8 +780,9 @@ TYPED_TEST(TokenTest, VerifyTokenPS256Fail) {
 		"N5KY67UrVSr3s9nkuK9ZTQkyODHfyEUh9F_FhRCATGrb5G7_qHqBYvTvaPUXqzhhpCjN855Tocg7A24Hl0yMwM-XdasucW5xNdKjG_YCkis"
 		"HX7ax--JiF5GNYCO61eLFteO4THUg-3Z0r4OlGqlppyWo5X5tjcxOZCvBh7WDWfkxA48KFZPRv0nlKA";
 
-	auto verify =
-		jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::ps256(rsa_pub_key_invalid, "", "", "")).with_issuer("auth0");
+	auto verify = jwt::verify<TypeParam>()
+					  .allow_algorithm(jwt::algorithm::ps256(rsa_pub_key_invalid, "", "", ""))
+					  .with_issuer("auth0");
 
 	auto decoded_token = jwt::decode<TypeParam>(token);
 
@@ -760,7 +792,8 @@ TYPED_TEST(TokenTest, VerifyTokenPS256Fail) {
 TYPED_TEST(TokenTest, VerifyTokenPS256FailNoKey) {
 	EXPECT_THROW(
 		[]() {
-			auto verify = jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::ps256("", "", "", "")).with_issuer("auth0");
+			auto verify =
+				jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::ps256("", "", "", "")).with_issuer("auth0");
 		}(),
 		jwt::error::rsa_exception);
 }
@@ -782,7 +815,8 @@ TYPED_TEST(TokenTest, VerifyTokenEd25519Fail) {
 		"eyJhbGciOiJFZERTQSIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.OujgVcO8xQx5xLcAYWENCRU1SCGH5HcX4MX4o6wU3M4"
 		"DOnKiNmc0O2AnvQlzr-9cgI4QGQzeC6gz_fgLoesADg";
 
-	auto verify = jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::ed25519(ed25519_pub_key_invalid, "", "", ""));
+	auto verify =
+		jwt::verify<TypeParam>().allow_algorithm(jwt::algorithm::ed25519(ed25519_pub_key_invalid, "", "", ""));
 	auto decoded_token = jwt::decode<TypeParam>(token);
 
 	EXPECT_THROW(verify.verify(decoded_token), jwt::error::signature_verification_exception);
@@ -821,7 +855,9 @@ struct test_clock {
 };
 
 TYPED_TEST(TokenTest, VerifyTokenExpireFail) {
-	auto token = jwt::create<TypeParam>().set_expires_at(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
+	auto token = jwt::create<TypeParam>()
+					 .set_expires_at(std::chrono::system_clock::from_time_t(100))
+					 .sign(jwt::algorithm::none{});
 	auto decoded_token = jwt::decode<TypeParam>(token);
 
 	auto verify = jwt::verify<test_clock, TypeParam>({std::chrono::system_clock::from_time_t(110)})
@@ -835,7 +871,9 @@ TYPED_TEST(TokenTest, VerifyTokenExpireFail) {
 }
 
 TYPED_TEST(TokenTest, VerifyTokenExpire) {
-	auto token = jwt::create<TypeParam>().set_expires_at(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
+	auto token = jwt::create<TypeParam>()
+					 .set_expires_at(std::chrono::system_clock::from_time_t(100))
+					 .sign(jwt::algorithm::none{});
 	auto decoded_token = jwt::decode<TypeParam>(token);
 
 	auto verify = jwt::verify<test_clock, TypeParam>({std::chrono::system_clock::from_time_t(90)})
@@ -848,7 +886,9 @@ TYPED_TEST(TokenTest, VerifyTokenExpire) {
 }
 
 TYPED_TEST(TokenTest, VerifyTokenNBFFail) {
-	auto token = jwt::create<TypeParam>().set_not_before(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
+	auto token = jwt::create<TypeParam>()
+					 .set_not_before(std::chrono::system_clock::from_time_t(100))
+					 .sign(jwt::algorithm::none{});
 	auto decoded_token = jwt::decode<TypeParam>(token);
 
 	auto verify = jwt::verify<test_clock, TypeParam>({std::chrono::system_clock::from_time_t(90)})
@@ -862,7 +902,9 @@ TYPED_TEST(TokenTest, VerifyTokenNBFFail) {
 }
 
 TYPED_TEST(TokenTest, VerifyTokenNBF) {
-	auto token = jwt::create<TypeParam>().set_not_before(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
+	auto token = jwt::create<TypeParam>()
+					 .set_not_before(std::chrono::system_clock::from_time_t(100))
+					 .sign(jwt::algorithm::none{});
 	auto decoded_token = jwt::decode<TypeParam>(token);
 
 	auto verify = jwt::verify<test_clock, TypeParam>({std::chrono::system_clock::from_time_t(110)})
@@ -875,7 +917,9 @@ TYPED_TEST(TokenTest, VerifyTokenNBF) {
 }
 
 TYPED_TEST(TokenTest, VerifyTokenIATFail) {
-	auto token = jwt::create<TypeParam>().set_issued_at(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
+	auto token = jwt::create<TypeParam>()
+					 .set_issued_at(std::chrono::system_clock::from_time_t(100))
+					 .sign(jwt::algorithm::none{});
 	auto decoded_token = jwt::decode<TypeParam>(token);
 
 	auto verify = jwt::verify<test_clock, TypeParam>({std::chrono::system_clock::from_time_t(90)})
@@ -889,7 +933,9 @@ TYPED_TEST(TokenTest, VerifyTokenIATFail) {
 }
 
 TYPED_TEST(TokenTest, VerifyTokenIAT) {
-	auto token = jwt::create<TypeParam>().set_issued_at(std::chrono::system_clock::from_time_t(100)).sign(jwt::algorithm::none{});
+	auto token = jwt::create<TypeParam>()
+					 .set_issued_at(std::chrono::system_clock::from_time_t(100))
+					 .sign(jwt::algorithm::none{});
 	auto decoded_token = jwt::decode<TypeParam>(token);
 
 	auto verify = jwt::verify<test_clock, TypeParam>({std::chrono::system_clock::from_time_t(110)})
@@ -907,7 +953,8 @@ TYPED_TEST(TokenTest, VerifyTokenType) {
 	ASSERT_NO_THROW(jwt::decode<TypeParam>(token));
 	auto decoded_token = jwt::decode<TypeParam>(token);
 
-	ASSERT_NO_THROW(jwt::verify<TypeParam>().with_type("jws").allow_algorithm(jwt::algorithm::none{}).verify(decoded_token));
+	ASSERT_NO_THROW(
+		jwt::verify<TypeParam>().with_type("jws").allow_algorithm(jwt::algorithm::none{}).verify(decoded_token));
 	auto verify = jwt::verify<TypeParam>().with_type("jws").allow_algorithm(jwt::algorithm::none{});
 	EXPECT_NO_THROW(verify.verify(decoded_token));
 	std::error_code ec;

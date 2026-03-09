@@ -7,13 +7,17 @@ class TokenFormatTest : public ::testing::Test {};
 TYPED_TEST_SUITE(TokenFormatTest, AllTraitTypes);
 
 TYPED_TEST(TokenFormatTest, MissingDot) {
-	EXPECT_THROW(jwt::decode<TypeParam>("eyJhbGciOiJub25lIiwidHlwIjoiSldTIn0.eyJpc3MiOiJhdXRoMCJ9"), std::invalid_argument);
-	EXPECT_THROW(jwt::decode<TypeParam>("eyJhbGciOiJub25lIiwidHlwIjoiSldTIn0eyJpc3MiOiJhdXRoMCJ9."), std::invalid_argument);
-	EXPECT_THROW(jwt::decode<TypeParam>("eyJhbGciOiJub25lIiwidHlwIjoiSldTIn0eyJpc3MiOiJhdXRoMCJ9"), std::invalid_argument);
+	EXPECT_THROW(jwt::decode<TypeParam>("eyJhbGciOiJub25lIiwidHlwIjoiSldTIn0.eyJpc3MiOiJhdXRoMCJ9"),
+				 std::invalid_argument);
+	EXPECT_THROW(jwt::decode<TypeParam>("eyJhbGciOiJub25lIiwidHlwIjoiSldTIn0eyJpc3MiOiJhdXRoMCJ9."),
+				 std::invalid_argument);
+	EXPECT_THROW(jwt::decode<TypeParam>("eyJhbGciOiJub25lIiwidHlwIjoiSldTIn0eyJpc3MiOiJhdXRoMCJ9"),
+				 std::invalid_argument);
 }
 
 TYPED_TEST(TokenFormatTest, InvalidChar) {
-	EXPECT_THROW(jwt::decode<TypeParam>("eyJhbGciOiJub25lIiwidHlwIjoiSldTIn0().eyJpc3MiOiJhdXRoMCJ9."), std::runtime_error);
+	EXPECT_THROW(jwt::decode<TypeParam>("eyJhbGciOiJub25lIiwidHlwIjoiSldTIn0().eyJpc3MiOiJhdXRoMCJ9."),
+				 std::runtime_error);
 }
 
 TYPED_TEST(TokenFormatTest, InvalidJSON) {

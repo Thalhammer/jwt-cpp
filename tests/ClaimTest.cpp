@@ -63,15 +63,17 @@ TYPED_TEST(ClaimTest, AudienceAsSet) {
 TYPED_TEST(ClaimTest, SetAudienceAsSet) {
 	auto token = jwt::create<TypeParam>()
 					 .set_type("JWT")
-					 .set_audience(typename TypeParam::array_type{typename TypeParam::value_type("test"), typename TypeParam::value_type("test2")})
+					 .set_audience(typename TypeParam::array_type{typename TypeParam::value_type("test"),
+																  typename TypeParam::value_type("test2")})
 					 .sign(jwt::algorithm::none{});
 	EXPECT_EQ("eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJhdWQiOlsidGVzdCIsInRlc3QyIl19.", token);
 }
 
 TYPED_TEST(ClaimTest, SetArray) {
 	std::vector<int64_t> vect = {100, 20, 10};
-	auto token =
-		jwt::create<TypeParam>().set_payload_claim("test", jwt::basic_claim<TypeParam>(vect.begin(), vect.end())).sign(jwt::algorithm::none{});
+	auto token = jwt::create<TypeParam>()
+					 .set_payload_claim("test", jwt::basic_claim<TypeParam>(vect.begin(), vect.end()))
+					 .sign(jwt::algorithm::none{});
 	EXPECT_EQ(token, "eyJhbGciOiJub25lIn0.eyJ0ZXN0IjpbMTAwLDIwLDEwXX0.");
 }
 
