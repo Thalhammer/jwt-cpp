@@ -36,7 +36,7 @@ tar -zxf "v${glaze_VERSION}.tar.gz"
 # Build and install
 echo "Building and installing..."
 cd "${BUILD_DIR}"
-mkdir build
+mkdir -p build
 cd build
 cmake ..  -DCMAKE_BUILD_TYPE=Release
 sudo cmake --install .
