@@ -17,7 +17,7 @@ jobs:
       - uses: ./.github/actions/install/boost-json
       - uses: ./.github/actions/install/open-source-parsers-jsoncpp
       - uses: ./.github/actions/install/glaze-json
-
+      - uses: ./.github/actions/install/reflectcpp-json
 
       - name: Configure LCOV to ignore mismatches
         # https://github.com/linux-test-project/lcov/issues/316#issuecomment-2304694266
