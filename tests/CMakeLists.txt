@@ -166,12 +166,12 @@ target_compile_options(
                        $<$<CXX_COMPILER_ID:Clang>:${JWT_TESTER_CLANG_FLAGS}>)
 
 if(HUNTER_ENABLED)
-  target_link_libraries(jwt-cpp-test PRIVATE GTest::gtest GTest::gtest_main)
+  target_link_libraries(jwt-cpp-test PRIVATE GTest::gtest GTest::gtest_main GTest::gmock)
   # Define a compile define to bypass openssl error tests
   target_compile_definitions(jwt-cpp-test PRIVATE HUNTER_ENABLED=1)
 else()
   # https://github.com/google/googletest/blob/eb80f759d595874a5e905a3342bd8e2af4c0a12d/googletest/README.md?plain=1#L62-L64
-  target_link_libraries(jwt-cpp-test PRIVATE GTest::gtest_main)
+  target_link_libraries(jwt-cpp-test PRIVATE GTest::gtest_main GTest::gmock)
   if(TARGET jsoncons)
     target_link_libraries(jwt-cpp-test PRIVATE jsoncons)
   endif()

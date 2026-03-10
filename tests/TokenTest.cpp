@@ -1,6 +1,8 @@
 // Include the generated trait type list for parameterized testing
 #include "traits_typelist.h"
-#include <gtest/gtest.h>
+
+#include <gmock/gmock.h>
+using ::testing::AnyOf;
 
 template<typename Trait>
 class TokenTest : public ::testing::Test {};
@@ -57,37 +59,54 @@ TYPED_TEST(TokenTest, DecodeToken) {
 
 TYPED_TEST(TokenTest, CreateToken) {
 	auto token = jwt::create<TypeParam>().set_issuer("auth0").set_type("JWS").sign(jwt::algorithm::none{});
-	EXPECT_EQ("eyJhbGciOiJub25lIiwidHlwIjoiSldTIn0.eyJpc3MiOiJhdXRoMCJ9.", token);
+	EXPECT_THAT(token, AnyOf("eyJhbGciOiJub25lIiwidHlwIjoiSldTIn0.eyJpc3MiOiJhdXRoMCJ9.",
+							 "eyJ0eXAiOiJKV1MiLCJhbGciOiJub25lIn0.eyJpc3MiOiJhdXRoMCJ9."));
 }
 
 TYPED_TEST(TokenTest, CreateTokenHS256) {
 	auto token = jwt::create<TypeParam>().set_issuer("auth0").set_type("JWS").sign(jwt::algorithm::hs256{"secret"});
-	EXPECT_EQ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE",
-			  token);
+	EXPECT_THAT(
+		token,
+		AnyOf("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE",
+			  "eyJ0eXAiOiJKV1MiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJhdXRoMCJ9.4cAAvglS11pWWgSYUdrBYT0QbkBbv-LBCbVDBMYan2g"));
 }
 
 TYPED_TEST(TokenTest, CreateTokenRS256) {
 	auto token = jwt::create<TypeParam>().set_issuer("auth0").set_type("JWS").sign(
 		jwt::algorithm::rs256(rsa_pub_key, rsa_priv_key, "", ""));
 
-	EXPECT_EQ(
-		"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
-		"HAZCTQxa1Q8NppnpYV-hlqxh-X3Bb0JOePTGzjynpNZoJh2aHZD-GKpZt7OO1Zp8AFWPZ3p8Cahq8536fD8RiBES9jRsvChZvOqA7gMcFc4"
-		"YD0iZhNIcI7a654u5yPYyTlf5kjR97prCf_OXWRn-bYY74zna4p_bP9oWCL4BkaoRcMxi-IR7kmVcCnvbYqyIrKloXP2qPO442RBGqU7Ov9"
-		"sGQxiVqtRHKXZR9RbfvjrErY1KGiCp9M5i2bsUHadZEY44FE2jiOmx-uc2z5c05CCXqVSpfCjWbh9gQ",
-		token);
+	EXPECT_THAT(token, AnyOf("eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9."
+							 "VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
+							 "HAZCTQxa1Q8NppnpYV-hlqxh-X3Bb0JOePTGzjynpNZoJh2aHZD-"
+							 "GKpZt7OO1Zp8AFWPZ3p8Cahq8536fD8RiBES9jRsvChZvOqA7gMcFc4"
+							 "YD0iZhNIcI7a654u5yPYyTlf5kjR97prCf_OXWRn-bYY74zna4p_bP9oWCL4BkaoRcMxi-"
+							 "IR7kmVcCnvbYqyIrKloXP2qPO442RBGqU7Ov9"
+							 "sGQxiVqtRHKXZR9RbfvjrErY1KGiCp9M5i2bsUHadZEY44FE2jiOmx-uc2z5c05CCXqVSpfCjWbh9gQ",
+							 "eyJ0eXAiOiJKV1MiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJhdXRoMCJ9."
+							 "uDKRv4xfFzPDVAQq9OsvJiVBkLFU67rikyKbVzhZd8NVhtI-MCk_"
+							 "AnQBU4NXMiKh5G5YrMjgXpPhqVMo8TW6yamkkv2qeJ0YFzEqrNvJYrqtxaHRthtWcNgoF3DflK78DwPuJUZXtzbKE"
+							 "Kx6FVRhB2h4yK88ic2Cc5lFKfxDwsNxanm0BtJ2JuS6iOD3JfSjHuL24cGP_"
+							 "IiDVpf2LCZcVjmlTBjJ6XrWTBDfM7igxDGQ3lZehE8iu0fvPsELPQQHl6u1uiIm9QEMq9MYF4-"
+							 "fv0aEaV2lo6b360kfmY64nBhzfaEisW1ilsrrTHnZWoN5evrDUCYT3bVFSvPlCzS2RA"));
 }
 
 TYPED_TEST(TokenTest, CreateTokenEvpPkeyRS256) {
 	auto token = jwt::create<TypeParam>().set_issuer("auth0").set_type("JWS").sign(
 		jwt::algorithm::rsa(jwt::helper::load_private_key_from_string(rsa_priv_key), EVP_sha256, "RS256"));
 
-	EXPECT_EQ(
-		"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
-		"HAZCTQxa1Q8NppnpYV-hlqxh-X3Bb0JOePTGzjynpNZoJh2aHZD-GKpZt7OO1Zp8AFWPZ3p8Cahq8536fD8RiBES9jRsvChZvOqA7gMcFc4"
-		"YD0iZhNIcI7a654u5yPYyTlf5kjR97prCf_OXWRn-bYY74zna4p_bP9oWCL4BkaoRcMxi-IR7kmVcCnvbYqyIrKloXP2qPO442RBGqU7Ov9"
-		"sGQxiVqtRHKXZR9RbfvjrErY1KGiCp9M5i2bsUHadZEY44FE2jiOmx-uc2z5c05CCXqVSpfCjWbh9gQ",
-		token);
+	EXPECT_THAT(token, AnyOf("eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9."
+							 "VA2i1ui1cnoD6I3wnji1WAVCf29EekysvevGrT2GXqK1dDMc8"
+							 "HAZCTQxa1Q8NppnpYV-hlqxh-X3Bb0JOePTGzjynpNZoJh2aHZD-"
+							 "GKpZt7OO1Zp8AFWPZ3p8Cahq8536fD8RiBES9jRsvChZvOqA7gMcFc4"
+							 "YD0iZhNIcI7a654u5yPYyTlf5kjR97prCf_OXWRn-bYY74zna4p_bP9oWCL4BkaoRcMxi-"
+							 "IR7kmVcCnvbYqyIrKloXP2qPO442RBGqU7Ov9"
+							 "sGQxiVqtRHKXZR9RbfvjrErY1KGiCp9M5i2bsUHadZEY44FE2jiOmx-uc2z5c05CCXqVSpfCjWbh9gQ",
+							 "eyJ0eXAiOiJKV1MiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJhdXRoMCJ9."
+							 "uDKRv4xfFzPDVAQq9OsvJiVBkLFU67rikyKbVzhZd8NVhtI-MCk_"
+							 "AnQBU4NXMiKh5G5YrMjgXpPhqVMo8TW6yamkkv2qeJ0YFzEqrNvJYrqtxaHRthtWcNgoF3DflK78DwPuJUZXtzbKE"
+							 "Kx6FVRhB2h4yK88ic2Cc5lFKfxDwsNxanm0BtJ2JuS6iOD3JfSjHuL24cGP_"
+							 "IiDVpf2LCZcVjmlTBjJ6XrWTBDfM7igxDGQ3lZehE8iu0fvPsELPQQHl6u1uiIm9QEMq9MYF4-"
+							 "fv0aEaV2lo6b360kfmY64nBhzfaEisW1ilsrrTHnZWoN5evrDUCYT3bVFSvPlCzS2RA"));
 }
 
 #if !defined(JWT_OPENSSL_1_0_0)
@@ -138,12 +157,17 @@ ixip+DkPtcbSsFjn2bVnknYYluk+Qupw/kWGxyFbvC1sYhn1iNwFv0g=
 	auto token = jwt::create<TypeParam>().set_issuer("auth0").set_type("JWS").sign(
 		jwt::algorithm::rs256(rsa_public, rsa_private, rsa_passphrase, rsa_passphrase));
 
-	EXPECT_EQ("eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.HL2mq18xubKWG1j4GZI2DLBi-"
-			  "wajNyI9QotK31VjX1pQdfarHr9OsX5qiHydXfPBJSj-O4xIeH92LGslH1Z3rYiEwrq0dN6hr8nFfcBUYHu1nntYe_"
-			  "hVFXdx5oK8V427aKPUxlBq8MyOGLYFCXFKYWLinLTCihPHnEV5LFI2HGGtWm-"
-			  "S2OlNKawt24qnOhRtwE8QuckfOiiIjCtPH8798cOZzBrsqMdKTYhlFM28dTkejP_AgJUwD6QujSm2is0kAg1_"
-			  "SXxKTDSHVlg8irtG9ZQZXcuhaZCieAE1uIlJmKpEg4MUHVfvMsgy0N0p64NOiHa6bQsEb3NFn7UAe55jKQ",
-			  token);
+	EXPECT_THAT(token, AnyOf("eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.HL2mq18xubKWG1j4GZI2DLBi-"
+							 "wajNyI9QotK31VjX1pQdfarHr9OsX5qiHydXfPBJSj-O4xIeH92LGslH1Z3rYiEwrq0dN6hr8nFfcBUYHu1nntYe_"
+							 "hVFXdx5oK8V427aKPUxlBq8MyOGLYFCXFKYWLinLTCihPHnEV5LFI2HGGtWm-"
+							 "S2OlNKawt24qnOhRtwE8QuckfOiiIjCtPH8798cOZzBrsqMdKTYhlFM28dTkejP_AgJUwD6QujSm2is0kAg1_"
+							 "SXxKTDSHVlg8irtG9ZQZXcuhaZCieAE1uIlJmKpEg4MUHVfvMsgy0N0p64NOiHa6bQsEb3NFn7UAe55jKQ",
+							 "eyJ0eXAiOiJKV1MiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJhdXRoMCJ9."
+							 "euR6TAvNGYyA1yqPa5DcwYhMHO1XhP0Guv4lP4ZDlG0v9gW4jHF8b1pJpfZnbXeUyt6xlJK6B_fe_"
+							 "vPJX8h6gkDkX8dywD65ULpsboGUqBkPZmy19cnPaFLsOZud2F_"
+							 "WR8demr1I7P0GvClvj1Vc1GLH75htKds9TUsGwCPI4TRY1MTeMdFxkSOaLPMLSgjXtqdk8IDNvvy718COQ3QQ_"
+							 "VLeOECeEuVvvAcLIymZVdgmu_VesmoerRqDWQwYUsug8tJYN3QDfzLU4WrGbXXO_1z8t1QzOf5jgzH4IHQGXbRJ-"
+							 "5H6oCw3hz5o27RrJW6tTrjLDPELPQq2tOseePqF6w"));
 }
 #endif
 
@@ -151,10 +175,14 @@ TYPED_TEST(TokenTest, CreateTokenRS512) {
 	auto token = jwt::create<TypeParam>().set_issuer("auth0").set_type("JWS").sign(
 		jwt::algorithm::rs512(rsa512_pub_key, rsa512_priv_key, "", ""));
 
-	EXPECT_EQ("eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.GZhnjtsvBl2_KDSxg4JW6xnmNjr2mWhYSZSSQyLKvI0"
+	EXPECT_THAT(
+		token,
+		AnyOf("eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.GZhnjtsvBl2_KDSxg4JW6xnmNjr2mWhYSZSSQyLKvI0"
 			  "TK86sJKchkt_HDy2IC5l5BGRhq_Xv9pHdA1umidQZG3a7gWvHsujqybCBgBraMTd1wJrCl4QxFg2RYHhHbRqb9BnPJgFD_vryd4GB"
 			  "hfGgejPBCBlGrQtqFGFdHHOjNHY",
-			  token);
+			  "eyJ0eXAiOiJKV1MiLCJhbGciOiJSUzUxMiJ9.eyJpc3MiOiJhdXRoMCJ9.yoJDOjEs1SsuLk5X7QunClqmmcLW8IaoH_"
+			  "wmueLlAS87OCDnEsGUosfomktPqBRVbOrTaX_SHDH-7OnpmaNA8gX3xMzAeloZFwuYFcZSwKWtX1e8EtjCUXLYr-"
+			  "TReHxeJslf81rLQJBUm1tWFhlorWZ7a8qo_VKoUWteED7M_mA"));
 }
 
 TYPED_TEST(TokenTest, CreateTokenPS256) {

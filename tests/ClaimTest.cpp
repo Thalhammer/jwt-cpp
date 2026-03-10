@@ -1,6 +1,9 @@
 // Include the generated trait type list for parameterized testing
 #include "traits_typelist.h"
 
+#include <gmock/gmock.h>
+using ::testing::AnyOf;
+
 template<typename Trait>
 class ClaimTest : public ::testing::Test {};
 
@@ -32,8 +35,11 @@ TYPED_TEST(ClaimTest, AudienceAsString) {
 
 TYPED_TEST(ClaimTest, SetAudienceAsString) {
 	auto token = jwt::create<TypeParam>().set_type("JWT").set_audience("test").sign(jwt::algorithm::hs256("test"));
-	EXPECT_EQ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0.ny5Fa0vzAg7tNL95KWg_ecBNd3XP3tdAzq0SFA6diY4",
-			  token);
+	// Header claim order does not matter, so check both possibilities
+	EXPECT_THAT(
+		token,
+		AnyOf("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0.ny5Fa0vzAg7tNL95KWg_ecBNd3XP3tdAzq0SFA6diY4",
+			  "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJ0ZXN0In0.3PVcrRz3ipFzs8vJaIlRNViUae48dIXWv5FLX5PJDzA"));
 }
 
 TYPED_TEST(ClaimTest, AudienceAsSet) {
@@ -66,7 +72,10 @@ TYPED_TEST(ClaimTest, SetAudienceAsSet) {
 					 .set_audience(typename TypeParam::array_type{typename TypeParam::value_type("test"),
 																  typename TypeParam::value_type("test2")})
 					 .sign(jwt::algorithm::none{});
-	EXPECT_EQ("eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJhdWQiOlsidGVzdCIsInRlc3QyIl19.", token);
+
+	// Header claim order does not matter, so check both possibilities
+	EXPECT_THAT(token, AnyOf("eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJhdWQiOlsidGVzdCIsInRlc3QyIl19.",
+							 "eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0.eyJhdWQiOlsidGVzdCIsInRlc3QyIl19."));
 }
 
 TYPED_TEST(ClaimTest, SetArray) {
