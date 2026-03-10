@@ -13,3 +13,7 @@ runs:
       shell: bash
     - run: sudo ln -s /usr/src/gtest/libgtest_main.a /usr/lib/libgtest_main.a
       shell: bash
+    - run: sudo ln -s /usr/src/gtest/libgmock.a /usr/lib/libgmock.a
+      shell: bash
+    - run: sudo ln -s /usr/src/gtest/libgmock_main.a /usr/lib/libgmock_main.a
+      shell: bash
