@@ -11,7 +11,7 @@ if(HUNTER_ENABLED)
   hunter_add_package(GTest)
 endif()
 
-find_package(GTest)
+find_package(GTest CONFIG)
 if(NOT TARGET GTest::gtest_main)
   message(STATUS "jwt-cpp: using FetchContent for GTest")
   include(FetchContent)
