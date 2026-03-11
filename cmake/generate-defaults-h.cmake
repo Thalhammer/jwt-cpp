@@ -26,7 +26,7 @@ string(REPLACE "_" "-" TRAITS_DIR_NAME "${TRAITS_NAME}")
 string(TOUPPER "${TRAITS_NAME}" TRAITS_NAME_UPPER)
 
 set(TEMPLATE_FILE "${CMAKE_CURRENT_SOURCE_DIR}/include/jwt-cpp/traits/defaults.h.in")
-if (NOT EXISTS "${TEMPLATE_FILE}")
+if(NOT EXISTS "${TEMPLATE_FILE}")
   message(FATAL_ERROR "Wrong working directory! Template file `${TEMPLATE_FILE}` does not exist.")
 endif()
 
