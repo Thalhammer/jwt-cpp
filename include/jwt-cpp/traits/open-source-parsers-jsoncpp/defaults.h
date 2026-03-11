@@ -67,7 +67,8 @@ namespace jwt {
 	 * \return Parsed JWK
 	 * \throw std::runtime_error Token is not in correct format
 	 */
-	inline jwk<traits::open_source_parsers_jsoncpp> parse_jwk(const traits::open_source_parsers_jsoncpp::string_type& token) {
+	inline jwk<traits::open_source_parsers_jsoncpp>
+	parse_jwk(const traits::open_source_parsers_jsoncpp::string_type& token) {
 		return jwk<traits::open_source_parsers_jsoncpp>(token);
 	}
 
@@ -77,7 +78,8 @@ namespace jwt {
 	 * \return Parsed JWKs
 	 * \throw std::runtime_error Token is not in correct format
 	 */
-	inline jwks<traits::open_source_parsers_jsoncpp> parse_jwks(const traits::open_source_parsers_jsoncpp::string_type& token) {
+	inline jwks<traits::open_source_parsers_jsoncpp>
+	parse_jwks(const traits::open_source_parsers_jsoncpp::string_type& token) {
 		return jwks<traits::open_source_parsers_jsoncpp>(token);
 	}
 

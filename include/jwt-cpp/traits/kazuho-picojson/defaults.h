@@ -1,7 +1,6 @@
 #ifndef JWT_CPP_KAZUHO_PICOJSON_DEFAULTS_H
 #define JWT_CPP_KAZUHO_PICOJSON_DEFAULTS_H
 
-
 #include "traits.h"
 
 namespace jwt {
