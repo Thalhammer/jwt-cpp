@@ -16,7 +16,7 @@ if(NOT TARGET GTest::gtest_main)
   message(STATUS "jwt-cpp: using FetchContent for GTest")
   include(FetchContent)
   fetchcontent_declare(googletest
-                       URL https://github.com/google/googletest/releases/download/v1.17.0/googletest-1.17.0.tar.gz)
+                       URL https://github.com/google/googletest/releases/download/v1.16.0/googletest-1.16.0.tar.gz)
   # https://google.github.io/googletest/quickstart-cmake.html
   set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
   fetchcontent_makeavailable(googletest)
