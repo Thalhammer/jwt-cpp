@@ -36,7 +36,7 @@ tar -zxf "googletest-${gtest_VERSION}.tar.gz"
 # Build and install
 echo "Building and installing..."
 cd "${BUILD_DIR}"
-cmake .  -DCMAKE_BUILD_TYPE=Release
+cmake . -DCMAKE_BUILD_TYPE=Release -DINSTALL_GTEST=ON
 cmake --build .
 sudo cmake --install .
 
