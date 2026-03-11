@@ -1,0 +1,7 @@
+name: "Render `defaults.h` Template"
+description: "Generate all the `defaults.h` header file for JSON libraries"
+runs:
+  using: composite
+  steps:
+    - run: ${{ github.action_path }}/configure-traits.sh
+      shell: bash

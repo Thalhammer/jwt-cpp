@@ -13,6 +13,7 @@ JWT_TRAITS_METADATA=(
   "nlohmann_json|JSON for Modern C++|https://github.com/nlohmann/json|true"
   "open_source_parsers_jsoncpp|jsoncpp|https://github.com/open-source-parsers/jsoncpp|true"
   "glaze_json|Glaze|https://github.com/stephenberry/glaze|true"
+  "reflectcpp_json|ReflectCPP|https://github.com/getml/reflect-cpp|true"
 )
 
 # Determine the source directory (parent of this script's directory)
