@@ -12,6 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
+      - run: sudo apt-get install lcov
       - uses: ./.github/actions/install/gtest
       - uses: ./.github/actions/install/danielaparker-jsoncons
       - uses: ./.github/actions/install/boost-json
