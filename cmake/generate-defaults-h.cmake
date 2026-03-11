@@ -1,18 +1,13 @@
 #[[
 # This script generates a single defaults.h file from the defaults.h.in template
-# It is invoked by the main CMakeLists.txt via add_custom_command()
+# It is invoked from the root directory of the project.
 #
 # Expected variables (set via -D command line):
 # - TRAITS_NAME: name of the trait (e.g., nlohmann_json)
 # - LIBRARY_NAME: name of the JSON library (e.g., JSON for Modern C++)
 # - LIBRARY_URL: URL to the library
 # - DISABLE_DEFAULT_TRAITS: whether to disable default picojson (true/false)
-# - SOURCE_DIR: the project source directory
 #]]
-
-if(NOT DEFINED SOURCE_DIR)
-  message(FATAL_ERROR "SOURCE_DIR must be defined")
-endif()
 
 if(NOT DEFINED TRAITS_NAME)
   message(FATAL_ERROR "TRAITS_NAME must be defined")
@@ -30,9 +25,13 @@ endif()
 string(REPLACE "_" "-" TRAITS_DIR_NAME "${TRAITS_NAME}")
 string(TOUPPER "${TRAITS_NAME}" TRAITS_NAME_UPPER)
 
+set(TEMPLATE_FILE "${CMAKE_CURRENT_SOURCE_DIR}/include/jwt-cpp/traits/defaults.h.in")
+if (NOT EXISTS "${TEMPLATE_FILE}")
+  message(FATAL_ERROR "Wrong working directory! Template file `${TEMPLATE_FILE}` does not exist.")
+endif()
+
 # Determine output directory
-set(OUTPUT_DIR "${SOURCE_DIR}/include/jwt-cpp/traits/${TRAITS_DIR_NAME}")
-set(TEMPLATE_FILE "${SOURCE_DIR}/include/jwt-cpp/traits/defaults.h.in")
+set(OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/jwt-cpp/traits/${TRAITS_DIR_NAME}")
 set(OUTPUT_FILE "${OUTPUT_DIR}/defaults.h")
 
 # Ensure output directory exists

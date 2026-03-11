@@ -13,11 +13,8 @@ JWT_TRAITS_METADATA=(
   "nlohmann_json|JSON for Modern C++|https://github.com/nlohmann/json|true"
   "open_source_parsers_jsoncpp|jsoncpp|https://github.com/open-source-parsers/jsoncpp|true"
   "glaze_json|Glaze|https://github.com/stephenberry/glaze|true"
-  "reflectcpp_json|ReflectCPP|https://github.com/getml/reflect-cpp|true"
+  "reflectcpp_json|ReflectCpp|https://github.com/getml/reflect-cpp|true"
 )
-
-# Determine the source directory (parent of this script's directory)
-SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
 
 # Function to configure traits defaults
 configure_traits_defaults() {
@@ -31,13 +28,9 @@ configure_traits_defaults() {
       -DLIBRARY_NAME="$LIBRARY_NAME" \
       -DLIBRARY_URL="$LIBRARY_URL" \
       -DDISABLE_DEFAULT_TRAITS="$DISABLE_DEFAULT_TRAITS" \
-      -DSOURCE_DIR="$SOURCE_DIR" \
-      -P "$SOURCE_DIR/cmake/generate-defaults-h.cmake"; then
-      echo "Failed to configure defaults.h for $TRAITS_NAME" >&2
-      exit 1
+      -P "cmake/generate-defaults-h.cmake"; then
+      echo "::error::Failed to configure defaults.h for $TRAITS_NAME"
     fi
-    
-    echo "Generated defaults.h for $TRAITS_NAME"
   done
 }
 
