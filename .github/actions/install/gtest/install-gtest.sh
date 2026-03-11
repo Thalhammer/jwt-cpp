@@ -38,11 +38,7 @@ echo "Building and installing..."
 cd "${BUILD_DIR}"
 cmake . -DCMAKE_BUILD_TYPE=Release -DINSTALL_GTEST=ON
 cmake --build .
-sudo cmake --install .
-
-cat CMakeCache.txt
-make -j$(nproc)
-sudo make install
+sudo make install # There's a bug in the v1.16.0 CMakeLists.txt that doesn't properly install the library when invoked via CMake, so we have to use make install directly
 
 # Cleanup
 echo "Cleaning up..."
