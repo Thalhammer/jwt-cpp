@@ -40,6 +40,8 @@ cmake . -DCMAKE_BUILD_TYPE=Release -DINSTALL_GTEST=ON
 cmake --build .
 sudo cmake --install .
 
+cat CMakeCache.txt
+
 # Cleanup
 echo "Cleaning up..."
 rm -f "${INSTALL_DIR}/googletest-${gtest_VERSION}.tar.gz"
