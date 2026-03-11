@@ -99,7 +99,7 @@ jobs:
         traits:
           # - { name: "boost_json", suite: "BoostJsonTest" } # Currently needs work around for API limitations
           - { name: "danielaparker_jsoncons", suite: "JsonconsTest" }
-          - { name: "kazuho_picojson", suite: "PicoJsonTest" }
+          # - { name: "kazuho_picojson", suite: "PicoJsonTest" } # No ctor for integer type
           - { name: "nlohmann_json", suite: "NlohmannTest" }
           - { name: "open_source_parsers_jsoncpp", suite: "OspJsoncppTest" }
           # - { name: "glaze_json", suite: "GlazeTest" } # No supported due to istream buffer being specialized
