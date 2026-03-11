@@ -41,6 +41,8 @@ cmake --build .
 sudo cmake --install .
 
 cat CMakeCache.txt
+make -j$(nproc)
+sudo make install
 
 # Cleanup
 echo "Cleaning up..."
