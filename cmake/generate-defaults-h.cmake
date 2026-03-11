@@ -1,3 +1,4 @@
+#[[
 # This script generates a single defaults.h file from the defaults.h.in template
 # It is invoked by the main CMakeLists.txt via add_custom_command()
 #
@@ -7,6 +8,7 @@
 # - LIBRARY_URL: URL to the library
 # - DISABLE_DEFAULT_TRAITS: whether to disable default picojson (true/false)
 # - SOURCE_DIR: the project source directory
+#]]
 
 if(NOT DEFINED SOURCE_DIR)
   message(FATAL_ERROR "SOURCE_DIR must be defined")
@@ -38,7 +40,8 @@ file(MAKE_DIRECTORY "${OUTPUT_DIR}")
 
 # Handle the conditional DISABLE_PICOJSON block
 if(DISABLE_DEFAULT_TRAITS)
-  set(DISABLE_PICOJSON_DEFINE "
+  set(DISABLE_PICOJSON_DEFINE
+      "
 #ifndef JWT_DISABLE_PICOJSON
 #define JWT_DISABLE_PICOJSON
 #endif")
@@ -47,11 +50,6 @@ else()
 endif()
 
 # Configure the file
-configure_file(
-  "${TEMPLATE_FILE}"
-  "${OUTPUT_FILE}"
-  @ONLY
-)
+configure_file("${TEMPLATE_FILE}" "${OUTPUT_FILE}" @ONLY)
 
 message(STATUS "Generated ${OUTPUT_FILE}")
-
