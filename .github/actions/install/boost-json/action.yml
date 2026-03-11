@@ -8,5 +8,5 @@ inputs:
 runs:
   using: composite
   steps:
-    - run: ${{ github.action_path }}/install-boost-json.sh" ${{ inputs.version }}
+    - run: ${{ github.action_path }}/install-boost-json.sh ${{ inputs.version }}
       shell: bash

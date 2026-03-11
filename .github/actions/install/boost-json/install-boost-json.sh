@@ -26,7 +26,7 @@ echo "Installing Boost.JSON v${BOOST_JSON_VERSION}..."
 # Download
 echo "Downloading Boost.JSON v${BOOST_JSON_VERSION}..."
 cd "${INSTALL_DIR}"
-wget -q "https://github.com/boostorg/json/archive/boost-${BOOST_JSON_VERSION}.tar.gz" -O "boost-${BOOST_JSON_VERSION}.tar.gz"
+wget -q "https://github.com/boostorg/json/archive/boost-${BOOST_JSON_VERSION}.tar.gz"
 
 # Extract
 echo "Extracting archive..."
