@@ -2426,7 +2426,6 @@ namespace jwt {
 				std::is_constructible<value_type, const value_type&>::value && // a more generic is_copy_constructible
 				std::is_move_constructible<value_type>::value && std::is_assignable<value_type, value_type>::value &&
 				std::is_copy_assignable<value_type>::value && std::is_move_assignable<value_type>::value;
-			// TODO(prince-chrismc): Stream operators
 		};
 
 		// https://stackoverflow.com/a/53967057/8480874
@@ -2495,6 +2494,12 @@ namespace jwt {
 				is_at_const_signature<object_type, value_type, string_type>::value;
 		};
 
+		template<typename array_type>
+		using is_size_signature = typename std::is_integral<decltype(std::declval<const array_type>().size())>;
+
+		template<typename array_type>
+		using is_empty_signature = typename std::is_same<bool, decltype(std::declval<const array_type>().empty())>;
+
 		template<typename value_type, typename array_type>
 		struct is_valid_json_array {
 			template<typename T>
@@ -2505,7 +2510,8 @@ namespace jwt {
 										  is_iterable<array_type>::value &&
 										  is_detected<value_type_t, array_type>::value &&
 										  std::is_same<typename array_type::value_type, value_type>::value &&
-										  std::is_same<front_base_type, value_type>::value;
+										  std::is_same<front_base_type, value_type>::value &&
+										  is_size_signature<array_type>::value && is_empty_signature<array_type>::value;
 		};
 
 		template<typename string_type, typename integer_type>
@@ -2643,13 +2649,18 @@ namespace jwt {
 		 * Parse input stream into underlying JSON value
 		 * \return input stream
 		 */
-		std::istream& operator>>(std::istream& is) { return is >> val; }
+		std::istream& operator>>(std::istream& is) {
+			typename json_traits::string_type buffer{std::istreambuf_iterator<char>(is),
+													 std::istreambuf_iterator<char>()};
+			json_traits::parse(val, buffer);
+			return is;
+		}
 
 		/**
 		 * Serialize claim to output stream from wrapped JSON value
 		 * \return output stream
 		 */
-		std::ostream& operator<<(std::ostream& os) { return os << val; }
+		std::ostream& operator<<(std::ostream& os) { return os << json_traits::serialize(val); }
 
 		/**
 		 * Get type of contained JSON value

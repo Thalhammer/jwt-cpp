@@ -3,12 +3,12 @@ if(HUNTER_ENABLED)
   hunter_add_package(GTest)
 endif()
 
-find_package(GTest)
+find_package(GTest CONFIG)
 if(NOT TARGET GTest::gtest_main)
   message(STATUS "jwt-cpp: using FetchContent for GTest")
   include(FetchContent)
   fetchcontent_declare(googletest
-                       URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip)
+                       URL https://github.com/google/googletest/releases/download/v1.16.0/googletest-1.16.0.tar.gz)
   # https://google.github.io/googletest/quickstart-cmake.html
   set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
   fetchcontent_makeavailable(googletest)
@@ -69,6 +69,9 @@ string(APPEND TRAITS_TYPELIST_CONTENT "#define TRAITS_TYPELIST_H\n\n")
 string(APPEND TRAITS_TYPELIST_CONTENT "// Auto-generated list of available JWT traits\n")
 string(APPEND TRAITS_TYPELIST_CONTENT "// Includes all necessary trait headers\n\n")
 
+string(APPEND TRAITS_TYPELIST_CONTENT "#define JWT_DISABLE_PICOJSON // Block default traits\n\n")
+string(APPEND TRAITS_TYPELIST_CONTENT "#include <gtest/gtest.h>\n\n")
+
 # Include headers for all available traits
 string(APPEND TRAITS_TYPELIST_CONTENT "#include <jwt-cpp/traits/kazuho-picojson/traits.h>\n")
 string(APPEND TRAITS_TYPELIST_CONTENT "#include <jwt-cpp/traits/nlohmann-json/traits.h>\n")
@@ -116,9 +119,9 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/traits_typelist.h" "${TRAITS_TYPELIST_CO
 set(TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/BaseTest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/ClaimTest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Keys.cpp ${CMAKE_CURRENT_SOURCE_DIR}/HelperTest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/TestMain.cpp ${CMAKE_CURRENT_SOURCE_DIR}/TokenFormatTest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/TokenTest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/JwksTest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/OpenSSLErrorTest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/traits/NlohmannTest.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestMain.cpp ${CMAKE_CURRENT_SOURCE_DIR}/TokenTest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/JwksTest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/OpenSSLErrorTest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/traits/PicoJsonTest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/traits/NlohmannTest.cpp)
 
 # Add trait-specific test files (legacy, for additional trait-specific tests)
 if(TARGET jsoncons)
@@ -155,12 +158,12 @@ target_compile_options(
                        $<$<CXX_COMPILER_ID:Clang>:${JWT_TESTER_CLANG_FLAGS}>)
 
 if(HUNTER_ENABLED)
-  target_link_libraries(jwt-cpp-test PRIVATE GTest::gtest GTest::gtest_main)
+  target_link_libraries(jwt-cpp-test PRIVATE GTest::gtest GTest::gtest_main GTest::gmock)
   # Define a compile define to bypass openssl error tests
   target_compile_definitions(jwt-cpp-test PRIVATE HUNTER_ENABLED=1)
 else()
   # https://github.com/google/googletest/blob/eb80f759d595874a5e905a3342bd8e2af4c0a12d/googletest/README.md?plain=1#L62-L64
-  target_link_libraries(jwt-cpp-test PRIVATE GTest::gtest_main)
+  target_link_libraries(jwt-cpp-test PRIVATE GTest::gtest_main GTest::gmock)
   if(TARGET jsoncons)
     target_link_libraries(jwt-cpp-test PRIVATE jsoncons)
   endif()

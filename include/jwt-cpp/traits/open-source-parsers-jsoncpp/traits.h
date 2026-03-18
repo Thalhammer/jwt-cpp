@@ -3,6 +3,7 @@
 
 #include "jwt-cpp/jwt.h"
 #include "json/json.h"
+#include <initializer_list>
 
 namespace jwt {
 	/**
@@ -22,6 +23,13 @@ namespace jwt {
 				explicit array_type(const Json::Value& o) : Json::Value(o) {}
 				array_type(array_type&&) = default;
 				explicit array_type(Json::Value&& o) : Json::Value(o) {}
+				array_type(std::initializer_list<value_type> init) {
+					for (auto const& v : init) {
+						Json::Value value;
+						value = v;
+						this->append(value);
+					}
+				}
 				template<typename Iterator>
 				array_type(Iterator begin, Iterator end) {
 					for (Iterator it = begin; it != end; ++it) {
@@ -45,7 +53,7 @@ namespace jwt {
 				using mapped_type = Json::Value;
 				using size_type = size_t;
 
-				object_type() = default;
+				object_type() : Json::Value(Json::objectValue) {}
 				object_type(const object_type&) = default;
 				explicit object_type(const Json::Value& o) : Json::Value(o) {}
 				object_type(object_type&&) = default;
