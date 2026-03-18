@@ -7,10 +7,10 @@ set -e  # Exit on error
 # Define traits metadata as pipe-delimited strings
 # Format: TRAITS_NAME|LIBRARY_NAME|LIBRARY_URL|DISABLE_DEFAULT_TRAITS
 JWT_TRAITS_METADATA=(
-  "boost_json|Boost.JSON|https://github.com/boostorg/json|true"
-  "danielaparker_jsoncons|jsoncons|https://github.com/danielaparker/jsoncons|true"
   "kazuho_picojson|picojson|https://github.com/kazuho/picojson|false"
   "nlohmann_json|JSON for Modern C++|https://github.com/nlohmann/json|true"
+  "boost_json|Boost.JSON|https://github.com/boostorg/json|true"
+  "danielaparker_jsoncons|jsoncons|https://github.com/danielaparker/jsoncons|true"
   "open_source_parsers_jsoncpp|jsoncpp|https://github.com/open-source-parsers/jsoncpp|true"
   "glaze_json|Glaze|https://github.com/stephenberry/glaze|true"
   "reflectcpp_json|ReflectCpp|https://github.com/getml/reflect-cpp|true"
