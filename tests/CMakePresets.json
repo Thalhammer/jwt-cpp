@@ -178,9 +178,31 @@
             "name": "unit-tests",
             "description": "Run the unit tests",
             "configurePreset": "unit-tests",
+            "output": {
+                "outputOnFailure": true
+            },
             "execution": {
                 "noTestsAction": "error"
             }
+        }
+    ],
+    "workflowPresets": [
+        {
+            "name": "unit-tests",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "unit-tests"
+                },
+                {
+                    "type": "build",
+                    "name": "unit-tests"
+                },
+                {
+                    "type": "test",
+                    "name": "unit-tests"
+                }
+            ]
         }
     ]
 }
