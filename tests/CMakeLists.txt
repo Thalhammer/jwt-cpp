@@ -11,12 +11,12 @@ if(HUNTER_ENABLED)
   hunter_add_package(GTest)
 endif()
 
-find_package(GTest)
+find_package(GTest CONFIG)
 if(NOT TARGET GTest::gtest_main)
   message(STATUS "jwt-cpp: using FetchContent for GTest")
   include(FetchContent)
   fetchcontent_declare(googletest
-                       URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip)
+                       URL https://github.com/google/googletest/releases/download/v1.16.0/googletest-1.16.0.tar.gz)
   # https://google.github.io/googletest/quickstart-cmake.html
   set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
   fetchcontent_makeavailable(googletest)
@@ -51,16 +51,22 @@ if(TARGET boost_json)
   list(APPEND AVAILABLE_TRAIT_TYPES "::jwt::traits::boost_json")
 endif()
 
+find_package(jsoncpp CONFIG)
+if(TARGET jsoncpp_static)
+  list(APPEND AVAILABLE_TRAIT_NAMES "jsoncpp")
+  list(APPEND AVAILABLE_TRAIT_TYPES "::jwt::traits::open_source_parsers_jsoncpp")
+endif()
+
 find_package(glaze CONFIG)
 if(TARGET glaze::glaze)
   list(APPEND AVAILABLE_TRAIT_NAMES "glaze_json")
   list(APPEND AVAILABLE_TRAIT_TYPES "::jwt::traits::glaze_json")
 endif()
 
-find_package(jsoncpp CONFIG)
-if(TARGET jsoncpp_static)
-  list(APPEND AVAILABLE_TRAIT_NAMES "jsoncpp")
-  list(APPEND AVAILABLE_TRAIT_TYPES "::jwt::traits::open_source_parsers_jsoncpp")
+find_package(reflectcpp CONFIG)
+if(TARGET reflectcpp::reflectcpp)
+  list(APPEND AVAILABLE_TRAIT_NAMES "reflectcpp")
+  list(APPEND AVAILABLE_TRAIT_TYPES "::jwt::traits::reflectcpp_json")
 endif()
 
 message(STATUS "jwt-cpp: Generating traits_typelist.h with ${AVAILABLE_TRAIT_NAMES}")
@@ -71,8 +77,11 @@ string(APPEND TRAITS_TYPELIST_CONTENT "#define TRAITS_TYPELIST_H\n\n")
 string(APPEND TRAITS_TYPELIST_CONTENT "// Auto-generated list of available JWT traits\n")
 string(APPEND TRAITS_TYPELIST_CONTENT "// Includes all necessary trait headers\n\n")
 
+string(APPEND TRAITS_TYPELIST_CONTENT "#define JWT_DISABLE_PICOJSON // Block default traits\n\n")
+string(APPEND TRAITS_TYPELIST_CONTENT "#include <gtest/gtest.h>\n\n")
+
 # Include headers for all available traits
-string(APPEND TRAITS_TYPELIST_CONTENT "#include <jwt-cpp/traits/kazuho-picojson/traits.h>\n\n")
+string(APPEND TRAITS_TYPELIST_CONTENT "#include <jwt-cpp/traits/kazuho-picojson/traits.h>\n")
 string(APPEND TRAITS_TYPELIST_CONTENT "#include <jwt-cpp/traits/nlohmann-json/traits.h>\n")
 
 if(TARGET jsoncons)
@@ -83,16 +92,20 @@ if(TARGET boost_json)
   string(APPEND TRAITS_TYPELIST_CONTENT "#include <jwt-cpp/traits/boost-json/traits.h>\n")
 endif()
 
-if(TARGET glaze::glaze)
-  string(APPEND TRAITS_TYPELIST_CONTENT "#include <jwt-cpp/traits/glaze-json/traits.h>\n")
-endif()
-
 if(TARGET jsoncpp_static)
   string(APPEND TRAITS_TYPELIST_CONTENT "#include <jwt-cpp/traits/open-source-parsers-jsoncpp/traits.h>\n")
 endif()
 
+if(TARGET glaze::glaze)
+  string(APPEND TRAITS_TYPELIST_CONTENT "#include <jwt-cpp/traits/glaze-json/traits.h>\n")
+endif()
+
+if(TARGET reflectcpp::reflectcpp)
+  string(APPEND TRAITS_TYPELIST_CONTENT "#include <jwt-cpp/traits/reflectcpp-json/traits.h>\n")
+endif()
+
 # Add the type list using the available traits
-string(APPEND TRAITS_TYPELIST_CONTENT "using AllTraitTypes = ::testing::Types<\n")
+string(APPEND TRAITS_TYPELIST_CONTENT "\nusing AllTraitTypes = ::testing::Types<\n")
 
 list(LENGTH AVAILABLE_TRAIT_TYPES count)
 math(EXPR last_index "${count} - 1")
@@ -114,9 +127,9 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/traits_typelist.h" "${TRAITS_TYPELIST_CO
 set(TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/BaseTest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/ClaimTest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Keys.cpp ${CMAKE_CURRENT_SOURCE_DIR}/HelperTest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/TestMain.cpp ${CMAKE_CURRENT_SOURCE_DIR}/TokenFormatTest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/TokenTest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/JwksTest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/OpenSSLErrorTest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/traits/NlohmannTest.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestMain.cpp ${CMAKE_CURRENT_SOURCE_DIR}/TokenTest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/JwksTest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/OpenSSLErrorTest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/traits/PicoJsonTest.cpp ${CMAKE_CURRENT_SOURCE_DIR}/traits/NlohmannTest.cpp)
 
 # Add trait-specific test files (legacy, for additional trait-specific tests)
 if(TARGET jsoncons)
@@ -127,12 +140,16 @@ if(TARGET boost_json)
   list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/BoostJsonTest.cpp)
 endif()
 
+if(TARGET jsoncpp_static)
+  list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/OspJsoncppTest.cpp)
+endif()
+
 if(TARGET glaze::glaze)
   list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/GlazeTest.cpp)
 endif()
 
-if(TARGET jsoncpp_static)
-  list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/OspJsoncppTest.cpp)
+if(TARGET reflectcpp::reflectcpp)
+  list(APPEND TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/traits/ReflectCppJsonTest.cpp)
 endif()
 
 add_executable(jwt-cpp-test ${TEST_SOURCES})
@@ -147,28 +164,33 @@ set(JWT_TESTER_CLANG_FLAGS -Weverything -Wno-c++98-compat -Wno-global-constructo
 target_compile_options(
   jwt-cpp-test PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/W4> $<$<CXX_COMPILER_ID:GNU>:${JWT_TESTER_GCC_FLAGS}>
                        $<$<CXX_COMPILER_ID:Clang>:${JWT_TESTER_CLANG_FLAGS}>)
+
 if(HUNTER_ENABLED)
-  target_link_libraries(jwt-cpp-test PRIVATE GTest::gtest GTest::gtest_main)
+  target_link_libraries(jwt-cpp-test PRIVATE GTest::gtest GTest::gtest_main GTest::gmock)
   # Define a compile define to bypass openssl error tests
   target_compile_definitions(jwt-cpp-test PRIVATE HUNTER_ENABLED=1)
 else()
   # https://github.com/google/googletest/blob/eb80f759d595874a5e905a3342bd8e2af4c0a12d/googletest/README.md?plain=1#L62-L64
-  target_link_libraries(jwt-cpp-test PRIVATE GTest::gtest_main)
+  target_link_libraries(jwt-cpp-test PRIVATE GTest::gtest_main GTest::gmock)
   if(TARGET jsoncons)
     target_link_libraries(jwt-cpp-test PRIVATE jsoncons)
   endif()
   if(TARGET boost_json)
     target_link_libraries(jwt-cpp-test PRIVATE boost_json)
   endif()
-  if(TARGET glaze::glaze)
-    target_link_libraries(jwt-cpp-test PRIVATE glaze::glaze)
-    target_compile_features(jwt-cpp-test PUBLIC cxx_std_23)
-    set_target_properties(jwt-cpp-test PROPERTIES CXX_STANDARD 23 CXX_EXTENSIONS OFF CXX_STANDARD_REQUIRED ON)
-  endif()
   if(TARGET jsoncpp_static)
     target_link_libraries(jwt-cpp-test PRIVATE jsoncpp_static)
   endif()
+  if(TARGET glaze::glaze)
+    target_compile_features(jwt-cpp-test PRIVATE cxx_std_23)
+    target_link_libraries(jwt-cpp-test PRIVATE glaze::glaze)
+  endif()
+  if(TARGET reflectcpp::reflectcpp)
+    target_compile_features(jwt-cpp-test PRIVATE cxx_std_20)
+    target_link_libraries(jwt-cpp-test PRIVATE reflectcpp::reflectcpp)
+  endif()
 endif()
+
 target_link_libraries(jwt-cpp-test PRIVATE jwt-cpp nlohmann_json::nlohmann_json
                                            $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:${CMAKE_DL_LIBS}>)
 

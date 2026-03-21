@@ -1,0 +1,12 @@
+name: Install reflect-cpp
+description: Install reflect-cpp for building test application
+inputs:
+  version:
+    description: The desired reflect-cpp version to install
+    required: false
+    default: "0.24.0"
+runs:
+  using: composite
+  steps:
+    - run: ${{ github.action_path }}/install-reflect-cpp.sh ${{ inputs.version }}
+      shell: bash
