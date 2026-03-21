@@ -11,10 +11,10 @@ if(TARGET jsoncons)
   target_link_libraries(danielaparker-jsoncons jwt-cpp::jwt-cpp jsoncons)
 endif()
 
-include("../../cmake/private-find-boost-json.cmake")
-if(TARGET boost_json)
+find_package(Boost CONFIG COMPONENTS json)
+if(TARGET Boost::json)
   add_executable(boost-json boost-json.cpp)
-  target_link_libraries(boost-json jwt-cpp::jwt-cpp boost_json)
+  target_link_libraries(boost-json jwt-cpp::jwt-cpp Boost::json)
 endif()
 
 find_package(nlohmann_json CONFIG)
