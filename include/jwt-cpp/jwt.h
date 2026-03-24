@@ -1626,7 +1626,7 @@ namespace jwt {
 					ec = error::signature_generation_error::signinit_failed;
 					return {};
 				}
-				if (!EVP_DigestUpdate(ctx.get(), data.data(), static_cast<unsigned int>(data.size()))) {
+				if (!EVP_DigestUpdate(ctx.get(), data.data(), data.size())) {
 					ec = error::signature_generation_error::digestupdate_failed;
 					return {};
 				}
@@ -1666,7 +1666,7 @@ namespace jwt {
 					ec = error::signature_verification_error::verifyinit_failed;
 					return;
 				}
-				if (!EVP_DigestUpdate(ctx.get(), data.data(), static_cast<unsigned int>(data.size()))) {
+				if (!EVP_DigestUpdate(ctx.get(), data.data(), data.size())) {
 					ec = error::signature_verification_error::verifyupdate_failed;
 					return;
 				}
@@ -1985,7 +1985,7 @@ namespace jwt {
 					return {};
 				}
 #endif
-				if (EVP_DigestUpdate(md_ctx.get(), data.data(), static_cast<unsigned int>(data.size())) != 1) {
+				if (EVP_DigestUpdate(md_ctx.get(), data.data(), data.size()) != 1) {
 					ec = error::signature_generation_error::digestupdate_failed;
 					return {};
 				}
@@ -2034,7 +2034,7 @@ namespace jwt {
 					return;
 				}
 #endif
-				if (EVP_DigestUpdate(md_ctx.get(), data.data(), static_cast<unsigned int>(data.size())) != 1) {
+				if (EVP_DigestUpdate(md_ctx.get(), data.data(), data.size()) != 1) {
 					ec = error::signature_verification_error::verifyupdate_failed;
 					return;
 				}
