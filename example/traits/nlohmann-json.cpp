@@ -1,7 +1,7 @@
-#include "jwt-cpp/traits/nlohmann-json/traits.h"
-
 #include <iostream>
 #include <sstream>
+
+#include "jwt-cpp/traits/nlohmann-json/traits.h"
 
 int main() {
 	using sec = std::chrono::seconds;

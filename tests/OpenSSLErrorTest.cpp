@@ -2,10 +2,15 @@
 
 #ifndef HUNTER_ENABLED // Static linking (which hunter always? does) breaks the tests (duplicate definition), so skip them
 
-#include "jwt-cpp/jwt.h"
 #include <gtest/gtest.h>
 
 #include <dlfcn.h>
+
+#ifdef JWT_ENABLE_MODULES
+import jwt_cpp;
+#else
+#include "jwt-cpp/jwt.h"
+#endif
 // TODO: Figure out why the tests fail on older openssl versions
 #ifndef JWT_OPENSSL_1_0_0 // It fails on < 1.1 but no idea why.
 // LibreSSL has different return codes but was already outside of the effective scope

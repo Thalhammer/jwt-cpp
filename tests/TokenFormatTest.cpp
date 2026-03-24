@@ -1,5 +1,9 @@
-#include "jwt-cpp/jwt.h"
 #include <gtest/gtest.h>
+#include "jwt-cpp/traits/nlohmann-json/traits.h"
+
+#ifndef JWT_ENABLE_MODULES
+#include "jwt-cpp/jwt.h"
+#endif
 
 TEST(TokenFormatTest, MissingDot) {
 	ASSERT_THROW(jwt::decode("eyJhbGciOiJub25lIiwidHlwIjoiSldTIn0.eyJpc3MiOiJhdXRoMCJ9"), std::invalid_argument);
@@ -14,8 +18,6 @@ TEST(TokenFormatTest, InvalidChar) {
 TEST(TokenFormatTest, InvalidJSON) {
 	ASSERT_THROW(jwt::decode("YXsiYWxnIjoibm9uZSIsInR5cCI6IkpXUyJ9YQ.eyJpc3MiOiJhdXRoMCJ9."), std::runtime_error);
 }
-
-#include "jwt-cpp/traits/nlohmann-json/traits.h"
 
 TEST(TokenFormatTest, GitHubIssue341) {
 	std::string const token =

@@ -28,6 +28,13 @@
 #ifndef picojson_h
 #define picojson_h
 
+#if defined(JWT_CPP_MODULE_INTERFACE_BUILD) && defined(JWT_USE_IMPORT_STD)
+#define PICOJSON_USE_IMPORTED_STD 1
+#else
+#define PICOJSON_USE_IMPORTED_STD 0
+#endif
+
+#if PICOJSON_USE_IMPORTED_STD
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
@@ -41,10 +48,13 @@
 #include <string>
 #include <vector>
 #include <utility>
+#endif
 
 // for isnan/isinf
 #if __cplusplus >= 201103L
+#if !PICOJSON_USE_IMPORTED_STD
 #include <cmath>
+#endif
 #else
 extern "C" {
 #ifdef _MSC_VER
@@ -76,6 +86,7 @@ extern "C" {
 // experimental support for int64_t (see README.mkdn for detail)
 #ifdef PICOJSON_USE_INT64
 #define __STDC_FORMAT_MACROS
+#if !PICOJSON_USE_IMPORTED_STD
 #include <cerrno>
 #if __cplusplus >= 201103L
 #include <cinttypes>
@@ -85,12 +96,13 @@ extern "C" {
 }
 #endif
 #endif
+#endif
 
 // to disable the use of localeconv(3), set PICOJSON_USE_LOCALE to 0
 #ifndef PICOJSON_USE_LOCALE
 #define PICOJSON_USE_LOCALE 1
 #endif
-#if PICOJSON_USE_LOCALE
+#if PICOJSON_USE_LOCALE && !PICOJSON_USE_IMPORTED_STD
 extern "C" {
 #include <locale.h>
 }
@@ -493,7 +505,8 @@ inline std::string value::to_str() const {
   case number_type: {
     char buf[256];
     double tmp;
-    SNPRINTF(buf, sizeof(buf), fabs(u_.number_) < (1ULL << 53) && modf(u_.number_, &tmp) == 0 ? "%.f" : "%.17g", u_.number_);
+    SNPRINTF(buf, sizeof(buf), std::fabs(u_.number_) < (1ULL << 53) && std::modf(u_.number_, &tmp) == 0 ? "%.f" : "%.17g",
+             u_.number_);
 #if PICOJSON_USE_LOCALE
     char *decimal_point = localeconv()->decimal_point;
     if (strcmp(decimal_point, ".") != 0) {
@@ -1196,5 +1209,7 @@ inline std::ostream &operator<<(std::ostream &os, const picojson::value &x) {
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
+
+#undef PICOJSON_USE_IMPORTED_STD
 
 #endif

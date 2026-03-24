@@ -45,6 +45,10 @@ if(TARGET jsoncpp_static)
 endif()
 
 add_executable(jwt-cpp-test ${TEST_SOURCES})
+if(JWT_ENABLE_MODULES AND NOT JWT_USE_IMPORT_STD)
+  target_compile_definitions(jwt-cpp-test PRIVATE JWT_ENABLE_MODULES)
+  set_property(TARGET jwt-cpp-test PROPERTY CXX_SCAN_FOR_MODULES ON)
+endif()
 
 # NOTE: Don't use space inside a generator expression here, because the function prematurely breaks the expression into
 # multiple lines. https://cmake.org/pipermail/cmake/2018-April/067422.html

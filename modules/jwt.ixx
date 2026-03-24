@@ -44,6 +44,15 @@ module;
 #include <variant>
 #include <vector>
 #include <cwchar>
+#else
+#include <errno.h>
+#include <inttypes.h>
+#include <locale.h>
+#include <math.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #endif
 
 #include <openssl/ec.h>
@@ -59,65 +68,18 @@ module;
 #include <openssl/param_build.h>
 #endif
 
-#include "jwt-cpp/jwt.h"
-
 export module jwt_cpp;
 
-export using ::operator>>;
-export using ::operator<<;
+#ifdef JWT_USE_IMPORT_STD
+// Keep std private to jwt_cpp. Re-exporting it makes mixed consumers
+// (gtest, iostream, third-party JSON headers) collide with the MSVC std module.
+import std;
+#endif
 
-export namespace jwt {
-	using jwt::verify;
-	using jwt::decode;
-	using jwt::create;
-	using jwt::claim;
-	using jwt::date;
-	using jwt::parse_jwk;
-	using jwt::parse_jwks;
+// Build the public headers in module purview so imported declarations are
+// attached to jwt_cpp instead of the global module.
+#define JWT_CPP_MODULE_INTERFACE_BUILD 1
+export {
+#include "jwt-cpp/jwt.h"
 }
-
-export namespace jwt::algorithm {
-	using jwt::algorithm::ecdsa;
-	using jwt::algorithm::ed25519;
-	using jwt::algorithm::ed448;
-	using jwt::algorithm::eddsa;
-	using jwt::algorithm::es256;
-	using jwt::algorithm::es256k;
-	using jwt::algorithm::es384;
-	using jwt::algorithm::es512;
-	using jwt::algorithm::hmacsha;
-	using jwt::algorithm::hs256;
-	using jwt::algorithm::hs384;
-	using jwt::algorithm::hs512;
-	using jwt::algorithm::none;
-	using jwt::algorithm::ps256;
-	using jwt::algorithm::ps384;
-	using jwt::algorithm::ps512;
-	using jwt::algorithm::pss;
-	using jwt::algorithm::rs256;
-	using jwt::algorithm::rs384;
-	using jwt::algorithm::rs512;
-	using jwt::algorithm::rsa;
-}
-
-export namespace jwt::base {
-	using jwt::base::encode;
-}
-
-export namespace jwt::alphabet {
-	using jwt::alphabet::base64url;
-}
-
-export namespace jwt::helper {
-	using jwt::helper::convert_base64_der_to_pem;
-	using jwt::helper::create_public_key_from_rsa_components;
-}
-
-export namespace jwt::error {
-	using jwt::error::make_error_code;
-	using jwt::error::invalid_json_exception;
-	using jwt::error::claim_not_present_exception;
-	using jwt::error::token_verification_error;
-	using jwt::error::token_verification_exception;
-	using jwt::error::token_verification_error_category;
-}
+#undef JWT_CPP_MODULE_INTERFACE_BUILD

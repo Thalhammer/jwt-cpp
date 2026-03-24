@@ -1,9 +1,14 @@
 /// @file print-claims.cpp
-#include <iostream>
 
 #ifndef JWT_ENABLE_MODULES
+#include <iostream>
 #include <jwt-cpp/jwt.h>
 #else
+#ifdef JWT_USE_IMPORT_STD
+import std;
+#else
+#include <iostream>
+#endif
 import jwt_cpp;
 #endif
 

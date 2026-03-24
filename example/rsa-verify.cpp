@@ -1,10 +1,16 @@
 /// \file rsa-verify.cpp
-#include <iostream>
-#include <chrono>
 
 #ifndef JWT_ENABLE_MODULES
+#include <chrono>
+#include <iostream>
 #include <jwt-cpp/jwt.h>
 #else
+#ifdef JWT_USE_IMPORT_STD
+import std;
+#else
+#include <chrono>
+#include <iostream>
+#endif
 import jwt_cpp;
 #endif
 

@@ -4,7 +4,7 @@ if(POLICY CMP0135) # DOWNLOAD_EXTRACT_TIMESTAMP
   cmake_policy(SET CMP0135 NEW)
 endif()
 
-set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "d0edc3af-4c50-42ea-a356-e2862fe7a444")
+set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "451f2fe2-a8a2-47c3-bc32-94786d8fc91b")
 
 # HUNTER_ENABLED is always set if this package is included in a project using hunter (HunterGate sets it) In this case
 # we will use hunter as well to stay consistent. If not the use can supply it on configure to force using hunter.
@@ -104,6 +104,20 @@ if(NOT JWT_DISABLE_BASE64)
 endif()
 
 if (JWT_ENABLE_MODULES)
+  if(CMAKE_VERSION VERSION_LESS "4.3")
+    message(FATAL_ERROR "CMake >= 4.3 is required to build with modules")
+  endif()
+
+  set(CMAKE_CXX_SCAN_FOR_MODULES ON)
+
+  if(JWT_USE_IMPORT_STD)
+    if(NOT CMAKE_GENERATOR MATCHES "Visual Studio")
+    set(CMAKE_CXX_MODULE_STD 1)
+    endif()
+  endif()
+endif()
+
+if (JWT_ENABLE_MODULES)
   add_library(jwt-cpp STATIC)
   set(JWT_LIBRARY_TYPE PUBLIC)
 else()
@@ -112,34 +126,21 @@ else()
 endif()
 add_library(jwt-cpp::jwt-cpp ALIAS jwt-cpp) # To match export
 
-if (JWT_ENABLE_MODULES)
-  if(CMAKE_VERSION VERSION_LESS "4.0")
-    message(FATAL_ERROR "CMake >= 4.0 is required to build with modules")
-  endif()
-
-  set(CMAKE_CXX_SCAN_FOR_MODULES ON)
-
-  if(JWT_USE_IMPORT_STD)
-    target_compile_features(jwt-cpp ${JWT_LIBRARY_TYPE} cxx_std_23)
-    if (NOT CMAKE_GENERATOR MATCHES "Visual Studio")
-       set(CMAKE_CXX_MODULE_STD 1)
-    endif()
+if(NOT JWT_ENABLE_MODULES)
+  target_compile_features(jwt-cpp ${JWT_LIBRARY_TYPE} cxx_std_11)
+else()
+  if(NOT JWT_USE_IMPORT_STD)
+      target_compile_features(jwt-cpp ${JWT_LIBRARY_TYPE} cxx_std_20)
   else()
-    target_compile_features(jwt-cpp ${JWT_LIBRARY_TYPE} cxx_std_20)
+      target_compile_features(jwt-cpp ${JWT_LIBRARY_TYPE} cxx_std_23)
+      target_compile_definitions(jwt-cpp PRIVATE JWT_USE_IMPORT_STD)
   endif()
-
-  target_sources(jwt-cpp
+    target_sources(jwt-cpp
     PUBLIC
       FILE_SET cxx_modules TYPE CXX_MODULES
         BASE_DIRS ${JWT_MODULE_PATH}
         FILES ${JWT_MODULE_PATH}/jwt.ixx
-  )
-else()
-  target_compile_features(jwt-cpp ${JWT_LIBRARY_TYPE} cxx_std_11)
-endif()
-
-if (JWT_USE_IMPORT_STD)
-  target_compile_definitions(jwt-cpp ${JWT_LIBRARY_TYPE} JWT_USE_IMPORT_STD)
+    )
 endif()
 
 if(JWT_DISABLE_BASE64)

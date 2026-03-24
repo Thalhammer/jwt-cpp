@@ -9,7 +9,11 @@
 #ifndef JWT_DISABLE_PICOJSON
 #define JWT_DISABLE_PICOJSON
 #endif
+#if defined(JWT_ENABLE_MODULES) && !defined(JWT_USE_IMPORT_STD)
+import jwt_cpp;
+#else
 #include "jwt-cpp/jwt.h"
+#endif
 
 namespace jwt {
 	/**

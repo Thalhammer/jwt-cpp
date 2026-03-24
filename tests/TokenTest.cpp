@@ -1,5 +1,11 @@
-#include "jwt-cpp/jwt.h"
 #include <gtest/gtest.h>
+#include <openssl/evp.h>
+
+#ifdef JWT_ENABLE_MODULES
+import jwt_cpp;
+#else
+#include "jwt-cpp/jwt.h"
+#endif
 
 inline namespace test_keys {
 	extern std::string rsa_priv_key;

@@ -1,8 +1,8 @@
-#include "jwt-cpp/traits/boost-json/traits.h"
-
 // #include <boost/json/src.hpp> // You may require this if you are not building it elsewhere
 #include <iostream>
 #include <sstream>
+
+#include "jwt-cpp/traits/boost-json/traits.h"
 
 int main() {
 	using sec = std::chrono::seconds;
