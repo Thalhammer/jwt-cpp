@@ -1,3 +1,4 @@
+/// @file es256k.cpp
 #include <iostream>
 #include <jwt-cpp/jwt.h>
 
@@ -18,12 +19,12 @@ K9EDZi0mZ7VUeeNKq476CU5X940yusahgneePQrDMF2nWFEtBCOiXQ==
 					 .set_issuer("auth0")
 					 .set_type("JWT")
 					 .set_id("es256k-create-example")
-					 .set_issued_at(std::chrono::system_clock::now())
-					 .set_expires_at(std::chrono::system_clock::now() + std::chrono::seconds{36000})
+					 .set_issued_now()
+					 .set_expires_in(std::chrono::seconds{36000})
 					 .set_payload_claim("sample", jwt::claim(std::string{"test"}))
 					 .sign(jwt::algorithm::es256k(es256k_pub_key, es256k_priv_key, "", ""));
 
-	std::cout << "token:\n" << token << std::endl;
+	std::cout << "token:\n" << token << '\n';
 
 	auto verify = jwt::verify()
 					  .allow_algorithm(jwt::algorithm::es256k(es256k_pub_key, es256k_priv_key, "", ""))
@@ -34,7 +35,7 @@ K9EDZi0mZ7VUeeNKq476CU5X940yusahgneePQrDMF2nWFEtBCOiXQ==
 	verify.verify(decoded);
 
 	for (auto& e : decoded.get_header_json())
-		std::cout << e.first << " = " << e.second << std::endl;
+		std::cout << e.first << " = " << e.second << '\n';
 	for (auto& e : decoded.get_payload_json())
-		std::cout << e.first << " = " << e.second << std::endl;
+		std::cout << e.first << " = " << e.second << '\n';
 }

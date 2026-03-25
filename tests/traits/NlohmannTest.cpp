@@ -82,6 +82,19 @@ TEST(NlohmannTest, VerifyTokenExpirationValid) {
 	verify.verify(decoded_token);
 }
 
+TEST(NlohmannTest, VerifyTokenExpirationInValid) {
+	const auto token = jwt::create<jwt::traits::nlohmann_json>()
+						   .set_issuer("auth0")
+						   .set_issued_now()
+						   .set_expires_in(std::chrono::hours{1})
+						   .sign(jwt::algorithm::hs256{"secret"});
+
+	const auto decoded_token = jwt::decode<jwt::traits::nlohmann_json>(token);
+	const auto verify =
+		jwt::verify<jwt::traits::nlohmann_json>().allow_algorithm(jwt::algorithm::hs256{"secret"}).with_issuer("auth0");
+	verify.verify(decoded_token);
+}
+
 TEST(NlohmannTest, VerifyTokenExpired) {
 	const auto token = jwt::create<jwt::traits::nlohmann_json>()
 						   .set_issuer("auth0")
@@ -92,7 +105,7 @@ TEST(NlohmannTest, VerifyTokenExpired) {
 	const auto decoded_token = jwt::decode<jwt::traits::nlohmann_json>(token);
 	const auto verify =
 		jwt::verify<jwt::traits::nlohmann_json>().allow_algorithm(jwt::algorithm::hs256{"secret"}).with_issuer("auth0");
-	ASSERT_THROW(verify.verify(decoded_token), jwt::token_verification_exception);
+	ASSERT_THROW(verify.verify(decoded_token), jwt::error::token_verification_exception);
 
 	std::error_code ec;
 	ASSERT_NO_THROW(verify.verify(decoded_token, ec));

@@ -1,3 +1,4 @@
+/// @file private-claims.cpp
 #include <jwt-cpp/jwt.h>
 
 #include <iostream>
@@ -20,7 +21,7 @@ int main() {
 						   .set_issuer("auth.mydomain.io")
 						   .set_audience("mydomain.io")
 						   .set_issued_at(time)
-						   .set_not_before(time + sec{15})
+						   .set_not_before(time - sec{15})
 						   .set_expires_at(time + sec{15} + min{2})
 						   .set_payload_claim("boolean", picojson::value(true))
 						   .set_payload_claim("integer", picojson::value(int64_t{12345}))
@@ -33,14 +34,16 @@ int main() {
 	const auto decoded = jwt::decode(token);
 
 	const auto api_array = decoded.get_payload_claim("object").to_json().get("api").get("array");
-	std::cout << "api array = " << api_array << std::endl;
+	std::cout << "api array = " << api_array << '\n';
 
+	/* [verify exact claim] */
 	jwt::verify()
 		.allow_algorithm(jwt::algorithm::none{})
 		.with_issuer("auth.mydomain.io")
 		.with_audience("mydomain.io")
-		.with_claim("object", from_raw_json)
+		.with_claim("object", from_raw_json) // Match the exact JSON content
 		.verify(decoded);
+	/* [verify exact claim] */
 
 	return 0;
 }

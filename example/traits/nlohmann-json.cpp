@@ -34,7 +34,7 @@ int main() {
 	const auto decoded = jwt::decode<traits>(token);
 
 	const auto array = traits::as_array(decoded.get_payload_claim("object").to_json()["api"]["array"]);
-	std::cout << "payload /object/api/array = " << array << std::endl;
+	std::cout << "payload /object/api/array = " << array << '\n';
 
 	jwt::verify<traits>()
 		.allow_algorithm(jwt::algorithm::none{})

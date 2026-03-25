@@ -12,25 +12,23 @@ jobs:
     strategy:
       matrix:
         openssl:
-          - { tag: "openssl-3.0.3", name: "3.0.3" }
-          - { tag: "OpenSSL_1_1_1o", name: "1.1.1o" }
-          - { tag: "OpenSSL_1_1_0i", name: "1.1.0i" } # Do not bump, there's a broken in the autoconfig script and it's not maintained
+          - { tag: "openssl-3.0.19", name: "3.0.19" }
+          - { tag: "openssl-3.5.5", name: "3.5.5" }
+          - { tag: "openssl-3.6.1", name: "3.6.1" }
+          - { tag: "OpenSSL_1_1_1w", name: "1.1.1w" }
+          - { tag: "OpenSSL_1_1_0i", name: "1.1.0i" } # Do not bump, there's a bug in the autoconf script and it's not maintained
           - { tag: "OpenSSL_1_0_2u", name: "1.0.2u" }
           - { tag: "OpenSSL_1_0_1u", name: "1.0.1u" }
     name: OpenSSL ${{ matrix.openssl.name }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
       - uses: ./.github/actions/install/gtest
       - uses: ./.github/actions/install/openssl
         with:
           version: ${{ matrix.openssl.tag }}
 
-      - name: configure
-        run: cmake . -DJWT_BUILD_TESTS=ON -DOPENSSL_ROOT_DIR=/tmp
-      - run: make
-      - name: test
-        run: ./tests/jwt-cpp-test
+      - run: cmake --workflow --preset unit-tests
 
       - if: github.event_name == 'push' && always()
         uses: ./.github/actions/badge
@@ -40,28 +38,30 @@ jobs:
 
   openssl-no-deprecated:
     runs-on: ubuntu-latest
-    name: OpenSSL 3.0 No Deprecated
+    name: OpenSSL 3.6 No Deprecated
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
       - uses: ./.github/actions/install/gtest
       - uses: ./.github/actions/install/openssl
         with:
-          version: "openssl-3.0.3"
+          version: "openssl-3.6.1"
 
       - name: configure
-        run: cmake . -DJWT_BUILD_TESTS=ON -DOPENSSL_ROOT_DIR=/tmp -DCMAKE_CXX_FLAGS="-DOPENSSL_NO_DEPRECATED=1" -DCMAKE_C_FLAGS="-DOPENSSL_NO_DEPRECATED=1"
-      - run: make
+        run: cmake --preset unit-tests -DCMAKE_CXX_FLAGS="-DOPENSSL_NO_DEPRECATED=1" -DCMAKE_C_FLAGS="-DOPENSSL_NO_DEPRECATED=1"
+      - run: cmake --build --preset unit-tests
+      - name: test
+        run: ctest --preset unit-tests --output-on-failure
 
   libressl:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        libressl: ["3.5.3", "3.4.3", "3.3.6"]
+        libressl: ["4.2.1", "4.1.2", "3.9.2"]
     name: LibreSSL ${{ matrix.libressl }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
       - uses: ./.github/actions/install/gtest
       - uses: ./.github/actions/install/libressl
@@ -69,10 +69,10 @@ jobs:
           version: ${{ matrix.libressl }}
 
       - name: configure
-        run: cmake . -DJWT_BUILD_TESTS=ON -DJWT_SSL_LIBRARY:STRING=LibreSSL
-      - run: make
+        run: cmake --preset unit-tests -DJWT_SSL_LIBRARY:STRING=LibreSSL
+      - run: cmake --build --preset unit-tests
       - name: test
-        run: ./tests/jwt-cpp-test
+        run: ctest --preset unit-tests --output-on-failure
 
       - if: github.event_name == 'push' && always()
         uses: ./.github/actions/badge
@@ -88,9 +88,10 @@ jobs:
           - { ref: "v5.1.1-stable", name: "5.1.1"}
           - { ref: "v5.2.0-stable", name: "5.2.0" }
           - { ref: "v5.3.0-stable", name: "5.3.0"}
+          - { ref: "v5.7.0-stable", name: "5.7.0"}
     name: wolfSSL ${{ matrix.wolfssl.name }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
       - uses: ./.github/actions/install/gtest
       - uses: ./.github/actions/install/wolfssl
@@ -98,10 +99,10 @@ jobs:
           version: ${{ matrix.wolfssl.ref }}
 
       - name: configure
-        run: cmake . -DJWT_BUILD_TESTS=ON -DJWT_SSL_LIBRARY:STRING=wolfSSL
-      - run: make
+        run: cmake --preset unit-tests -DJWT_SSL_LIBRARY:STRING=wolfSSL
+      - run: cmake --build --preset unit-tests
       - name: test
-        run: ./tests/jwt-cpp-test
+        run: ctest --preset unit-tests --output-on-failure
 
       - if: github.event_name == 'push' && always()
         uses: ./.github/actions/badge

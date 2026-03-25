@@ -17,45 +17,43 @@ jobs:
   default-linux:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
 
       - name: setup
         run: |
-          mkdir build
-          cd build
-          cmake .. -DJWT_BUILD_EXAMPLES=OFF
-          sudo make install
+          cmake --preset release
+          sudo cmake --build --preset release --target install
 
       - name: test
+        working-directory: tests/cmake
         run: |
-          cd tests/cmake
           cmake . -DTEST:STRING="defaults-enabled" -DCMAKE_FIND_DEBUG_MODE=1
           cmake --build .
 
   default-linux-with-examples:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
 
       - name: setup
         run: |
           mkdir build
           cd build
-          cmake ..
+          cmake .. -DJWT_BUILD_EXAMPLES=ON
           sudo cmake --install .
 
       - name: test
+        working-directory: tests/cmake
         run: |
-          cd tests/cmake
           cmake . -DTEST:STRING="defaults-enabled"
           cmake --build .
 
   default-win:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
       - run: choco install openssl
 
@@ -75,16 +73,36 @@ jobs:
   min-req:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: install cmake
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/install/cmake
+        with:
+          version: "3.14.7"
+          url: "https://cmake.org/files/v3.14/cmake-3.14.7.tar.gz"
+      - uses: ./.github/actions/install/gtest
+        with:
+          version: "1.16.0" # Compatible with CMake 3.14, required 3.13
+
+      - name: setup
         run: |
-          wget https://cmake.org/files/v3.12/cmake-3.12.4.tar.gz
-          tar -zxf cmake-3.12.4.tar.gz
-          cd cmake-3.12.4
-          ./bootstrap
-          make -j $(nproc)
+          mkdir build
+          cd build
+          cmake .. -DJWT_BUILD_EXAMPLES=ON -DJWT_BUILD_TESTS=ON
           sudo make install
 
+      - name: test
+        run: |
+          cd tests/cmake
+          cmake . -DTEST:STRING="defaults-enabled"
+          cmake --build .
+
+  preset-support-but-not-enough:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/install/cmake
+        with:
+          version: "3.24.4"
+          url: "https://cmake.org/files/v3.24/cmake-3.24.4.tar.gz"
       - uses: ./.github/actions/install/gtest
 
       - name: setup
@@ -103,7 +121,7 @@ jobs:
   custom-install-linux:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
 
       - name: setup
@@ -119,10 +137,29 @@ jobs:
           cmake . -DCMAKE_PREFIX_PATH="/opt/jwt-cpp" -DTEST:STRING="defaults-enabled" -DCMAKE_FIND_DEBUG_MODE=1
           cmake --build .
 
+  root-hint-install-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: lukka/get-cmake@latest
+
+      - name: setup
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_INSTALL_PREFIX:STRING="/opt/jwt-cpp" -DJWT_BUILD_EXAMPLES=OFF
+          make install
+
+      - name: test
+        run: |
+          cd tests/cmake
+          cmake . -Djwt-cpp_ROOT="/opt/jwt-cpp" -DTEST:STRING="defaults-enabled" -DCMAKE_FIND_DEBUG_MODE=1
+          cmake --build .
+
   custom-install-win:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
       - run: choco install openssl
 
@@ -142,7 +179,7 @@ jobs:
   no-pico:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
 
       - name: setup
@@ -161,7 +198,7 @@ jobs:
   no-base64:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
 
       - name: setup
@@ -180,7 +217,7 @@ jobs:
   with-libressl:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
       - uses: ./.github/actions/install/libressl
 
@@ -200,7 +237,7 @@ jobs:
   with-wolfssl:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
       - uses: ./.github/actions/install/wolfssl
         with:
@@ -219,11 +256,13 @@ jobs:
           cmake . -DTEST:STRING="wolfssl-is-used"
           cmake --build .
 
-  with-hunter:
+  with-hunter: # This is actually testing the integration with the package management
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: "~3.25.0"  # <--= optional, use most recent 3.25.x version
 
       - name: setup
         run: |

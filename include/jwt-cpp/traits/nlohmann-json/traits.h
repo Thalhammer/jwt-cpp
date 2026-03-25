@@ -5,7 +5,11 @@
 #include "nlohmann/json.hpp"
 
 namespace jwt {
+	/**
+	 * \brief Namespace containing all the json_trait implementations for a jwt::basic_claim.
+	*/
 	namespace traits {
+		/// basic_claim's JSON trait implementation for Modern C++ JSON
 		struct nlohmann_json {
 			using json = nlohmann::json;
 			using value_type = json;
@@ -46,7 +50,7 @@ namespace jwt {
 				return val.get<json::array_t>();
 			}
 
-			static int64_t as_int(const json& val) {
+			static int64_t as_integer(const json& val) {
 				switch (val.type()) {
 				case json::value_t::number_integer:
 				case json::value_t::number_unsigned: return val.get<int64_t>();
@@ -54,7 +58,7 @@ namespace jwt {
 				}
 			}
 
-			static bool as_bool(const json& val) {
+			static bool as_boolean(const json& val) {
 				if (val.type() != json::value_t::boolean) throw std::bad_cast();
 				return val.get<bool>();
 			}

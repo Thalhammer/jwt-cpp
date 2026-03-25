@@ -1,0 +1,208 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 25,
+        "patch": 0
+    },
+    "include": [
+        "../cmake/CMakePresets.json"
+    ],
+    "configurePresets": [
+        {
+            "name": "linux",
+            "hidden": true,
+            "description": "This is only available on Linux",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            }
+        },
+        {
+            "name": "coverage",
+            "inherits": ["debug", "linux"],
+            "displayName": "Coverage",
+            "description": "This is only available on Linux",
+            "cacheVariables": {
+                "JWT_BUILD_TESTS": "ON",
+                "JWT_ENABLE_COVERAGE": "ON"
+            }
+        },
+        {
+            "name": "unit-tests",
+            "inherits": ["debug"],
+            "displayName": "Unit Tests",
+            "cacheVariables": {
+                "JWT_BUILD_TESTS": "ON"
+            }
+        },
+        {
+            "name": "mac-libressl",
+            "inherits": ["unit-tests"],
+            "displayName": "macOS Unit Tests (LibreSSL)",
+            "description": "This is only available on macOS and requires LibreSSL to be installed via Homebrew. You can install it with `brew install libressl`. You need to manually download the FindLibreSSL.cmake file from the LibreSSL repository and place it in the cmake/ directory of this project.",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Darwin"
+            },
+            "cacheVariables": {
+                "JWT_SSL_LIBRARY": "LibreSSL",
+                "LIBRESSL_ROOT_DIR": "$env{HOMEBREW_PREFIX}/opt/libressl"
+            }
+        },
+        {
+            "name": "linux-libressl",
+            "inherits": ["linux", "unit-tests"],
+            "displayName": "Linux Unit Tests (LibreSSL)",
+            "description": "This is only available on Linux and requires LibreSSL to be installed. You need to manually download the FindLibreSSL.cmake file from the LibreSSL repository and place it in the cmake/ directory of this project.",
+            "cacheVariables": {
+                "JWT_SSL_LIBRARY": "LibreSSL"
+            }
+        },
+        {
+            "name": "ci-fuzzing",
+            "inherits": ["debug", "linux"],
+            "displayName": "Fuzz Testing",
+            "description": "This is only available on Linux with Clang",
+            "cacheVariables": {
+                "JWT_ENABLE_FUZZING": "ON",
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_CXX_COMPILER": "clang++"
+            }
+        },
+        {
+            "name": "ci-asan",
+            "inherits": ["debug", "linux"],
+            "displayName": "Address/Leak Sanitizer",
+            "description": "This is only available on Linux",
+            "environment": {
+                "ASAN_FLAGS": "-fsanitize=address -fsanitize=leak",
+                "ASAN_OPTIONS": "check_initialization_order=true:detect_stack_use_after_return=true:fast_unwind_on_malloc=0"
+            },
+            "cacheVariables": {
+                "JWT_BUILD_EXAMPLES": "ON",
+                "JWT_BUILD_TESTS": "ON",
+                "CMAKE_C_FLAGS": "$env{ASAN_FLAGS}",
+                "CMAKE_CXX_FLAGS": "$env{ASAN_FLAGS}",
+                "CMAKE_EXE_LINKER_FLAGS": "$env{ASAN_FLAGS}",
+                "CMAKE_MODULE_LINKER_FLAGS": "$env{ASAN_FLAGS}"
+            }
+        },
+        {
+            "name": "ci-ubsan",
+            "inherits": ["debug", "linux"],
+            "displayName": "Undefined Behavior Sanitizer",
+            "description": "This is only available on Linux",
+            "environment": {
+                "UBSAN_FLAGS": "-fsanitize=undefined -fsanitize=return -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize-recover=all",
+                "UBSAN_OPTIONS": "print_stacktrace=1"
+            },
+            "cacheVariables": {
+                "JWT_BUILD_EXAMPLES": "ON",
+                "JWT_BUILD_TESTS": "ON",
+                "CMAKE_C_FLAGS": "$env{UBSAN_FLAGS}",
+                "CMAKE_CXX_FLAGS": "$env{UBSAN_FLAGS}",
+                "CMAKE_EXE_LINKER_FLAGS": "$env{UBSAN_FLAGS}",
+                "CMAKE_MODULE_LINKER_FLAGS": "$env{UBSAN_FLAGS}"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "coverage",
+            "configurePreset": "coverage",
+            "configuration": "Debug",
+            "targets": [
+                "jwt-cpp-test",
+                "coverage"
+            ]
+        },
+        {
+            "name": "unit-tests",
+            "configurePreset": "unit-tests",
+            "configuration": "Debug",
+            "targets": [
+                "jwt-cpp-test"
+            ]
+        },
+        {
+            "name": "mac-libressl",
+            "configurePreset": "mac-libressl",
+            "configuration": "Debug",
+            "targets": [
+                "jwt-cpp-test"
+            ]
+        },
+        {
+            "name": "linux-libressl",
+            "configurePreset": "linux-libressl",
+            "configuration": "Debug",
+            "targets": [
+                "jwt-cpp-test"
+            ]
+        },
+        {
+            "name": "ci-fuzzing",
+            "configurePreset": "ci-fuzzing",
+            "targets": [
+                "jwt-cpp-fuzz-BaseEncodeFuzz",
+                "jwt-cpp-fuzz-BaseDecodeFuzz",
+                "jwt-cpp-fuzz-TokenDecodeFuzz"
+            ]
+        },
+        {
+            "name": "ci-asan",
+            "configurePreset": "ci-asan",
+            "targets": [
+                "rsa-create",
+                "rsa-verify",
+                "jwks-verify",
+                "jwt-cpp-test"
+            ]
+        },
+        {
+            "name": "ci-ubsan",
+            "configurePreset": "ci-ubsan",
+            "targets": [
+                "rsa-create",
+                "rsa-verify",
+                "jwks-verify",
+                "jwt-cpp-test"
+            ]
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "unit-tests",
+            "description": "Run the unit tests",
+            "configurePreset": "unit-tests",
+            "output": {
+                "outputOnFailure": true
+            },
+            "execution": {
+                "noTestsAction": "error"
+            }
+        }
+    ],
+    "workflowPresets": [
+        {
+            "name": "unit-tests",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "unit-tests"
+                },
+                {
+                    "type": "build",
+                    "name": "unit-tests"
+                },
+                {
+                    "type": "test",
+                    "name": "unit-tests"
+                }
+            ]
+        }
+    ]
+}

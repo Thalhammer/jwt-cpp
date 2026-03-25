@@ -2,12 +2,9 @@
 #error "missing wolfSSL's SSL header!"
 #endif
 
-#ifndef OPENSSL_EXTRA
+// See https://github.com/Thalhammer/jwt-cpp/pull/352
+#ifndef EXTERNAL_OPTS_OPENVPN
 #error "missing wolfSSL's OPENSSL_EXTRA macro!"
-#endif
-
-#ifndef OPENSSL_ALL
-#error "missing wolfSSL's OPENSSL_ALL macro!"
 #endif
 
 #include "jwt-cpp/jwt.h"

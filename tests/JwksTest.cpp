@@ -1,7 +1,12 @@
-#include "jwt-cpp/jwt.h"
-#include <gtest/gtest.h>
+// Include the generated trait type list for parameterized testing
+#include "traits_typelist.h"
 
-TEST(JwksTest, OneKeyParse) {
+template<typename Trait>
+class JwksTest : public ::testing::Test {};
+
+TYPED_TEST_SUITE(JwksTest, AllTraitTypes);
+
+TYPED_TEST(JwksTest, OneKeyParse) {
 	std::string public_key = R"({
     "alg": "RS256",
     "kty": "RSA",
@@ -14,21 +19,22 @@ TEST(JwksTest, OneKeyParse) {
     "kid": "123456789",
     "x5t": "NjVBRjY5MDlCMUIwNzU4RTA2QzZFMDQ4QzQ2MDAyQjVDNjk1RTM2Qg"
   })";
-	ASSERT_THROW(jwt::parse_jwk("__not_json__"), jwt::error::invalid_json_exception);
-	ASSERT_THROW(jwt::parse_jwk(R"##(["not","an","object"])##"), std::bad_cast);
+	EXPECT_ANY_THROW(jwt::parse_jwk<TypeParam>("__not_json__"));
+	EXPECT_THROW(jwt::parse_jwk<TypeParam>(R"##(["not","an","object"])##"), std::bad_cast);
 
-	auto jwk = jwt::parse_jwk(public_key);
+	ASSERT_NO_THROW(jwt::parse_jwk<TypeParam>(public_key));
+	auto jwk = jwt::parse_jwk<TypeParam>(public_key);
 
-	ASSERT_TRUE(jwk.has_algorithm());
-	ASSERT_TRUE(jwk.has_key_id());
-	ASSERT_TRUE(jwk.has_x5c());
-	ASSERT_FALSE(jwk.has_jwk_claim("foo"));
+	EXPECT_TRUE(jwk.has_algorithm());
+	EXPECT_TRUE(jwk.has_key_id());
+	EXPECT_TRUE(jwk.has_x5c());
+	EXPECT_FALSE(jwk.has_jwk_claim("foo"));
 
-	ASSERT_EQ("RS256", jwk.get_algorithm());
-	ASSERT_EQ("123456789", jwk.get_key_id());
+	EXPECT_EQ("RS256", jwk.get_algorithm());
+	EXPECT_EQ("123456789", jwk.get_key_id());
 }
 
-TEST(JwksTest, MultiKeysParse) {
+TYPED_TEST(JwksTest, MultiKeysParse) {
 	std::string public_key = R"({
 	"keys": [{
 			"kid": "internal-gateway-jwt",
@@ -52,21 +58,22 @@ TEST(JwksTest, MultiKeysParse) {
 		}
 	]
 })";
-	auto jwks = jwt::parse_jwks(public_key);
+	ASSERT_NO_THROW(jwt::parse_jwks<TypeParam>(public_key));
+	auto jwks = jwt::parse_jwks<TypeParam>(public_key);
 	auto jwk = jwks.get_jwk("internal-gateway-jwt");
 
-	ASSERT_TRUE(jwk.has_algorithm());
-	ASSERT_TRUE(jwk.has_key_id());
-	ASSERT_TRUE(jwk.has_x5c());
-	ASSERT_FALSE(jwk.has_jwk_claim("foo"));
+	EXPECT_TRUE(jwk.has_algorithm());
+	EXPECT_TRUE(jwk.has_key_id());
+	EXPECT_TRUE(jwk.has_x5c());
+	EXPECT_FALSE(jwk.has_jwk_claim("foo"));
 
-	ASSERT_EQ("RS256", jwk.get_algorithm());
-	ASSERT_EQ("internal-gateway-jwt", jwk.get_key_id());
+	EXPECT_EQ("RS256", jwk.get_algorithm());
+	EXPECT_EQ("internal-gateway-jwt", jwk.get_key_id());
 
-	ASSERT_THROW(jwks.get_jwk("123456"), jwt::error::claim_not_present_exception);
+	EXPECT_THROW(jwks.get_jwk("123456"), jwt::error::claim_not_present_exception);
 }
 
-TEST(JwksTest, Missingx5c) {
+TYPED_TEST(JwksTest, Missingx5c) {
 	std::string public_key = R"({
 	"keys": [{
 			"kid": "internal-gateway-jwt",
@@ -98,21 +105,65 @@ TEST(JwksTest, Missingx5c) {
 		}
 	]
 })";
-
-	auto jwks = jwt::parse_jwks(public_key);
-	ASSERT_TRUE(jwks.has_jwk("internal-gateway-jwt"));
-	ASSERT_FALSE(jwks.has_jwk("random-jwt"));
+	ASSERT_NO_THROW(jwt::parse_jwks<TypeParam>(public_key));
+	auto jwks = jwt::parse_jwks<TypeParam>(public_key);
+	EXPECT_TRUE(jwks.has_jwk("internal-gateway-jwt"));
+	EXPECT_FALSE(jwks.has_jwk("random-jwt"));
 	auto jwk = jwks.get_jwk("internal-gateway-jwt");
 
-	ASSERT_TRUE(jwk.has_algorithm());
-	ASSERT_THROW(jwk.get_x5c(), jwt::error::claim_not_present_exception);
+	EXPECT_TRUE(jwk.has_algorithm());
+	EXPECT_THROW(jwk.get_x5c(), jwt::error::claim_not_present_exception);
 
 	auto jwk2 = jwks.get_jwk("internal-0");
 
-	ASSERT_EQ(jwk2.get_x5c().size(), 0);
-	ASSERT_THROW(jwk2.get_x5c_key_value(), jwt::error::claim_not_present_exception);
+	EXPECT_EQ(jwk2.get_x5c().size(), 0);
+	EXPECT_THROW(jwk2.get_x5c_key_value(), jwt::error::claim_not_present_exception);
 
 	auto jwk3 = jwks.get_jwk("internal-1");
-	ASSERT_EQ(jwk3.get_x5c().size(), 3);
-	ASSERT_EQ(jwk3.get_x5c_key_value(), "1");
+	EXPECT_EQ(jwk3.get_x5c().size(), 3);
+	EXPECT_EQ(jwk3.get_x5c_key_value(), "1");
+}
+
+TYPED_TEST(JwksTest, DefaultConstructor) {
+	using Jwks = decltype(jwt::parse_jwks<TypeParam>(std::declval<std::string>()));
+
+	Jwks keys{};
+	EXPECT_EQ(keys.begin(), keys.end());
+	EXPECT_FALSE(keys.has_jwk(""));
+	EXPECT_FALSE(keys.has_jwk("random-jwt"));
+}
+
+TYPED_TEST(JwksTest, CachingBasedOnKid) {
+	std::string public_key = R"({
+	"keys": [{
+			"kid": "internal-gateway-jwt",
+			"use": "sig",
+			"x5c": ["MIIG1TCCBL2gAwIBAgIIFvMVGp6t\/cMwDQYJKoZIhvcNAQELBQAwZjELMAkGA1UEBhMCR0IxIDAeBgNVBAoMF1N0YW5kYXJkIENoYXJ0ZXJlZCBCYW5rMTUwMwYDVQQDDCxTdGFuZGFyZCBDaGFydGVyZWQgQmFuayBTaWduaW5nIENBIEcxIC0gU0hBMjAeFw0xODEwMTAxMTI2MzVaFw0yMjEwMTAxMTI2MzVaMIG9MQswCQYDVQQGEwJTRzESMBAGA1UECAwJU2luZ2Fwb3JlMRIwEAYDVQQHDAlTaW5nYXBvcmUxIDAeBgNVBAoMF1N0YW5kYXJkIENoYXJ0ZXJlZCBCYW5rMRwwGgYDVQQLDBNGb3VuZGF0aW9uIFNlcnZpY2VzMSgwJgYDVQQDDB9pbnRlcm5hbC1nYXRld2F5LWp3dC5hcGkuc2MubmV0MRwwGgYJKoZIhvcNAQkBFg1BUElQU1NAc2MuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArVWBoIi3IJ4nOWXu7\/SDxczqMou1B+c4c2FdQrOXrK31HxAaz4WEtma9BLXFdFHJ5mCCPIvdUcVxxnCynqhMOkZ\/a7acQbUD9cDzI8isMB9JL7VooDw0CctxHxffjqQQVIEhC2Q7zsM1pQayR7cl+pbBlvHIoRxq2n1B0fFvfoiosjf4kDiCpgHdM+v5Hw9aVYmUbroHxmQWqhB0iRTJQPPLZqqQVC50A1Q\/96gkwoODyotc46Uy9wYEpdGrtDG\/thWay3fmMsjpWR0U25xFIrxTrfCGBblYpD7juukWWml2E9rtE2rHgUxbymxXjEw7xrMwcGrhOGyqwoBqJy1JVwIDAQABo4ICLTCCAikwZAYIKwYBBQUHAQEEWDBWMFQGCCsGAQUFBzABhkhodHRwOi8vY29yZW9jc3AuZ2xvYmFsLnN0YW5kYXJkY2hhcnRlcmVkLmNvbS9lamJjYS9wdWJsaWN3ZWIvc3RhdHVzL29jc3AwHQYDVR0OBBYEFIinW4BNDeVEFcuLf8YjZjtySoW9MAwGA1UdEwEB\/wQCMAAwHwYDVR0jBBgwFoAUfNZMoZi33nKrcmVU3TFVQnuEi\/4wggFCBgNVHR8EggE5MIIBNTCCATGggcKggb+GgbxodHRwOi8vY29yZWNybC5nbG9iYWwuc3RhbmRhcmRjaGFydGVyZWQuY29tL2VqYmNhL3B1YmxpY3dlYi93ZWJkaXN0L2NlcnRkaXN0P2NtZD1jcmwmaXNzdWVyPUNOPVN0YW5kYXJkJTIwQ2hhcnRlcmVkJTIwQmFuayUyMFNpZ25pbmclMjBDQSUyMEcxJTIwLSUyMFNIQTIsTz1TdGFuZGFyZCUyMENoYXJ0ZXJlZCUyMEJhbmssQz1HQqJqpGgwZjE1MDMGA1UEAwwsU3RhbmRhcmQgQ2hhcnRlcmVkIEJhbmsgU2lnbmluZyBDQSBHMSAtIFNIQTIxIDAeBgNVBAoMF1N0YW5kYXJkIENoYXJ0ZXJlZCBCYW5rMQswCQYDVQQGEwJHQjAOBgNVHQ8BAf8EBAMCBsAwHQYDVR0lBBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMEMA0GCSqGSIb3DQEBCwUAA4ICAQBtsoRlDHuOTDChcWdfdVUtRgP0U0ijDSeJi8vULN1rgYnqqJc4PdJno50aiu9MGlxY02O7HW7ZVD6QEG\/pqHmZ0sbWpb\/fumMgZSjP65IcGuS53zgcNtLYnyXyEv+v5T\/CK3bk4Li6tUW3ScJPUwVWwP1E0\/u6aBSb5k\/h4lTwS1o88ybS5pJOg6XutXByp991QQrrs7tp7fKNynjNZbFuG3J1e09X+zTfJOpjaDUofQTkt8IyMRI6Cs4wI1eZA+dAIL8B0n8ze1mRl1FOJqgdZrAQjoqZkCTnc0Il5VY\/dUXxGVg6D9e5pfck3FWT107K9\/5EZoxytpqYXFCjMXi5hx4YjK17OUgm82mZhvqkNdzF8Yq2vFuB3LPfyelESq99xFLykvinrVm1NtZKeDTT1Jq\/VvZt6stO\/tovq1RfJJcznpYcwOzxlnhGR6E+hxuBx7aDJzGf0JaoRxQILH1B2XV9WDI3HPYQsP7XtriX+QUJ\/aly28QkV48RmaGYCsly43YZu1MKudSsw+dhnbZzRsg\/aes3dzGW2x137bQPtux7k2LCSpsTXgedhOys28YoGlsoe8kUv0myAU4Stt+I3mrwO3BKUn+tJggvlDiiiyT1tg2HiklyU\/2FxQkZRMeB0eRrXTpg3l9x2mpF+dDFxOMKszxwD2kgoEZgo6o58A=="],
+			"n": "nr9UsxnPVd21iuiGcIJ_Qli2XVlAZe5VbELA1hO2-L4k5gI4fjHZ3ysUcautLpbOYogOQgsnlpsLrCmvNDvBDVzVp2nMbpguJlt12vHSP1fRJJpipGQ8qU-VaXsC4OjOQf3H9ojAU5Vfnl5gZ7kVCd8g4M29l-IRyNpxE-Ccxc2Y7molsCHT6GHLMMBVsd11JIOXMICJf4hz2YYkQ1t7C8SaB2RFRPuGO5Mn6mfAnwdmRera4TBz6_pIPPCgCbN8KOdJItWkr9F7Tjv_0nhh-ZVlQvbQ9PXHyKTj00g3IYUlbZIWHm0Ley__fzNZk2dyAAVjNA2QSzTZJc33MQx1pQ",
+			"e": "AQAB",
+			"x5t": "-qC0akuyiHT7GcV5a8O5nrFsKVWM9da7lzq6DLrj09I",
+			"alg": "RS256",
+			"kty": "RSA"
+		},
+		{
+			"kid": "internal-0",
+			"use": "sig",
+			"x5c": ["MIIG1TCCBL2gAwIBAgIIFvMVGp6t\/cMwDQYJKoZIhvcNAQELBQAwZjELMAkGA1UEBhMCR0IxIDAeBgNVBAoMF1N0YW5kYXJkIENoYXJ0ZXJlZCBCYW5rMTUwMwYDVQQDDCxTdGFuZGFyZCBDaGFydGVyZWQgQmFuayBTaWduaW5nIENBIEcxIC0gU0hBMjAeFw0xODEwMTAxMTI2MzVaFw0yMjEwMTAxMTI2MzVaMIG9MQswCQYDVQQGEwJTRzESMBAGA1UECAwJU2luZ2Fwb3JlMRIwEAYDVQQHDAlTaW5nYXBvcmUxIDAeBgNVBAoMF1N0YW5kYXJkIENoYXJ0ZXJlZCBCYW5rMRwwGgYDVQQLDBNGb3VuZGF0aW9uIFNlcnZpY2VzMSgwJgYDVQQDDB9pbnRlcm5hbC1nYXRld2F5LWp3dC5hcGkuc2MubmV0MRwwGgYJKoZIhvcNAQkBFg1BUElQU1NAc2MuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArVWBoIi3IJ4nOWXu7\/SDxczqMou1B+c4c2FdQrOXrK31HxAaz4WEtma9BLXFdFHJ5mCCPIvdUcVxxnCynqhMOkZ\/a7acQbUD9cDzI8isMB9JL7VooDw0CctxHxffjqQQVIEhC2Q7zsM1pQayR7cl+pbBlvHIoRxq2n1B0fFvfoiosjf4kDiCpgHdM+v5Hw9aVYmUbroHxmQWqhB0iRTJQPPLZqqQVC50A1Q\/96gkwoODyotc46Uy9wYEpdGrtDG\/thWay3fmMsjpWR0U25xFIrxTrfCGBblYpD7juukWWml2E9rtE2rHgUxbymxXjEw7xrMwcGrhOGyqwoBqJy1JVwIDAQABo4ICLTCCAikwZAYIKwYBBQUHAQEEWDBWMFQGCCsGAQUFBzABhkhodHRwOi8vY29yZW9jc3AuZ2xvYmFsLnN0YW5kYXJkY2hhcnRlcmVkLmNvbS9lamJjYS9wdWJsaWN3ZWIvc3RhdHVzL29jc3AwHQYDVR0OBBYEFIinW4BNDeVEFcuLf8YjZjtySoW9MAwGA1UdEwEB\/wQCMAAwHwYDVR0jBBgwFoAUfNZMoZi33nKrcmVU3TFVQnuEi\/4wggFCBgNVHR8EggE5MIIBNTCCATGggcKggb+GgbxodHRwOi8vY29yZWNybC5nbG9iYWwuc3RhbmRhcmRjaGFydGVyZWQuY29tL2VqYmNhL3B1YmxpY3dlYi93ZWJkaXN0L2NlcnRkaXN0P2NtZD1jcmwmaXNzdWVyPUNOPVN0YW5kYXJkJTIwQ2hhcnRlcmVkJTIwQmFuayUyMFNpZ25pbmclMjBDQSUyMEcxJTIwLSUyMFNIQTIsTz1TdGFuZGFyZCUyMENoYXJ0ZXJlZCUyMEJhbmssQz1HQqJqpGgwZjE1MDMGA1UEAwwsU3RhbmRhcmQgQ2hhcnRlcmVkIEJhbmsgU2lnbmluZyBDQSBHMSAtIFNIQTIxIDAeBgNVBAoMF1N0YW5kYXJkIENoYXJ0ZXJlZCBCYW5rMQswCQYDVQQGEwJHQjAOBgNVHQ8BAf8EBAMCBsAwHQYDVR0lBBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMEMA0GCSqGSIb3DQEBCwUAA4ICAQBtsoRlDHuOTDChcWdfdVUtRgP0U0ijDSeJi8vULN1rgYnqqJc4PdJno50aiu9MGlxY02O7HW7ZVD6QEG\/pqHmZ0sbWpb\/fumMgZSjP65IcGuS53zgcNtLYnyXyEv+v5T\/CK3bk4Li6tUW3ScJPUwVWwP1E0\/u6aBSb5k\/h4lTwS1o88ybS5pJOg6XutXByp991QQrrs7tp7fKNynjNZbFuG3J1e09X+zTfJOpjaDUofQTkt8IyMRI6Cs4wI1eZA+dAIL8B0n8ze1mRl1FOJqgdZrAQjoqZkCTnc0Il5VY\/dUXxGVg6D9e5pfck3FWT107K9\/5EZoxytpqYXFCjMXi5hx4YjK17OUgm82mZhvqkNdzF8Yq2vFuB3LPfyelESq99xFLykvinrVm1NtZKeDTT1Jq\/VvZt6stO\/tovq1RfJJcznpYcwOzxlnhGR6E+hxuBx7aDJzGf0JaoRxQILH1B2XV9WDI3HPYQsP7XtriX+QUJ\/aly28QkV48RmaGYCsly43YZu1MKudSsw+dhnbZzRsg\/aes3dzGW2x137bQPtux7k2LCSpsTXgedhOys28YoGlsoe8kUv0myAU4Stt+I3mrwO3BKUn+tJggvlDiiiyT1tg2HiklyU\/2FxQkZRMeB0eRrXTpg3l9x2mpF+dDFxOMKszxwD2kgoEZgo6o58A=="],
+			"n": "nr9UsxnPVd21iuiGcIJ_Qli2XVlAZe5VbELA1hO2-L4k5gI4fjHZ3ysUcautLpbOYogOQgsnlpsLrCmvNDvBDVzVp2nMbpguJlt12vHSP1fRJJpipGQ8qU-VaXsC4OjOQf3H9ojAU5Vfnl5gZ7kVCd8g4M29l-IRyNpxE-Ccxc2Y7molsCHT6GHLMMBVsd11JIOXMICJf4hz2YYkQ1t7C8SaB2RFRPuGO5Mn6mfAnwdmRera4TBz6_pIPPCgCbN8KOdJItWkr9F7Tjv_0nhh-ZVlQvbQ9PXHyKTj00g3IYUlbZIWHm0Ley__fzNZk2dyAAVjNA2QSzTZJc33MQx1pQ",
+			"e": "AQAB",
+			"x5t": "-qC0akuyiHT7GcV5a8O5nrFsKVWM9da7lzq6DLrj09I",
+			"alg": "RS256",
+			"kty": "RSA"
+		}
+	]
+})";
+	ASSERT_NO_THROW(jwt::parse_jwks<TypeParam>(public_key));
+	auto jwks = jwt::parse_jwks<TypeParam>(public_key);
+	std::map<typename TypeParam::string_type, jwt::jwk<TypeParam>> xs;
+
+	for (auto jwk : jwks) {
+		xs.emplace(std::make_pair(jwk.get_key_id(), jwk));
+	}
+
+	EXPECT_EQ(xs.size(), 2);
 }

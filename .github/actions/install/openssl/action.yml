@@ -16,4 +16,6 @@ runs:
         ./config --prefix=/tmp --libdir=lib
         make -j $(nproc)
         sudo make -j $(nproc) install_sw
+        echo "OPENSSL_ROOT_DIR=/tmp" >> "$GITHUB_ENV"
+        echo "OpenSSL_ROOT=/tmp" >> "$GITHUB_ENV"
       shell: bash

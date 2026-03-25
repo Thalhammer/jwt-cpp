@@ -12,7 +12,11 @@
 #include "jwt-cpp/jwt.h"
 
 namespace jwt {
+	/**
+	 * \brief Namespace containing all the json_trait implementations for a jwt::basic_claim.
+	*/
 	namespace traits {
+		/// basic_claim's JSON trait implementation for picojson
 		struct kazuho_picojson {
 			using value_type = picojson::value;
 			using object_type = picojson::object;
@@ -49,12 +53,12 @@ namespace jwt {
 				return val.get<picojson::array>();
 			}
 
-			static int64_t as_int(const picojson::value& val) {
+			static int64_t as_integer(const picojson::value& val) {
 				if (!val.is<int64_t>()) throw std::bad_cast();
 				return val.get<int64_t>();
 			}
 
-			static bool as_bool(const picojson::value& val) {
+			static bool as_boolean(const picojson::value& val) {
 				if (!val.is<bool>()) throw std::bad_cast();
 				return val.get<bool>();
 			}

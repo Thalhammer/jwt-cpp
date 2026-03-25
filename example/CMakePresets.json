@@ -1,0 +1,32 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 25,
+        "patch": 0
+    },
+    "include": [
+        "../cmake/CMakePresets.json"
+    ],
+    "configurePresets": [
+        {
+            "name": "examples",
+            "displayName": "Build Examples",
+            "inherits": "release",
+            "cacheVariables": {
+                "JWT_BUILD_EXAMPLES": "ON"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "examples",
+            "configurePreset": "examples",
+            "configuration": "Release",
+            "targets": [
+                "rsa-create",
+                "rsa-verify"
+            ]
+        }
+    ]
+}

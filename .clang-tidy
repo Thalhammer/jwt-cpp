@@ -20,7 +20,8 @@ Checks: '-*,
          readability-*,
          -readability-magic-numbers,
          -readability-braces-around-statements,
-         -readability-uppercase-literal-suffix'
+         -readability-uppercase-literal-suffix,
+         -misc-include-cleaner'
 
 CheckOptions:
   - key: readability-identifier-naming.TypedefCase

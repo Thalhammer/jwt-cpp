@@ -1,0 +1,12 @@
+name: Install open-source-parsers/jsoncpp
+description: Install open-source-parsers/jsoncpp for building test application
+inputs:
+  version:
+    description: The desired open-source-parsers/jsoncpp version to install
+    required: false
+    default: "1.9.6"
+runs:
+  using: composite
+  steps:
+    - run: ${{ github.action_path }}/install-jsoncpp.sh ${{ inputs.version }}
+      shell: bash

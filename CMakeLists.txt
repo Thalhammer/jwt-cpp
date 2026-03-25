@@ -1,4 +1,8 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.14)
+cmake_policy(VERSION 3.14)
+if(POLICY CMP0135) # DOWNLOAD_EXTRACT_TIMESTAMP
+  cmake_policy(SET CMP0135 NEW)
+endif()
 
 # HUNTER_ENABLED is always set if this package is included in a project using hunter (HunterGate sets it) In this case
 # we will use hunter as well to stay consistent. If not the use can supply it on configure to force using hunter.
@@ -9,22 +13,33 @@ if(HUNTER_ENABLED)
   message(STATUS "jwt-cpp: using hunter for dependency resolution")
 endif()
 
-project(jwt-cpp)
+project(jwt-cpp LANGUAGES CXX)
 
 option(JWT_BUILD_EXAMPLES "Configure CMake to build examples (or not)" ON)
 option(JWT_BUILD_TESTS "Configure CMake to build tests (or not)" OFF)
+option(JWT_BUILD_DOCS "Adds a target for building the doxygen documentation" OFF)
 option(JWT_ENABLE_COVERAGE "Enable code coverage testing" OFF)
 option(JWT_ENABLE_FUZZING "Enable fuzz testing" OFF)
 
-option(JWT_EXTERNAL_PICOJSON "Use find_package() to locate picojson, provided to integrate with package managers" OFF)
-option(JWT_DISABLE_BASE64 "Do not include the base64 implementation from this library" OFF)
 option(JWT_DISABLE_PICOJSON "Do not provide the picojson template specialiaze" OFF)
+option(JWT_DISABLE_BASE64 "Do not include the base64 implementation from this library" OFF)
+include(CMakeDependentOption)
+cmake_dependent_option(
+  JWT_BUILD_TESTS "Configure CMake to build tests (or not)" OFF
+  "NOT JWT_DISABLE_BASE64 AND NOT JWT_DISABLE_PICOJSON" OFF)
+cmake_dependent_option(
+  JWT_EXTERNAL_PICOJSON "Use find_package() to locate picojson, provided to integrate with package managers" OFF
+  "NOT JWT_DISABLE_PICOJSON" OFF)
+cmake_dependent_option(
+  JWT_EXTERNAL_NLOHMANN_JSON "Use find_package() to locate nlohman-json required for tests and examples" OFF
+  "JWT_BUILD_EXAMPLES OR JWT_BUILD_TESTS" OFF)
 
 set(JWT_SSL_LIBRARY_OPTIONS OpenSSL LibreSSL wolfSSL)
 set(JWT_SSL_LIBRARY OpenSSL CACHE STRING "Determines which SSL library to build with")
 set_property(CACHE JWT_SSL_LIBRARY PROPERTY STRINGS ${JWT_SSL_LIBRARY_OPTIONS})
 
-set(JWT_JSON_TRAITS_OPTIONS boost-json danielaparker-jsoncons kazuho-picojson nlohmann-json)
+set(JWT_JSON_TRAITS_OPTIONS boost-json danielaparker-jsoncons kazuho-picojson nlohmann-json open-source-parsers-jsoncpp
+                            glaze-json reflectcpp-json)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
@@ -55,11 +70,24 @@ elseif(${JWT_SSL_LIBRARY} MATCHES "LibreSSL")
 elseif(${JWT_SSL_LIBRARY} MATCHES "wolfSSL")
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(wolfssl REQUIRED IMPORTED_TARGET wolfssl)
-  list(TRANSFORM wolfssl_INCLUDE_DIRS APPEND "/wolfssl") # This is required to access OpenSSL compatability API
+  list(TRANSFORM wolfssl_INCLUDE_DIRS APPEND "/wolfssl") # This is required to access OpenSSL compatibility API
 endif()
 
-if(JWT_EXTERNAL_PICOJSON)
+if(NOT JWT_DISABLE_PICOJSON AND JWT_EXTERNAL_PICOJSON)
   find_package(picojson 1.3.0 REQUIRED)
+endif()
+
+if(JWT_BUILD_EXAMPLES OR JWT_BUILD_TESTS)
+  if(JWT_EXTERNAL_NLOHMANN_JSON)
+    message(STATUS "jwt-cpp: using find_package for nlohmann-json required for tests")
+    find_package(nlohmann_json CONFIG REQUIRED)
+  else()
+    message(STATUS "jwt-cpp: using FetchContent for nlohmann-json required for tests")
+    include(FetchContent)
+    fetchcontent_declare(nlohmann_json URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz
+                         URL_MD5 e155202b2a589137f6804724bd182f12)
+    fetchcontent_makeavailable(nlohmann_json)
+  endif()
 endif()
 
 set(JWT_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -98,24 +126,27 @@ endif()
 
 if(${JWT_SSL_LIBRARY} MATCHES "wolfSSL")
   target_link_libraries(jwt-cpp INTERFACE PkgConfig::wolfssl)
-  # This is required to access OpenSSL compatability API
+  # This is required to access OpenSSL compatibility API
   target_include_directories(jwt-cpp INTERFACE ${wolfssl_INCLUDE_DIRS})
-  target_compile_definitions(jwt-cpp INTERFACE OPENSSL_EXTRA OPENSSL_ALL)
+  # This flag is required to have the mandatory header included automatically
+  # https://github.com/Thalhammer/jwt-cpp/pull/352#discussion_r1627971786
+  # https://github.com/wolfSSL/wolfssl/blob/3b74a6402998a8b8839e25e31ba8ac74749aa9b0/wolfssl/wolfcrypt/settings.h#L58
+  target_compile_definitions(jwt-cpp INTERFACE EXTERNAL_OPTS_OPENVPN)
 endif()
 
-if(JWT_EXTERNAL_PICOJSON)
-  target_link_libraries(jwt-cpp INTERFACE picojson::picojson>)
+if(NOT JWT_DISABLE_PICOJSON AND JWT_EXTERNAL_PICOJSON)
+  target_link_libraries(jwt-cpp INTERFACE picojson::picojson)
 endif()
 
-# Hunter needs relative paths so the files are palced correctly
+# Hunter needs relative paths so the files are placed correctly
 if(NOT JWT_CMAKE_FILES_INSTALL_DIR)
   set(JWT_CMAKE_FILES_INSTALL_DIR cmake)
 endif()
 
 configure_package_config_file(
   ${CMAKE_CURRENT_LIST_DIR}/cmake/jwt-cpp-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config.cmake
-  INSTALL_DESTINATION ${JWT_CMAKE_FILES_INSTALL_DIR} PATH_VARS JWT_EXTERNAL_PICOJSON JWT_SSL_LIBRARY)
-write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-version.cmake VERSION 0.6.0
+  INSTALL_DESTINATION ${JWT_CMAKE_FILES_INSTALL_DIR})
+write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-version.cmake VERSION 0.7.2
                                  COMPATIBILITY ExactVersion)
 
 install(TARGETS jwt-cpp EXPORT jwt-cpp-targets PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
@@ -133,9 +164,14 @@ if(JWT_BUILD_EXAMPLES)
 endif()
 
 if(JWT_BUILD_TESTS)
+  enable_testing()
   add_subdirectory(tests)
 endif()
 
 if(JWT_ENABLE_FUZZING)
   add_subdirectory(tests/fuzz)
+endif()
+
+if(JWT_BUILD_DOCS)
+  add_subdirectory(docs)
 endif()

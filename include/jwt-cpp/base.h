@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cstdint>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -37,8 +38,24 @@ namespace jwt {
 					 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'}};
 				return data;
 			}
+			static const std::array<int8_t, 256>& rdata() {
+				static constexpr std::array<int8_t, 256> rdata{{
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63,
+					52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1, -1, 0,	1,	2,	3,	4,	5,	6,
+					7,	8,	9,	10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1,
+					-1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
+					49, 50, 51, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+				}};
+				return rdata;
+			}
 			static const std::string& fill() {
-				static std::string fill{"="};
+				static const std::string fill{"="};
 				return fill;
 			}
 		};
@@ -60,14 +77,30 @@ namespace jwt {
 					 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'}};
 				return data;
 			}
+			static const std::array<int8_t, 256>& rdata() {
+				static constexpr std::array<int8_t, 256> rdata{{
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1,
+					52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1, -1, 0,	1,	2,	3,	4,	5,	6,
+					7,	8,	9,	10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, 63,
+					-1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
+					49, 50, 51, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+				}};
+				return rdata;
+			}
 			static const std::string& fill() {
-				static std::string fill{"%3d"};
+				static const std::string fill{"%3d"};
 				return fill;
 			}
 		};
 		namespace helper {
 			/**
-			 * @brief A General purpose base64url alphabet respecting the
+			 * \brief A General purpose base64url alphabet respecting the
 			 * [URI Case Normalization](https://datatracker.ietf.org/doc/html/rfc3986#section-6.2.2.1)
 			 *
 			 * This is useful in situations outside of JWT encoding/decoding and is provided as a helper
@@ -81,18 +114,33 @@ namespace jwt {
 						 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'}};
 					return data;
 				}
-				static const std::initializer_list<std::string>& fill() {
-					static std::initializer_list<std::string> fill{"%3D", "%3d"};
+				static const std::array<int8_t, 256>& rdata() {
+					static constexpr std::array<int8_t, 256> rdata{{
+						-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+						-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1,
+						52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1, -1, 0,	1,	2,	3,	4,	5,	6,
+						7,	8,	9,	10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, 63,
+						-1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
+						49, 50, 51, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+						-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+						-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+						-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+						-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+						-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+					}};
+					return rdata;
+				}
+				static const std::vector<std::string>& fill() {
+					static const std::vector<std::string> fill{"%3D", "%3d"};
 					return fill;
 				}
 			};
 		} // namespace helper
 
-		inline uint32_t index(const std::array<char, 64>& alphabet, char symbol) {
-			auto itr = std::find_if(alphabet.cbegin(), alphabet.cend(), [symbol](char c) { return c == symbol; });
-			if (itr == alphabet.cend()) { throw std::runtime_error("Invalid input: not within alphabet"); }
-
-			return std::distance(alphabet.cbegin(), itr);
+		inline uint32_t index(const std::array<int8_t, 256>& rdata, char symbol) {
+			auto index = rdata[static_cast<unsigned char>(symbol)];
+			if (index <= -1) { throw std::runtime_error("Invalid input: not within alphabet"); }
+			return static_cast<uint32_t>(index);
 		}
 	} // namespace alphabet
 
@@ -100,7 +148,6 @@ namespace jwt {
 	 * \brief A collection of fellable functions for working with base64 and base64url
 	 */
 	namespace base {
-
 		namespace details {
 			struct padding {
 				size_t count = 0;
@@ -178,7 +225,7 @@ namespace jwt {
 				return res;
 			}
 
-			inline std::string decode(const std::string& base, const std::array<char, 64>& alphabet,
+			inline std::string decode(const std::string& base, const std::array<int8_t, 256>& rdata,
 									  const std::vector<std::string>& fill) {
 				const auto pad = count_padding(base, fill);
 				if (pad.count > 2) throw std::runtime_error("Invalid input: too much fill");
@@ -190,7 +237,7 @@ namespace jwt {
 				std::string res;
 				res.reserve(out_size);
 
-				auto get_sextet = [&](size_t offset) { return alphabet::index(alphabet, base[offset]); };
+				auto get_sextet = [&](size_t offset) { return alphabet::index(rdata, base[offset]); };
 
 				size_t fast_size = size - size % 4;
 				for (size_t i = 0; i < fast_size;) {
@@ -224,9 +271,9 @@ namespace jwt {
 				return res;
 			}
 
-			inline std::string decode(const std::string& base, const std::array<char, 64>& alphabet,
+			inline std::string decode(const std::string& base, const std::array<int8_t, 256>& rdata,
 									  const std::string& fill) {
-				return decode(base, alphabet, std::vector<std::string>{fill});
+				return decode(base, rdata, std::vector<std::string>{fill});
 			}
 
 			inline std::string pad(const std::string& base, const std::string& fill) {
@@ -247,18 +294,58 @@ namespace jwt {
 			}
 		} // namespace details
 
+		/**
+		 * \brief Generic base64 encoding
+		 * 
+		 * A Generic base64 encode function that supports any "alphabet"
+		 * such as jwt::alphabet::base64 
+		 * 
+		 * \code
+		 * const auto b64 = jwt::base::encode<jwt::alphabet::base64>("example_data")
+		 * \endcode
+		 */
 		template<typename T>
 		std::string encode(const std::string& bin) {
 			return details::encode(bin, T::data(), T::fill());
 		}
+		/**
+		 * \brief Generic base64 decoding
+		 * 
+		 * A Generic base64 decoding function that supports any "alphabet"
+		 * such as jwt::alphabet::base64 
+		 * 
+		 * \code
+		 * const auto b64 = jwt::base::decode<jwt::alphabet::base64>("ZXhhbXBsZV9kYXRh")
+		 * \endcode
+		 */
 		template<typename T>
 		std::string decode(const std::string& base) {
-			return details::decode(base, T::data(), T::fill());
+			return details::decode(base, T::rdata(), T::fill());
 		}
+		/**
+		 * \brief Generic base64 padding
+		 * 
+		 * A Generic base64 pad function that supports any "alphabet"
+		 * such as jwt::alphabet::base64 
+		 * 
+		 * \code
+		 * const auto b64 = jwt::base::pad<jwt::alphabet::base64>("ZXhhbXBsZV9kYQ")
+		 * \endcode
+		 */
 		template<typename T>
 		std::string pad(const std::string& base) {
 			return details::pad(base, T::fill());
 		}
+		/**
+		 * \brief Generic base64 trimming
+		 * 
+		 * A Generic base64 trim function that supports any "alphabet"
+		 * such as jwt::alphabet::base64 
+		 * 
+		 * \code
+		 * const auto b64 = jwt::base::trim<jwt::alphabet::base64>("ZXhhbXBsZV9kYQ==")
+		 * \endcode
+		 */
 		template<typename T>
 		std::string trim(const std::string& base) {
 			return details::trim(base, T::fill());

@@ -25,9 +25,12 @@ namespace jwt {
 	}
 
 	/**
-	 * Return a builder instance to create a new token
+	 * Create a builder using the default clock
+	 * \return builder instance to create a new token
 	 */
-	inline builder<traits::nlohmann_json> create() { return builder<traits::nlohmann_json>(); }
+	inline builder<default_clock, traits::nlohmann_json> create() {
+		return builder<default_clock, traits::nlohmann_json>(default_clock{});
+	}
 
 #ifndef JWT_DISABLE_BASE64
 	/**
@@ -44,7 +47,7 @@ namespace jwt {
 
 	/**
 	 * Decode a token
-	 * \tparam Decode is callabled, taking a string_type and returns a string_type.
+	 * \tparam Decode is callable, taking a string_type and returns a string_type.
 	 * It should ensure the padding of the input and then base64url decode and
 	 * return the results.
 	 * \param token Token to decode

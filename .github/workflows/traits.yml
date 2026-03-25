@@ -10,15 +10,21 @@ jobs:
   traits:
     name: Traits (${{ matrix.target.name }})
     runs-on: ubuntu-latest
+    concurrency:
+      group: badges-${{ github.ref }}-${{ matrix.target.name }}
+      cancel-in-progress: false
     strategy:
       matrix:
         target:
-          - { name: "danielaparker-jsoncons", tag: "0.167.1", version: "v0.167.1" }
-          - { name: "boost-json", tag: "1.77.0", version: "v1.77.0" }
-          - { name: "nlohmann-json", tag: "3.10.4", version: "v3.10.4" }
+          - { name: "danielaparker-jsoncons", tag: "1.3.2", version: "v1.3.2" }
+          - { name: "boost-json", tag: "1.78.0", version: "v1.80.0" }
+          - { name: "nlohmann-json", tag: "3.12.0", version: "v3.12.0" }
           - { name: "kazuho-picojson", tag: "111c9be5188f7350c2eac9ddaedd8cca3d7bf394", version: "111c9be" }
+          - { name: "open-source-parsers-jsoncpp", tag: "1.9.6", version: "v1.9.6" }
+          - { name: "glaze-json", tag: "7.0.2", version: "v7.0.2" }
+          - { name: "reflectcpp-json", tag: "0.24.0", version: "v0.24.0" }
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
       - name: setup
         run: |
@@ -39,8 +45,6 @@ jobs:
           version: ${{matrix.target.tag}}
 
       - if: matrix.target.name == 'nlohmann-json'
-        run: rm -rf include/nlohmann
-      - if: matrix.target.name == 'nlohmann-json'
         uses: ./.github/actions/install/nlohmann-json
         with:
           version: ${{matrix.target.tag}}
@@ -51,6 +55,21 @@ jobs:
         uses: ./.github/actions/install/kazuho-picojson
         with:
           version: ${{matrix.target.tag}}
+
+      - if: matrix.target.name == 'open-source-parsers-jsoncpp'
+        uses: ./.github/actions/install/open-source-parsers-jsoncpp
+        with:
+          version: ${{matrix.target.tag}}
+
+      - if: matrix.target.name == 'glaze-json'
+        uses: ./.github/actions/install/glaze-json
+        with:
+          version: ${{matrix.target.tag}}
+
+      - if: matrix.target.name == 'reflectcpp-json'
+        uses: ./.github/actions/install/reflectcpp-json
+        with:
+          version: ${{ matrix.target.tag }}
 
       - name: test
         working-directory: example/traits
