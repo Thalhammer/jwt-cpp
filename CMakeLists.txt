@@ -25,6 +25,9 @@ option(JWT_DISABLE_PICOJSON "Do not provide the picojson template specialiaze" O
 option(JWT_DISABLE_BASE64 "Do not include the base64 implementation from this library" OFF)
 include(CMakeDependentOption)
 cmake_dependent_option(
+  JWT_BUILD_TESTS "Configure CMake to build tests (or not)" OFF
+  "NOT JWT_DISABLE_BASE64 AND NOT JWT_DISABLE_PICOJSON" OFF)
+cmake_dependent_option(
   JWT_EXTERNAL_PICOJSON "Use find_package() to locate picojson, provided to integrate with package managers" OFF
   "NOT JWT_DISABLE_PICOJSON" OFF)
 cmake_dependent_option(
