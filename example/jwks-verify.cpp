@@ -4,9 +4,21 @@
  * Novel example using a JWT's "key ID" to match with a JWK Set
  * and using the corresponding x5c from the JWK to verify the token
  */
-#include <iostream>
-#include <jwt-cpp/jwt.h>
 #include <openssl/rand.h>
+
+#ifndef JWT_ENABLE_MODULES
+#include <iostream>
+#include <string>
+#include <jwt-cpp/jwt.h>
+#else
+#ifdef JWT_USE_IMPORT_STD
+import std;
+#else
+#include <iostream>
+#include <string>
+#endif
+import jwt_cpp;
+#endif
 
 int main() {
 	std::string raw_jwks =

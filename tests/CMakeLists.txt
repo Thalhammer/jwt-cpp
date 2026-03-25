@@ -153,6 +153,10 @@ if(TARGET reflectcpp::reflectcpp)
 endif()
 
 add_executable(jwt-cpp-test ${TEST_SOURCES})
+if(JWT_ENABLE_MODULES AND NOT JWT_USE_IMPORT_STD)
+  target_compile_definitions(jwt-cpp-test PRIVATE JWT_ENABLE_MODULES)
+  set_property(TARGET jwt-cpp-test PROPERTY CXX_SCAN_FOR_MODULES ON)
+endif()
 
 # Add include path for generated traits_typelist.h
 target_include_directories(jwt-cpp-test PRIVATE ${CMAKE_CURRENT_BINARY_DIR})

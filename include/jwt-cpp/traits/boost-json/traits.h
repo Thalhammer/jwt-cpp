@@ -2,7 +2,11 @@
 #define JWT_CPP_BOOSTJSON_TRAITS_H
 
 #define JWT_DISABLE_PICOJSON
+#if defined(JWT_ENABLE_MODULES) && !defined(JWT_USE_IMPORT_STD)
+import jwt_cpp;
+#else
 #include "jwt-cpp/jwt.h"
+#endif
 
 #include <boost/json.hpp>
 // if not boost JSON standalone then error...

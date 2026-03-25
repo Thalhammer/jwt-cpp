@@ -12,6 +12,7 @@
 #include "base.h"
 #endif
 
+#ifndef JWT_CPP_MODULE_INTERFACE_BUILD
 #include <openssl/ec.h>
 #include <openssl/ecdsa.h>
 #include <openssl/err.h>
@@ -21,6 +22,9 @@
 #include <openssl/rsa.h>
 #include <openssl/ssl.h>
 
+#ifdef JWT_USE_IMPORT_STD
+import std;
+#else
 #include <algorithm>
 #include <chrono>
 #include <climits>
@@ -44,10 +48,14 @@
 #endif
 #endif
 #endif
+#endif
+#endif
 
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L // 3.0.0
 #define JWT_OPENSSL_3_0
+#ifndef JWT_CPP_MODULE_INTERFACE_BUILD
 #include <openssl/param_build.h>
+#endif
 #elif OPENSSL_VERSION_NUMBER >= 0x10101000L // 1.1.1
 #define JWT_OPENSSL_1_1_1
 #elif OPENSSL_VERSION_NUMBER >= 0x10100000L // 1.1.0

@@ -1,6 +1,6 @@
-#include "jwt-cpp/traits/{{traits_dir}}/traits.h"
-
 #include <gtest/gtest.h>
+
+#include "jwt-cpp/traits/{{traits_dir}}/traits.h"
 
 TEST({{test_suite_name}}, BasicClaims) {
 	const auto string = jwt::basic_claim<jwt::traits::{{traits_name}}>(

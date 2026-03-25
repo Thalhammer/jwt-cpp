@@ -1,8 +1,20 @@
 /// @file private-claims.cpp
-#include <jwt-cpp/jwt.h>
 
+#ifndef JWT_ENABLE_MODULES
+#include <chrono>
 #include <iostream>
 #include <sstream>
+#include <jwt-cpp/jwt.h>
+#else
+#ifdef JWT_USE_IMPORT_STD
+import std;
+#else
+#include <chrono>
+#include <iostream>
+#include <sstream>
+#endif
+import jwt_cpp;
+#endif
 
 using sec = std::chrono::seconds;
 using min = std::chrono::minutes;
@@ -13,7 +25,7 @@ int main() {
 	iss >> from_raw_json;
 
 	jwt::claim::set_t list{"once", "twice"};
-	std::vector<int64_t> big_numbers{727663072ULL, 770979831ULL, 427239169ULL, 525936436ULL};
+	std::vector<std::int64_t> big_numbers{727663072ULL, 770979831ULL, 427239169ULL, 525936436ULL};
 
 	const auto time = jwt::date::clock::now();
 	const auto token = jwt::create()
@@ -24,7 +36,7 @@ int main() {
 						   .set_not_before(time - sec{15})
 						   .set_expires_at(time + sec{15} + min{2})
 						   .set_payload_claim("boolean", picojson::value(true))
-						   .set_payload_claim("integer", picojson::value(int64_t{12345}))
+						   .set_payload_claim("integer", picojson::value(std::int64_t{12345}))
 						   .set_payload_claim("precision", picojson::value(12.345))
 						   .set_payload_claim("strings", jwt::claim(list))
 						   .set_payload_claim("array", jwt::claim(big_numbers.begin(), big_numbers.end()))

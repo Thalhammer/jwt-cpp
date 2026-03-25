@@ -5,7 +5,11 @@
 #define JSONCONS_NO_DEPRECATED
 
 #include "jsoncons/json.hpp"
+#if defined(JWT_ENABLE_MODULES) && !defined(JWT_USE_IMPORT_STD)
+import jwt_cpp;
+#else
 #include "jwt-cpp/jwt.h"
+#endif
 
 #include <initializer_list>
 #include <sstream>

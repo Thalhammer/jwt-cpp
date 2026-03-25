@@ -1,7 +1,11 @@
 #ifndef JWT_CPP_NLOHMANN_JSON_TRAITS_H
 #define JWT_CPP_NLOHMANN_JSON_TRAITS_H
 
-#include "jwt-cpp/jwt.h"
+#if defined(JWT_ENABLE_MODULES) && !defined(JWT_USE_IMPORT_STD)
+import jwt_cpp;
+#else
+#include <jwt-cpp/jwt.h>
+#endif
 #include "nlohmann/json.hpp"
 
 namespace jwt {
