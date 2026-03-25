@@ -37,6 +37,7 @@ body:
       label: Version
       description: What version of our software are you running?
       options:
+        - 0.7.2
         - 0.7.1
         - 0.7.0
         - 0.6.0

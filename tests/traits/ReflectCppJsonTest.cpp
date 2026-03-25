@@ -1,24 +1,24 @@
+#include "jwt-cpp/traits/reflectcpp-json/traits.h"
+
 #include <gtest/gtest.h>
 
-#include "jwt-cpp/traits/{{traits_dir}}/traits.h"
-
-TEST({{test_suite_name}}, BasicClaims) {
-	const auto string = jwt::basic_claim<jwt::traits::{{traits_name}}>(
-		jwt::traits::{{traits_name}}::string_type("string"));
+TEST(ReflectCppTest, BasicClaims) {
+	const auto string =
+		jwt::basic_claim<jwt::traits::reflectcpp_json>(jwt::traits::reflectcpp_json::string_type("string"));
 	ASSERT_EQ(string.get_type(), jwt::json::type::string);
 
-	const auto array = jwt::basic_claim<jwt::traits::{{traits_name}}>(
-		std::set<jwt::traits::{{traits_name}}::string_type>{"string", "string"});
+	const auto array = jwt::basic_claim<jwt::traits::reflectcpp_json>(
+		std::set<jwt::traits::reflectcpp_json::string_type>{"string", "string"});
 	ASSERT_EQ(array.get_type(), jwt::json::type::array);
 
-	const auto integer = jwt::basic_claim<jwt::traits::{{traits_name}}>(159816816);
+	const auto integer = jwt::basic_claim<jwt::traits::reflectcpp_json>(159816816);
 	ASSERT_EQ(integer.get_type(), jwt::json::type::integer);
 }
 
-TEST({{test_suite_name}}, AudienceAsString) {
-	jwt::traits::{{traits_name}}::string_type token =
+TEST(ReflectCppTest, AudienceAsString) {
+	jwt::traits::reflectcpp_json::string_type token =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0.WZnM3SIiSRHsbO3O7Z2bmIzTJ4EC32HRBKfLznHhrh4";
-	auto decoded = jwt::decode<jwt::traits::{{traits_name}}>(token);
+	auto decoded = jwt::decode<jwt::traits::reflectcpp_json>(token);
 
 	ASSERT_TRUE(decoded.has_algorithm());
 	ASSERT_TRUE(decoded.has_type());
@@ -39,76 +39,78 @@ TEST({{test_suite_name}}, AudienceAsString) {
 	ASSERT_EQ("test", *aud.begin());
 }
 
-TEST({{test_suite_name}}, SetArray) {
-	std::vector<int64_t> vect = {100, 20, 10};
+TEST(ReflectCppTest, SetArray) {
+	jwt::traits::reflectcpp_json::array_type arr{100, 20, 10};
+	jwt::traits::reflectcpp_json::value_type value(arr);
+	jwt::basic_claim<jwt::traits::reflectcpp_json> array_claim(value);
 	auto token =
-		jwt::create<jwt::traits::{{traits_name}}>()
-			.set_payload_claim("test", jwt::basic_claim<jwt::traits::{{traits_name}}>(vect.begin(), vect.end()))
-			.sign(jwt::algorithm::none{});
+		jwt::create<jwt::traits::reflectcpp_json>().set_payload_claim("test", array_claim).sign(jwt::algorithm::none{});
 	ASSERT_EQ(token, "eyJhbGciOiJub25lIn0.eyJ0ZXN0IjpbMTAwLDIwLDEwXX0.");
 }
 
-TEST({{test_suite_name}}, SetObject) {
-	std::istringstream iss{"{\"api-x\": [1]}"};
-	jwt::basic_claim<jwt::traits::{{traits_name}}> object;
-	iss >> object;
+TEST(ReflectCppTest, SetObject) {
+	jwt::traits::reflectcpp_json::value_type value;
+	ASSERT_TRUE(jwt::traits::reflectcpp_json::parse(value, "{\"api-x\": [1]}"));
+
+	// Wrap into a claim and verify type
+	jwt::basic_claim<jwt::traits::reflectcpp_json> object(value);
 	ASSERT_EQ(object.get_type(), jwt::json::type::object);
 
-	auto token = jwt::create<jwt::traits::{{traits_name}}>()
+	auto token = jwt::create<jwt::traits::reflectcpp_json>()
 					 .set_payload_claim("namespace", object)
 					 .sign(jwt::algorithm::hs256("test"));
 	ASSERT_EQ(token,
 			  "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lc3BhY2UiOnsiYXBpLXgiOlsxXX19.F8I6I2RcSF98bKa0IpIz09fRZtHr1CWnWKx2za-tFQA");
 }
 
-TEST({{test_suite_name}}, VerifyTokenHS256) {
-	jwt::traits::{{traits_name}}::string_type token =
+TEST(ReflectCppTest, VerifyTokenHS256) {
+	jwt::traits::reflectcpp_json::string_type token =
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpc3MiOiJhdXRoMCJ9.AbIJTDMFc7yUa5MhvcP03nJPyCPzZtQcGEp-zWfOkEE";
 
-	const auto decoded_token = jwt::decode<jwt::traits::{{traits_name}}>(token);
-	const auto verify = jwt::verify<jwt::traits::{{traits_name}}>()
+	const auto decoded_token = jwt::decode<jwt::traits::reflectcpp_json>(token);
+	const auto verify = jwt::verify<jwt::traits::reflectcpp_json>()
 							.allow_algorithm(jwt::algorithm::hs256{"secret"})
 							.with_issuer("auth0");
 	verify.verify(decoded_token);
 }
 
-TEST({{test_suite_name}}, VerifyTokenExpirationValid) {
-	const auto token = jwt::create<jwt::traits::{{traits_name}}>()
+TEST(ReflectCppTest, VerifyTokenExpirationValid) {
+	const auto token = jwt::create<jwt::traits::reflectcpp_json>()
 						   .set_issuer("auth0")
 						   .set_issued_at(std::chrono::system_clock::now())
 						   .set_expires_at(std::chrono::system_clock::now() + std::chrono::seconds{3600})
 						   .sign(jwt::algorithm::hs256{"secret"});
 
-	const auto decoded_token = jwt::decode<jwt::traits::{{traits_name}}>(token);
-	const auto verify = jwt::verify<jwt::traits::{{traits_name}}>()
+	const auto decoded_token = jwt::decode<jwt::traits::reflectcpp_json>(token);
+	const auto verify = jwt::verify<jwt::traits::reflectcpp_json>()
 							.allow_algorithm(jwt::algorithm::hs256{"secret"})
 							.with_issuer("auth0");
 	verify.verify(decoded_token);
 }
 
-TEST({{test_suite_name}}, VerifyTokenExpirationInValid) {
-	const auto token = jwt::create<jwt::traits::{{traits_name}}>()
+TEST(ReflectCppTest, VerifyTokenExpirationInValid) {
+	const auto token = jwt::create<jwt::traits::reflectcpp_json>()
 						   .set_issuer("auth0")
 						   .set_issued_now()
 						   .set_expires_in(std::chrono::hours{1})
 						   .sign(jwt::algorithm::hs256{"secret"});
 
-	const auto decoded_token = jwt::decode<jwt::traits::{{traits_name}}>(token);
-	const auto verify = jwt::verify<jwt::traits::{{traits_name}}>()
+	const auto decoded_token = jwt::decode<jwt::traits::reflectcpp_json>(token);
+	const auto verify = jwt::verify<jwt::traits::reflectcpp_json>()
 							.allow_algorithm(jwt::algorithm::hs256{"secret"})
 							.with_issuer("auth0");
 	verify.verify(decoded_token);
 }
 
-TEST({{test_suite_name}}, VerifyTokenExpired) {
-	const auto token = jwt::create<jwt::traits::{{traits_name}}>()
+TEST(ReflectCppTest, VerifyTokenExpired) {
+	const auto token = jwt::create<jwt::traits::reflectcpp_json>()
 						   .set_issuer("auth0")
 						   .set_issued_at(std::chrono::system_clock::now() - std::chrono::seconds{3601})
 						   .set_expires_at(std::chrono::system_clock::now() - std::chrono::seconds{1})
 						   .sign(jwt::algorithm::hs256{"secret"});
 
-	const auto decoded_token = jwt::decode<jwt::traits::{{traits_name}}>(token);
-	const auto verify = jwt::verify<jwt::traits::{{traits_name}}>()
+	const auto decoded_token = jwt::decode<jwt::traits::reflectcpp_json>(token);
+	const auto verify = jwt::verify<jwt::traits::reflectcpp_json>()
 							.allow_algorithm(jwt::algorithm::hs256{"secret"})
 							.with_issuer("auth0");
 	ASSERT_THROW(verify.verify(decoded_token), jwt::error::token_verification_exception);
@@ -120,27 +122,27 @@ TEST({{test_suite_name}}, VerifyTokenExpired) {
 	ASSERT_EQ(ec.value(), static_cast<int>(jwt::error::token_verification_error::token_expired));
 }
 
-TEST({{test_suite_name}}, VerifyArray) {
-	jwt::traits::{{traits_name}}::string_type token = "eyJhbGciOiJub25lIn0.eyJ0ZXN0IjpbMTAwLDIwLDEwXX0.";
-	const auto decoded_token = jwt::decode<jwt::traits::{{traits_name}}>(token);
+TEST(ReflectCppTest, VerifyArray) {
+	jwt::traits::reflectcpp_json::string_type token = "eyJhbGciOiJub25lIn0.eyJ0ZXN0IjpbMTAwLDIwLDEwXX0.";
+	const auto decoded_token = jwt::decode<jwt::traits::reflectcpp_json>(token);
 
-	std::vector<int64_t> vect = {100, 20, 10};
-	jwt::basic_claim<jwt::traits::{{traits_name}}> array_claim(vect.begin(), vect.end());
-	const auto verify = jwt::verify<jwt::traits::{{traits_name}}>()
+	jwt::traits::reflectcpp_json::array_type arr{100, 20, 10};
+	jwt::basic_claim<jwt::traits::reflectcpp_json> array_claim{jwt::traits::reflectcpp_json::value_type(arr)};
+	const auto verify = jwt::verify<jwt::traits::reflectcpp_json>()
 							.allow_algorithm(jwt::algorithm::none{})
 							.with_claim("test", array_claim);
 	ASSERT_NO_THROW(verify.verify(decoded_token));
 }
 
-TEST({{test_suite_name}}, VerifyObject) {
-	jwt::traits::{{traits_name}}::string_type token =
+TEST(ReflectCppTest, VerifyObject) {
+	jwt::traits::reflectcpp_json::string_type token =
 		"eyJhbGciOiJIUzI1NiJ9.eyJuYW1lc3BhY2UiOnsiYXBpLXgiOlsxXX19.F8I6I2RcSF98bKa0IpIz09fRZtHr1CWnWKx2za-tFQA";
-	const auto decoded_token = jwt::decode<jwt::traits::{{traits_name}}>(token);
+	const auto decoded_token = jwt::decode<jwt::traits::reflectcpp_json>(token);
 
-	jwt::basic_claim<jwt::traits::{{traits_name}}> object_claim;
-	std::istringstream iss{"{\"api-x\": [1]}"};
-	iss >> object_claim;
-	const auto verify = jwt::verify<jwt::traits::{{traits_name}}>()
+	jwt::traits::reflectcpp_json::value_type value;
+	ASSERT_TRUE(jwt::traits::reflectcpp_json::parse(value, "{\"api-x\": [1]}"));
+	jwt::basic_claim<jwt::traits::reflectcpp_json> object_claim(value);
+	const auto verify = jwt::verify<jwt::traits::reflectcpp_json>()
 							.allow_algorithm(jwt::algorithm::hs256("test"))
 							.with_claim("namespace", object_claim);
 	ASSERT_NO_THROW(verify.verify(decoded_token));

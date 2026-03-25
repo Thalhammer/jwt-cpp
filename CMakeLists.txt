@@ -28,18 +28,19 @@ option(JWT_USE_IMPORT_STD "Use import std" OFF)
 option(JWT_DISABLE_PICOJSON "Do not provide the picojson template specialiaze" OFF)
 option(JWT_DISABLE_BASE64 "Do not include the base64 implementation from this library" OFF)
 include(CMakeDependentOption)
-cmake_dependent_option(JWT_EXTERNAL_PICOJSON
-  "Use find_package() to locate picojson, provided to integrate with package managers" OFF
+cmake_dependent_option(
+  JWT_EXTERNAL_PICOJSON "Use find_package() to locate picojson, provided to integrate with package managers" OFF
   "NOT JWT_DISABLE_PICOJSON" OFF)
-cmake_dependent_option(JWT_EXTERNAL_NLOHMANN_JSON
-  "Use find_package() to locate nlohman-json required for tests and examples" OFF
+cmake_dependent_option(
+  JWT_EXTERNAL_NLOHMANN_JSON "Use find_package() to locate nlohman-json required for tests and examples" OFF
   "JWT_BUILD_EXAMPLES OR JWT_BUILD_TESTS" OFF)
 
 set(JWT_SSL_LIBRARY_OPTIONS OpenSSL LibreSSL wolfSSL)
 set(JWT_SSL_LIBRARY OpenSSL CACHE STRING "Determines which SSL library to build with")
 set_property(CACHE JWT_SSL_LIBRARY PROPERTY STRINGS ${JWT_SSL_LIBRARY_OPTIONS})
 
-set(JWT_JSON_TRAITS_OPTIONS boost-json danielaparker-jsoncons kazuho-picojson nlohmann-json open-source-parsers-jsoncpp)
+set(JWT_JSON_TRAITS_OPTIONS boost-json danielaparker-jsoncons kazuho-picojson nlohmann-json open-source-parsers-jsoncpp
+                            glaze-json reflectcpp-json)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
@@ -84,9 +85,8 @@ if(JWT_BUILD_EXAMPLES OR JWT_BUILD_TESTS)
   else()
     message(STATUS "jwt-cpp: using FetchContent for nlohmann-json required for tests")
     include(FetchContent)
-    fetchcontent_declare(nlohmann_json
-      URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz
-      URL_MD5 e155202b2a589137f6804724bd182f12)
+    fetchcontent_declare(nlohmann_json URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz
+                         URL_MD5 e155202b2a589137f6804724bd182f12)
     fetchcontent_makeavailable(nlohmann_json)
   endif()
 endif()
@@ -192,7 +192,7 @@ endif()
 configure_package_config_file(
   ${CMAKE_CURRENT_LIST_DIR}/cmake/jwt-cpp-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config.cmake
   INSTALL_DESTINATION ${JWT_CMAKE_FILES_INSTALL_DIR})
-write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-version.cmake VERSION 0.7.1 COMPATIBILITY ExactVersion)
+write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-version.cmake VERSION 0.7.2 COMPATIBILITY ExactVersion)
 if (JWT_ENABLE_MODULES)
   install(TARGETS jwt-cpp EXPORT jwt-cpp-targets
           PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}

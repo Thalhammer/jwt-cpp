@@ -1,11 +1,12 @@
-#include <gtest/gtest.h>
-#ifdef JWT_ENABLE_MODULES
-import jwt_cpp;
-#else
-#include <jwt-cpp/jwt.h>
-#endif
+// Include the generated trait type list for parameterized testing
+#include "traits_typelist.h"
 
-TEST(JwksTest, OneKeyParse) {
+template<typename Trait>
+class JwksTest : public ::testing::Test {};
+
+TYPED_TEST_SUITE(JwksTest, AllTraitTypes);
+
+TYPED_TEST(JwksTest, OneKeyParse) {
 	std::string public_key = R"({
     "alg": "RS256",
     "kty": "RSA",
@@ -18,21 +19,22 @@ TEST(JwksTest, OneKeyParse) {
     "kid": "123456789",
     "x5t": "NjVBRjY5MDlCMUIwNzU4RTA2QzZFMDQ4QzQ2MDAyQjVDNjk1RTM2Qg"
   })";
-	ASSERT_THROW(jwt::parse_jwk("__not_json__"), jwt::error::invalid_json_exception);
-	ASSERT_THROW(jwt::parse_jwk(R"##(["not","an","object"])##"), std::bad_cast);
+	EXPECT_ANY_THROW(jwt::parse_jwk<TypeParam>("__not_json__"));
+	EXPECT_THROW(jwt::parse_jwk<TypeParam>(R"##(["not","an","object"])##"), std::bad_cast);
 
-	auto jwk = jwt::parse_jwk(public_key);
+	ASSERT_NO_THROW(jwt::parse_jwk<TypeParam>(public_key));
+	auto jwk = jwt::parse_jwk<TypeParam>(public_key);
 
-	ASSERT_TRUE(jwk.has_algorithm());
-	ASSERT_TRUE(jwk.has_key_id());
-	ASSERT_TRUE(jwk.has_x5c());
-	ASSERT_FALSE(jwk.has_jwk_claim("foo"));
+	EXPECT_TRUE(jwk.has_algorithm());
+	EXPECT_TRUE(jwk.has_key_id());
+	EXPECT_TRUE(jwk.has_x5c());
+	EXPECT_FALSE(jwk.has_jwk_claim("foo"));
 
-	ASSERT_EQ("RS256", jwk.get_algorithm());
-	ASSERT_EQ("123456789", jwk.get_key_id());
+	EXPECT_EQ("RS256", jwk.get_algorithm());
+	EXPECT_EQ("123456789", jwk.get_key_id());
 }
 
-TEST(JwksTest, MultiKeysParse) {
+TYPED_TEST(JwksTest, MultiKeysParse) {
 	std::string public_key = R"({
 	"keys": [{
 			"kid": "internal-gateway-jwt",
@@ -56,21 +58,22 @@ TEST(JwksTest, MultiKeysParse) {
 		}
 	]
 })";
-	auto jwks = jwt::parse_jwks(public_key);
+	ASSERT_NO_THROW(jwt::parse_jwks<TypeParam>(public_key));
+	auto jwks = jwt::parse_jwks<TypeParam>(public_key);
 	auto jwk = jwks.get_jwk("internal-gateway-jwt");
 
-	ASSERT_TRUE(jwk.has_algorithm());
-	ASSERT_TRUE(jwk.has_key_id());
-	ASSERT_TRUE(jwk.has_x5c());
-	ASSERT_FALSE(jwk.has_jwk_claim("foo"));
+	EXPECT_TRUE(jwk.has_algorithm());
+	EXPECT_TRUE(jwk.has_key_id());
+	EXPECT_TRUE(jwk.has_x5c());
+	EXPECT_FALSE(jwk.has_jwk_claim("foo"));
 
-	ASSERT_EQ("RS256", jwk.get_algorithm());
-	ASSERT_EQ("internal-gateway-jwt", jwk.get_key_id());
+	EXPECT_EQ("RS256", jwk.get_algorithm());
+	EXPECT_EQ("internal-gateway-jwt", jwk.get_key_id());
 
-	ASSERT_THROW(jwks.get_jwk("123456"), jwt::error::claim_not_present_exception);
+	EXPECT_THROW(jwks.get_jwk("123456"), jwt::error::claim_not_present_exception);
 }
 
-TEST(JwksTest, Missingx5c) {
+TYPED_TEST(JwksTest, Missingx5c) {
 	std::string public_key = R"({
 	"keys": [{
 			"kid": "internal-gateway-jwt",
@@ -102,35 +105,35 @@ TEST(JwksTest, Missingx5c) {
 		}
 	]
 })";
-
-	auto jwks = jwt::parse_jwks(public_key);
-	ASSERT_TRUE(jwks.has_jwk("internal-gateway-jwt"));
-	ASSERT_FALSE(jwks.has_jwk("random-jwt"));
+	ASSERT_NO_THROW(jwt::parse_jwks<TypeParam>(public_key));
+	auto jwks = jwt::parse_jwks<TypeParam>(public_key);
+	EXPECT_TRUE(jwks.has_jwk("internal-gateway-jwt"));
+	EXPECT_FALSE(jwks.has_jwk("random-jwt"));
 	auto jwk = jwks.get_jwk("internal-gateway-jwt");
 
-	ASSERT_TRUE(jwk.has_algorithm());
-	ASSERT_THROW(jwk.get_x5c(), jwt::error::claim_not_present_exception);
+	EXPECT_TRUE(jwk.has_algorithm());
+	EXPECT_THROW(jwk.get_x5c(), jwt::error::claim_not_present_exception);
 
 	auto jwk2 = jwks.get_jwk("internal-0");
 
-	ASSERT_EQ(jwk2.get_x5c().size(), 0);
-	ASSERT_THROW(jwk2.get_x5c_key_value(), jwt::error::claim_not_present_exception);
+	EXPECT_EQ(jwk2.get_x5c().size(), 0);
+	EXPECT_THROW(jwk2.get_x5c_key_value(), jwt::error::claim_not_present_exception);
 
 	auto jwk3 = jwks.get_jwk("internal-1");
-	ASSERT_EQ(jwk3.get_x5c().size(), 3);
-	ASSERT_EQ(jwk3.get_x5c_key_value(), "1");
+	EXPECT_EQ(jwk3.get_x5c().size(), 3);
+	EXPECT_EQ(jwk3.get_x5c_key_value(), "1");
 }
 
-TEST(JwksTest, DefaultConstructor) {
-	using Jwks = decltype(jwt::parse_jwks(std::declval<std::string>()));
+TYPED_TEST(JwksTest, DefaultConstructor) {
+	using Jwks = decltype(jwt::parse_jwks<TypeParam>(std::declval<std::string>()));
 
 	Jwks keys{};
-	ASSERT_EQ(keys.begin(), keys.end());
-	ASSERT_FALSE(keys.has_jwk(""));
-	ASSERT_FALSE(keys.has_jwk("random-jwt"));
+	EXPECT_EQ(keys.begin(), keys.end());
+	EXPECT_FALSE(keys.has_jwk(""));
+	EXPECT_FALSE(keys.has_jwk("random-jwt"));
 }
 
-TEST(JwksTest, CachingBasedOnKid) {
+TYPED_TEST(JwksTest, CachingBasedOnKid) {
 	std::string public_key = R"({
 	"keys": [{
 			"kid": "internal-gateway-jwt",
@@ -154,12 +157,13 @@ TEST(JwksTest, CachingBasedOnKid) {
 		}
 	]
 })";
-	auto jwks = jwt::parse_jwks(public_key);
-	std::map<std::string, jwt::jwk<jwt::traits::kazuho_picojson>> xs;
+	ASSERT_NO_THROW(jwt::parse_jwks<TypeParam>(public_key));
+	auto jwks = jwt::parse_jwks<TypeParam>(public_key);
+	std::map<typename TypeParam::string_type, jwt::jwk<TypeParam>> xs;
 
 	for (auto jwk : jwks) {
 		xs.emplace(std::make_pair(jwk.get_key_id(), jwk));
 	}
 
-	ASSERT_EQ(xs.size(), 2);
+	EXPECT_EQ(xs.size(), 2);
 }

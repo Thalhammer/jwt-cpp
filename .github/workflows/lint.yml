@@ -71,6 +71,8 @@ jobs:
           - { name: "kazuho_picojson", library: "picojson", url: "https://github.com/kazuho/picojson", disable_pico: false }
           - { name: "nlohmann_json", library: "JSON for Modern C++", url: "https://github.com/nlohmann/json", disable_pico: true }
           - { name: "open_source_parsers_jsoncpp", library: "jsoncpp", url: "https://github.com/open-source-parsers/jsoncpp", disable_pico: true }
+          - { name: "glaze_json", library: "Glaze", url: "https://github.com/stephenberry/glaze", disable_pico: true }
+          - { name: "reflectcpp_json", library: "ReflectCpp", url: "https://github.com/getml/reflect-cpp", disable_pico: true }
     name: render-defaults (${{ matrix.traits.name }})
     steps:
       - uses: actions/checkout@v4
@@ -95,11 +97,13 @@ jobs:
       fail-fast: false
       matrix:
         traits:
-          # - { name: "boost_json", suite: "BoostJsonTest" } # Currently needs work arounds for API limitations
+          # - { name: "boost_json", suite: "BoostJsonTest" } # Currently needs work around for API limitations
           - { name: "danielaparker_jsoncons", suite: "JsonconsTest" }
-          # - { name: "kazuho_picojson", suite: "PicoJsonTest" } # Currently the default everything tests against this!
+          # - { name: "kazuho_picojson", suite: "PicoJsonTest" } # No ctor for integer type
           - { name: "nlohmann_json", suite: "NlohmannTest" }
           - { name: "open_source_parsers_jsoncpp", suite: "OspJsoncppTest" }
+          # - { name: "glaze_json", suite: "GlazeTest" } # No supported due to istream buffer being specialized
+          # - { name: "reflectcpp_json", suite: "ReflectCppJsonTest" } # No supported due to istream buffer being specialized
     name: render-tests (${{ matrix.traits.name }})
     steps:
       - uses: actions/checkout@v4

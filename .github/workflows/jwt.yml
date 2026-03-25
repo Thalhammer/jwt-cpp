@@ -12,10 +12,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
+      - run: sudo apt-get install lcov
       - uses: ./.github/actions/install/gtest
       - uses: ./.github/actions/install/danielaparker-jsoncons
       - uses: ./.github/actions/install/boost-json
       - uses: ./.github/actions/install/open-source-parsers-jsoncpp
+      - uses: ./.github/actions/install/glaze-json
+      - uses: ./.github/actions/install/reflectcpp-json
 
       - name: configure
         run: cmake --preset coverage
@@ -51,8 +54,8 @@ jobs:
       fail-fast: false
       matrix:
         openssl:
-          - { tag: "openssl-3.0.5", name: "3.0.5" }
-          - { tag: "OpenSSL_1_1_1q", name: "1.1.1q" }
+          - { tag: "openssl-3.6.1", name: "3.6.1" }
+          - { tag: "OpenSSL_1_1_1w", name: "1.1.1w" }
     steps:
       - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest

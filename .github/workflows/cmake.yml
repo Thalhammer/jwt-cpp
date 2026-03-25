@@ -79,6 +79,8 @@ jobs:
           version: "3.14.7"
           url: "https://cmake.org/files/v3.14/cmake-3.14.7.tar.gz"
       - uses: ./.github/actions/install/gtest
+        with:
+          version: "1.16.0" # Compatible with CMake 3.14, required 3.13
 
       - name: setup
         run: |

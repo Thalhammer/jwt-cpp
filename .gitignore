@@ -319,3 +319,4 @@ build/*
 package-lock.json
 
 CMakeUserPresets.json
+cmake/FindLibreSSL.cmake

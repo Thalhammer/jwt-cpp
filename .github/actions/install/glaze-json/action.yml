@@ -1,0 +1,12 @@
+name: Install Glaze
+description: Install Glaze for building test application
+inputs:
+  version:
+    description: The desired Glaze version to install
+    required: false
+    default: "7.0.2"
+runs:
+  using: composite
+  steps:
+    - run: ${{ github.action_path }}/install-glaze.sh ${{ inputs.version }}
+      shell: bash

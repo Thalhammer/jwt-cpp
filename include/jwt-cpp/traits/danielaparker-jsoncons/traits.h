@@ -11,6 +11,7 @@ import jwt_cpp;
 #include "jwt-cpp/jwt.h"
 #endif
 
+#include <initializer_list>
 #include <sstream>
 
 namespace jwt {
@@ -80,9 +81,13 @@ namespace jwt {
 				array_type(const array_type& a) : json_(a) {}
 				explicit array_type(const json& j) : json_(j) {}
 				explicit array_type(array_type&& a) noexcept : json_(std::move(a)) {}
+				array_type(std::initializer_list<value_type> init) : json_(json::array()) {
+					for (auto const& v : init) {
+						json_.push_back(v);
+					}
+				}
 				template<typename Iterator>
-				array_type(Iterator first, Iterator last) {
-					json_ = json::array();
+				array_type(Iterator first, Iterator last) : json_(json::array()) {
 					for (auto it = first; it != last; ++it) {
 						json_.push_back(*it);
 					}
@@ -104,6 +109,10 @@ namespace jwt {
 				const value_type& at(size_type index) const { return json_.at(index); }
 
 				value_type const& front() const { return json_.at(0); }
+
+				size_type size() const { return json_.size(); }
+
+				bool empty() const { return json_.empty(); }
 
 				void push_back(const value_type& val) { json_.push_back(val); }
 

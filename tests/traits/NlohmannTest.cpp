@@ -86,7 +86,7 @@ TEST(NlohmannTest, VerifyTokenExpirationInValid) {
 	const auto token = jwt::create<jwt::traits::nlohmann_json>()
 						   .set_issuer("auth0")
 						   .set_issued_now()
-						   .set_expires_in(std::chrono::seconds{3600})
+						   .set_expires_in(std::chrono::hours{1})
 						   .sign(jwt::algorithm::hs256{"secret"});
 
 	const auto decoded_token = jwt::decode<jwt::traits::nlohmann_json>(token);

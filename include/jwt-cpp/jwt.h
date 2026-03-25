@@ -65,7 +65,9 @@ import std;
 #endif
 
 #if defined(LIBRESSL_VERSION_NUMBER)
-#if LIBRESSL_VERSION_NUMBER >= 0x3050300fL
+#if LIBRESSL_VERSION_NUMBER >= 0x3070100fL // 3.7.1 - EdDSA support
+#define JWT_OPENSSL_1_1_1
+#elif LIBRESSL_VERSION_NUMBER >= 0x3050300fL // 3.5.3
 #define JWT_OPENSSL_1_1_0
 #else
 #define JWT_OPENSSL_1_0_0
@@ -730,13 +732,23 @@ namespace jwt {
 			if (key.substr(0, 27) == "-----BEGIN CERTIFICATE-----") {
 				auto epkey = helper::extract_pubkey_from_cert<error_category>(key, password, ec);
 				if (ec) return {};
-				const int len = static_cast<int>(epkey.size());
+				// Ensure the size fits into an int before casting
+				if (epkey.size() > static_cast<std::size_t>((std::numeric_limits<int>::max)())) {
+					ec = error_category::load_key_bio_write; // Add an appropriate error here
+					return {};
+				}
+				int len = static_cast<int>(epkey.size());
 				if (BIO_write(pubkey_bio.get(), epkey.data(), len) != len) {
 					ec = error_category::load_key_bio_write;
 					return {};
 				}
 			} else {
-				const int len = static_cast<int>(key.size());
+				// Ensure the size fits into an int before casting
+				if (key.size() > static_cast<std::size_t>((std::numeric_limits<int>::max)())) {
+					ec = error_category::load_key_bio_write; // Add an appropriate error here
+					return {};
+				}
+				int len = static_cast<int>(key.size());
 				if (BIO_write(pubkey_bio.get(), key.data(), len) != len) {
 					ec = error_category::load_key_bio_write;
 					return {};
@@ -1804,6 +1816,7 @@ namespace jwt {
 		 *
 		 * The EdDSA algorithms were introduced in [OpenSSL v1.1.1](https://www.openssl.org/news/openssl-1.1.1-notes.html),
 		 * so these algorithms are only available when building against this version or higher.
+		 * LibreSSL added EdDSA (Ed25519) functionality in [LibreSSL 3.7.1](https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-3.7.1-relnotes.txt)
 		 */
 		struct eddsa {
 			/**
@@ -1847,10 +1860,9 @@ namespace jwt {
 				size_t len = EVP_PKEY_size(pkey.get());
 				std::string res(len, '\0');
 
-// LibreSSL is the special kid in the block, as it does not support EVP_DigestSign.
-// OpenSSL on the otherhand does not support using EVP_DigestSignUpdate for eddsa, which is why we end up with this
-// mess.
-#if defined(LIBRESSL_VERSION_NUMBER) || defined(LIBWOLFSSL_VERSION_HEX)
+// LibreSSL and OpenSSL, require the oneshot EVP_DigestSign API.
+// wolfSSL uses the Update/Final pattern.
+#if defined(LIBWOLFSSL_VERSION_HEX)
 				ERR_clear_error();
 				if (EVP_DigestSignUpdate(ctx.get(), reinterpret_cast<const unsigned char*>(data.data()), data.size()) !=
 					1) {
@@ -1891,10 +1903,9 @@ namespace jwt {
 					ec = error::signature_verification_error::verifyinit_failed;
 					return;
 				}
-// LibreSSL is the special kid in the block, as it does not support EVP_DigestVerify.
-// OpenSSL on the otherhand does not support using EVP_DigestVerifyUpdate for eddsa, which is why we end up with this
-// mess.
-#if defined(LIBRESSL_VERSION_NUMBER) || defined(LIBWOLFSSL_VERSION_HEX)
+// LibreSSL and OpenSSL, require the oneshot EVP_DigestVerify API.
+// wolfSSL uses the Update/Final pattern.
+#if defined(LIBWOLFSSL_VERSION_HEX)
 				if (EVP_DigestVerifyUpdate(ctx.get(), reinterpret_cast<const unsigned char*>(data.data()),
 										   data.size()) != 1) {
 					ec = error::signature_verification_error::verifyupdate_failed;
@@ -2208,7 +2219,7 @@ namespace jwt {
 		 *
 		 * https://en.wikipedia.org/wiki/EdDSA#Ed25519
 		 *
-		 * Requires at least OpenSSL 1.1.1.
+		 * Requires at least OpenSSL 1.1.1 or LibreSSL 3.7.1.
 		 */
 		struct ed25519 : public eddsa {
 			/**
@@ -2225,12 +2236,13 @@ namespace jwt {
 				: eddsa(public_key, private_key, public_key_password, private_key_password, "EdDSA") {}
 		};
 
+#if !defined(LIBRESSL_VERSION_NUMBER)
 		/**
 		 * Ed448 algorithm
 		 *
 		 * https://en.wikipedia.org/wiki/EdDSA#Ed448
 		 *
-		 * Requires at least OpenSSL 1.1.1.
+		 * Requires at least OpenSSL 1.1.1. Note: Not supported by LibreSSL.
 		 */
 		struct ed448 : public eddsa {
 			/**
@@ -2246,7 +2258,8 @@ namespace jwt {
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: eddsa(public_key, private_key, public_key_password, private_key_password, "EdDSA") {}
 		};
-#endif
+#endif // !LIBRESSL_VERSION_NUMBER
+#endif // !JWT_OPENSSL_1_0_0 && !JWT_OPENSSL_1_1_0
 
 		/**
 		 * PS256 algorithm
@@ -2421,7 +2434,6 @@ namespace jwt {
 				std::is_constructible<value_type, const value_type&>::value && // a more generic is_copy_constructible
 				std::is_move_constructible<value_type>::value && std::is_assignable<value_type, value_type>::value &&
 				std::is_copy_assignable<value_type>::value && std::is_move_assignable<value_type>::value;
-			// TODO(prince-chrismc): Stream operators
 		};
 
 		// https://stackoverflow.com/a/53967057/8480874
@@ -2490,6 +2502,12 @@ namespace jwt {
 				is_at_const_signature<object_type, value_type, string_type>::value;
 		};
 
+		template<typename array_type>
+		using is_size_signature = typename std::is_integral<decltype(std::declval<const array_type>().size())>;
+
+		template<typename array_type>
+		using is_empty_signature = typename std::is_same<bool, decltype(std::declval<const array_type>().empty())>;
+
 		template<typename value_type, typename array_type>
 		struct is_valid_json_array {
 			template<typename T>
@@ -2500,18 +2518,21 @@ namespace jwt {
 										  is_iterable<array_type>::value &&
 										  is_detected<value_type_t, array_type>::value &&
 										  std::is_same<typename array_type::value_type, value_type>::value &&
-										  std::is_same<front_base_type, value_type>::value;
+										  std::is_same<front_base_type, value_type>::value &&
+										  is_size_signature<array_type>::value && is_empty_signature<array_type>::value;
 		};
 
 		template<typename string_type, typename integer_type>
 		using is_substr_start_end_index_signature =
-			typename std::is_same<decltype(std::declval<string_type>().substr(std::declval<integer_type>(),
-																			  std::declval<integer_type>())),
+			typename std::is_same<decltype(std::declval<string_type>().substr(
+									  static_cast<size_t>(std::declval<integer_type>()),
+									  static_cast<size_t>(std::declval<integer_type>()))),
 								  string_type>;
 
 		template<typename string_type, typename integer_type>
 		using is_substr_start_index_signature =
-			typename std::is_same<decltype(std::declval<string_type>().substr(std::declval<integer_type>())),
+			typename std::is_same<decltype(std::declval<string_type>().substr(
+									  static_cast<size_t>(std::declval<integer_type>()))),
 								  string_type>;
 
 		template<typename string_type>
@@ -2618,7 +2639,8 @@ namespace jwt {
 
 		JWT_CLAIM_EXPLICIT basic_claim(typename json_traits::string_type s) : val(std::move(s)) {}
 		JWT_CLAIM_EXPLICIT basic_claim(const date& d)
-			: val(typename json_traits::integer_type(std::chrono::system_clock::to_time_t(d))) {}
+			: val(typename json_traits::integer_type(
+				  std::chrono::duration_cast<std::chrono::seconds>(d.time_since_epoch()).count())) {}
 		JWT_CLAIM_EXPLICIT basic_claim(typename json_traits::array_type a) : val(std::move(a)) {}
 		JWT_CLAIM_EXPLICIT basic_claim(typename json_traits::value_type v) : val(std::move(v)) {}
 		JWT_CLAIM_EXPLICIT basic_claim(const set_t& s) : val(typename json_traits::array_type(s.begin(), s.end())) {}
@@ -2635,13 +2657,18 @@ namespace jwt {
 		 * Parse input stream into underlying JSON value
 		 * \return input stream
 		 */
-		std::istream& operator>>(std::istream& is) { return is >> val; }
+		std::istream& operator>>(std::istream& is) {
+			typename json_traits::string_type buffer{std::istreambuf_iterator<char>(is),
+													 std::istreambuf_iterator<char>()};
+			json_traits::parse(val, buffer);
+			return is;
+		}
 
 		/**
 		 * Serialize claim to output stream from wrapped JSON value
 		 * \return output stream
 		 */
-		std::ostream& operator<<(std::ostream& os) { return os << val; }
+		std::ostream& operator<<(std::ostream& os) { return os << json_traits::serialize(val); }
 
 		/**
 		 * Get type of contained JSON value
@@ -2668,8 +2695,8 @@ namespace jwt {
 		date as_date() const {
 			using std::chrono::system_clock;
 			if (get_type() == json::type::number)
-				return system_clock::from_time_t(static_cast<std::time_t>(std::round(as_number())));
-			return system_clock::from_time_t(static_cast<std::time_t>(as_integer()));
+				return date(std::chrono::seconds(static_cast<int64_t>(std::llround(as_number()))));
+			return date(std::chrono::seconds(as_integer()));
 		}
 
 		/**
@@ -3254,8 +3281,8 @@ namespace jwt {
 		 * \param d token expiration timeout
 		 * \return *this to allow for method chaining
 		 */
-		template<class Rep>
-		builder& set_expires_in(const std::chrono::duration<Rep>& d) {
+		template<class Rep, class Period>
+		builder& set_expires_in(const std::chrono::duration<Rep, Period>& d) {
 			return set_payload_claim("exp", basic_claim<json_traits>(clock.now() + d));
 		}
 		/**
