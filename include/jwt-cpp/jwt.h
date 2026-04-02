@@ -74,6 +74,10 @@
 #define JWT_CLAIM_EXPLICIT explicit
 #endif
 
+#ifdef JWT_OPENSSL_3_0
+#include <openssl/param_build.h>
+#endif
+
 /**
  * \brief JSON Web Token.
  *
@@ -1339,6 +1343,40 @@ namespace jwt {
 #endif
 	} // namespace helper
 
+	class key {
+	public:
+		static key symmetric(const std::string& bytes) { return key(bytes); }
+
+		static key asymmetric(helper::evp_pkey_handle pkey) { return key(pkey); }
+
+		std::string get_symmetric_key() const {
+			if (!is_symmetric) { throw std::logic_error("not a symmetric key"); }
+
+			return oct_key;
+		}
+
+		helper::evp_pkey_handle get_asymmetric_key() const {
+			if (is_symmetric) { throw std::logic_error("not an asymmetric key"); }
+
+			return pkey;
+		}
+
+	private:
+		key(const std::string& key) {
+			is_symmetric = true;
+			oct_key = key;
+		}
+
+		key(helper::evp_pkey_handle key) {
+			is_symmetric = false;
+			pkey = key;
+		}
+
+		bool is_symmetric;
+		helper::evp_pkey_handle pkey;
+		std::string oct_key;
+	};
+
 	/**
 	 * \brief Various cryptographic algorithms when working with JWT
 	 *
@@ -1483,6 +1521,9 @@ namespace jwt {
 				: pkey(std::move(key_pair)), md(md), alg_name(std::move(name)) {
 				if (!pkey) { throw error::rsa_exception(error::rsa_error::no_key_provided); }
 			}
+
+			rsa(helper::evp_pkey_handle pkey, const EVP_MD* (*md)(), std::string name)
+				: pkey(pkey), md(md), alg_name(std::move(name)) {}
 			/**
 			 * Sign jwt data
 			 * \param data The data to sign
@@ -1608,6 +1649,9 @@ namespace jwt {
 				if (keysize != signature_length * 4 && (signature_length != 132 || keysize != 521))
 					throw error::ecdsa_exception(error::ecdsa_error::invalid_key_size);
 			}
+
+			ecdsa(helper::evp_pkey_handle pkey, const EVP_MD* (*md)(), std::string name, size_t siglen)
+				: pkey(pkey), md(md), alg_name(std::move(name)), signature_length(siglen) {}
 
 			/**
 			 * Sign jwt data
@@ -1955,6 +1999,9 @@ namespace jwt {
 					throw error::rsa_exception(error::rsa_error::no_key_provided);
 			}
 
+			pss(helper::evp_pkey_handle pkey, const EVP_MD* (*md)(), std::string name)
+				: pkey(pkey), md(md), alg_name(std::move(name)) {}
+
 			/**
 			 * Sign jwt data
 			 * \param data The data to sign
@@ -2106,6 +2153,8 @@ namespace jwt {
 			explicit rs256(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: rsa(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "RS256") {}
+
+			explicit rs256(helper::evp_pkey_handle pkey) : rsa(pkey, EVP_sha256, "RS256") {}
 		};
 		/**
 		 * RS384 algorithm
@@ -2121,6 +2170,8 @@ namespace jwt {
 			explicit rs384(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: rsa(public_key, private_key, public_key_password, private_key_password, EVP_sha384, "RS384") {}
+
+			explicit rs384(helper::evp_pkey_handle pkey) : rsa(pkey, EVP_sha384, "RS384") {}
 		};
 		/**
 		 * RS512 algorithm
@@ -2136,6 +2187,8 @@ namespace jwt {
 			explicit rs512(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: rsa(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "RS512") {}
+
+			explicit rs512(helper::evp_pkey_handle pkey) : rsa(pkey, EVP_sha512, "RS512") {}
 		};
 		/**
 		 * ES256 algorithm
@@ -2153,6 +2206,8 @@ namespace jwt {
 			explicit es256(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "ES256", 64) {}
+
+			explicit es256(helper::evp_pkey_handle pkey) : ecdsa(pkey, EVP_sha256, "ES256", 64) {}
 		};
 		/**
 		 * ES384 algorithm
@@ -2170,6 +2225,8 @@ namespace jwt {
 			explicit es384(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha384, "ES384", 96) {}
+
+			explicit es384(helper::evp_pkey_handle pkey) : ecdsa(pkey, EVP_sha384, "ES384", 96) {}
 		};
 		/**
 		 * ES512 algorithm
@@ -2187,6 +2244,8 @@ namespace jwt {
 			explicit es512(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "ES512", 132) {}
+
+			explicit es512(helper::evp_pkey_handle pkey) : ecdsa(pkey, EVP_sha512, "ES512", 132) {}
 		};
 		/**
 		 * ES256K algorithm
@@ -2203,6 +2262,8 @@ namespace jwt {
 			explicit es256k(const std::string& public_key, const std::string& private_key = "",
 							const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: ecdsa(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "ES256K", 64) {}
+
+			explicit es256k(helper::evp_pkey_handle pkey) : ecdsa(pkey, EVP_sha256, "ES256K", 64) {}
 		};
 
 #if !defined(JWT_OPENSSL_1_0_0) && !defined(JWT_OPENSSL_1_1_0)
@@ -2267,6 +2328,8 @@ namespace jwt {
 			explicit ps256(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: pss(public_key, private_key, public_key_password, private_key_password, EVP_sha256, "PS256") {}
+
+			explicit ps256(helper::evp_pkey_handle pkey) : pss(pkey, EVP_sha256, "PS256") {}
 		};
 		/**
 		 * PS384 algorithm
@@ -2282,6 +2345,8 @@ namespace jwt {
 			explicit ps384(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: pss(public_key, private_key, public_key_password, private_key_password, EVP_sha384, "PS384") {}
+
+			explicit ps384(helper::evp_pkey_handle pkey) : pss(pkey, EVP_sha384, "PS384") {}
 		};
 		/**
 		 * PS512 algorithm
@@ -2297,6 +2362,8 @@ namespace jwt {
 			explicit ps512(const std::string& public_key, const std::string& private_key = "",
 						   const std::string& public_key_password = "", const std::string& private_key_password = "")
 				: pss(public_key, private_key, public_key_password, private_key_password, EVP_sha512, "PS512") {}
+
+			explicit ps512(helper::evp_pkey_handle pkey) : pss(pkey, EVP_sha512, "PS512") {}
 		};
 	} // namespace algorithm
 
@@ -3608,6 +3675,309 @@ namespace jwt {
 	} // namespace verify_ops
 
 	/**
+	 * \brief JSON Web Key
+	 *
+	 * https://tools.ietf.org/html/rfc7517
+	 *
+	 * A JSON object that represents a cryptographic key.  The members of
+	 * the object represent properties of the key, including its value.
+	 */
+	template<typename json_traits>
+	class jwk {
+		using basic_claim_t = basic_claim<json_traits>;
+		const details::map_of_claims<json_traits> jwk_claims;
+
+	public:
+		template<typename Decode>
+		jwk(const typename json_traits::string_type& str, Decode&& decode)
+			: jwk(details::map_of_claims<json_traits>::parse_claims(str), decode) {}
+
+		template<typename Decode>
+		jwk(const typename json_traits::value_type& json, Decode&& decode)
+			: jwk(json_traits::as_object(json), decode) {}
+
+		template<typename Decode>
+		jwk(const typename json_traits::object_type& json, Decode&& decode)
+			: jwk_claims(json), k(build_key(jwk_claims, decode)) {}
+
+#ifndef JWT_DISABLE_BASE64
+		JWT_CLAIM_EXPLICIT jwk(const typename json_traits::string_type& str)
+			: jwk(details::map_of_claims<json_traits>::parse_claims(str)) {}
+
+		JWT_CLAIM_EXPLICIT jwk(const typename json_traits::value_type& json) : jwk(json_traits::as_object(json)) {}
+
+		JWT_CLAIM_EXPLICIT jwk(const typename json_traits::object_type& json)
+			: jwk(json, [](const typename json_traits::string_type& str) {
+				  return base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(str));
+			  }) {
+			// https://datatracker.ietf.org/doc/html/rfc7518#section-6.1
+			// * indicate required params
+			// "kty"* : "EC", "RSA", "oct"
+
+			// if "EC", then "crv"*, then "x"*. if "crv" is any of "P-256", "P-384", "P-521", then "y"*
+			// if "EC" and private key, then "d"*
+
+			// if "RSA", then "n"*, "e"*
+			// if "RSA" and private, then "d"*
+			// if "RSA" and any of the following is present, then all must be present
+			//   "p", "q", "dp", "dq", "qi"
+			// "oth" - array of objects consisting of "r"*, "d"*, "t"*
+
+			// if "oct", then "k"*
+			// if "oct", then SHOULD contain "alg"
+		}
+#endif
+
+		/**
+		 * Get key type claim
+		 *
+		 * This returns the general type (e.g. RSA or EC), not a specific algorithm value.
+		 * \return key type as string
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
+		 */
+		typename json_traits::string_type get_key_type() const { return get_jwk_claim("kty").as_string(); }
+
+		/**
+		 * Get public key usage claim
+		 * \return usage parameter as string
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
+		 */
+		typename json_traits::string_type get_use() const { return get_jwk_claim("use").as_string(); }
+
+		/**
+		 * Get key operation types claim
+		 * \return key operation types as a set of strings
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
+		 */
+		typename basic_claim_t::set_t get_key_operations() const { return get_jwk_claim("key_ops").as_set(); }
+
+		/**
+		 * Get algorithm claim
+		 * \return algorithm as string
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
+		 */
+		typename json_traits::string_type get_algorithm() const { return get_jwk_claim("alg").as_string(); }
+
+		/**
+		 * Get key id claim
+		 * \return key id as string
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
+		 */
+		typename json_traits::string_type get_key_id() const { return get_jwk_claim("kid").as_string(); }
+
+		/**
+		 * \brief Get curve claim
+		 *
+		 * https://www.rfc-editor.org/rfc/rfc7518.html#section-6.2.1.1
+		 * https://www.iana.org/assignments/jose/jose.xhtml#table-web-key-elliptic-curve
+		 *
+		 * \return curve as string
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
+		 */
+		typename json_traits::string_type get_curve() const { return get_jwk_claim("crv").as_string(); }
+
+		/**
+		 * Get x5c claim
+		 * \return x5c as an array
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a array (Should not happen in a valid token)
+		 */
+		typename json_traits::array_type get_x5c() const { return get_jwk_claim("x5c").as_array(); };
+
+		/**
+		 * Get X509 URL claim
+		 * \return x5u as string
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
+		 */
+		typename json_traits::string_type get_x5u() const { return get_jwk_claim("x5u").as_string(); };
+
+		/**
+		 * Get X509 thumbprint claim
+		 * \return x5t as string
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
+		 */
+		typename json_traits::string_type get_x5t() const { return get_jwk_claim("x5t").as_string(); };
+
+		/**
+		 * Get X509 SHA256 thumbprint claim
+		 * \return x5t#S256 as string
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
+		 */
+		typename json_traits::string_type get_x5t_sha256() const { return get_jwk_claim("x5t#S256").as_string(); };
+
+		/**
+		 * Get x5c claim as a string
+		 * \return x5c as an string
+		 * \throw std::runtime_error If claim was not present
+		 * \throw std::bad_cast Claim was present but not a string (Should not happen in a valid token)
+		 */
+		typename json_traits::string_type get_x5c_key_value() const {
+			auto x5c_array = get_jwk_claim("x5c").as_array();
+			if (x5c_array.size() == 0) throw error::claim_not_present_exception();
+
+			return json_traits::as_string(x5c_array.front());
+		};
+
+		/**
+		 * Check if a key type is present ("kty")
+		 * \return true if present, false otherwise
+		 */
+		bool has_key_type() const noexcept { return has_jwk_claim("kty"); }
+
+		/**
+		 * Check if a public key usage indication is present ("use")
+		 * \return true if present, false otherwise
+		 */
+		bool has_use() const noexcept { return has_jwk_claim("use"); }
+
+		/**
+		 * Check if a key operations parameter is present ("key_ops")
+		 * \return true if present, false otherwise
+		 */
+		bool has_key_operations() const noexcept { return has_jwk_claim("key_ops"); }
+
+		/**
+		 * Check if algortihm is present ("alg")
+		 * \return true if present, false otherwise
+		 */
+		bool has_algorithm() const noexcept { return has_jwk_claim("alg"); }
+
+		/**
+		 * Check if curve is present ("crv")
+		 * \return true if present, false otherwise
+		 */
+		bool has_curve() const noexcept { return has_jwk_claim("crv"); }
+
+		/**
+		 * Check if key id is present ("kid")
+		 * \return true if present, false otherwise
+		 */
+		bool has_key_id() const noexcept { return has_jwk_claim("kid"); }
+
+		/**
+		 * Check if X509 URL is present ("x5u")
+		 * \return true if present, false otherwise
+		 */
+		bool has_x5u() const noexcept { return has_jwk_claim("x5u"); }
+
+		/**
+		 * Check if X509 Chain is present ("x5c")
+		 * \return true if present, false otherwise
+		 */
+		bool has_x5c() const noexcept { return has_jwk_claim("x5c"); }
+
+		/**
+		 * Check if a X509 thumbprint is present ("x5t")
+		 * \return true if present, false otherwise
+		 */
+		bool has_x5t() const noexcept { return has_jwk_claim("x5t"); }
+
+		/**
+		 * Check if a X509 SHA256 thumbprint is present ("x5t#S256")
+		 * \return true if present, false otherwise
+		 */
+		bool has_x5t_sha256() const noexcept { return has_jwk_claim("x5t#S256"); }
+
+		/**
+		 * Check if a jwks claim is present
+		 * \return true if claim was present, false otherwise
+		 */
+		bool has_jwk_claim(const typename json_traits::string_type& name) const noexcept {
+			return jwk_claims.has_claim(name);
+		}
+
+		/**
+		 * Get jwks claim
+		 * \return Requested claim
+		 * \throw std::runtime_error If claim was not present
+		 */
+		basic_claim_t get_jwk_claim(const typename json_traits::string_type& name) const {
+			return jwk_claims.get_claim(name);
+		}
+
+		bool empty() const noexcept { return jwk_claims.empty(); }
+
+		helper::evp_pkey_handle get_pkey() const { return k.get_asymmetric_key(); }
+
+		std::string get_oct_key() const { return k.get_symmetric_key(); }
+
+	private:
+		template<typename Decode>
+		static helper::evp_pkey_handle build_rsa_key(const details::map_of_claims<json_traits>& claims,
+													 Decode&& decode) {
+			EVP_PKEY* evp_key = nullptr;
+			auto n = jwt::helper::raw2bn(decode(claims.get_claim("n").as_string()));
+			auto e = jwt::helper::raw2bn(decode(claims.get_claim("e").as_string()));
+#ifdef JWT_OPENSSL_3_0
+			// https://www.openssl.org/docs/manmaster/man7/EVP_PKEY-RSA.html
+			// see https://www.openssl.org/docs/man3.0/man3/EVP_PKEY_fromdata.html
+			// and https://stackoverflow.com/questions/68465716/how-to-properly-create-an-rsa-key-from-raw-data-in-openssl-3-0-in-c-language
+			std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)> ctx(
+				EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL), EVP_PKEY_CTX_free);
+			if (!ctx) { throw std::runtime_error("EVP_PKEY_CTX_new_from_name failed"); }
+
+			std::unique_ptr<OSSL_PARAM_BLD, decltype(&OSSL_PARAM_BLD_free)> params_build(OSSL_PARAM_BLD_new(),
+																						 OSSL_PARAM_BLD_free);
+			OSSL_PARAM_BLD_push_BN(params_build.get(), "n", n.get());
+			OSSL_PARAM_BLD_push_BN(params_build.get(), "e", e.get());
+
+			std::unique_ptr<OSSL_PARAM, decltype(&OSSL_PARAM_free)> params(OSSL_PARAM_BLD_to_param(params_build.get()),
+																		   OSSL_PARAM_free);
+			EVP_PKEY_fromdata_init(ctx.get());
+			EVP_PKEY_fromdata(ctx.get(), &evp_key, EVP_PKEY_PUBLIC_KEY, params.get());
+			return helper::evp_pkey_handle(evp_key);
+#else
+			RSA* rsa = RSA_new();
+			evp_key = EVP_PKEY_new();
+#if defined(JWT_OPENSSL_1_0_0) && !defined(LIBWOLFSSL_VERSION_HEX)
+			rsa->e = e.release();
+			rsa->n = n.release();
+#else
+			RSA_set0_key(rsa, n.release(), e.release(), nullptr);
+#endif
+			EVP_PKEY_assign_RSA(evp_key, rsa);
+			return helper::evp_pkey_handle(evp_key);
+#endif
+		}
+
+		template<typename Decode>
+		static key build_key(const details::map_of_claims<json_traits>& claims, Decode&& decode) {
+			if (!claims.has_claim("kty")) {
+				// TODO: custom exception or error code
+				throw std::runtime_error("missing required claim \"kty\"");
+			}
+
+			if (claims.get_claim("kty").get_type() != json::type::string) {
+				// TODO: custom exception or error code
+				throw std::runtime_error("\"kty\" claim must be of type 'string'");
+			}
+
+			if (claims.get_claim("kty").as_string() == "RSA") {
+				return key::asymmetric(build_rsa_key(claims, decode));
+			} else if (claims.get_claim("kty").as_string() == "EC") {
+				// TODO: build EC key
+				throw std::runtime_error("not implemented");
+			} else if (claims.get_claim("kty").as_string() == "oct") {
+				return key::symmetric(decode(claims.get_claim("k").as_string()));
+			} else {
+				// TODO: do not build error messages like this
+				throw std::runtime_error("unknown key type (\"kty\"):" + claims.get_claim("kty").as_string());
+			}
+		}
+
+		key k;
+	};
+
+	/**
 	 * Verifier class used to check if a decoded token contains all claims required by your application and has a valid
 	 * signature.
 	 */
@@ -3648,6 +4018,92 @@ namespace jwt {
 		Clock clock;
 		/// Supported algorithms
 		std::unordered_map<std::string, std::shared_ptr<algo_base>> algs;
+		using alg_name = std::string;
+		using alg_list = std::vector<alg_name>;
+		using algorithms = std::unordered_map<std::string, alg_list>;
+		algorithms supported_alg = {{"RSA", {"RS256", "RS384", "RS512", "PS256", "PS384", "PS512"}},
+									{"EC", {"ES256", "ES384", "ES512", "ES256K"}},
+									{"oct", {"HS256", "HS384", "HS512"}}};
+
+		typedef std::vector<jwt::jwk<json_traits>> key_list;
+		/// https://datatracker.ietf.org/doc/html/rfc7517#section-4.5 - kid to keys
+		typedef std::unordered_map<std::string, key_list> keysets;
+		keysets keys;
+
+		void verify_claims(const decoded_jwt<json_traits>& jwt, std::error_code& ec) const {
+			verify_ops::verify_context<json_traits> ctx{clock.now(), jwt, default_leeway};
+			for (auto& c : claims) {
+				ctx.claim_key = c.first;
+				c.second(ctx, ec);
+				if (ec) return;
+			}
+		}
+
+		bool is_valid_combination(const jwt::jwk<json_traits>& key, const std::string& alg_name) const {
+			const alg_list& x = supported_alg.find(key.get_key_type())->second;
+			return std::find(x.cbegin(), x.cend(), alg_name) != x.cend();
+		}
+
+		inline std::unique_ptr<algo_base> from_key_and_alg(const jwt::jwk<json_traits>& key,
+														   const std::string& alg_name, std::error_code& ec) const {
+			ec.clear();
+			algorithms::const_iterator it = supported_alg.find(key.get_key_type());
+			if (it == supported_alg.end()) {
+				ec = error::token_verification_error::wrong_algorithm;
+				return nullptr;
+			}
+
+			const alg_list& supported_jwt_algorithms = it->second;
+			if (std::find(supported_jwt_algorithms.begin(), supported_jwt_algorithms.end(), alg_name) ==
+				supported_jwt_algorithms.end()) {
+				ec = error::token_verification_error::wrong_algorithm;
+				return nullptr;
+			}
+
+			if (alg_name == "RS256") {
+				return std::unique_ptr<algo<jwt::algorithm::rs256>>(
+					new algo<jwt::algorithm::rs256>(jwt::algorithm::rs256(key.get_pkey())));
+			} else if (alg_name == "RS384") {
+				return std::unique_ptr<algo<jwt::algorithm::rs384>>(
+					new algo<jwt::algorithm::rs384>(jwt::algorithm::rs384(key.get_pkey())));
+			} else if (alg_name == "RS512") {
+				return std::unique_ptr<algo<jwt::algorithm::rs512>>(
+					new algo<jwt::algorithm::rs512>(jwt::algorithm::rs512(key.get_pkey())));
+			} else if (alg_name == "PS256") {
+				return std::unique_ptr<algo<jwt::algorithm::ps256>>(
+					new algo<jwt::algorithm::ps256>(jwt::algorithm::ps256(key.get_pkey())));
+			} else if (alg_name == "PS384") {
+				return std::unique_ptr<algo<jwt::algorithm::ps384>>(
+					new algo<jwt::algorithm::ps384>(jwt::algorithm::ps384(key.get_pkey())));
+			} else if (alg_name == "PS512") {
+				return std::unique_ptr<algo<jwt::algorithm::ps512>>(
+					new algo<jwt::algorithm::ps512>(jwt::algorithm::ps512(key.get_pkey())));
+			} else if (alg_name == "ES256") {
+				return std::unique_ptr<algo<jwt::algorithm::es256>>(
+					new algo<jwt::algorithm::es256>(jwt::algorithm::es256(key.get_pkey())));
+			} else if (alg_name == "ES384") {
+				return std::unique_ptr<algo<jwt::algorithm::es384>>(
+					new algo<jwt::algorithm::es384>(jwt::algorithm::es384(key.get_pkey())));
+			} else if (alg_name == "ES512") {
+				return std::unique_ptr<algo<jwt::algorithm::es512>>(
+					new algo<jwt::algorithm::es512>(jwt::algorithm::es512(key.get_pkey())));
+			} else if (alg_name == "ES256K") {
+				return std::unique_ptr<algo<jwt::algorithm::es256k>>(
+					new algo<jwt::algorithm::es256k>(jwt::algorithm::es256k(key.get_pkey())));
+			} else if (alg_name == "HS256") {
+				return std::unique_ptr<algo<jwt::algorithm::hs256>>(
+					new algo<jwt::algorithm::hs256>(jwt::algorithm::hs256(key.get_oct_key())));
+			} else if (alg_name == "HS384") {
+				return std::unique_ptr<algo<jwt::algorithm::hs384>>(
+					new algo<jwt::algorithm::hs384>(jwt::algorithm::hs384(key.get_oct_key())));
+			} else if (alg_name == "HS512") {
+				return std::unique_ptr<algo<jwt::algorithm::hs512>>(
+					new algo<jwt::algorithm::hs512>(jwt::algorithm::hs512(key.get_oct_key())));
+			}
+
+			ec = error::token_verification_error::wrong_algorithm;
+			return nullptr;
+		}
 
 	public:
 		/**
@@ -3830,6 +4286,18 @@ namespace jwt {
 			return *this;
 		}
 
+		verifier& allow_key(const jwt::jwk<json_traits>& key) {
+			std::string keyid = "";
+			if (key.has_key_id()) {
+				keyid = key.get_key_id();
+				auto it = keys.find(keyid);
+				if (it == keys.end()) { keys[keyid] = key_list(); }
+			}
+
+			keys[keyid].push_back(key);
+			return *this;
+		}
+
 		/**
 		 * Verify the given token.
 		 * \param jwt Token to check
@@ -3850,19 +4318,34 @@ namespace jwt {
 			const typename json_traits::string_type data = jwt.get_header_base64() + "." + jwt.get_payload_base64();
 			const typename json_traits::string_type sig = jwt.get_signature();
 			const std::string algo = jwt.get_algorithm();
-			if (algs.count(algo) == 0) {
-				ec = error::token_verification_error::wrong_algorithm;
-				return;
-			}
-			algs.at(algo)->verify(data, sig, ec);
-			if (ec) return;
+			std::string kid("");
+			if (jwt.has_header_claim("kid")) { kid = jwt.get_header_claim("kid").as_string(); }
 
-			verify_ops::verify_context<json_traits> ctx{clock.now(), jwt, default_leeway};
-			for (auto& c : claims) {
-				ctx.claim_key = c.first;
-				c.second(ctx, ec);
-				if (ec) return;
+			typename keysets::const_iterator key_set_it = keys.find(kid);
+			bool key_found = false;
+			if (key_set_it != keys.end()) {
+				const key_list& keys = key_set_it->second;
+				for (const auto& key : keys) {
+					if (is_valid_combination(key, algo)) {
+						key_found = true;
+						auto alg = from_key_and_alg(key, algo, ec);
+						alg->verify(data, sig, ec);
+						break;
+					}
+				}
 			}
+
+			if (!key_found) {
+				auto alg = algs.find(algo);
+				if (alg == algs.end()) {
+					ec = error::token_verification_error::wrong_algorithm;
+					return;
+				}
+				alg->second->verify(data, sig, ec);
+			}
+
+			if (ec) return;
+			verify_claims(jwt, ec);
 		}
 	};
 
@@ -4100,6 +4583,8 @@ namespace jwt {
 		 */
 		jwks() = default;
 
+		template<typename Decode>
+		jwks(const typename json_traits::string_type& str, Decode decode) {
 		/**
 		 * Parses a string buffer to extract the JWKS.
 		 * \param str buffer containing JSON object representing a JWKS
@@ -4115,8 +4600,15 @@ namespace jwt {
 
 			auto jwk_list = jwks_json.get_claim("keys").as_array();
 			std::transform(jwk_list.begin(), jwk_list.end(), std::back_inserter(jwk_claims),
-						   [](const typename json_traits::value_type& val) { return jwks_t{val}; });
+						   [&](const typename json_traits::value_type& val) { return jwk_t(val, decode); });
 		}
+
+#ifndef JWT_DISABLE_BASE64
+		JWT_CLAIM_EXPLICIT jwks(const typename json_traits::string_type& str)
+			: jwks(str, [](const typename json_traits::string_type& str) {
+				  return base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(str));
+			  }) {}
+#endif
 
 		iterator begin() { return jwk_claims.begin(); }
 		iterator end() { return jwk_claims.end(); }
