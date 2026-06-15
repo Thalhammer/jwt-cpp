@@ -1,7 +1,9 @@
 #ifndef JWT_CPP_GLAZE_JSON_TRAITS_H
 #define JWT_CPP_GLAZE_JSON_TRAITS_H
 
+#ifndef JWT_DISABLE_PICOJSON
 #define JWT_DISABLE_PICOJSON
+#endif
 #include "jwt-cpp/jwt.h"
 
 #include <glaze/json.hpp>
