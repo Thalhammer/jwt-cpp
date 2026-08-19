@@ -50,7 +50,7 @@ namespace jwt {
 
 			static string_type as_string(const value_type& val) {
 				if (val.kind() != json::kind::string) throw std::bad_cast();
-				return string_type{val.get_string()};
+				return string_type(val.get_string().cbegin(), val.get_string().cend());
 			}
 
 			static integer_type as_integer(const value_type& val) {
