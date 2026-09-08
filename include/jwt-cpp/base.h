@@ -170,8 +170,8 @@ namespace jwt {
 						continue;
 
 					auto end = base.size() - fill.size();
-					while(end > fill.size() && base.compare(end - fill.size(), fill.size(), fill) == 0)
-						 end -= fill.size();
+					while (end > fill.size() && base.compare(end - fill.size(), fill.size(), fill) == 0)
+						end -= fill.size();
 					return {(base.size() - end) / fill.size(), base.size() - end};
 				}
 

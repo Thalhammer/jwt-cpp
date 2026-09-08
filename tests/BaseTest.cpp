@@ -46,7 +46,7 @@ TEST(BaseTest, BaseDetailsCountPadding) {
 	ASSERT_EQ(padding{}, jwt::base::details::count_padding("ABC", {"~", "!"}));
 	ASSERT_EQ((padding{1, 1}), jwt::base::details::count_padding("ABC!", {"~", "!"}));
 	ASSERT_EQ((padding{1, 1}), jwt::base::details::count_padding("ABC~", {"~", "!"}));
-	
+
 	// Padding should be uniform and not change mid string
 	ASSERT_EQ((padding{1, 1}), jwt::base::details::count_padding("ABC~~!", {"~", "!"}));
 	ASSERT_EQ((padding{2, 2}), jwt::base::details::count_padding("ABC!~~", {"~", "!"}));
