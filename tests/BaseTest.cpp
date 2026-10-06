@@ -46,13 +46,15 @@ TEST(BaseTest, BaseDetailsCountPadding) {
 	ASSERT_EQ(padding{}, jwt::base::details::count_padding("ABC", {"~", "!"}));
 	ASSERT_EQ((padding{1, 1}), jwt::base::details::count_padding("ABC!", {"~", "!"}));
 	ASSERT_EQ((padding{1, 1}), jwt::base::details::count_padding("ABC~", {"~", "!"}));
-	ASSERT_EQ((padding{3, 3}), jwt::base::details::count_padding("ABC~~!", {"~", "!"}));
-	ASSERT_EQ((padding{3, 3}), jwt::base::details::count_padding("ABC!~~", {"~", "!"}));
-	ASSERT_EQ((padding{5, 5}), jwt::base::details::count_padding("ABC~~!~~", {"~", "!"}));
+
+	// Padding should be uniform and not change mid string
+	ASSERT_EQ((padding{1, 1}), jwt::base::details::count_padding("ABC~~!", {"~", "!"}));
+	ASSERT_EQ((padding{2, 2}), jwt::base::details::count_padding("ABC!~~", {"~", "!"}));
+	ASSERT_EQ((padding{2, 2}), jwt::base::details::count_padding("ABC~~!~~", {"~", "!"}));
 
 	ASSERT_EQ((padding{2, 6}), jwt::base::details::count_padding("MTIzNA%3d%3d", {"%3d", "%3D"}));
-	ASSERT_EQ((padding{2, 6}), jwt::base::details::count_padding("MTIzNA%3d%3D", {"%3d", "%3D"}));
-	ASSERT_EQ((padding{2, 6}), jwt::base::details::count_padding("MTIzNA%3D%3d", {"%3d", "%3D"}));
+	ASSERT_EQ((padding{1, 3}), jwt::base::details::count_padding("MTIzNA%3d%3D", {"%3d", "%3D"}));
+	ASSERT_EQ((padding{1, 3}), jwt::base::details::count_padding("MTIzNA%3D%3d", {"%3d", "%3D"}));
 	ASSERT_EQ((padding{2, 6}), jwt::base::details::count_padding("MTIzNA%3D%3D", {"%3d", "%3D"}));
 
 	// Some fake scenarios
@@ -63,7 +65,7 @@ TEST(BaseTest, BaseDetailsCountPadding) {
 	ASSERT_EQ((padding{1, 1}), jwt::base::details::count_padding("ABC~", {"~", "~~!"}));
 	ASSERT_EQ((padding{1, 3}), jwt::base::details::count_padding("ABC~~!", {"~", "~~!"}));
 	ASSERT_EQ((padding{2, 2}), jwt::base::details::count_padding("ABC!~~", {"~", "~~!"}));
-	ASSERT_EQ((padding{3, 5}), jwt::base::details::count_padding("ABC~~!~~", {"~", "~~!"}));
+	ASSERT_EQ((padding{2, 2}), jwt::base::details::count_padding("ABC~~!~~", {"~", "~~!"}));
 	ASSERT_EQ(padding{}, jwt::base::details::count_padding("ABC~~!~~", {}));
 }
 
@@ -83,8 +85,7 @@ TEST(BaseTest, Base64DecodeURL) {
 
 TEST(BaseTest, Base64DecodeURLCaseInsensitive) {
 	ASSERT_EQ("1", jwt::base::decode<jwt::alphabet::helper::base64url_percent_encoding>("MQ%3d%3d"));
-	ASSERT_EQ("1", jwt::base::decode<jwt::alphabet::helper::base64url_percent_encoding>("MQ%3D%3d"));
-	ASSERT_EQ("1", jwt::base::decode<jwt::alphabet::helper::base64url_percent_encoding>("MQ%3d%3D"));
+	ASSERT_EQ("1", jwt::base::decode<jwt::alphabet::helper::base64url_percent_encoding>("MQ%3D%3D"));
 	ASSERT_EQ("12", jwt::base::decode<jwt::alphabet::helper::base64url_percent_encoding>("MTI%3d"));
 	ASSERT_EQ("123", jwt::base::decode<jwt::alphabet::helper::base64url_percent_encoding>("MTIz"));
 	ASSERT_EQ("1234", jwt::base::decode<jwt::alphabet::helper::base64url_percent_encoding>("MTIzNA%3d%3d"));
