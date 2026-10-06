@@ -1,6 +1,6 @@
-#include "jwt-cpp/traits/danielaparker-jsoncons/traits.h"
-
 #include <gtest/gtest.h>
+
+#include "jwt-cpp/traits/danielaparker-jsoncons/traits.h"
 
 TEST(JsonconsTest, BasicClaims) {
 	const auto string = jwt::basic_claim<jwt::traits::danielaparker_jsoncons>(

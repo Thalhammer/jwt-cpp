@@ -28,6 +28,19 @@
 #ifndef picojson_h
 #define picojson_h
 
+#ifdef JWT_CPP_EXPORT
+#define PICOJSON_JWT_CPP_EXPORT JWT_CPP_EXPORT
+#else
+#define PICOJSON_JWT_CPP_EXPORT
+#endif
+
+#if defined(JWT_CPP_MODULE_INTERFACE_BUILD)
+#define PICOJSON_USE_IMPORTED_STD 1
+#else
+#define PICOJSON_USE_IMPORTED_STD 0
+#endif
+
+#if !PICOJSON_USE_IMPORTED_STD
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
@@ -41,10 +54,13 @@
 #include <string>
 #include <vector>
 #include <utility>
+#endif
 
 // for isnan/isinf
 #if __cplusplus >= 201103L
+#if !PICOJSON_USE_IMPORTED_STD
 #include <cmath>
+#endif
 #else
 extern "C" {
 #ifdef _MSC_VER
@@ -76,6 +92,7 @@ extern "C" {
 // experimental support for int64_t (see README.mkdn for detail)
 #ifdef PICOJSON_USE_INT64
 #define __STDC_FORMAT_MACROS
+#if !PICOJSON_USE_IMPORTED_STD
 #include <cerrno>
 #if __cplusplus >= 201103L
 #include <cinttypes>
@@ -85,12 +102,13 @@ extern "C" {
 }
 #endif
 #endif
+#endif
 
 // to disable the use of localeconv(3), set PICOJSON_USE_LOCALE to 0
 #ifndef PICOJSON_USE_LOCALE
 #define PICOJSON_USE_LOCALE 1
 #endif
-#if PICOJSON_USE_LOCALE
+#if PICOJSON_USE_LOCALE && !PICOJSON_USE_IMPORTED_STD
 extern "C" {
 #include <locale.h>
 }
@@ -132,9 +150,9 @@ enum {
 
 enum { INDENT_WIDTH = 2, DEFAULT_MAX_DEPTHS = 100 };
 
-struct null {};
+PICOJSON_JWT_CPP_EXPORT struct null {};
 
-class value {
+PICOJSON_JWT_CPP_EXPORT class value {
 public:
   typedef std::vector<value> array;
   typedef std::map<std::string, value> object;
@@ -206,8 +224,8 @@ private:
   void clear();
 };
 
-typedef value::array array;
-typedef value::object object;
+PICOJSON_JWT_CPP_EXPORT typedef value::array array;
+PICOJSON_JWT_CPP_EXPORT typedef value::object object;
 
 inline value::value() : type_(null_type), u_() {
 }
@@ -493,7 +511,8 @@ inline std::string value::to_str() const {
   case number_type: {
     char buf[256];
     double tmp;
-    SNPRINTF(buf, sizeof(buf), fabs(u_.number_) < (1ULL << 53) && modf(u_.number_, &tmp) == 0 ? "%.f" : "%.17g", u_.number_);
+    SNPRINTF(buf, sizeof(buf), std::fabs(u_.number_) < (1ULL << 53) && std::modf(u_.number_, &tmp) == 0 ? "%.f" : "%.17g",
+             u_.number_);
 #if PICOJSON_USE_LOCALE
     char *decimal_point = localeconv()->decimal_point;
     if (strcmp(decimal_point, ".") != 0) {
@@ -1147,7 +1166,7 @@ inline const std::string &get_last_error() {
   return last_error_t<bool>::s;
 }
 
-inline bool operator==(const value &x, const value &y) {
+PICOJSON_JWT_CPP_EXPORT inline bool operator==(const value &x, const value &y) {
   if (x.is<null>())
     return y.is<null>();
 #define PICOJSON_CMP(type)                                                                                                         \
@@ -1166,7 +1185,7 @@ inline bool operator==(const value &x, const value &y) {
   return false;
 }
 
-inline bool operator!=(const value &x, const value &y) {
+PICOJSON_JWT_CPP_EXPORT inline bool operator!=(const value &x, const value &y) {
   return !(x == y);
 }
 }
@@ -1179,7 +1198,7 @@ template <> inline void swap(picojson::value &x, picojson::value &y) {
 }
 #endif
 
-inline std::istream &operator>>(std::istream &is, picojson::value &x) {
+PICOJSON_JWT_CPP_EXPORT inline std::istream &operator>>(std::istream &is, picojson::value &x) {
   picojson::set_last_error(std::string());
   const std::string err(picojson::parse(x, is));
   if (!err.empty()) {
@@ -1189,12 +1208,15 @@ inline std::istream &operator>>(std::istream &is, picojson::value &x) {
   return is;
 }
 
-inline std::ostream &operator<<(std::ostream &os, const picojson::value &x) {
+PICOJSON_JWT_CPP_EXPORT inline std::ostream &operator<<(std::ostream &os, const picojson::value &x) {
   x.serialize(std::ostream_iterator<char>(os));
   return os;
 }
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
+
+#undef PICOJSON_JWT_CPP_EXPORT
+#undef PICOJSON_USE_IMPORTED_STD
 
 #endif

@@ -1,0 +1,57 @@
+name: Build & Test with modules
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+    paths:
+      - "CMakeLists.txt"
+      - "cmake/**"
+      - "include/jwt-cpp/**"
+      - "tests/cmake/**"
+      - ".github/actions/**"
+      - ".github/workflows/cmake.yml"
+
+jobs:
+  build:
+    name: ${{ matrix.runs_on }}-${{ matrix.compiler }}
+    runs-on: ${{ matrix.runs_on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runs_on: windows-2025-vs2026
+            compiler: msvc-14.50
+            configure_preset: "x64-vs-modules"
+            build_preset: "x64-vs-modules-build"
+            test_preset : "x64-vs-modules-test"
+          - runs_on: ubuntu-26.04
+            compiler: gcc-15
+            cc: gcc-15
+            cxx: g++-15
+            configure_preset: "linux-modules"
+            build_preset: "linux-modules-build"
+            test_preset : "linux-modules-test"
+          - runs_on: ubuntu-26.04
+            compiler: clang-22
+            cc: clang-22
+            cxx: clang++-22
+            configure_preset: "linux-modules"
+            build_preset: "linux-modules-build"
+            test_preset : "linux-modules-test"
+    steps:
+
+    - uses: actions/checkout@v6
+    
+    - uses: lukka/get-cmake@latest
+  
+    - name: "Build & Test"
+      uses: lukka/run-cmake@v10
+      env:
+          CC: ${{ matrix.cc }}
+          CXX: ${{ matrix.cxx }}
+      with:
+        configurePreset: ${{ matrix.configure_preset }}
+        buildPreset: ${{ matrix.build_preset }}
+        testPreset: ${{ matrix.test_preset }}

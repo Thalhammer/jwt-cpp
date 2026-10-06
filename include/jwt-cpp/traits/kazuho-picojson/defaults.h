@@ -1,6 +1,14 @@
 #ifndef JWT_CPP_KAZUHO_PICOJSON_DEFAULTS_H
 #define JWT_CPP_KAZUHO_PICOJSON_DEFAULTS_H
 
+#ifndef JWT_CPP_EXPORT
+#if defined(JWT_CPP_MODULE_INTERFACE_BUILD)
+#define JWT_CPP_EXPORT export
+#else
+#define JWT_CPP_EXPORT
+#endif
+#endif
+
 #include "traits.h"
 
 namespace jwt {
@@ -10,13 +18,13 @@ namespace jwt {
 	 * This type is the specialization of the \ref basic_claim class which
 	 * uses the standard template types.
 	 */
-	using claim = basic_claim<traits::kazuho_picojson>;
+	JWT_CPP_EXPORT using claim = basic_claim<traits::kazuho_picojson>;
 
 	/**
 	 * Create a verifier using the default clock
 	 * \return verifier instance
 	 */
-	inline verifier<default_clock, traits::kazuho_picojson> verify() {
+	JWT_CPP_EXPORT inline verifier<default_clock, traits::kazuho_picojson> verify() {
 		return verify<default_clock, traits::kazuho_picojson>(default_clock{});
 	}
 
@@ -24,7 +32,7 @@ namespace jwt {
 	 * Create a builder using the default clock
 	 * \return builder instance to create a new token
 	 */
-	inline builder<default_clock, traits::kazuho_picojson> create() {
+	JWT_CPP_EXPORT inline builder<default_clock, traits::kazuho_picojson> create() {
 		return builder<default_clock, traits::kazuho_picojson>(default_clock{});
 	}
 
@@ -36,7 +44,7 @@ namespace jwt {
 	 * \throw std::invalid_argument Token is not in correct format
 	 * \throw std::runtime_error Base64 decoding failed or invalid json
 	 */
-	inline decoded_jwt<traits::kazuho_picojson> decode(const std::string& token) {
+	JWT_CPP_EXPORT inline decoded_jwt<traits::kazuho_picojson> decode(const std::string& token) {
 		return decoded_jwt<traits::kazuho_picojson>(token);
 	}
 #endif
@@ -52,7 +60,7 @@ namespace jwt {
 	 * \throw std::invalid_argument Token is not in correct format
 	 * \throw std::runtime_error Base64 decoding failed or invalid json
 	 */
-	template<typename Decode>
+	JWT_CPP_EXPORT template<typename Decode>
 	decoded_jwt<traits::kazuho_picojson> decode(const std::string& token, Decode decode) {
 		return decoded_jwt<traits::kazuho_picojson>(token, decode);
 	}
@@ -63,7 +71,7 @@ namespace jwt {
 	 * \return Parsed JWK
 	 * \throw std::runtime_error Token is not in correct format
 	 */
-	inline jwk<traits::kazuho_picojson> parse_jwk(const traits::kazuho_picojson::string_type& token) {
+	JWT_CPP_EXPORT inline jwk<traits::kazuho_picojson> parse_jwk(const traits::kazuho_picojson::string_type& token) {
 		return jwk<traits::kazuho_picojson>(token);
 	}
 
@@ -73,7 +81,7 @@ namespace jwt {
 	 * \return Parsed JWKs
 	 * \throw std::runtime_error Token is not in correct format
 	 */
-	inline jwks<traits::kazuho_picojson> parse_jwks(const traits::kazuho_picojson::string_type& token) {
+	JWT_CPP_EXPORT inline jwks<traits::kazuho_picojson> parse_jwks(const traits::kazuho_picojson::string_type& token) {
 		return jwks<traits::kazuho_picojson>(token);
 	}
 
@@ -81,7 +89,7 @@ namespace jwt {
 	 * This type is the specialization of the \ref verify_ops::verify_context class which
 	 * uses the standard template types.
 	 */
-	using verify_context = verify_ops::verify_context<traits::kazuho_picojson>;
+	JWT_CPP_EXPORT using verify_context = verify_ops::verify_context<traits::kazuho_picojson>;
 } // namespace jwt
 
 #endif // JWT_CPP_KAZUHO_PICOJSON_DEFAULTS_H
