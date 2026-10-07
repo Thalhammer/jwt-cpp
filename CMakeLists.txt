@@ -34,9 +34,11 @@ cmake_dependent_option(
   JWT_EXTERNAL_NLOHMANN_JSON "Use find_package() to locate nlohman-json required for tests and examples" OFF
   "JWT_BUILD_EXAMPLES OR JWT_BUILD_TESTS" OFF)
 
-set(JWT_SSL_LIBRARY_OPTIONS OpenSSL LibreSSL wolfSSL)
+set(JWT_SSL_LIBRARY_OPTIONS OpenSSL BoringSSL LibreSSL wolfSSL)
 set(JWT_SSL_LIBRARY OpenSSL CACHE STRING "Determines which SSL library to build with")
 set_property(CACHE JWT_SSL_LIBRARY PROPERTY STRINGS ${JWT_SSL_LIBRARY_OPTIONS})
+set(JWT_BORINGSSL_ROOT_DIR "" CACHE PATH
+    "BoringSSL installation or source/build root used by jwt-cpp")
 
 set(JWT_JSON_TRAITS_OPTIONS boost-json danielaparker-jsoncons kazuho-picojson nlohmann-json open-source-parsers-jsoncpp
                             glaze-json reflectcpp-json)
@@ -52,6 +54,8 @@ endif()
 if(HUNTER_ENABLED)
   if(${JWT_SSL_LIBRARY} MATCHES "OpenSSL")
     hunter_add_package(OpenSSL)
+  elseif(${JWT_SSL_LIBRARY} MATCHES "BoringSSL")
+    message(STATUS "jwt-cpp: BoringSSL selected; using existing CMake targets or JWT_BORINGSSL_ROOT_DIR")
   elseif(${JWT_SSL_LIBRARY} MATCHES "LibreSSL")
     message(WARNING "Hunter does not support LibreSSL yet, the system library will be used (if available)")
   elseif(${JWT_SSL_LIBRARY} MATCHES "wolfSSL")
@@ -65,6 +69,60 @@ endif()
 # Lookup dependencies
 if(${JWT_SSL_LIBRARY} MATCHES "OpenSSL")
   find_package(OpenSSL 1.0.1 REQUIRED)
+elseif(${JWT_SSL_LIBRARY} MATCHES "BoringSSL")
+  # BoringSSL intentionally does not ship a conventional find module.  When
+  # embedded, its CMake project creates the ssl/crypto targets directly.  For
+  # standalone/package builds, accept a root containing include/ and lib/ (or
+  # lib64/) and create equivalent imported targets.
+  if(NOT TARGET ssl AND NOT TARGET crypto AND JWT_BORINGSSL_ROOT_DIR AND
+     EXISTS "${JWT_BORINGSSL_ROOT_DIR}/CMakeLists.txt")
+    message(STATUS "jwt-cpp: adding BoringSSL source tree from ${JWT_BORINGSSL_ROOT_DIR}")
+    # BoringSSL's Windows CMake path otherwise unconditionally enables NASM.
+    # Keep the standalone jwt-cpp build usable with a stock VS installation.
+    set(OPENSSL_NO_ASM ON CACHE BOOL "" FORCE)
+    set(NO_ASM ON CACHE BOOL "" FORCE)
+    set(FORCE_DO_ASM OFF CACHE BOOL "" FORCE)
+    add_subdirectory("${JWT_BORINGSSL_ROOT_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/boringssl" EXCLUDE_FROM_ALL)
+  endif()
+  if(TARGET ssl AND TARGET crypto)
+    set(JWT_BORINGSSL_INCLUDE_DIRS "" CACHE INTERNAL "jwt-cpp BoringSSL include dirs")
+    if(DEFINED BORINGSSL_INCLUDE_DIR)
+      set(JWT_BORINGSSL_INCLUDE_DIRS "${BORINGSSL_INCLUDE_DIR}")
+    elseif(DEFINED BoringSSL_INCLUDE_DIRS)
+      set(JWT_BORINGSSL_INCLUDE_DIRS "${BoringSSL_INCLUDE_DIRS}")
+    elseif(JWT_BORINGSSL_ROOT_DIR AND EXISTS "${JWT_BORINGSSL_ROOT_DIR}/include")
+      set(JWT_BORINGSSL_INCLUDE_DIRS "${JWT_BORINGSSL_ROOT_DIR}/include")
+    endif()
+    set(JWT_BORINGSSL_SSL_TARGET ssl)
+    set(JWT_BORINGSSL_CRYPTO_TARGET crypto)
+  else()
+    find_path(JWT_BORINGSSL_INCLUDE_DIR openssl/ssl.h
+      HINTS "${JWT_BORINGSSL_ROOT_DIR}" ENV BORINGSSL_ROOT_DIR
+      PATH_SUFFIXES include)
+    find_library(JWT_BORINGSSL_SSL_LIBRARY NAMES ssl
+      HINTS "${JWT_BORINGSSL_ROOT_DIR}" ENV BORINGSSL_ROOT_DIR
+      PATH_SUFFIXES lib lib64)
+    find_library(JWT_BORINGSSL_CRYPTO_LIBRARY NAMES crypto
+      HINTS "${JWT_BORINGSSL_ROOT_DIR}" ENV BORINGSSL_ROOT_DIR
+      PATH_SUFFIXES lib lib64)
+    if(NOT JWT_BORINGSSL_INCLUDE_DIR OR NOT JWT_BORINGSSL_SSL_LIBRARY OR
+       NOT JWT_BORINGSSL_CRYPTO_LIBRARY)
+      message(FATAL_ERROR
+        "JWT_SSL_LIBRARY=BoringSSL requires existing ssl/crypto targets or "
+        "JWT_BORINGSSL_ROOT_DIR containing include/ and lib[64]/ libraries")
+    endif()
+    add_library(jwt-cpp-boringssl-ssl UNKNOWN IMPORTED)
+    set_target_properties(jwt-cpp-boringssl-ssl PROPERTIES
+      IMPORTED_LOCATION "${JWT_BORINGSSL_SSL_LIBRARY}"
+      INTERFACE_INCLUDE_DIRECTORIES "${JWT_BORINGSSL_INCLUDE_DIR}")
+    add_library(jwt-cpp-boringssl-crypto UNKNOWN IMPORTED)
+    set_target_properties(jwt-cpp-boringssl-crypto PROPERTIES
+      IMPORTED_LOCATION "${JWT_BORINGSSL_CRYPTO_LIBRARY}"
+      INTERFACE_INCLUDE_DIRECTORIES "${JWT_BORINGSSL_INCLUDE_DIR}")
+    set(JWT_BORINGSSL_SSL_TARGET jwt-cpp-boringssl-ssl)
+    set(JWT_BORINGSSL_CRYPTO_TARGET jwt-cpp-boringssl-crypto)
+    set(JWT_BORINGSSL_INCLUDE_DIRS "${JWT_BORINGSSL_INCLUDE_DIR}")
+  endif()
 elseif(${JWT_SSL_LIBRARY} MATCHES "LibreSSL")
   find_package(LibreSSL 3.0.0 REQUIRED)
 elseif(${JWT_SSL_LIBRARY} MATCHES "wolfSSL")
@@ -118,6 +176,14 @@ target_include_directories(jwt-cpp INTERFACE $<BUILD_INTERFACE:${JWT_INCLUDE_PAT
 
 if(${JWT_SSL_LIBRARY} MATCHES "OpenSSL")
   target_link_libraries(jwt-cpp INTERFACE OpenSSL::SSL OpenSSL::Crypto)
+endif()
+
+if(${JWT_SSL_LIBRARY} MATCHES "BoringSSL")
+  if(JWT_BORINGSSL_INCLUDE_DIRS)
+    target_include_directories(jwt-cpp SYSTEM INTERFACE ${JWT_BORINGSSL_INCLUDE_DIRS})
+  endif()
+  target_link_libraries(jwt-cpp INTERFACE ${JWT_BORINGSSL_SSL_TARGET}
+                                        ${JWT_BORINGSSL_CRYPTO_TARGET})
 endif()
 
 if(${JWT_SSL_LIBRARY} MATCHES "LibreSSL")
