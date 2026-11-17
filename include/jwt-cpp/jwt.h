@@ -19,7 +19,12 @@
 #include <openssl/hmac.h>
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
+// wolfSSL declares the X509 and BIO compatibility API in ssl.h. OpenSSL and LibreSSL provide it from x509.h.
+#if defined(LIBWOLFSSL_VERSION_HEX)
 #include <openssl/ssl.h>
+#else
+#include <openssl/x509.h>
+#endif
 
 #include <algorithm>
 #include <chrono>
