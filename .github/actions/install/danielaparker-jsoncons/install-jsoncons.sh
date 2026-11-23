@@ -13,9 +13,7 @@ if [[ -z "$1" ]] || [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
     echo "  VERSION jsoncons version to install (required)"
     echo ""
     echo "Examples:"
-    echo "  $0 1.5.0"
-    echo "  $0 1.4.3"
-    echo "  $0 1.3.2"
+    echo "  $0 1.10.0"
     exit 1
 fi
 

@@ -13,7 +13,7 @@ if [[ -z "$1" ]] || [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
     echo "  VERSION glaze version to install (required)"
     echo ""
     echo "Examples:"
-    echo "  $0 7.0.2"
+    echo "  $0 9.1.0"
     exit 1
 fi
 

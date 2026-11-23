@@ -13,8 +13,7 @@ if [[ -z "$1" ]] || [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
     echo "  VERSION Boost.JSON version to install (required)"
     echo ""
     echo "Examples:"
-    echo "  $0 1.90.0"
-    echo "  $0 1.89.0"
+    echo "  $0 1.92.0"
     exit 1
 fi
 

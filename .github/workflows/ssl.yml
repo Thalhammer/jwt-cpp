@@ -12,6 +12,7 @@ jobs:
     strategy:
       matrix:
         openssl:
+          - { tag: "openssl-4.1.0", name: "4.1.0" }
           - { tag: "openssl-3.0.19", name: "3.0.19" }
           - { tag: "openssl-3.5.5", name: "3.5.5" }
           - { tag: "openssl-3.6.1", name: "3.6.1" }
@@ -38,14 +39,14 @@ jobs:
 
   openssl-no-deprecated:
     runs-on: ubuntu-latest
-    name: OpenSSL 3.6 No Deprecated
+    name: OpenSSL 4.1 No Deprecated
     steps:
       - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
       - uses: ./.github/actions/install/gtest
       - uses: ./.github/actions/install/openssl
         with:
-          version: "openssl-3.6.1"
+          version: "openssl-4.1.0"
 
       - name: configure
         run: cmake --preset unit-tests -DCMAKE_CXX_FLAGS="-DOPENSSL_NO_DEPRECATED=1" -DCMAKE_C_FLAGS="-DOPENSSL_NO_DEPRECATED=1"
@@ -58,7 +59,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        libressl: ["4.2.1", "4.1.2", "3.9.2"]
+        libressl: ["4.4.1", "4.2.1", "4.1.2", "3.9.2"]
     name: LibreSSL ${{ matrix.libressl }}
     steps:
       - uses: actions/checkout@v4
@@ -89,6 +90,7 @@ jobs:
           - { ref: "v5.2.0-stable", name: "5.2.0" }
           - { ref: "v5.3.0-stable", name: "5.3.0"}
           - { ref: "v5.7.0-stable", name: "5.7.0"}
+          - { ref: "v5.9.4-stable", name: "5.9.4"}
     name: wolfSSL ${{ matrix.wolfssl.name }}
     steps:
       - uses: actions/checkout@v4

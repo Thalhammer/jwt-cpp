@@ -13,7 +13,7 @@ if [[ -z "$1" ]] || [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
     echo "  VERSION reflect-cpp version to install (required)"
     echo ""
     echo "Examples:"
-    echo "  $0 0.24.0"
+    echo "  $0 0.27.1"
     exit 1
 fi
 

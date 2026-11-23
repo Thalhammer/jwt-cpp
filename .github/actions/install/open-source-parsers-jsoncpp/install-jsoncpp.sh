@@ -13,7 +13,7 @@ if [[ -z "$1" ]] || [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
     echo "  VERSION jsoncpp version to install (required)"
     echo ""
     echo "Examples:"
-    echo "  $0 1.9.6"
+    echo "  $0 1.9.8"
     exit 1
 fi
 
