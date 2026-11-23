@@ -165,12 +165,14 @@ namespace jwt {
 
 			inline padding count_padding(const std::string& base, const std::vector<std::string>& fills) {
 				for (const auto& fill : fills) {
-					if (base.size() < fill.size()) continue;
-					// Does the end of the input exactly match the fill pattern?
-					if (base.substr(base.size() - fill.size()) == fill) {
-						return padding{1, fill.length()} +
-							   count_padding(base.substr(0, base.size() - fill.size()), fills);
-					}
+					// Try the next one if it does not match the end
+					if (base.size() < fill.size() || base.compare(base.size() - fill.size(), fill.size(), fill) != 0)
+						continue;
+
+					auto end = base.size() - fill.size();
+					while (end > fill.size() && base.compare(end - fill.size(), fill.size(), fill) == 0)
+						end -= fill.size();
+					return {(base.size() - end) / fill.size(), base.size() - end};
 				}
 
 				return {};
