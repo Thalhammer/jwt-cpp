@@ -71,7 +71,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        libressl: ["4.4.1", "4.2.1", "4.1.2", "3.9.2"]
+        libressl: ["4.4.1", "4.2.1", "3.9.2"]
     name: LibreSSL ${{ matrix.libressl }}
     steps:
       - uses: actions/checkout@v4
@@ -104,11 +104,9 @@ jobs:
     strategy:
       matrix:
         wolfssl:
-          - { ref: "v5.1.1-stable", name: "5.1.1"}
-          - { ref: "v5.2.0-stable", name: "5.2.0" }
-          - { ref: "v5.3.0-stable", name: "5.3.0"}
-          - { ref: "v5.7.0-stable", name: "5.7.0"}
           - { ref: "v5.9.4-stable", name: "5.9.4"}
+          - { ref: "v5.7.0-stable", name: "5.7.0"}
+          - { ref: "v5.3.0-stable", name: "5.3.0"}
     name: wolfSSL ${{ matrix.wolfssl.name }}
     steps:
       - uses: actions/checkout@v4

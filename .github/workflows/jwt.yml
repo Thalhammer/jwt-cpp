@@ -55,6 +55,7 @@ jobs:
       matrix:
         openssl:
           - { tag: "openssl-4.1.0", name: "4.1.0" }
+          - { tag: "openssl-3.5.5", name: "3.5.5" }
           - { tag: "OpenSSL_1_1_1w", name: "1.1.1w" }
     steps:
       - uses: actions/checkout@v4
