@@ -1,49 +1,18 @@
 #!/usr/bin/env bash
-# Install glaze library with specified version
+set -euo pipefail
 
-set -e  # Exit on error
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../common.sh"
+install_init "$@"
+install_require cmake
 
-# Check if version is provided
-if [[ -z "$1" ]] || [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
-    echo "Usage: $0 VERSION"
-    echo ""
-    echo "Install glaze library"
-    echo ""
-    echo "Arguments:"
-    echo "  VERSION glaze version to install (required)"
-    echo ""
-    echo "Examples:"
-    echo "  $0 9.1.0"
-    exit 1
-fi
-
-# Configuration
-glaze_VERSION="$1"
-INSTALL_DIR="/tmp"
-BUILD_DIR="${INSTALL_DIR}/glaze-${glaze_VERSION}"
-
-echo "Installing glaze v${glaze_VERSION}..."
-
-# Download
-echo "Downloading glaze v${glaze_VERSION}..."
-cd "${INSTALL_DIR}"
-wget -q "https://github.com/stephenberry/glaze/archive/v${glaze_VERSION}.tar.gz"
-
-# Extract
-echo "Extracting archive..."
-tar -zxf "v${glaze_VERSION}.tar.gz"
-
-# Build and install
-echo "Building and installing..."
-cd "${BUILD_DIR}"
-mkdir -p build
-cd build
-cmake ..  -DCMAKE_BUILD_TYPE=Release
-sudo cmake --install .
-
-# Cleanup
-echo "Cleaning up..."
-rm -f "${INSTALL_DIR}/v${glaze_VERSION}.tar.gz"
-rm -rf "${BUILD_DIR}"
-
-echo "✓ glaze v${glaze_VERSION} installed successfully!"
+SOURCE_DIR="$INSTALL_WORK_DIR/glaze-${INSTALL_VERSION}"
+BUILD_DIR="$INSTALL_WORK_DIR/build"
+install_download_extract "https://github.com/stephenberry/glaze/archive/v${INSTALL_VERSION}.tar.gz" \
+    "glaze-${INSTALL_VERSION}.tar.gz"
+cmake -S "$SOURCE_DIR" -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX" \
+    -Dglaze_DEVELOPER_MODE=OFF
+cmake --build "$BUILD_DIR" --parallel "$INSTALL_JOBS"
+cmake --install "$BUILD_DIR"
+install_publish_environment
+echo "Glaze ${INSTALL_VERSION} installed under ${INSTALL_PREFIX}"

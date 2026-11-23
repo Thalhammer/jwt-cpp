@@ -29,6 +29,12 @@ jobs:
         with:
           version: ${{ matrix.openssl.tag }}
 
+      - name: verify OpenSSL installation
+        run: |
+          "$OPENSSL_ROOT_DIR/bin/openssl" version | grep -F "${{ matrix.openssl.name }}"
+      - name: verify installers left checkout clean
+        run: git status --short --untracked-files=all && test -z "$(git status --porcelain --untracked-files=all)"
+
       - run: cmake --workflow --preset unit-tests
 
       - if: github.event_name == 'push' && always()
@@ -47,6 +53,12 @@ jobs:
       - uses: ./.github/actions/install/openssl
         with:
           version: "openssl-4.1.0"
+
+      - name: verify OpenSSL installation
+        run: |
+          "$OPENSSL_ROOT_DIR/bin/openssl" version | grep -F "4.1.0"
+      - name: verify installers left checkout clean
+        run: git status --short --untracked-files=all && test -z "$(git status --porcelain --untracked-files=all)"
 
       - name: configure
         run: cmake --preset unit-tests -DCMAKE_CXX_FLAGS="-DOPENSSL_NO_DEPRECATED=1" -DCMAKE_C_FLAGS="-DOPENSSL_NO_DEPRECATED=1"
@@ -68,6 +80,12 @@ jobs:
       - uses: ./.github/actions/install/libressl
         with:
           version: ${{ matrix.libressl }}
+
+      - name: verify LibreSSL installation
+        run: |
+          "$LIBRESSL_ROOT_DIR/bin/openssl" version | grep -F "LibreSSL ${{ matrix.libressl }}"
+      - name: verify installers left checkout clean
+        run: git status --short --untracked-files=all && test -z "$(git status --porcelain --untracked-files=all)"
 
       - name: configure
         run: cmake --preset unit-tests -DJWT_SSL_LIBRARY:STRING=LibreSSL
@@ -99,6 +117,12 @@ jobs:
       - uses: ./.github/actions/install/wolfssl
         with:
           version: ${{ matrix.wolfssl.ref }}
+
+      - name: verify wolfSSL installation
+        run: |
+          "$RUNNER_TEMP/jwt-cpp-deps/bin/wolfssl-config" --version | grep -Fx "${{ matrix.wolfssl.name }}"
+      - name: verify installers left checkout clean
+        run: git status --short --untracked-files=all && test -z "$(git status --porcelain --untracked-files=all)"
 
       - name: configure
         run: cmake --preset unit-tests -DJWT_SSL_LIBRARY:STRING=wolfSSL

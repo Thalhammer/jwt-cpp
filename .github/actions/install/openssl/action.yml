@@ -8,14 +8,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - run: |
-        cd /tmp
-        wget https://github.com/openssl/openssl/archive/refs/tags/${{ inputs.version }}.tar.gz
-        tar -zxf /tmp/${{ inputs.version }}.tar.gz
-        cd openssl-${{ inputs.version }}
-        ./config --prefix=/tmp --libdir=lib
-        make -j $(nproc)
-        sudo make -j $(nproc) install_sw
-        echo "OPENSSL_ROOT_DIR=/tmp" >> "$GITHUB_ENV"
-        echo "OpenSSL_ROOT=/tmp" >> "$GITHUB_ENV"
+    - run: '"$GITHUB_ACTION_PATH/install-openssl.sh" "$VERSION" --prefix "$RUNNER_TEMP/jwt-cpp-deps" --jobs "$(nproc)"'
       shell: bash
+      env:
+        VERSION: ${{ inputs.version }}

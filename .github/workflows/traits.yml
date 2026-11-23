@@ -28,10 +28,8 @@ jobs:
       - uses: lukka/get-cmake@latest
       - name: setup
         run: |
-          mkdir build
-          cd build
-          cmake .. -DJWT_BUILD_EXAMPLES=OFF
-          sudo cmake --install .
+          cmake -S . -B build -DJWT_BUILD_EXAMPLES=OFF -DCMAKE_INSTALL_PREFIX="$RUNNER_TEMP/jwt-cpp-deps"
+          cmake --install build
 
       # Install the JSON library
       - if: matrix.target.name == 'danielaparker-jsoncons'
@@ -49,8 +47,6 @@ jobs:
         with:
           version: ${{matrix.target.tag}}
 
-      - if: matrix.target.name == 'kazuho-picojson'
-        run: rm -rf include/picojson
       - if: matrix.target.name == 'kazuho-picojson'
         uses: ./.github/actions/install/kazuho-picojson
         with:
@@ -71,9 +67,18 @@ jobs:
         with:
           version: ${{ matrix.target.tag }}
 
+      - name: verify installers left checkout clean
+        run: git status --short --untracked-files=all && test -z "$(git status --porcelain --untracked-files=all)"
+
       - name: test
         working-directory: example/traits
         run: |
+          if [[ "${{ matrix.target.name }}" == "kazuho-picojson" ]]; then
+            backup="$(mktemp)"
+            cp ../../include/picojson/picojson.h "$backup"
+            rm -rf ../../include/picojson
+            trap 'mkdir -p ../../include/picojson; cp "$backup" ../../include/picojson/picojson.h; rm -f "$backup"' EXIT
+          fi
           cmake . -DCMAKE_FIND_DEBUG_MODE=1
           cmake --build . --target ${{ matrix.target.name }}
           ./${{ matrix.target.name }}

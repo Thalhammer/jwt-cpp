@@ -1,31 +1,21 @@
 #!/usr/bin/env bash
-# Install wolfSSL library with specified version
+set -euo pipefail
 
-set -e  # Exit on error
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../common.sh"
+install_init "$@"
+install_require autoconf automake aclocal autoreconf make
 
-# Check if version is provided
-if [[ -z "$1" ]] || [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
-    echo "Usage: $0 VERSION"
-    echo ""
-    echo "Install wolfSSL library"
-    echo ""
-    echo "Arguments:"
-    echo "  VERSION wolfSSL version to install (required)"
-    echo ""
-    echo "Examples:"
-    echo "  $0 4.2.1"
-    echo "  $0 4.1.2"
-    echo "  $0 3.9.4"
-    exit 1
-fi
-
-WOLFSSL_VERSION="$1"
-
-cd /tmp
-wget -O wolfssl.tar.gz https://github.com/wolfSSL/wolfssl/archive/$WOLFSSL_VERSION.tar.gz
-tar -zxf /tmp/wolfssl.tar.gz
-cd wolfssl-*
-autoreconf -fiv
-./configure --enable-opensslall --enable-opensslextra --disable-examples --disable-crypttests --enable-harden --enable-all --enable-all-crypto
-make
-sudo make install
+SOURCE_DIR="$INSTALL_WORK_DIR/wolfssl-${INSTALL_VERSION#v}"
+install_download_extract "https://github.com/wolfSSL/wolfssl/archive/${INSTALL_VERSION}.tar.gz" \
+    "wolfssl-${INSTALL_VERSION}.tar.gz"
+(
+    cd "$SOURCE_DIR"
+    autoreconf -fiv
+    ./configure --prefix="$INSTALL_PREFIX" --enable-opensslall --enable-opensslextra \
+        --disable-examples --disable-crypttests --enable-harden --enable-all --enable-all-crypto
+    make -j "$INSTALL_JOBS"
+    make install
+)
+install_publish_environment
+echo "wolfSSL ${INSTALL_VERSION#v} installed under ${INSTALL_PREFIX}"

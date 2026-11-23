@@ -1,30 +1,20 @@
 #!/usr/bin/env bash
-# Install LibreSSL library with specified version
+set -euo pipefail
 
-set -e  # Exit on error
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../common.sh"
+install_init "$@"
+install_require make
 
-# Check if version is provided
-if [[ -z "$1" ]] || [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
-    echo "Usage: $0 VERSION"
-    echo ""
-    echo "Install libreSSL library"
-    echo ""
-    echo "Arguments:"
-    echo "  VERSION libreSSL version to install (required)"
-    echo ""
-    echo "Examples:"
-    echo "  $0 4.2.1"
-    echo "  $0 4.1.2"
-    echo "  $0 3.9.4"
-    exit 1
-fi
-
-LIBRESSL_VERSION="$1"
-
-wget https://raw.githubusercontent.com/libressl-portable/portable/v${LIBRESSL_VERSION}/FindLibreSSL.cmake -P cmake/
-cd /tmp
-wget https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-${LIBRESSL_VERSION}.tar.gz
-tar -zvxf /tmp/libressl-${LIBRESSL_VERSION}.tar.gz
-cd libressl-${LIBRESSL_VERSION}
-./configure
-sudo make -j $(nproc) install
+SOURCE_DIR="$INSTALL_WORK_DIR/libressl-${INSTALL_VERSION}"
+install_download_extract \
+    "https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-${INSTALL_VERSION}.tar.gz" \
+    "libressl-${INSTALL_VERSION}.tar.gz"
+(
+    cd "$SOURCE_DIR"
+    ./configure --prefix="$INSTALL_PREFIX"
+    make -j "$INSTALL_JOBS"
+    make install
+)
+install_publish_environment LIBRESSL_ROOT_DIR
+echo "LibreSSL ${INSTALL_VERSION} installed under ${INSTALL_PREFIX}"

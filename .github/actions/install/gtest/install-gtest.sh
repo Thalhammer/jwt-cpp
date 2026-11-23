@@ -1,48 +1,20 @@
 #!/usr/bin/env bash
-# Install gtest library with specified version
+set -euo pipefail
 
-set -e  # Exit on error
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../common.sh"
+install_init "$@"
+install_require cmake make
 
-# Check if version is provided
-if [[ -z "$1" ]] || [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
-    echo "Usage: $0 VERSION"
-    echo ""
-    echo "Install gtest library"
-    echo ""
-    echo "Arguments:"
-    echo "  VERSION gtest version to install (required)"
-    echo ""
-    echo "Examples:"
-    echo "  $0 1.17.0"
-    exit 1
-fi
-
-# Configuration
-gtest_VERSION="$1"
-INSTALL_DIR="/tmp"
-BUILD_DIR="${INSTALL_DIR}/googletest-${gtest_VERSION}"
-
-echo "Installing gtest v${gtest_VERSION}..."
-
-# Download
-echo "Downloading gtest v${gtest_VERSION}..."
-cd "${INSTALL_DIR}"
-wget -q "https://github.com/google/googletest/releases/download/v${gtest_VERSION}/googletest-${gtest_VERSION}.tar.gz"
-
-# Extract
-echo "Extracting archive..."
-tar -zxf "googletest-${gtest_VERSION}.tar.gz"
-
-# Build and install
-echo "Building and installing..."
-cd "${BUILD_DIR}"
-cmake . -DCMAKE_BUILD_TYPE=Release -DINSTALL_GTEST=ON
-cmake --build .
-sudo make install # There's a bug in the v1.16.0 CMakeLists.txt that doesn't properly install the library when invoked via CMake, so we have to use make install directly
-
-# Cleanup
-echo "Cleaning up..."
-rm -f "${INSTALL_DIR}/googletest-${gtest_VERSION}.tar.gz"
-rm -rf "${BUILD_DIR}"
-
-echo "✓ gtest v${gtest_VERSION} installed successfully!"
+SOURCE_DIR="$INSTALL_WORK_DIR/googletest-${INSTALL_VERSION}"
+BUILD_DIR="$INSTALL_WORK_DIR/build"
+install_download_extract \
+    "https://github.com/google/googletest/releases/download/v${INSTALL_VERSION}/googletest-${INSTALL_VERSION}.tar.gz" \
+    "googletest-${INSTALL_VERSION}.tar.gz"
+cmake -S "$SOURCE_DIR" -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release -DINSTALL_GTEST=ON \
+    -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX"
+cmake --build "$BUILD_DIR" --parallel "$INSTALL_JOBS"
+# Use make install because the CMake install target is broken in GTest 1.16.0.
+make -C "$BUILD_DIR" -j "$INSTALL_JOBS" install
+install_publish_environment
+echo "GoogleTest ${INSTALL_VERSION} installed under ${INSTALL_PREFIX}"
