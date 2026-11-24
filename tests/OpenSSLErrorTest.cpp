@@ -6,9 +6,10 @@
 #include <gtest/gtest.h>
 
 #include <dlfcn.h>
-// OpenSSL 4.1 bypasses the BIO_ctrl symbol interposed by these tests.
+// OpenSSL 4.1 bypasses the BIO_ctrl and X509_get_pubkey symbols interposed by these tests.
 #if !defined(LIBWOLFSSL_VERSION_HEX) && OPENSSL_VERSION_NUMBER < 0x40100000L
 #define JWT_TEST_BIO_CTRL_INTERPOSITION
+#define JWT_TEST_X509_GET_PUBKEY_INTERPOSITION
 #endif
 // TODO: Figure out why the tests fail on older openssl versions
 #ifndef JWT_OPENSSL_1_0_0 // It fails on < 1.1 but no idea why.
@@ -746,7 +747,9 @@ void run_multitest(const std::vector<multitest_entry>& mapping, Func fn) {
 TEST(OpenSSLErrorTest, ExtractPubkeyFromCert) {
 	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
 										 {&fail_PEM_read_bio_X509, 1, jwt::error::rsa_error::cert_load_failed},
+#ifdef JWT_TEST_X509_GET_PUBKEY_INTERPOSITION
 										 {&fail_X509_get_pubkey, 1, jwt::error::rsa_error::get_key_failed},
+#endif
 										 {&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::write_key_failed},
 #ifdef JWT_TEST_BIO_CTRL_INTERPOSITION
 										 {&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed}
@@ -764,7 +767,9 @@ TEST(OpenSSLErrorTest, ExtractPubkeyFromCert) {
 TEST(OpenSSLErrorTest, ExtractPubkeyFromCertErrorCode) {
 	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
 										 {&fail_PEM_read_bio_X509, 1, jwt::error::rsa_error::cert_load_failed},
+#ifdef JWT_TEST_X509_GET_PUBKEY_INTERPOSITION
 										 {&fail_X509_get_pubkey, 1, jwt::error::rsa_error::get_key_failed},
+#endif
 										 {&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::write_key_failed},
 #ifdef JWT_TEST_BIO_CTRL_INTERPOSITION
 										 {&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed}
@@ -1223,7 +1228,9 @@ TEST(OpenSSLErrorTest, ECDSACertificate) {
 			// extract_pubkey_from_cert
 			{&fail_BIO_new, 2, jwt::error::ecdsa_error::create_mem_bio_failed},
 			{&fail_PEM_read_bio_X509, 1, jwt::error::ecdsa_error::cert_load_failed},
+#ifdef JWT_TEST_X509_GET_PUBKEY_INTERPOSITION
 			{&fail_X509_get_pubkey, 1, jwt::error::ecdsa_error::get_key_failed},
+#endif
 			{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::ecdsa_error::write_key_failed},
 #ifdef JWT_TEST_BIO_CTRL_INTERPOSITION
 		{
@@ -1367,7 +1374,9 @@ TEST(OpenSSLErrorTest, EdDSACertificate) {
 			// extract_pubkey_from_cert
 			{&fail_BIO_new, 2, jwt::error::rsa_error::create_mem_bio_failed},
 			{&fail_PEM_read_bio_X509, 1, jwt::error::rsa_error::cert_load_failed},
+#ifdef JWT_TEST_X509_GET_PUBKEY_INTERPOSITION
 			{&fail_X509_get_pubkey, 1, jwt::error::rsa_error::get_key_failed},
+#endif
 #ifdef JWT_TEST_BIO_CTRL_INTERPOSITION
 			{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::write_key_failed},
 			{&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed}
