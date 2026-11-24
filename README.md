@@ -100,6 +100,14 @@ If you are looking to issue or verify more unique tokens, checkout out the [exam
 
 Building on the goal of providing flexibility.
 
+#### Modules support
+jwt-cpp supports modules. Use `JWT_ENABLE_MODULES` to enable modules. This requires C++23, because modules are used in combination with `import std`.
+CMake example:
+```cmake
+set(JWT_ENABLE_MODULES ON)
+```
+You can now `import jwt_cpp;`.
+
 #### SSL Compatibility
 
 jwt-cpp supports [OpenSSL](https://github.com/openssl/openssl), [LibreSSL](https://github.com/libressl-portable/portable), and [wolfSSL](https://github.com/wolfSSL/wolfssl). For a listed of tested versions, check [this page](docs/ssl.md) for more details.

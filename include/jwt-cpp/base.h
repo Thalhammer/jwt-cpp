@@ -1,12 +1,23 @@
 #ifndef JWT_CPP_BASE_H
 #define JWT_CPP_BASE_H
 
+#ifndef JWT_CPP_EXPORT
+#if defined(JWT_CPP_MODULE_INTERFACE_BUILD)
+#define JWT_CPP_EXPORT export
+#else
+#define JWT_CPP_EXPORT
+#endif
+#endif
+
+#if !defined(JWT_CPP_MODULE_INTERFACE_BUILD)
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <stdexcept>
 #include <string>
 #include <vector>
+#endif
 
 #ifdef __has_cpp_attribute
 #if __has_cpp_attribute(fallthrough)
@@ -29,7 +40,7 @@ namespace jwt {
 		 * As directed in [X.509 Parameter](https://datatracker.ietf.org/doc/html/rfc7517#section-4.7) certificate chains are
 		 * base64-encoded as per [Section 4 of RFC4648](https://datatracker.ietf.org/doc/html/rfc4648#section-4)
 		 */
-		struct base64 {
+		JWT_CPP_EXPORT struct base64 {
 			static const std::array<char, 64>& data() {
 				static constexpr std::array<char, 64> data{
 					{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
@@ -38,8 +49,8 @@ namespace jwt {
 					 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'}};
 				return data;
 			}
-			static const std::array<int8_t, 256>& rdata() {
-				static constexpr std::array<int8_t, 256> rdata{{
+			static const std::array<std::int8_t, 256>& rdata() {
+				static constexpr std::array<std::int8_t, 256> rdata{{
 					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63,
 					52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1, -1, 0,	1,	2,	3,	4,	5,	6,
@@ -68,7 +79,7 @@ namespace jwt {
 		 * > Base64 encoding using the URL- and filename-safe character set defined in
 		 * > [Section 5 of RFC 4648 RFC4648](https://tools.ietf.org/html/rfc4648#section-5), with all trailing '=' characters omitted
 		 */
-		struct base64url {
+		JWT_CPP_EXPORT struct base64url {
 			static const std::array<char, 64>& data() {
 				static constexpr std::array<char, 64> data{
 					{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
@@ -77,8 +88,8 @@ namespace jwt {
 					 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'}};
 				return data;
 			}
-			static const std::array<int8_t, 256>& rdata() {
-				static constexpr std::array<int8_t, 256> rdata{{
+			static const std::array<std::int8_t, 256>& rdata() {
+				static constexpr std::array<std::int8_t, 256> rdata{{
 					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 					-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1,
 					52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1, -1, 0,	1,	2,	3,	4,	5,	6,
@@ -105,7 +116,7 @@ namespace jwt {
 			 *
 			 * This is useful in situations outside of JWT encoding/decoding and is provided as a helper
 			 */
-			struct base64url_percent_encoding {
+			JWT_CPP_EXPORT struct base64url_percent_encoding {
 				static const std::array<char, 64>& data() {
 					static constexpr std::array<char, 64> data{
 						{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
@@ -114,8 +125,8 @@ namespace jwt {
 						 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'}};
 					return data;
 				}
-				static const std::array<int8_t, 256>& rdata() {
-					static constexpr std::array<int8_t, 256> rdata{{
+				static const std::array<std::int8_t, 256>& rdata() {
+					static constexpr std::array<std::int8_t, 256> rdata{{
 						-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 						-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1,
 						52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1, -1, 0,	1,	2,	3,	4,	5,	6,
@@ -137,10 +148,10 @@ namespace jwt {
 			};
 		} // namespace helper
 
-		inline uint32_t index(const std::array<int8_t, 256>& rdata, char symbol) {
+		JWT_CPP_EXPORT inline std::uint32_t index(const std::array<std::int8_t, 256>& rdata, char symbol) {
 			auto index = rdata[static_cast<unsigned char>(symbol)];
 			if (index <= -1) { throw std::runtime_error("Invalid input: not within alphabet"); }
-			return static_cast<uint32_t>(index);
+			return static_cast<std::uint32_t>(index);
 		}
 	} // namespace alphabet
 
@@ -150,11 +161,11 @@ namespace jwt {
 	namespace base {
 		namespace details {
 			struct padding {
-				size_t count = 0;
-				size_t length = 0;
+				std::size_t count = 0;
+				std::size_t length = 0;
 
 				padding() = default;
-				padding(size_t count, size_t length) : count(count), length(length) {}
+				padding(std::size_t count, std::size_t length) : count(count), length(length) {}
 
 				padding operator+(const padding& p) { return padding(count + p.count, length + p.length); }
 
@@ -180,17 +191,17 @@ namespace jwt {
 
 			inline std::string encode(const std::string& bin, const std::array<char, 64>& alphabet,
 									  const std::string& fill) {
-				size_t size = bin.size();
+				std::size_t size = bin.size();
 				std::string res;
 
 				// clear incomplete bytes
-				size_t fast_size = size - size % 3;
-				for (size_t i = 0; i < fast_size;) {
-					uint32_t octet_a = static_cast<unsigned char>(bin[i++]);
-					uint32_t octet_b = static_cast<unsigned char>(bin[i++]);
-					uint32_t octet_c = static_cast<unsigned char>(bin[i++]);
+				std::size_t fast_size = size - size % 3;
+				for (std::size_t i = 0; i < fast_size;) {
+					std::uint32_t octet_a = static_cast<unsigned char>(bin[i++]);
+					std::uint32_t octet_b = static_cast<unsigned char>(bin[i++]);
+					std::uint32_t octet_c = static_cast<unsigned char>(bin[i++]);
 
-					uint32_t triple = (octet_a << 0x10) + (octet_b << 0x08) + octet_c;
+					std::uint32_t triple = (octet_a << 0x10) + (octet_b << 0x08) + octet_c;
 
 					res += alphabet[(triple >> 3 * 6) & 0x3F];
 					res += alphabet[(triple >> 2 * 6) & 0x3F];
@@ -200,13 +211,13 @@ namespace jwt {
 
 				if (fast_size == size) return res;
 
-				size_t mod = size % 3;
+				std::size_t mod = size % 3;
 
-				uint32_t octet_a = fast_size < size ? static_cast<unsigned char>(bin[fast_size++]) : 0;
-				uint32_t octet_b = fast_size < size ? static_cast<unsigned char>(bin[fast_size++]) : 0;
-				uint32_t octet_c = fast_size < size ? static_cast<unsigned char>(bin[fast_size++]) : 0;
+				std::uint32_t octet_a = fast_size < size ? static_cast<unsigned char>(bin[fast_size++]) : 0;
+				std::uint32_t octet_b = fast_size < size ? static_cast<unsigned char>(bin[fast_size++]) : 0;
+				std::uint32_t octet_c = fast_size < size ? static_cast<unsigned char>(bin[fast_size++]) : 0;
 
-				uint32_t triple = (octet_a << 0x10) + (octet_b << 0x08) + octet_c;
+				std::uint32_t triple = (octet_a << 0x10) + (octet_b << 0x08) + octet_c;
 
 				switch (mod) {
 				case 1:
@@ -227,28 +238,28 @@ namespace jwt {
 				return res;
 			}
 
-			inline std::string decode(const std::string& base, const std::array<int8_t, 256>& rdata,
+			inline std::string decode(const std::string& base, const std::array<std::int8_t, 256>& rdata,
 									  const std::vector<std::string>& fill) {
 				const auto pad = count_padding(base, fill);
 				if (pad.count > 2) throw std::runtime_error("Invalid input: too much fill");
 
-				const size_t size = base.size() - pad.length;
+				const std::size_t size = base.size() - pad.length;
 				if ((size + pad.count) % 4 != 0) throw std::runtime_error("Invalid input: incorrect total size");
 
-				size_t out_size = size / 4 * 3;
+				std::size_t out_size = size / 4 * 3;
 				std::string res;
 				res.reserve(out_size);
 
-				auto get_sextet = [&](size_t offset) { return alphabet::index(rdata, base[offset]); };
+				auto get_sextet = [&](std::size_t offset) { return alphabet::index(rdata, base[offset]); };
 
-				size_t fast_size = size - size % 4;
-				for (size_t i = 0; i < fast_size;) {
-					uint32_t sextet_a = get_sextet(i++);
-					uint32_t sextet_b = get_sextet(i++);
-					uint32_t sextet_c = get_sextet(i++);
-					uint32_t sextet_d = get_sextet(i++);
+				std::size_t fast_size = size - size % 4;
+				for (std::size_t i = 0; i < fast_size;) {
+					std::uint32_t sextet_a = get_sextet(i++);
+					std::uint32_t sextet_b = get_sextet(i++);
+					std::uint32_t sextet_c = get_sextet(i++);
+					std::uint32_t sextet_d = get_sextet(i++);
 
-					uint32_t triple =
+					std::uint32_t triple =
 						(sextet_a << 3 * 6) + (sextet_b << 2 * 6) + (sextet_c << 1 * 6) + (sextet_d << 0 * 6);
 
 					res += static_cast<char>((triple >> 2 * 8) & 0xFFU);
@@ -258,7 +269,7 @@ namespace jwt {
 
 				if (pad.count == 0) return res;
 
-				uint32_t triple = (get_sextet(fast_size) << 3 * 6) + (get_sextet(fast_size + 1) << 2 * 6);
+				std::uint32_t triple = (get_sextet(fast_size) << 3 * 6) + (get_sextet(fast_size + 1) << 2 * 6);
 
 				switch (pad.count) {
 				case 1:
@@ -273,7 +284,7 @@ namespace jwt {
 				return res;
 			}
 
-			inline std::string decode(const std::string& base, const std::array<int8_t, 256>& rdata,
+			inline std::string decode(const std::string& base, const std::array<std::int8_t, 256>& rdata,
 									  const std::string& fill) {
 				return decode(base, rdata, std::vector<std::string>{fill});
 			}
@@ -306,7 +317,7 @@ namespace jwt {
 		 * const auto b64 = jwt::base::encode<jwt::alphabet::base64>("example_data")
 		 * \endcode
 		 */
-		template<typename T>
+		JWT_CPP_EXPORT template<typename T>
 		std::string encode(const std::string& bin) {
 			return details::encode(bin, T::data(), T::fill());
 		}
@@ -320,7 +331,7 @@ namespace jwt {
 		 * const auto b64 = jwt::base::decode<jwt::alphabet::base64>("ZXhhbXBsZV9kYXRh")
 		 * \endcode
 		 */
-		template<typename T>
+		JWT_CPP_EXPORT template<typename T>
 		std::string decode(const std::string& base) {
 			return details::decode(base, T::rdata(), T::fill());
 		}
@@ -334,7 +345,7 @@ namespace jwt {
 		 * const auto b64 = jwt::base::pad<jwt::alphabet::base64>("ZXhhbXBsZV9kYQ")
 		 * \endcode
 		 */
-		template<typename T>
+		JWT_CPP_EXPORT template<typename T>
 		std::string pad(const std::string& base) {
 			return details::pad(base, T::fill());
 		}
@@ -348,7 +359,7 @@ namespace jwt {
 		 * const auto b64 = jwt::base::trim<jwt::alphabet::base64>("ZXhhbXBsZV9kYQ==")
 		 * \endcode
 		 */
-		template<typename T>
+		JWT_CPP_EXPORT template<typename T>
 		std::string trim(const std::string& base) {
 			return details::trim(base, T::fill());
 		}

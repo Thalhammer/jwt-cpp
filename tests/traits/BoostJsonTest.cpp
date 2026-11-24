@@ -1,6 +1,6 @@
-#include "jwt-cpp/traits/boost-json/traits.h"
-
 #include <gtest/gtest.h>
+
+#include "jwt-cpp/traits/boost-json/traits.h"
 
 TEST(BoostJsonTest, BasicClaims) {
 	const auto string = jwt::basic_claim<jwt::traits::boost_json>(jwt::traits::boost_json::string_type("string"));

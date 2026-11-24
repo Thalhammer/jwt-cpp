@@ -21,6 +21,45 @@
                 "JWT_BUILD_EXAMPLES": "ON",
                 "JWT_BUILD_TESTS": "ON"
             }
+        },
+        {
+            "name": "windows-vs-base",
+            "hidden": true,
+            "generator": "Visual Studio 18 2026",
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "installDir": "${sourceDir}/out/install/${presetName}",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "x64-vs-modules",
+            "displayName": "x64 (VS generator) with Modules (CI)",
+            "inherits": "windows-vs-base",
+            "architecture": "x64",
+            "cacheVariables": {
+                "JWT_ENABLE_MODULES": "ON",
+                "JWT_BUILD_EXAMPLES": "ON"
+            }
+        },
+        {
+            "name": "linux-modules",
+            "displayName": "Linux Debug with Modules (CI)",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "installDir": "${sourceDir}/out/install/${presetName}",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "JWT_ENABLE_MODULES": "ON",
+                "JWT_BUILD_EXAMPLES": "ON"
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            }
         }
     ],
     "buildPresets": [
@@ -28,6 +67,14 @@
             "name": "dev",
             "configurePreset": "dev",
             "configuration": "Debug"
+        },
+        {
+            "name": "x64-vs-modules-build",
+            "configurePreset": "x64-vs-modules"
+        },
+        {
+            "name": "linux-modules-build",
+            "configurePreset": "linux-modules"
         }
     ],
     "testPresets": [
@@ -35,6 +82,14 @@
             "name": "dev",
             "displayName": "Run all tests",
             "configurePreset": "dev"
+        },
+        { 
+            "name": "x64-vs-modules-test",
+            "configurePreset": "x64-vs-modules"
+        },
+        {
+            "name": "linux-modules-test",
+            "configurePreset": "linux-modules"
         }
     ]
 }

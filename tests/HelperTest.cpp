@@ -1,5 +1,9 @@
-#include "jwt-cpp/jwt.h"
 #include <gtest/gtest.h>
+#ifdef JWT_ENABLE_MODULES
+import jwt_cpp;
+#else
+#include <jwt-cpp/jwt.h>
+#endif
 
 namespace {
 	extern std::string google_cert;

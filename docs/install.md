@@ -8,6 +8,14 @@ It's strongly recommended to use a package manager, as JWT-CPP has dependencies 
 
 When manually adding this dependency, and the dependencies this has, check the GitHub Actions and Workflows for some inspiration about how to go about it.
 
+#### Modules support
+jwt-cpp supports modules. Use `JWT_ENABLE_MODULES` to enable modules. This requires C++23, because modules are used in combination with `import std`.
+CMake example:
+```cmake
+set(JWT_ENABLE_MODULES ON)
+```
+You can now `import jwt_cpp;`.
+
 ### Package Manager
 
 - Conan: <https://conan.io/center/recipes/jwt-cpp>

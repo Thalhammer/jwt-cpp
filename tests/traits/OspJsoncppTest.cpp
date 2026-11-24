@@ -1,6 +1,6 @@
-#include "jwt-cpp/traits/open-source-parsers-jsoncpp/traits.h"
-
 #include <gtest/gtest.h>
+
+#include "jwt-cpp/traits/open-source-parsers-jsoncpp/traits.h"
 
 TEST(OspJsoncppTest, BasicClaims) {
 	const auto string = jwt::basic_claim<jwt::traits::open_source_parsers_jsoncpp>(

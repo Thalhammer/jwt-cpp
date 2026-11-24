@@ -1,6 +1,6 @@
-#include "jwt-cpp/traits/nlohmann-json/traits.h"
-
 #include <gtest/gtest.h>
+
+#include "jwt-cpp/traits/nlohmann-json/traits.h"
 
 TEST(NlohmannTest, BasicClaims) {
 	const auto string = jwt::basic_claim<jwt::traits::nlohmann_json>(jwt::traits::nlohmann_json::string_type("string"));

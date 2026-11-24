@@ -1,6 +1,30 @@
 #ifndef JWT_CPP_JWT_H
 #define JWT_CPP_JWT_H
 
+#ifndef JWT_CPP_EXPORT
+#if defined(JWT_CPP_MODULE_INTERFACE_BUILD)
+#define JWT_CPP_EXPORT export
+#else
+#define JWT_CPP_EXPORT
+#endif
+#endif
+
+#if !defined(JWT_CPP_MODULE_INTERFACE_BUILD)
+#include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cstddef>
+#include <iostream>
+#include <iterator>
+#include <limits>
+#include <map>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
+#endif
+
 #ifndef JWT_DISABLE_PICOJSON
 #ifndef PICOJSON_USE_INT64
 #define PICOJSON_USE_INT64
@@ -12,6 +36,7 @@
 #include "base.h"
 #endif
 
+#ifndef JWT_CPP_MODULE_INTERFACE_BUILD
 #include <openssl/ec.h>
 #include <openssl/ecdsa.h>
 #include <openssl/err.h>
@@ -44,10 +69,13 @@
 #endif
 #endif
 #endif
+#endif
 
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L // 3.0.0
 #define JWT_OPENSSL_3_0
+#ifndef JWT_CPP_MODULE_INTERFACE_BUILD
 #include <openssl/param_build.h>
+#endif
 #elif OPENSSL_VERSION_NUMBER >= 0x10101000L // 1.1.1
 #define JWT_OPENSSL_1_1_1
 #elif OPENSSL_VERSION_NUMBER >= 0x10100000L // 1.1.0
@@ -85,31 +113,31 @@ namespace jwt {
 	/**
 	 * Default system time point in UTC
 	 */
-	using date = std::chrono::system_clock::time_point;
+	JWT_CPP_EXPORT using date = std::chrono::system_clock::time_point;
 
 	/**
 	 * \brief Everything related to error codes issued by the library
 	 */
 	namespace error {
-		struct signature_verification_exception : public std::system_error {
+		JWT_CPP_EXPORT struct signature_verification_exception : public std::system_error {
 			using system_error::system_error;
 		};
-		struct signature_generation_exception : public std::system_error {
+		JWT_CPP_EXPORT struct signature_generation_exception : public std::system_error {
 			using system_error::system_error;
 		};
-		struct rsa_exception : public std::system_error {
+		JWT_CPP_EXPORT struct rsa_exception : public std::system_error {
 			using system_error::system_error;
 		};
-		struct ecdsa_exception : public std::system_error {
+		JWT_CPP_EXPORT struct ecdsa_exception : public std::system_error {
 			using system_error::system_error;
 		};
-		struct token_verification_exception : public std::system_error {
+		JWT_CPP_EXPORT struct token_verification_exception : public std::system_error {
 			using system_error::system_error;
 		};
 		/**
 		 * \brief Errors related to processing of RSA signatures
 		 */
-		enum class rsa_error {
+		JWT_CPP_EXPORT enum class rsa_error {
 			ok = 0,
 			cert_load_failed = 10,
 			get_key_failed,
@@ -126,7 +154,7 @@ namespace jwt {
 		/**
 		 * \brief Error category for RSA errors
 		 */
-		inline std::error_category& rsa_error_category() {
+		JWT_CPP_EXPORT inline std::error_category& rsa_error_category() {
 			class rsa_error_cat : public std::error_category {
 			public:
 				const char* name() const noexcept override { return "rsa_error"; };
@@ -154,11 +182,13 @@ namespace jwt {
 		/**
 		 * \brief Converts JWT-CPP errors into generic STL error_codes
 		 */
-		inline std::error_code make_error_code(rsa_error e) { return {static_cast<int>(e), rsa_error_category()}; }
+		JWT_CPP_EXPORT inline std::error_code make_error_code(rsa_error e) {
+			return {static_cast<int>(e), rsa_error_category()};
+		}
 		/**
 		 * \brief Errors related to processing of RSA signatures
 		 */
-		enum class ecdsa_error {
+		JWT_CPP_EXPORT enum class ecdsa_error {
 			ok = 0,
 			load_key_bio_write = 10,
 			load_key_bio_read,
@@ -178,7 +208,7 @@ namespace jwt {
 		/**
 		 * \brief Error category for ECDSA errors
 		 */
-		inline std::error_category& ecdsa_error_category() {
+		JWT_CPP_EXPORT inline std::error_category& ecdsa_error_category() {
 			class ecdsa_error_cat : public std::error_category {
 			public:
 				const char* name() const noexcept override { return "ecdsa_error"; };
@@ -210,12 +240,14 @@ namespace jwt {
 		/**
 		 * \brief Converts JWT-CPP errors into generic STL error_codes
 		 */
-		inline std::error_code make_error_code(ecdsa_error e) { return {static_cast<int>(e), ecdsa_error_category()}; }
+		JWT_CPP_EXPORT inline std::error_code make_error_code(ecdsa_error e) {
+			return {static_cast<int>(e), ecdsa_error_category()};
+		}
 
 		/**
 		 * \brief Errors related to verification of signatures
 		 */
-		enum class signature_verification_error {
+		JWT_CPP_EXPORT enum class signature_verification_error {
 			ok = 0,
 			invalid_signature = 10,
 			create_context_failed,
@@ -229,7 +261,7 @@ namespace jwt {
 		/**
 		 * \brief Error category for verification errors
 		 */
-		inline std::error_category& signature_verification_error_category() {
+		JWT_CPP_EXPORT inline std::error_category& signature_verification_error_category() {
 			class verification_error_cat : public std::error_category {
 			public:
 				const char* name() const noexcept override { return "signature_verification_error"; };
@@ -261,14 +293,14 @@ namespace jwt {
 		/**
 		 * \brief Converts JWT-CPP errors into generic STL error_codes
 		 */
-		inline std::error_code make_error_code(signature_verification_error e) {
+		JWT_CPP_EXPORT inline std::error_code make_error_code(signature_verification_error e) {
 			return {static_cast<int>(e), signature_verification_error_category()};
 		}
 
 		/**
 		 * \brief Errors related to signature generation errors
 		 */
-		enum class signature_generation_error {
+		JWT_CPP_EXPORT enum class signature_generation_error {
 			ok = 0,
 			hmac_failed = 10,
 			create_context_failed,
@@ -288,7 +320,7 @@ namespace jwt {
 		/**
 		 * \brief Error category for signature generation errors
 		 */
-		inline std::error_category& signature_generation_error_category() {
+		JWT_CPP_EXPORT inline std::error_category& signature_generation_error_category() {
 			class signature_generation_error_cat : public std::error_category {
 			public:
 				const char* name() const noexcept override { return "signature_generation_error"; };
@@ -331,14 +363,14 @@ namespace jwt {
 		/**
 		 * \brief Converts JWT-CPP errors into generic STL error_codes
 		 */
-		inline std::error_code make_error_code(signature_generation_error e) {
+		JWT_CPP_EXPORT inline std::error_code make_error_code(signature_generation_error e) {
 			return {static_cast<int>(e), signature_generation_error_category()};
 		}
 
 		/**
 		 * \brief Errors related to token verification errors
 		 */
-		enum class token_verification_error {
+		JWT_CPP_EXPORT enum class token_verification_error {
 			ok = 0,
 			wrong_algorithm = 10,
 			missing_claim,
@@ -350,7 +382,7 @@ namespace jwt {
 		/**
 		 * \brief Error category for token verification errors
 		 */
-		inline std::error_category& token_verification_error_category() {
+		JWT_CPP_EXPORT inline std::error_category& token_verification_error_category() {
 			class token_verification_error_cat : public std::error_category {
 			public:
 				const char* name() const noexcept override { return "token_verification_error"; };
@@ -376,13 +408,13 @@ namespace jwt {
 		/**
 		 * \brief Converts JWT-CPP errors into generic STL error_codes
 		 */
-		inline std::error_code make_error_code(token_verification_error e) {
+		JWT_CPP_EXPORT inline std::error_code make_error_code(token_verification_error e) {
 			return {static_cast<int>(e), token_verification_error_category()};
 		}
 		/**
 		 * \brief Raises an exception if any JWT-CPP error codes are active
 		 */
-		inline void throw_if_error(std::error_code ec) {
+		JWT_CPP_EXPORT inline void throw_if_error(std::error_code ec) {
 			if (ec) {
 				if (ec.category() == rsa_error_category()) throw rsa_exception(ec);
 				if (ec.category() == ecdsa_error_category()) throw ecdsa_exception(ec);
@@ -396,15 +428,15 @@ namespace jwt {
 } // namespace jwt
 
 namespace std {
-	template<>
+	JWT_CPP_EXPORT template<>
 	struct is_error_code_enum<jwt::error::rsa_error> : true_type {};
-	template<>
+	JWT_CPP_EXPORT template<>
 	struct is_error_code_enum<jwt::error::ecdsa_error> : true_type {};
-	template<>
+	JWT_CPP_EXPORT template<>
 	struct is_error_code_enum<jwt::error::signature_verification_error> : true_type {};
-	template<>
+	JWT_CPP_EXPORT template<>
 	struct is_error_code_enum<jwt::error::signature_generation_error> : true_type {};
-	template<>
+	JWT_CPP_EXPORT template<>
 	struct is_error_code_enum<jwt::error::token_verification_error> : true_type {};
 } // namespace std
 
@@ -424,7 +456,7 @@ namespace jwt {
 		 * jwt-cpp to leverage that and thus safe an allocation for the control block in std::shared_ptr.
 		 * The handle uses shared_ptr as a fallback on older versions. The behaviour should be identical between both.
 		 */
-		class evp_pkey_handle {
+		JWT_CPP_EXPORT class evp_pkey_handle {
 		public:
 			/**
 			 * \brief Creates a null key pointer.
@@ -498,11 +530,11 @@ namespace jwt {
 #endif
 		};
 
-		inline std::unique_ptr<BIO, decltype(&BIO_free_all)> make_mem_buf_bio() {
+		JWT_CPP_EXPORT inline std::unique_ptr<BIO, decltype(&BIO_free_all)> make_mem_buf_bio() {
 			return std::unique_ptr<BIO, decltype(&BIO_free_all)>(BIO_new(BIO_s_mem()), BIO_free_all);
 		}
 
-		inline std::unique_ptr<BIO, decltype(&BIO_free_all)> make_mem_buf_bio(const std::string& data) {
+		JWT_CPP_EXPORT inline std::unique_ptr<BIO, decltype(&BIO_free_all)> make_mem_buf_bio(const std::string& data) {
 			return std::unique_ptr<BIO, decltype(&BIO_free_all)>(
 #if OPENSSL_VERSION_NUMBER <= 0x10100003L
 				BIO_new_mem_buf(const_cast<char*>(data.data()), static_cast<int>(data.size())), BIO_free_all
@@ -512,7 +544,7 @@ namespace jwt {
 			);
 		}
 
-		template<typename error_category = error::rsa_error>
+		JWT_CPP_EXPORT template<typename error_category = error::rsa_error>
 		std::string write_bio_to_string(std::unique_ptr<BIO, decltype(&BIO_free_all)>& bio_out, std::error_code& ec) {
 			char* ptr = nullptr;
 			auto len = BIO_get_mem_data(bio_out.get(), &ptr);
@@ -523,7 +555,7 @@ namespace jwt {
 			return {ptr, static_cast<size_t>(len)};
 		}
 
-		inline std::unique_ptr<EVP_MD_CTX, void (*)(EVP_MD_CTX*)> make_evp_md_ctx() {
+		JWT_CPP_EXPORT inline std::unique_ptr<EVP_MD_CTX, void (*)(EVP_MD_CTX*)> make_evp_md_ctx() {
 			return
 #ifdef JWT_OPENSSL_1_0_0
 				std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_destroy)>(EVP_MD_CTX_create(), &EVP_MD_CTX_destroy);
@@ -540,7 +572,7 @@ namespace jwt {
 		 * \param pw				Password used to decrypt certificate (leave empty if not encrypted)
 		 * \param ec				error_code for error_detection (gets cleared if no error occurred)
 		 */
-		template<typename error_category = error::rsa_error>
+		JWT_CPP_EXPORT template<typename error_category = error::rsa_error>
 		std::string extract_pubkey_from_cert(const std::string& certstr, const std::string& pw, std::error_code& ec) {
 			ec.clear();
 			auto certbio = make_mem_buf_bio(certstr);
@@ -577,7 +609,7 @@ namespace jwt {
 		 * \param pw				Password used to decrypt certificate (leave empty if not encrypted)
 		 * \throw					templated error_category's type exception if an error occurred
 		 */
-		template<typename error_category = error::rsa_error>
+		JWT_CPP_EXPORT template<typename error_category = error::rsa_error>
 		std::string extract_pubkey_from_cert(const std::string& certstr, const std::string& pw = "") {
 			std::error_code ec;
 			auto res = extract_pubkey_from_cert<error_category>(certstr, pw, ec);
@@ -591,7 +623,7 @@ namespace jwt {
 		 * \param cert_der_str 	String containing the certificate encoded as base64 DER
 		 * \param ec			error_code for error_detection (gets cleared if no error occurs)
 		 */
-		inline std::string convert_der_to_pem(const std::string& cert_der_str, std::error_code& ec) {
+		JWT_CPP_EXPORT inline std::string convert_der_to_pem(const std::string& cert_der_str, std::error_code& ec) {
 			ec.clear();
 
 			auto c_str = reinterpret_cast<const unsigned char*>(cert_der_str.c_str());
@@ -626,7 +658,7 @@ namespace jwt {
 		 * \param decode 				The function to decode the cert
 		 * \param ec					error_code for error_detection (gets cleared if no error occurs)
 		 */
-		template<typename Decode>
+		JWT_CPP_EXPORT template<typename Decode>
 		std::string convert_base64_der_to_pem(const std::string& cert_base64_der_str, Decode decode,
 											  std::error_code& ec) {
 			ec.clear();
@@ -648,7 +680,7 @@ namespace jwt {
 		 * \param decode 				The function to decode the cert
 		 * \throw						rsa_exception if an error occurred
 		 */
-		template<typename Decode>
+		JWT_CPP_EXPORT template<typename Decode>
 		std::string convert_base64_der_to_pem(const std::string& cert_base64_der_str, Decode decode) {
 			std::error_code ec;
 			auto res = convert_base64_der_to_pem(cert_base64_der_str, std::move(decode), ec);
@@ -662,7 +694,7 @@ namespace jwt {
 		 * \param cert_der_str 	String containing the DER certificate
 		 * \throw				rsa_exception if an error occurred
 		 */
-		inline std::string convert_der_to_pem(const std::string& cert_der_str) {
+		JWT_CPP_EXPORT inline std::string convert_der_to_pem(const std::string& cert_der_str) {
 			std::error_code ec;
 			auto res = convert_der_to_pem(cert_der_str, ec);
 			error::throw_if_error(ec);
@@ -679,7 +711,8 @@ namespace jwt {
 		 * \param cert_base64_der_str 	String containing the certificate encoded as base64 DER
 		 * \param ec					error_code for error_detection (gets cleared if no error occurs)
 		 */
-		inline std::string convert_base64_der_to_pem(const std::string& cert_base64_der_str, std::error_code& ec) {
+		JWT_CPP_EXPORT inline std::string convert_base64_der_to_pem(const std::string& cert_base64_der_str,
+																	std::error_code& ec) {
 			auto decode = [](const std::string& token) {
 				return base::decode<alphabet::base64>(base::pad<alphabet::base64>(token));
 			};
@@ -695,7 +728,7 @@ namespace jwt {
 		 * \param cert_base64_der_str 	String containing the certificate encoded as base64 DER
 		 * \throw						rsa_exception if an error occurred
 		 */
-		inline std::string convert_base64_der_to_pem(const std::string& cert_base64_der_str) {
+		JWT_CPP_EXPORT inline std::string convert_base64_der_to_pem(const std::string& cert_base64_der_str) {
 			std::error_code ec;
 			auto res = convert_base64_der_to_pem(cert_base64_der_str, ec);
 			error::throw_if_error(ec);
@@ -712,7 +745,7 @@ namespace jwt {
 		 * \param password	Password used to decrypt certificate (leave empty if not encrypted)
 		 * \param ec		error_code for error_detection (gets cleared if no error occurs)
 		 */
-		template<typename error_category = error::rsa_error>
+		JWT_CPP_EXPORT template<typename error_category = error::rsa_error>
 		evp_pkey_handle load_public_key_from_string(const std::string& key, const std::string& password,
 													std::error_code& ec) {
 			ec.clear();
@@ -764,7 +797,7 @@ namespace jwt {
 		 * \param password			Password used to decrypt certificate (leave empty if not encrypted)
 		 * \throw					Templated error_category's type exception if an error occurred
 		 */
-		template<typename error_category = error::rsa_error>
+		JWT_CPP_EXPORT template<typename error_category = error::rsa_error>
 		inline evp_pkey_handle load_public_key_from_string(const std::string& key, const std::string& password = "") {
 			std::error_code ec;
 			auto res = load_public_key_from_string<error_category>(key, password, ec);
@@ -780,7 +813,7 @@ namespace jwt {
 		 * \param password			Password used to decrypt key (leave empty if not encrypted)
 		 * \param ec				error_code for error_detection (gets cleared if no error occurs)
 		 */
-		template<typename error_category = error::rsa_error>
+		JWT_CPP_EXPORT template<typename error_category = error::rsa_error>
 		inline evp_pkey_handle load_private_key_from_string(const std::string& key, const std::string& password,
 															std::error_code& ec) {
 			ec.clear();
@@ -808,7 +841,7 @@ namespace jwt {
 		 * \param password			Password used to decrypt key (leave empty if not encrypted)
 		 * \throw					Templated error_category's type exception if an error occurred
 		 */
-		template<typename error_category = error::rsa_error>
+		JWT_CPP_EXPORT template<typename error_category = error::rsa_error>
 		inline evp_pkey_handle load_private_key_from_string(const std::string& key, const std::string& password = "") {
 			std::error_code ec;
 			auto res = load_private_key_from_string<error_category>(key, password, ec);
@@ -827,8 +860,9 @@ namespace jwt {
 		 * \param password	Password used to decrypt certificate (leave empty if not encrypted)
 		 * \param ec		error_code for error_detection (gets cleared if no error occurs)
 		 */
-		inline evp_pkey_handle load_public_ec_key_from_string(const std::string& key, const std::string& password,
-															  std::error_code& ec) {
+		JWT_CPP_EXPORT inline evp_pkey_handle load_public_ec_key_from_string(const std::string& key,
+																			 const std::string& password,
+																			 std::error_code& ec) {
 			return load_public_key_from_string<error::ecdsa_error>(key, password, ec);
 		}
 
@@ -856,7 +890,8 @@ namespace jwt {
 		 * \param ec  error_code for error_detection (gets cleared if no error occurs)
 		 * \return BIGNUM representation
 		 */
-		inline std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw, std::error_code& ec) {
+		JWT_CPP_EXPORT inline std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw,
+																				std::error_code& ec) {
 			auto bn =
 				BN_bin2bn(reinterpret_cast<const unsigned char*>(raw.data()), static_cast<int>(raw.size()), nullptr);
 			// https://www.openssl.org/docs/man1.1.1/man3/BN_bin2bn.html#RETURN-VALUES
@@ -871,7 +906,7 @@ namespace jwt {
 		 * \param raw String to convert
 		 * \return BIGNUM representation
 		 */
-		inline std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw) {
+		JWT_CPP_EXPORT inline std::unique_ptr<BIGNUM, decltype(&BN_free)> raw2bn(const std::string& raw) {
 			std::error_code ec;
 			auto res = raw2bn(raw, ec);
 			error::throw_if_error(ec);
@@ -889,8 +924,8 @@ namespace jwt {
 		 * \param password	Password used to decrypt certificate or key (leave empty if not encrypted)
 		 * \throw			ecdsa_exception if an error occurred
 		 */
-		inline evp_pkey_handle load_public_ec_key_from_string(const std::string& key,
-															  const std::string& password = "") {
+		JWT_CPP_EXPORT inline evp_pkey_handle load_public_ec_key_from_string(const std::string& key,
+																			 const std::string& password = "") {
 			std::error_code ec;
 			auto res = load_public_key_from_string<error::ecdsa_error>(key, password, ec);
 			error::throw_if_error(ec);
@@ -906,8 +941,9 @@ namespace jwt {
 		 * \param password	Password used to decrypt key (leave empty if not encrypted)
 		 * \param ec		error_code for error_detection (gets cleared if no error occurs)
 		 */
-		inline evp_pkey_handle load_private_ec_key_from_string(const std::string& key, const std::string& password,
-															   std::error_code& ec) {
+		JWT_CPP_EXPORT inline evp_pkey_handle load_private_ec_key_from_string(const std::string& key,
+																			  const std::string& password,
+																			  std::error_code& ec) {
 			return load_private_key_from_string<error::ecdsa_error>(key, password, ec);
 		}
 
@@ -925,7 +961,7 @@ namespace jwt {
 		* \param ec			error_code for error_detection (gets cleared if no error occur
 		* \return 			public key in PEM format
 		*/
-		template<typename Decode>
+		JWT_CPP_EXPORT template<typename Decode>
 		std::string create_public_key_from_rsa_components(const std::string& modulus, const std::string& exponent,
 														  Decode decode, std::error_code& ec) {
 			ec.clear();
@@ -1041,7 +1077,7 @@ namespace jwt {
 		* \param decode 	The function to decode the RSA parameters
 		* \return public key in PEM format
 		*/
-		template<typename Decode>
+		JWT_CPP_EXPORT template<typename Decode>
 		std::string create_public_key_from_rsa_components(const std::string& modulus, const std::string& exponent,
 														  Decode decode) {
 			std::error_code ec;
@@ -1061,8 +1097,9 @@ namespace jwt {
 		* \param ec			error_code for error_detection (gets cleared if no error occur
 		* \return public key in PEM format
 		*/
-		inline std::string create_public_key_from_rsa_components(const std::string& modulus,
-																 const std::string& exponent, std::error_code& ec) {
+		JWT_CPP_EXPORT inline std::string create_public_key_from_rsa_components(const std::string& modulus,
+																				const std::string& exponent,
+																				std::error_code& ec) {
 			auto decode = [](const std::string& token) {
 				return base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(token));
 			};
@@ -1077,8 +1114,8 @@ namespace jwt {
 		* \param exponent	string containing base64url encoded exponent
 		* \return public key in PEM format
 		*/
-		inline std::string create_public_key_from_rsa_components(const std::string& modulus,
-																 const std::string& exponent) {
+		JWT_CPP_EXPORT inline std::string create_public_key_from_rsa_components(const std::string& modulus,
+																				const std::string& exponent) {
 			std::error_code ec;
 			auto res = create_public_key_from_rsa_components(modulus, exponent, ec);
 			error::throw_if_error(ec);
@@ -1094,8 +1131,8 @@ namespace jwt {
 		 * \param password	Password used to decrypt key (leave empty if not encrypted)
 		 * \throw			ecdsa_exception if an error occurred
 		 */
-		inline evp_pkey_handle load_private_ec_key_from_string(const std::string& key,
-															   const std::string& password = "") {
+		JWT_CPP_EXPORT inline evp_pkey_handle load_private_ec_key_from_string(const std::string& key,
+																			  const std::string& password = "") {
 			std::error_code ec;
 			auto res = load_private_key_from_string<error::ecdsa_error>(key, password, ec);
 			error::throw_if_error(ec);
@@ -1111,7 +1148,7 @@ namespace jwt {
 		 * \param ec	error_code for error_detection
 		 * \return 		group name
 		 */
-		inline std::string curve2group(const std::string curve, std::error_code& ec) {
+		JWT_CPP_EXPORT inline std::string curve2group(const std::string curve, std::error_code& ec) {
 			if (curve == "P-256") {
 				return "prime256v1";
 			} else if (curve == "P-384") {
@@ -1133,7 +1170,7 @@ namespace jwt {
 		 * \param ec	error_code for error_detection
 		 * \return 		ID
 		 */
-		inline int curve2nid(const std::string curve, std::error_code& ec) {
+		JWT_CPP_EXPORT inline int curve2nid(const std::string curve, std::error_code& ec) {
 			if (curve == "P-256") {
 				return NID_X9_62_prime256v1;
 			} else if (curve == "P-384") {
@@ -1163,7 +1200,7 @@ namespace jwt {
 		 * \param ec		error_code for error_detection (gets cleared if no error occur
 		 * \return 		public key in PEM format
 		 */
-		template<typename Decode>
+		JWT_CPP_EXPORT template<typename Decode>
 		std::string create_public_key_from_ec_components(const std::string& curve, const std::string& x,
 														 const std::string& y, Decode decode, std::error_code& ec) {
 			ec.clear();
@@ -1291,7 +1328,7 @@ namespace jwt {
 		* \param decode The function to decode the RSA parameters
 		* \return public key in PEM format
 		*/
-		template<typename Decode>
+		JWT_CPP_EXPORT template<typename Decode>
 		std::string create_public_key_from_ec_components(const std::string& curve, const std::string& x,
 														 const std::string& y, Decode decode) {
 			std::error_code ec;
@@ -1312,8 +1349,10 @@ namespace jwt {
 		* \param ec		error_code for error_detection (gets cleared if no error occur
 		* \return public key in PEM format
 		*/
-		inline std::string create_public_key_from_ec_components(const std::string& curve, const std::string& x,
-																const std::string& y, std::error_code& ec) {
+		JWT_CPP_EXPORT inline std::string create_public_key_from_ec_components(const std::string& curve,
+																			   const std::string& x,
+																			   const std::string& y,
+																			   std::error_code& ec) {
 			auto decode = [](const std::string& token) {
 				return base::decode<alphabet::base64url>(base::pad<alphabet::base64url>(token));
 			};
@@ -1329,8 +1368,9 @@ namespace jwt {
 		* \param y		string containing base64url encoded y coordinate
 		* \return public key in PEM format
 		*/
-		inline std::string create_public_key_from_ec_components(const std::string& curve, const std::string& x,
-																const std::string& y) {
+		JWT_CPP_EXPORT inline std::string create_public_key_from_ec_components(const std::string& curve,
+																			   const std::string& x,
+																			   const std::string& y) {
 			std::error_code ec;
 			auto res = create_public_key_from_ec_components(curve, x, y, ec);
 			error::throw_if_error(ec);
@@ -1356,7 +1396,7 @@ namespace jwt {
 		 * See [RFC 7518 Section 3.6](https://datatracker.ietf.org/doc/html/rfc7518#section-3.6)
 		 * for more information.
 		 */
-		struct none {
+		JWT_CPP_EXPORT struct none {
 			/**
 			 * \brief Return an empty string
 			 */
@@ -1381,7 +1421,7 @@ namespace jwt {
 		/**
 		 * \brief Base class for HMAC family of algorithms
 		 */
-		struct hmacsha {
+		JWT_CPP_EXPORT struct hmacsha {
 			/**
 			 * Construct new hmac algorithm
 			 *
@@ -1451,7 +1491,7 @@ namespace jwt {
 		/**
 		 * \brief Base class for RSA family of algorithms
 		 */
-		struct rsa {
+		JWT_CPP_EXPORT struct rsa {
 			/**
 			 * Construct new rsa algorithm
 			 *
@@ -1562,7 +1602,7 @@ namespace jwt {
 		/**
 		 * \brief Base class for ECDSA family of algorithms
 		 */
-		struct ecdsa {
+		JWT_CPP_EXPORT struct ecdsa {
 			/**
 			 * Construct new ecdsa algorithm
 			 *
@@ -1810,7 +1850,7 @@ namespace jwt {
 		 * so these algorithms are only available when building against this version or higher.
 		 * LibreSSL added EdDSA (Ed25519) functionality in [LibreSSL 3.7.1](https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-3.7.1-relnotes.txt)
 		 */
-		struct eddsa {
+		JWT_CPP_EXPORT struct eddsa {
 			/**
 			 * Construct new eddsa algorithm
 			 * \param public_key EdDSA public key in PEM format
@@ -1934,7 +1974,7 @@ namespace jwt {
 		/**
 		 * \brief Base class for PSS-RSA family of algorithms
 		 */
-		struct pss {
+		JWT_CPP_EXPORT struct pss {
 			/**
 			 * Construct new pss algorithm
 			 * \param public_key RSA public key in PEM format
@@ -2062,7 +2102,7 @@ namespace jwt {
 		/**
 		 * HS256 algorithm
 		 */
-		struct hs256 : public hmacsha {
+		JWT_CPP_EXPORT struct hs256 : public hmacsha {
 			/**
 			 * Construct new instance of algorithm
 			 * \param key HMAC signing key
@@ -2072,7 +2112,7 @@ namespace jwt {
 		/**
 		 * HS384 algorithm
 		 */
-		struct hs384 : public hmacsha {
+		JWT_CPP_EXPORT struct hs384 : public hmacsha {
 			/**
 			 * Construct new instance of algorithm
 			 * \param key HMAC signing key
@@ -2082,7 +2122,7 @@ namespace jwt {
 		/**
 		 * HS512 algorithm
 		 */
-		struct hs512 : public hmacsha {
+		JWT_CPP_EXPORT struct hs512 : public hmacsha {
 			/**
 			 * Construct new instance of algorithm
 			 * \param key HMAC signing key
@@ -2094,7 +2134,7 @@ namespace jwt {
 		 *
 		 * This data structure is used to describe the RSA256 and can be used to verify JWTs
 		 */
-		struct rs256 : public rsa {
+		JWT_CPP_EXPORT struct rs256 : public rsa {
 			/**
 			 * \brief Construct new instance of algorithm
 			 *
@@ -2110,7 +2150,7 @@ namespace jwt {
 		/**
 		 * RS384 algorithm
 		 */
-		struct rs384 : public rsa {
+		JWT_CPP_EXPORT struct rs384 : public rsa {
 			/**
 			 * Construct new instance of algorithm
 			 * \param public_key RSA public key in PEM format
@@ -2125,7 +2165,7 @@ namespace jwt {
 		/**
 		 * RS512 algorithm
 		 */
-		struct rs512 : public rsa {
+		JWT_CPP_EXPORT struct rs512 : public rsa {
 			/**
 			 * Construct new instance of algorithm
 			 * \param public_key RSA public key in PEM format
@@ -2140,7 +2180,7 @@ namespace jwt {
 		/**
 		 * ES256 algorithm
 		 */
-		struct es256 : public ecdsa {
+		JWT_CPP_EXPORT struct es256 : public ecdsa {
 			/**
 			 * Construct new instance of algorithm
 			 * \param public_key ECDSA public key in PEM format
@@ -2157,7 +2197,7 @@ namespace jwt {
 		/**
 		 * ES384 algorithm
 		 */
-		struct es384 : public ecdsa {
+		JWT_CPP_EXPORT struct es384 : public ecdsa {
 			/**
 			 * Construct new instance of algorithm
 			 * \param public_key ECDSA public key in PEM format
@@ -2174,7 +2214,7 @@ namespace jwt {
 		/**
 		 * ES512 algorithm
 		 */
-		struct es512 : public ecdsa {
+		JWT_CPP_EXPORT struct es512 : public ecdsa {
 			/**
 			 * Construct new instance of algorithm
 			 * \param public_key ECDSA public key in PEM format
@@ -2191,7 +2231,7 @@ namespace jwt {
 		/**
 		 * ES256K algorithm
 		 */
-		struct es256k : public ecdsa {
+		JWT_CPP_EXPORT struct es256k : public ecdsa {
 			/**
 			 * Construct new instance of algorithm
 			 * \param public_key ECDSA public key in PEM format
@@ -2213,7 +2253,7 @@ namespace jwt {
 		 *
 		 * Requires at least OpenSSL 1.1.1 or LibreSSL 3.7.1.
 		 */
-		struct ed25519 : public eddsa {
+		JWT_CPP_EXPORT struct ed25519 : public eddsa {
 			/**
 			 * Construct new instance of algorithm
 			 * \param public_key Ed25519 public key in PEM format
@@ -2236,7 +2276,7 @@ namespace jwt {
 		 *
 		 * Requires at least OpenSSL 1.1.1. Note: Not supported by LibreSSL.
 		 */
-		struct ed448 : public eddsa {
+		JWT_CPP_EXPORT struct ed448 : public eddsa {
 			/**
 			 * Construct new instance of algorithm
 			 * \param public_key Ed448 public key in PEM format
@@ -2256,7 +2296,7 @@ namespace jwt {
 		/**
 		 * PS256 algorithm
 		 */
-		struct ps256 : public pss {
+		JWT_CPP_EXPORT struct ps256 : public pss {
 			/**
 			 * Construct new instance of algorithm
 			 * \param public_key RSA public key in PEM format
@@ -2271,7 +2311,7 @@ namespace jwt {
 		/**
 		 * PS384 algorithm
 		 */
-		struct ps384 : public pss {
+		JWT_CPP_EXPORT struct ps384 : public pss {
 			/**
 			 * Construct new instance of algorithm
 			 * \param public_key RSA public key in PEM format
@@ -2286,7 +2326,7 @@ namespace jwt {
 		/**
 		 * PS512 algorithm
 		 */
-		struct ps512 : public pss {
+		JWT_CPP_EXPORT struct ps512 : public pss {
 			/**
 			 * Construct new instance of algorithm
 			 * \param public_key RSA public key in PEM format
@@ -2311,7 +2351,7 @@ namespace jwt {
 		 * to identify the different structures and reason about them without needing a "concept"
 		 * to capture that defintion to compare against a concrete type.
 		 */
-		enum class type { boolean, integer, number, string, array, object };
+		JWT_CPP_EXPORT enum class type { boolean, integer, number, string, array, object };
 	} // namespace json
 
 	namespace details {
@@ -2593,7 +2633,7 @@ namespace jwt {
 	 *
 	 * \see [RFC 7519: JSON Web Token (JWT)](https://tools.ietf.org/html/rfc7519)
 	 */
-	template<typename json_traits>
+	JWT_CPP_EXPORT template<typename json_traits>
 	class basic_claim {
 		/**
 		 * The reason behind this is to provide an expressive abstraction without
@@ -2737,13 +2777,13 @@ namespace jwt {
 		/**
 		 * Attempt to parse JSON was unsuccessful
 		 */
-		struct invalid_json_exception : public std::runtime_error {
+		JWT_CPP_EXPORT struct invalid_json_exception : public std::runtime_error {
 			invalid_json_exception() : runtime_error("invalid json") {}
 		};
 		/**
 		 * Attempt to access claim was unsuccessful
 		 */
-		struct claim_not_present_exception : public std::out_of_range {
+		JWT_CPP_EXPORT struct claim_not_present_exception : public std::out_of_range {
 			claim_not_present_exception() : out_of_range("claim not found") {}
 		};
 	} // namespace error
@@ -2812,7 +2852,7 @@ namespace jwt {
 	 * Base class that represents a token payload.
 	 * Contains Convenience accessors for common claims.
 	 */
-	template<typename json_traits>
+	JWT_CPP_EXPORT template<typename json_traits>
 	class payload {
 	protected:
 		details::map_of_claims<json_traits> payload_claims;
@@ -2930,7 +2970,7 @@ namespace jwt {
 	 * Base class that represents a token header.
 	 * Contains Convenience accessors for common claims.
 	 */
-	template<typename json_traits>
+	JWT_CPP_EXPORT template<typename json_traits>
 	class header {
 	protected:
 		details::map_of_claims<json_traits> header_claims;
@@ -3005,7 +3045,7 @@ namespace jwt {
 	/**
 	 * Class containing all information about a decoded token
 	 */
-	template<typename json_traits>
+	JWT_CPP_EXPORT template<typename json_traits>
 	class decoded_jwt : public header<json_traits>, public payload<json_traits> {
 	protected:
 		/// Unmodified token, as passed to constructor
@@ -3140,7 +3180,7 @@ namespace jwt {
 	 * Builder class to build and sign a new token
 	 * Use jwt::create() to get an instance of this class.
 	 */
-	template<typename Clock, typename json_traits>
+	JWT_CPP_EXPORT template<typename Clock, typename json_traits>
 	class builder {
 		typename json_traits::object_type header_claims;
 		typename json_traits::object_type payload_claims;
@@ -3392,7 +3432,7 @@ namespace jwt {
 		/**
 		 * This is the base container which holds the token that need to be verified
 		 */
-		template<typename json_traits>
+		JWT_CPP_EXPORT template<typename json_traits>
 		struct verify_context {
 			verify_context(date ctime, const decoded_jwt<json_traits>& j, size_t l)
 				: current_time(ctime), jwt(j), default_leeway(l) {}
@@ -3463,7 +3503,7 @@ namespace jwt {
 		/**
 		 * This is the default operation and does case sensitive matching
 		 */
-		template<typename json_traits, bool in_header = false>
+		JWT_CPP_EXPORT template<typename json_traits, bool in_header = false>
 		struct equals_claim {
 			const basic_claim<json_traits> expected;
 			void operator()(const verify_context<json_traits>& ctx, std::error_code& ec) const {
@@ -3492,7 +3532,7 @@ namespace jwt {
 		 * Checks that the current time is before the time specified in the given
 		 * claim. This is identical to how the "exp" check works.
 		 */
-		template<typename json_traits, bool in_header = false>
+		JWT_CPP_EXPORT template<typename json_traits, bool in_header = false>
 		struct date_before_claim {
 			const size_t leeway;
 			void operator()(const verify_context<json_traits>& ctx, std::error_code& ec) const {
@@ -3509,7 +3549,7 @@ namespace jwt {
 		 * Checks that the current time is after the time specified in the given
 		 * claim. This is identical to how the "nbf" and "iat" check works.
 		 */
-		template<typename json_traits, bool in_header = false>
+		JWT_CPP_EXPORT template<typename json_traits, bool in_header = false>
 		struct date_after_claim {
 			const size_t leeway;
 			void operator()(const verify_context<json_traits>& ctx, std::error_code& ec) const {
@@ -3527,7 +3567,7 @@ namespace jwt {
 		 * If the token value is a string it is treated as a set with a single element.
 		 * The comparison is case sensitive.
 		 */
-		template<typename json_traits, bool in_header = false>
+		JWT_CPP_EXPORT template<typename json_traits, bool in_header = false>
 		struct is_subset_claim {
 			const typename basic_claim<json_traits>::set_t expected;
 			void operator()(const verify_context<json_traits>& ctx, std::error_code& ec) const {
@@ -3556,7 +3596,7 @@ namespace jwt {
 		/**
 		 * Checks if the claim is a string and does an case insensitive comparison.
 		 */
-		template<typename json_traits, bool in_header = false>
+		JWT_CPP_EXPORT template<typename json_traits, bool in_header = false>
 		struct insensitive_string_claim {
 			const typename json_traits::string_type expected;
 			std::locale locale;
@@ -3611,7 +3651,7 @@ namespace jwt {
 	 * Verifier class used to check if a decoded token contains all claims required by your application and has a valid
 	 * signature.
 	 */
-	template<typename Clock, typename json_traits>
+	JWT_CPP_EXPORT template<typename Clock, typename json_traits>
 	class verifier {
 	public:
 		using basic_claim_t = basic_claim<json_traits>;
@@ -3874,7 +3914,7 @@ namespace jwt {
 	 * A JSON object that represents a cryptographic key.  The members of
 	 * the object represent properties of the key, including its value.
 	 */
-	template<typename json_traits>
+	JWT_CPP_EXPORT template<typename json_traits>
 	class jwk {
 		using basic_claim_t = basic_claim<json_traits>;
 		const details::map_of_claims<json_traits> jwk_claims;
@@ -4085,7 +4125,7 @@ namespace jwt {
 	 *
 	 * This container takes a JWKs and simplifies it to a vector of JWKs
 	 */
-	template<typename json_traits>
+	JWT_CPP_EXPORT template<typename json_traits>
 	class jwks {
 	public:
 		/// JWK instance template specialization
@@ -4160,7 +4200,7 @@ namespace jwt {
 	 * \param c Clock instance to use
 	 * \return verifier instance
 	 */
-	template<typename Clock, typename json_traits>
+	JWT_CPP_EXPORT template<typename Clock, typename json_traits>
 	verifier<Clock, json_traits> verify(Clock c) {
 		return verifier<Clock, json_traits>(c);
 	}
@@ -4170,7 +4210,7 @@ namespace jwt {
 	 * \param c Clock instance to use
 	 * \return builder instance
 	 */
-	template<typename Clock, typename json_traits>
+	JWT_CPP_EXPORT template<typename Clock, typename json_traits>
 	builder<Clock, json_traits> create(Clock c) {
 		return builder<Clock, json_traits>(c);
 	}
@@ -4178,7 +4218,7 @@ namespace jwt {
 	/**
 	 * Default clock class using std::chrono::system_clock as a backend.
 	 */
-	struct default_clock {
+	JWT_CPP_EXPORT struct default_clock {
 		/**
 		 * Gets the current system time
 		 * \return time_point of the host system
@@ -4194,7 +4234,7 @@ namespace jwt {
 	 * \param c Clock instance to use
 	 * \return verifier instance
 	 */
-	template<typename json_traits>
+	JWT_CPP_EXPORT template<typename json_traits>
 	verifier<default_clock, json_traits> verify(default_clock c = {}) {
 		return verifier<default_clock, json_traits>(c);
 	}
@@ -4202,7 +4242,7 @@ namespace jwt {
 	/**
 	 * Return a builder instance to create a new token
 	 */
-	template<typename json_traits>
+	JWT_CPP_EXPORT template<typename json_traits>
 	builder<default_clock, json_traits> create(default_clock c = {}) {
 		return builder<default_clock, json_traits>(c);
 	}
@@ -4221,7 +4261,7 @@ namespace jwt {
 	 * \throw std::invalid_argument Token is not in correct format
 	 * \throw std::runtime_error Base64 decoding failed or invalid json
 	 */
-	template<typename json_traits, typename Decode>
+	JWT_CPP_EXPORT template<typename json_traits, typename Decode>
 	decoded_jwt<json_traits> decode(const typename json_traits::string_type& token, Decode decode) {
 		return decoded_jwt<json_traits>(token, decode);
 	}
@@ -4236,7 +4276,7 @@ namespace jwt {
 	 * \throw std::invalid_argument Token is not in correct format
 	 * \throw std::runtime_error Base64 decoding failed or invalid json
 	 */
-	template<typename json_traits>
+	JWT_CPP_EXPORT template<typename json_traits>
 	decoded_jwt<json_traits> decode(const typename json_traits::string_type& token) {
 		return decoded_jwt<json_traits>(token);
 	}
@@ -4246,7 +4286,7 @@ namespace jwt {
 	 * \param jwk_ string buffer containing the JSON object
 	 * \return Decoded jwk
 	 */
-	template<typename json_traits>
+	JWT_CPP_EXPORT template<typename json_traits>
 	jwk<json_traits> parse_jwk(const typename json_traits::string_type& jwk_) {
 		return jwk<json_traits>(jwk_);
 	}
@@ -4260,18 +4300,18 @@ namespace jwt {
 	 * \return Parsed JSON object containing the data of the JWK SET string
 	 * \throw std::runtime_error Token is not in correct format
 	 */
-	template<typename json_traits>
+	JWT_CPP_EXPORT template<typename json_traits>
 	jwks<json_traits> parse_jwks(const typename json_traits::string_type& jwks_) {
 		return jwks<json_traits>(jwks_);
 	}
 } // namespace jwt
 
-template<typename json_traits>
+JWT_CPP_EXPORT template<typename json_traits>
 std::istream& operator>>(std::istream& is, jwt::basic_claim<json_traits>& c) {
 	return c.operator>>(is);
 }
 
-template<typename json_traits>
+JWT_CPP_EXPORT template<typename json_traits>
 std::ostream& operator<<(std::ostream& os, const jwt::basic_claim<json_traits>& c) {
 	return os << c.to_json();
 }

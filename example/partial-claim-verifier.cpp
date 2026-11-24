@@ -1,7 +1,7 @@
 /// @file partial-claim-verifier.cpp
-#include "jwt-cpp/traits/nlohmann-json/defaults.h"
-
 #include <iostream>
+
+#include "jwt-cpp/traits/nlohmann-json/defaults.h"
 
 int main() {
 	std::string const rsa_priv_key = R"(-----BEGIN PRIVATE KEY-----

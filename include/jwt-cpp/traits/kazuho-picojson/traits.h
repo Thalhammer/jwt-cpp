@@ -1,6 +1,14 @@
 #ifndef JWT_CPP_PICOJSON_TRAITS_H
 #define JWT_CPP_PICOJSON_TRAITS_H
 
+#ifndef JWT_CPP_EXPORT
+#if defined(JWT_CPP_MODULE_INTERFACE_BUILD)
+#define JWT_CPP_EXPORT export
+#else
+#define JWT_CPP_EXPORT
+#endif
+#endif
+
 #ifndef PICOJSON_USE_INT64
 #define PICOJSON_USE_INT64
 #endif
@@ -9,7 +17,11 @@
 #ifndef JWT_DISABLE_PICOJSON
 #define JWT_DISABLE_PICOJSON
 #endif
+#if defined(JWT_ENABLE_MODULES)
+import jwt_cpp;
+#else
 #include "jwt-cpp/jwt.h"
+#endif
 
 namespace jwt {
 	/**
@@ -17,7 +29,7 @@ namespace jwt {
 	*/
 	namespace traits {
 		/// basic_claim's JSON trait implementation for picojson
-		struct kazuho_picojson {
+		JWT_CPP_EXPORT struct kazuho_picojson {
 			using value_type = picojson::value;
 			using object_type = picojson::object;
 			using array_type = picojson::array;
