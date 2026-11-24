@@ -21,8 +21,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runs_on: windows-2025-vs2026
-            compiler: msvc-14.50
+          - runs_on: windows-2025
+            compiler: msvc-14.52
             configure_preset: "x64-vs-modules"
             build_preset: "x64-vs-modules-build"
             test_preset : "x64-vs-modules-test"

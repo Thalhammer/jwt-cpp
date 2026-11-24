@@ -4,8 +4,6 @@ if(POLICY CMP0135) # DOWNLOAD_EXTRACT_TIMESTAMP
   cmake_policy(SET CMP0135 NEW)
 endif()
 
-set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "451f2fe2-a8a2-47c3-bc32-94786d8fc91b" CACHE STRING "")
-
 # HUNTER_ENABLED is always set if this package is included in a project using hunter (HunterGate sets it) In this case
 # we will use hunter as well to stay consistent. If not the use can supply it on configure to force using hunter.
 if(HUNTER_ENABLED)
@@ -106,15 +104,11 @@ if(NOT JWT_DISABLE_BASE64)
 endif()
 
 if (JWT_ENABLE_MODULES)
-  if(CMAKE_VERSION VERSION_LESS "4.3")
-    message(FATAL_ERROR "CMake >= 4.3 is required to build with modules")
+  if(CMAKE_VERSION VERSION_LESS "4.5")
+    message(FATAL_ERROR "CMake >= 4.5 is required to build with modules")
   endif()
 
   set(CMAKE_CXX_SCAN_FOR_MODULES ON)
-
-  if(NOT CMAKE_GENERATOR MATCHES "Visual Studio")
-    set(CMAKE_CXX_MODULE_STD 1)
-  endif()
 endif()
 
 if (JWT_ENABLE_MODULES)
