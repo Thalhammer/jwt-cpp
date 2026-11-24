@@ -181,14 +181,14 @@ endif()
 configure_package_config_file(
   ${CMAKE_CURRENT_LIST_DIR}/cmake/jwt-cpp-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config.cmake
   INSTALL_DESTINATION ${JWT_CMAKE_FILES_INSTALL_DIR})
-write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-version.cmake VERSION 0.7.2 COMPATIBILITY ExactVersion)
+write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-config-version.cmake VERSION 0.7.3
+                                 COMPATIBILITY ExactVersion)
 if (JWT_ENABLE_MODULES)
   install(TARGETS jwt-cpp EXPORT jwt-cpp-targets
           PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
           FILE_SET cxx_modules DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/modules)
 else()
-  install(TARGETS jwt-cpp EXPORT jwt-cpp-targets
-          PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(TARGETS jwt-cpp EXPORT jwt-cpp-targets PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 endif()
 install(EXPORT jwt-cpp-targets NAMESPACE jwt-cpp:: FILE jwt-cpp-targets.cmake
         DESTINATION ${JWT_CMAKE_FILES_INSTALL_DIR})

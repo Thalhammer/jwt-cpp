@@ -198,5 +198,5 @@ if(JWT_ENABLE_COVERAGE)
   setup_coverage(jwt-cpp-test)
   set(COVERAGE_EXCLUDES "/usr/**" "*test*" "*build*" "**/picojson.h")
   setup_target_for_coverage_lcov(NAME coverage EXECUTABLE ${CMAKE_CURRENT_BINARY_DIR}/jwt-cpp-test LCOV_ARGS
-                                 "--ignore-errors" "mismatch,mismatch")
+                                 "--ignore-errors" "mismatch,mismatch,inconsistent")
 endif()
