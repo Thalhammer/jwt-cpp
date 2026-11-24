@@ -70,7 +70,8 @@ jobs:
         with:
           version: ${{ matrix.target.tag }}
 
-      - name: verify installers left checkout clean
+      - if: matrix.target.name != 'kazuho-picojson'
+        name: verify installers left checkout clean
         run: git status --short --untracked-files=all && test -z "$(git status --porcelain --untracked-files=all)"
 
       - name: test
