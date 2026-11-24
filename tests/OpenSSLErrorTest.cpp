@@ -934,13 +934,16 @@ TEST(OpenSSLErrorTest, ConvertCertBase64DerToPem) {
 
 // wolfSSL 5.9 parses the EdDSA certificate, so this injected failure reaches PEM writing.
 TEST(OpenSSLErrorTest, ConvertEcdsaCertBase64DerToPem) {
-	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
+	std::vector<multitest_entry> mapping {
+		{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
 #if defined(LIBWOLFSSL_VERSION_HEX) && LIBWOLFSSL_VERSION_HEX < 0x05009000
-										 {&fail_PEM_write_bio_cert, 1, jwt::error::rsa_error::create_mem_bio_failed}
+			{&fail_PEM_write_bio_cert, 1, jwt::error::rsa_error::create_mem_bio_failed}
 #else
-										 {&fail_PEM_write_bio_cert, 1, jwt::error::rsa_error::write_cert_failed},
+			{&fail_PEM_write_bio_cert, 1, jwt::error::rsa_error::write_cert_failed},
 #ifdef JWT_TEST_BIO_CTRL_INTERPOSITION
-										 {&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed}
+		{
+			&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed
+		}
 #endif
 #endif
 	};
@@ -1369,7 +1372,9 @@ TEST(OpenSSLErrorTest, EdDSACertificate) {
 			{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::write_key_failed},
 			{&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed}
 #else
-			{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::write_key_failed}
+		{
+			&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::write_key_failed
+		}
 #endif
 	};
 
