@@ -47,6 +47,9 @@ jobs:
         with:
           version: ${{matrix.target.tag}}
 
+      # Delete the vendor directory for kazuho-picojson to ensure that the install action is used.
+      - if: matrix.target.name == 'kazuho-picojson'
+        run: rm -rf include/picojson
       - if: matrix.target.name == 'kazuho-picojson'
         uses: ./.github/actions/install/kazuho-picojson
         with:
@@ -73,13 +76,7 @@ jobs:
       - name: test
         working-directory: example/traits
         run: |
-          if [[ "${{ matrix.target.name }}" == "kazuho-picojson" ]]; then
-            backup="$(mktemp)"
-            cp ../../include/picojson/picojson.h "$backup"
-            rm -rf ../../include/picojson
-            trap 'mkdir -p ../../include/picojson; cp "$backup" ../../include/picojson/picojson.h; rm -f "$backup"' EXIT
-          fi
-          cmake . -DCMAKE_FIND_DEBUG_MODE=1
+          cmake . -DCMAKE_FIND_DEBUG_MODE=1 -DCMAKE_CXX_FLAGS="-DJSONCONS_NO_DEPRECATED"
           cmake --build . --target ${{ matrix.target.name }}
           ./${{ matrix.target.name }}
 

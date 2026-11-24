@@ -6,6 +6,10 @@
 #include <gtest/gtest.h>
 
 #include <dlfcn.h>
+// OpenSSL 4.1 bypasses the BIO_ctrl symbol interposed by these tests.
+#if !defined(LIBWOLFSSL_VERSION_HEX) && OPENSSL_VERSION_NUMBER < 0x40100000L
+#define JWT_TEST_BIO_CTRL_INTERPOSITION
+#endif
 // TODO: Figure out why the tests fail on older openssl versions
 #ifndef JWT_OPENSSL_1_0_0 // It fails on < 1.1 but no idea why.
 // LibreSSL has different return codes but was already outside of the effective scope
@@ -744,7 +748,7 @@ TEST(OpenSSLErrorTest, ExtractPubkeyFromCert) {
 										 {&fail_PEM_read_bio_X509, 1, jwt::error::rsa_error::cert_load_failed},
 										 {&fail_X509_get_pubkey, 1, jwt::error::rsa_error::get_key_failed},
 										 {&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::write_key_failed},
-#ifndef LIBWOLFSSL_VERSION_HEX /* wolfSSL does not use BIO_ctrl in BIO_get_mem_data */
+#ifdef JWT_TEST_BIO_CTRL_INTERPOSITION
 										 {&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed}
 #endif
 	};
@@ -762,7 +766,7 @@ TEST(OpenSSLErrorTest, ExtractPubkeyFromCertErrorCode) {
 										 {&fail_PEM_read_bio_X509, 1, jwt::error::rsa_error::cert_load_failed},
 										 {&fail_X509_get_pubkey, 1, jwt::error::rsa_error::get_key_failed},
 										 {&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::write_key_failed},
-#ifndef LIBWOLFSSL_VERSION_HEX /* wolfSSL does not use BIO_ctrl in BIO_get_mem_data */
+#ifdef JWT_TEST_BIO_CTRL_INTERPOSITION
 										 {&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed}
 #endif
 	};
@@ -928,14 +932,16 @@ TEST(OpenSSLErrorTest, ConvertCertBase64DerToPem) {
 	});
 }
 
+// wolfSSL 5.9 parses the EdDSA certificate, so this injected failure reaches PEM writing.
 TEST(OpenSSLErrorTest, ConvertEcdsaCertBase64DerToPem) {
 	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
-#ifndef LIBWOLFSSL_VERSION_HEX
-										 {&fail_PEM_write_bio_cert, 1, jwt::error::rsa_error::write_cert_failed},
-										 {&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed}
+#if defined(LIBWOLFSSL_VERSION_HEX) && LIBWOLFSSL_VERSION_HEX < 0x05009000
+										 {&fail_PEM_write_bio_cert, 1, jwt::error::rsa_error::create_mem_bio_failed}
 #else
-										 {&fail_PEM_write_bio_cert, 1, jwt::error::rsa_error::create_mem_bio_failed},
-										 {&fail_BIO_ctrl, 1, jwt::error::rsa_error::create_mem_bio_failed}
+										 {&fail_PEM_write_bio_cert, 1, jwt::error::rsa_error::write_cert_failed},
+#ifdef JWT_TEST_BIO_CTRL_INTERPOSITION
+										 {&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed}
+#endif
 #endif
 	};
 
@@ -950,7 +956,7 @@ TEST(OpenSSLErrorTest, ConvertEcdsaCertBase64DerToPem) {
 TEST(OpenSSLErrorTest, ConvertCertBase64DerToPemErrorCode) {
 	std::vector<multitest_entry> mapping{{&fail_BIO_new, 1, jwt::error::rsa_error::create_mem_bio_failed},
 										 {&fail_PEM_write_bio_cert, 1, jwt::error::rsa_error::write_cert_failed},
-#ifndef LIBWOLFSSL_VERSION_HEX /* wolfSSL does not use BIO_ctrl in BIO_get_mem_data */
+#ifdef JWT_TEST_BIO_CTRL_INTERPOSITION
 										 {&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed}
 #endif
 	};
@@ -1216,7 +1222,7 @@ TEST(OpenSSLErrorTest, ECDSACertificate) {
 			{&fail_PEM_read_bio_X509, 1, jwt::error::ecdsa_error::cert_load_failed},
 			{&fail_X509_get_pubkey, 1, jwt::error::ecdsa_error::get_key_failed},
 			{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::ecdsa_error::write_key_failed},
-#ifndef LIBWOLFSSL_VERSION_HEX /* wolfSSL does not use BIO_ctrl in BIO_get_mem_data */
+#ifdef JWT_TEST_BIO_CTRL_INTERPOSITION
 		{
 			&fail_BIO_ctrl, 1, jwt::error::ecdsa_error::convert_to_pem_failed
 		}
@@ -1359,9 +1365,12 @@ TEST(OpenSSLErrorTest, EdDSACertificate) {
 			{&fail_BIO_new, 2, jwt::error::rsa_error::create_mem_bio_failed},
 			{&fail_PEM_read_bio_X509, 1, jwt::error::rsa_error::cert_load_failed},
 			{&fail_X509_get_pubkey, 1, jwt::error::rsa_error::get_key_failed},
-			{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::write_key_failed}, {
-			&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed
-		}
+#ifdef JWT_TEST_BIO_CTRL_INTERPOSITION
+			{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::write_key_failed},
+			{&fail_BIO_ctrl, 1, jwt::error::rsa_error::convert_to_pem_failed}
+#else
+			{&fail_PEM_write_bio_PUBKEY, 1, jwt::error::rsa_error::write_key_failed}
+#endif
 	};
 
 	run_multitest(mapping, [](std::error_code& ec) {

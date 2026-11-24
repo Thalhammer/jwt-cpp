@@ -131,30 +131,28 @@ namespace jwt {
 			static jwt::json::type get_type(const json& val) {
 				using jwt::json::type;
 
-				if (val.type() == jsoncons::json_type::bool_value) return type::boolean;
-				if (val.type() == jsoncons::json_type::int64_value) return type::integer;
-				if (val.type() == jsoncons::json_type::uint64_value) return type::integer;
-				if (val.type() == jsoncons::json_type::half_value) return type::number;
-				if (val.type() == jsoncons::json_type::double_value) return type::number;
-				if (val.type() == jsoncons::json_type::string_value) return type::string;
-				if (val.type() == jsoncons::json_type::array_value) return type::array;
-				if (val.type() == jsoncons::json_type::object_value) return type::object;
+				if (val.is_bool()) return type::boolean;
+				if (val.is_int64() || val.is_uint64()) return type::integer;
+				if (val.is_number()) return type::number;
+				if (val.is_string()) return type::string;
+				if (val.is_array()) return type::array;
+				if (val.is_object()) return type::object;
 
 				throw std::logic_error("invalid type");
 			}
 
 			static object_type as_object(const json& val) {
-				if (val.type() != jsoncons::json_type::object_value) throw std::bad_cast();
+				if (!val.is_object()) throw std::bad_cast();
 				return object_type(val);
 			}
 
 			static array_type as_array(const json& val) {
-				if (val.type() != jsoncons::json_type::array_value) throw std::bad_cast();
+				if (!val.is_array()) throw std::bad_cast();
 				return array_type(val);
 			}
 
 			static string_type as_string(const json& val) {
-				if (val.type() != jsoncons::json_type::string_value) throw std::bad_cast();
+				if (!val.is_string()) throw std::bad_cast();
 				return val.as_string();
 			}
 
@@ -169,7 +167,7 @@ namespace jwt {
 			}
 
 			static boolean_type as_boolean(const json& val) {
-				if (val.type() != jsoncons::json_type::bool_value) throw std::bad_cast();
+				if (!val.is_bool()) throw std::bad_cast();
 				return val.as_bool();
 			}
 

@@ -16,5 +16,11 @@ install_download_extract \
     make -j "$INSTALL_JOBS"
     make install
 )
+
+mkdir -p "$INSTALL_PREFIX/cmake"
+curl --fail --location --retry 3 --silent --show-error \
+    "https://raw.githubusercontent.com/libressl-portable/portable/v${INSTALL_VERSION}/FindLibreSSL.cmake" \
+    --output "$INSTALL_PREFIX/cmake/FindLibreSSL.cmake"
+
 install_publish_environment LIBRESSL_ROOT_DIR
 echo "LibreSSL ${INSTALL_VERSION} installed under ${INSTALL_PREFIX}"

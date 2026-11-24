@@ -12,7 +12,8 @@ install_download_extract "https://github.com/openssl/openssl/archive/refs/tags/$
 (
     cd "$SOURCE_DIR"
     ./config --prefix="$INSTALL_PREFIX" --libdir=lib
-    make -j "$INSTALL_JOBS" install_sw
+    make -j "$INSTALL_JOBS"
+    make install_sw
 )
 install_publish_environment OPENSSL_ROOT_DIR
 echo "OpenSSL ${INSTALL_VERSION#openssl-} installed under ${INSTALL_PREFIX}"

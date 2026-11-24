@@ -88,7 +88,7 @@ jobs:
         run: git status --short --untracked-files=all && test -z "$(git status --porcelain --untracked-files=all)"
 
       - name: configure
-        run: cmake --preset unit-tests -DJWT_SSL_LIBRARY:STRING=LibreSSL
+        run: cmake --preset unit-tests -DJWT_SSL_LIBRARY:STRING=LibreSSL -DCMAKE_MODULE_PATH="$RUNNER_TEMP/jwt-cpp-deps/cmake"
       - run: cmake --build --preset unit-tests
       - name: test
         run: ctest --preset unit-tests --output-on-failure
