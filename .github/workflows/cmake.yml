@@ -225,13 +225,17 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DJWT_SSL_LIBRARY:STRING="LibreSSL" -DJWT_BUILD_EXAMPLES=OFF
-          sudo make install
+          cmake .. -DJWT_SSL_LIBRARY:STRING="LibreSSL" -DJWT_BUILD_EXAMPLES=OFF \
+            -DCMAKE_INSTALL_PREFIX="$RUNNER_TEMP/jwt-cpp-deps" \
+            -DCMAKE_MODULE_PATH="$RUNNER_TEMP/jwt-cpp-deps/cmake"
+          cmake --build .
+          cmake --install .
 
       - name: test
         run: |
           cd tests/cmake
-          cmake . -DCMAKE_PREFIX_PATH=/usr/local/cmake -DCMAKE_MODULE_PATH=../../cmake -DTEST:STRING="libressl-is-used"
+          cmake . -DCMAKE_PREFIX_PATH="$RUNNER_TEMP/jwt-cpp-deps/cmake" \
+            -DCMAKE_MODULE_PATH="$RUNNER_TEMP/jwt-cpp-deps/cmake" -DTEST:STRING="libressl-is-used"
           cmake --build .
 
   with-wolfssl:

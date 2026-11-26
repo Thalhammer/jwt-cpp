@@ -8,11 +8,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - run: |
-        cd /tmp
-        wget https://github.com/nlohmann/json/archive/v${{ inputs.version }}.tar.gz
-        tar -zxf /tmp/v${{ inputs.version }}.tar.gz
-        cd json-${{ inputs.version }}
-        cmake .
-        sudo cmake --install .
+    - run: '"$GITHUB_ACTION_PATH/install-nlohmann-json.sh" "$VERSION" --prefix "$RUNNER_TEMP/jwt-cpp-deps" --jobs "$(nproc)"'
       shell: bash
+      env:
+        VERSION: ${{ inputs.version }}

@@ -1,48 +1,18 @@
 #!/usr/bin/env bash
-# Install reflect-cpp library with specified version
+set -euo pipefail
 
-set -e  # Exit on error
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../common.sh"
+install_init "$@"
+install_require cmake
 
-# Check if version is provided
-if [[ -z "$1" ]] || [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
-    echo "Usage: $0 VERSION"
-    echo ""
-    echo "Install reflect-cpp library"
-    echo ""
-    echo "Arguments:"
-    echo "  VERSION reflect-cpp version to install (required)"
-    echo ""
-    echo "Examples:"
-    echo "  $0 0.24.0"
-    exit 1
-fi
-
-# Configuration
-reflectcpp_VERSION="$1"
-INSTALL_DIR="/tmp"
-BUILD_DIR="${INSTALL_DIR}/reflect-cpp-${reflectcpp_VERSION}"
-
-echo "Installing reflectcpp v${reflectcpp_VERSION}..."
-
-# Download
-echo "Downloading reflectcpp v${reflectcpp_VERSION}..."
-cd "${INSTALL_DIR}"
-wget -q "https://github.com/getml/reflect-cpp/archive/v${reflectcpp_VERSION}.tar.gz"
-
-# Extract
-echo "Extracting archive..."
-tar -zxf "v${reflectcpp_VERSION}.tar.gz"
-
-# Build and install
-echo "Building and installing..."
-cd "${BUILD_DIR}"
-cmake .  -DCMAKE_BUILD_TYPE=Release -DREFLECTCPP_INSTALL=ON
-cmake --build .
-sudo cmake --install .
-
-# Cleanup
-echo "Cleaning up..."
-rm -f "${INSTALL_DIR}/v${reflectcpp_VERSION}.tar.gz"
-rm -rf "${BUILD_DIR}"
-
-echo "✓ reflect-cpp v${reflectcpp_VERSION} installed successfully!"
+SOURCE_DIR="$INSTALL_WORK_DIR/reflect-cpp-${INSTALL_VERSION}"
+BUILD_DIR="$INSTALL_WORK_DIR/build"
+install_download_extract "https://github.com/getml/reflect-cpp/archive/v${INSTALL_VERSION}.tar.gz" \
+    "reflect-cpp-${INSTALL_VERSION}.tar.gz"
+cmake -S "$SOURCE_DIR" -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX" -DREFLECTCPP_INSTALL=ON
+cmake --build "$BUILD_DIR" --parallel "$INSTALL_JOBS"
+cmake --install "$BUILD_DIR"
+install_publish_environment
+echo "reflect-cpp ${INSTALL_VERSION} installed under ${INSTALL_PREFIX}"

@@ -16,22 +16,20 @@ jobs:
     strategy:
       matrix:
         target:
-          - { name: "danielaparker-jsoncons", tag: "1.3.2", version: "v1.3.2" }
-          - { name: "boost-json", tag: "1.90.0", version: "v1.90.0" }
+          - { name: "danielaparker-jsoncons", tag: "1.10.0", version: "v1.10.0" }
+          - { name: "boost-json", tag: "1.92.0", version: "v1.92.0" }
           - { name: "nlohmann-json", tag: "3.12.0", version: "v3.12.0" }
           - { name: "kazuho-picojson", tag: "111c9be5188f7350c2eac9ddaedd8cca3d7bf394", version: "111c9be" }
-          - { name: "open-source-parsers-jsoncpp", tag: "1.9.6", version: "v1.9.6" }
-          - { name: "glaze-json", tag: "7.0.2", version: "v7.0.2" }
-          - { name: "reflectcpp-json", tag: "0.24.0", version: "v0.24.0" }
+          - { name: "open-source-parsers-jsoncpp", tag: "1.9.8", version: "v1.9.8" }
+          - { name: "glaze-json", tag: "9.1.0", version: "v9.1.0" }
+          - { name: "reflectcpp-json", tag: "0.27.1", version: "v0.27.1" }
     steps:
       - uses: actions/checkout@v4
       - uses: lukka/get-cmake@latest
       - name: setup
         run: |
-          mkdir build
-          cd build
-          cmake .. -DJWT_BUILD_EXAMPLES=OFF
-          sudo cmake --install .
+          cmake -S . -B build -DJWT_BUILD_EXAMPLES=OFF -DCMAKE_INSTALL_PREFIX="$RUNNER_TEMP/jwt-cpp-deps"
+          cmake --install build
 
       # Install the JSON library
       - if: matrix.target.name == 'danielaparker-jsoncons'
@@ -49,6 +47,7 @@ jobs:
         with:
           version: ${{matrix.target.tag}}
 
+      # Delete the vendor directory for kazuho-picojson to ensure that the install action is used.
       - if: matrix.target.name == 'kazuho-picojson'
         run: rm -rf include/picojson
       - if: matrix.target.name == 'kazuho-picojson'
@@ -71,10 +70,14 @@ jobs:
         with:
           version: ${{ matrix.target.tag }}
 
+      - if: matrix.target.name != 'kazuho-picojson'
+        name: verify installers left checkout clean
+        run: git status --short --untracked-files=all && test -z "$(git status --porcelain --untracked-files=all)"
+
       - name: test
         working-directory: example/traits
         run: |
-          cmake . -DCMAKE_FIND_DEBUG_MODE=1
+          cmake . -DCMAKE_FIND_DEBUG_MODE=1 -DCMAKE_CXX_FLAGS="-DJSONCONS_NO_DEPRECATED"
           cmake --build . --target ${{ matrix.target.name }}
           ./${{ matrix.target.name }}
 

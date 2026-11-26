@@ -4,9 +4,11 @@ inputs:
   version:
     description: The desired open-source-parsers/jsoncpp version to install
     required: false
-    default: "1.9.6"
+    default: "1.9.8"
 runs:
   using: composite
   steps:
-    - run: ${{ github.action_path }}/install-jsoncpp.sh ${{ inputs.version }}
+    - run: '"$GITHUB_ACTION_PATH/install-jsoncpp.sh" "$VERSION" --prefix "$RUNNER_TEMP/jwt-cpp-deps" --jobs "$(nproc)"'
       shell: bash
+      env:
+        VERSION: ${{ inputs.version }}

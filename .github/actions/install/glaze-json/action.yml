@@ -4,9 +4,11 @@ inputs:
   version:
     description: The desired Glaze version to install
     required: false
-    default: "7.0.2"
+    default: "9.1.0"
 runs:
   using: composite
   steps:
-    - run: ${{ github.action_path }}/install-glaze.sh ${{ inputs.version }}
+    - run: '"$GITHUB_ACTION_PATH/install-glaze.sh" "$VERSION" --prefix "$RUNNER_TEMP/jwt-cpp-deps" --jobs "$(nproc)"'
       shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
