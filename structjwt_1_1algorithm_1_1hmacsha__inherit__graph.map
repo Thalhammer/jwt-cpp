@@ -1,0 +1,9 @@
+<map id="jwt::algorithm::hmacsha" name="jwt::algorithm::hmacsha">
+<area shape="rect" id="Node000001" title="Base class for HMAC family of algorithms." alt="" coords="179,5,359,33"/>
+<area shape="rect" id="Node000002" href="$structjwt_1_1algorithm_1_1hs256.html" title=" " alt="" coords="5,81,165,109"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="224,40,119,83,117,78,219,38"/>
+<area shape="rect" id="Node000003" href="$structjwt_1_1algorithm_1_1hs384.html" title=" " alt="" coords="189,81,349,109"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="271,47,271,82,267,79,267,51"/>
+<area shape="rect" id="Node000004" href="$structjwt_1_1algorithm_1_1hs512.html" title=" " alt="" coords="373,81,533,109"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="317,37,423,80,418,81,316,42"/>
+</map>

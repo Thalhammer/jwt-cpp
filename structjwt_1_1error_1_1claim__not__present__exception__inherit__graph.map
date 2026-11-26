@@ -1,0 +1,9 @@
+<map id="jwt::error::claim_not_present_exception" name="jwt::error::claim_not_present_exception">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,232,158,277"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="14,157,149,184"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="83,198,84,232,79,231,80,202"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="22,81,141,109"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="82,122,84,157,79,156,81,127"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="25,5,138,33"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="82,46,84,81,79,80,81,51"/>
+</map>

@@ -1,0 +1,9 @@
+<map id="jwt::algorithm::rsa" name="jwt::algorithm::rsa">
+<area shape="rect" id="Node000001" title="Base class for RSA family of algorithms." alt="" coords="193,5,334,33"/>
+<area shape="rect" id="Node000002" href="$structjwt_1_1algorithm_1_1rs256.html" title=" " alt="" coords="5,81,162,109"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="220,40,116,83,114,78,215,38"/>
+<area shape="rect" id="Node000003" href="$structjwt_1_1algorithm_1_1rs384.html" title=" " alt="" coords="185,81,342,109"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="265,47,266,82,261,79,262,51"/>
+<area shape="rect" id="Node000004" href="$structjwt_1_1algorithm_1_1rs512.html" title=" " alt="" coords="365,81,522,109"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="310,37,414,80,409,81,309,42"/>
+</map>
