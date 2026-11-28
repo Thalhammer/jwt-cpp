@@ -117,11 +117,11 @@ target_include_directories(jwt-cpp INTERFACE $<BUILD_INTERFACE:${JWT_INCLUDE_PAT
                                              $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 if(${JWT_SSL_LIBRARY} MATCHES "OpenSSL")
-  target_link_libraries(jwt-cpp INTERFACE OpenSSL::SSL OpenSSL::Crypto)
+  target_link_libraries(jwt-cpp INTERFACE OpenSSL::Crypto)
 endif()
 
 if(${JWT_SSL_LIBRARY} MATCHES "LibreSSL")
-  target_link_libraries(jwt-cpp INTERFACE LibreSSL::TLS)
+  target_link_libraries(jwt-cpp INTERFACE LibreSSL::Crypto)
 endif()
 
 if(${JWT_SSL_LIBRARY} MATCHES "wolfSSL")
